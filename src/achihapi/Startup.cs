@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace achihapi
 {
     public class Startup
@@ -21,6 +20,12 @@ namespace achihapi
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
+
+            if (env.IsDevelopment())
+            {
+                //builder.AddUserSecrets();
+            }
+
             Configuration = builder.Build();
         }
 
@@ -29,8 +34,17 @@ namespace achihapi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddOptions();
+            //services.A<IConfigurationRoot>(Configuration);
+
             // Add framework services.
             services.AddMvc();
+
+            var strConn = Configuration.GetSection("ConnectionStrings")["DefaultConnection"];
+            if (String.IsNullOrEmpty(strConn))
+            {
+                // Do nothing!
+            }
 
             services.AddDbContext<alvachiendbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
         }
