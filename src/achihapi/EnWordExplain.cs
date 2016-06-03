@@ -12,7 +12,7 @@ namespace achihapi
 
         public int WordID { get; set; }
         public int ExplainID { get; set; }
-        public int POSID { get; set; }
+        public string POSAbb { get; set; }
 
         public virtual ICollection<EnWordExplainT> EnWordExplainT { get; set; }
         public virtual EnWord Word { get; set; }

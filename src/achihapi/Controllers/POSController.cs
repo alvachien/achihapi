@@ -17,7 +17,7 @@ namespace achihapi.Controllers
 
         private alvachiendbContext _dbContext = null;
 
-        // GET api/values
+        // GET api/pos
         [HttpGet]
         public IEnumerable<POSViewModel> Get()
         {
@@ -27,6 +27,26 @@ namespace achihapi.Controllers
                           from item in view.DefaultIfEmpty()                          
                           select new POSViewModel { POSAbb = item.POSAbb, POSName = item.POSName, LangID = item.LangID, POSNativeName = p1.POSName };
             return poslist;
+        }
+
+        // GET api/pos/adj.
+        [HttpGet("{id}", Name = "GetPOS")]
+        public IActionResult Get(String id)
+        {
+            var poslist = from p1 in _dbContext.ENPOS
+                          join p2 in _dbContext.EnPOST on p1.POSAbb equals p2.POSAbb                          
+                          into view
+                          from item in view.DefaultIfEmpty()
+                          where p1.POSAbb == id
+                          select new POSViewModel { POSAbb = item.POSAbb, POSName = item.POSName, LangID = item.LangID, POSNativeName = p1.POSName }
+                          ;
+
+            if (poslist.Count() <= 0)
+            {
+                return NotFound();
+            }
+
+            return new ObjectResult(poslist.First());
         }
     }
 }
