@@ -55,6 +55,12 @@ namespace achihapi
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            app.UseStatusCodePages();
+
             app.UseMvc();
         }
     }
