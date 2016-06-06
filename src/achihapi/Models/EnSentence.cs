@@ -7,6 +7,7 @@ namespace achihapi
     {
         public EnSentence()
         {
+            EnSentenceExplain = new HashSet<EnSentenceExplain>();
             EnSentenceWord = new HashSet<EnSentenceWord>();
         }
 
@@ -14,6 +15,7 @@ namespace achihapi
         public string SentenceString { get; set; }
         public string Tags { get; set; }
 
+        public virtual ICollection<EnSentenceExplain> EnSentenceExplain { get; set; }
         public virtual ICollection<EnSentenceWord> EnSentenceWord { get; set; }
     }
 }

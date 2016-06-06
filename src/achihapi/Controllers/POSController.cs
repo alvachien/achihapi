@@ -10,12 +10,12 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class POSController : Controller
     {
-        public POSController(alvachiendbContext context)
+        public POSController(achihdbContext context)
         {
             _dbContext = context;
         }
 
-        private alvachiendbContext _dbContext = null;
+        private achihdbContext _dbContext = null;
 
         // GET api/pos
         [HttpGet]

@@ -12,12 +12,12 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class WordController : Controller
     {
-        public WordController(alvachiendbContext context)
+        public WordController(achihdbContext context)
         {
             _dbContext = context;
         }
 
-        private alvachiendbContext _dbContext = null;
+        private achihdbContext _dbContext = null;
 
         // GET api/word
         [HttpGet]
@@ -159,9 +159,7 @@ namespace achihapi.Controllers
 
             // Add it into the database
             EnWord word = new EnWord();
-            List<EnWordExplain> listexp = new List<EnWordExplain>();
-            List<EnWordExplainT> listexpt = new List<EnWordExplainT>();
-             
+            
             using (var transaction = await _dbContext.Database.BeginTransactionAsync())
             {
                 try
@@ -206,7 +204,7 @@ namespace achihapi.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody]WordViewModel ch)
+        public IActionResult Update(int id, [FromBody]WordViewModel ch)
         {
             if (ch == null || ch.WordID != id)
             {

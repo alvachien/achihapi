@@ -3,10 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace achihapi
 {
-    public partial class alvachiendbContext : DbContext
+    public partial class achihdbContext : DbContext
     {
-        public alvachiendbContext(DbContextOptions<alvachiendbContext> options)
-            : base(options)
+        public achihdbContext(DbContextOptions options) : base(options)
         { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -60,6 +59,28 @@ namespace achihapi
             {
                 entity.HasKey(e => new { e.SentenceID, e.ExplainID })
                     .HasName("PK_EnSentenceExplain");
+
+                entity.HasOne(d => d.Sentence)
+                    .WithMany(p => p.EnSentenceExplain)
+                    .HasForeignKey(d => d.SentenceID)
+                    .HasConstraintName("FK_EnSentenceExplain_EnSentence");
+            });
+
+            modelBuilder.Entity<EnSentenceExplainT>(entity =>
+            {
+                entity.HasKey(e => new { e.SentenceID, e.ExplainID, e.LangID })
+                    .HasName("PK_EnSentenceExplainT");
+
+                entity.Property(e => e.LangID).HasMaxLength(5);
+
+                entity.Property(e => e.ExplainString)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.HasOne(d => d.EnSentenceExplain)
+                    .WithMany(p => p.EnSentenceExplainT)
+                    .HasForeignKey(d => new { d.SentenceID, d.ExplainID })
+                    .HasConstraintName("FK_EnSentenceExplainT_SentenceExplain");
             });
 
             modelBuilder.Entity<EnSentenceWord>(entity =>
@@ -94,6 +115,10 @@ namespace achihapi
             {
                 entity.HasKey(e => new { e.WordID, e.ExplainID })
                     .HasName("PK_EnWordExplain");
+
+                entity.Property(e => e.POSAbb)
+                    .IsRequired()
+                    .HasMaxLength(10);
 
                 entity.HasOne(d => d.Word)
                     .WithMany(p => p.EnWordExplain)
@@ -145,12 +170,11 @@ namespace achihapi
         public virtual DbSet<EnPOST> EnPOST { get; set; }
         public virtual DbSet<EnSentence> EnSentence { get; set; }
         public virtual DbSet<EnSentenceExplain> EnSentenceExplain { get; set; }
+        public virtual DbSet<EnSentenceExplainT> EnSentenceExplainT { get; set; }
         public virtual DbSet<EnSentenceWord> EnSentenceWord { get; set; }
         public virtual DbSet<EnWord> EnWord { get; set; }
         public virtual DbSet<EnWordExplain> EnWordExplain { get; set; }
         public virtual DbSet<EnWordExplainT> EnWordExplainT { get; set; }
         public virtual DbSet<TodoItem> TodoItem { get; set; }
-
-        // Unable to generate entity type for table 'dbo.EnSentenceExplainT'. Please see the warning messages.
     }
 }
