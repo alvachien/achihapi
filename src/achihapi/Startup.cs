@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Cors;
 
 namespace achihapi
 {
@@ -37,6 +38,8 @@ namespace achihapi
             services.AddOptions();
             //services.A<IConfigurationRoot>(Configuration);
 
+            services.AddCors();
+
             // Add framework services.
             services.AddMvc();
 
@@ -60,6 +63,10 @@ namespace achihapi
                 app.UseDeveloperExceptionPage();
             }
             app.UseStatusCodePages();
+
+            app.UseCors(builder =>
+                builder.WithOrigins("http://achihui.azurewebsites.net")
+                .AllowAnyHeader());
 
             app.UseMvc();
         }
