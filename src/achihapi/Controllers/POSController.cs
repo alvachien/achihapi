@@ -25,8 +25,19 @@ namespace achihapi.Controllers
                           join p2 in _dbContext.EnPOST on p1.POSAbb equals p2.POSAbb
                           into view
                           from item in view.DefaultIfEmpty()                          
-                          select new POSViewModel { POSAbb = item.POSAbb, POSName = item.POSName, LangID = item.LangID, POSNativeName = p1.POSName };
-            return poslist;
+                          select new { POSAbb = item.POSAbb, POSNativeName = item.POSName, LangID = item.LangID, POSName = p1.POSName };
+            List<POSViewModel> listPOS = new List<POSViewModel>();
+            foreach(var pos in poslist)
+            {
+                POSViewModel vm = new POSViewModel();
+                vm.POSAbb = pos.POSAbb;
+                vm.POSName = pos.POSName;
+                vm.LangID = pos.LangID;
+                vm.POSNativeName = pos.POSNativeName;
+
+                listPOS.Add(vm);
+            }
+            return listPOS;
         }
 
         // GET api/pos/adj.
