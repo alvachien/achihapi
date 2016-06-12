@@ -21,32 +21,103 @@ namespace achihapi.Controllers
         [HttpGet]
         public IEnumerable<TodoItemViewModel> Get()
         {
-            return new List<TodoItemViewModel>();
+            List<TodoItemViewModel> todos = new List<TodoItemViewModel>();
+            var tdis = from p1 in _dbContext.TodoItem
+                          select p1;
+            foreach(var tdi in tdis)
+            {
+                TodoItemViewModel vm = new TodoItemViewModel(tdi);
+                todos.Add(vm);
+            }
+
+            return todos;
         }
 
         // GET api/todoitem/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpGet("{id}", Name = "GetTodoItem")]
+        public IActionResult Get(int id)
         {
-            return "value";
+            var tdi = _dbContext.TodoItem.Single(x => x.ToDoID == id);
+            if (tdi == null)
+            {
+                return NotFound();
+            }
+
+            TodoItemViewModel vm = new TodoItemViewModel(tdi);
+
+            return new ObjectResult(vm);
         }
 
         // POST api/todoitem
         [HttpPost]
-        public void Post([FromBody]string value)
+        public async Task<IActionResult> Create([FromBody]TodoItemViewModel vm)
         {
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted or Explains is empty");
+            }
+
+            if (TryValidateModel(vm))
+            {
+                // Do nothing here
+            }
+            else
+            {
+                return BadRequest();
+            }
+
+            TodoItem tdi = new TodoItem();
+
+            using (var transaction = await _dbContext.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    tdi = vm.Convert2DB();
+                    _dbContext.TodoItem.Add(tdi);
+                    _dbContext.SaveChanges();
+
+                    transaction.Commit();
+                }
+                catch (Exception exp)
+                {
+#if DEBUG
+                    Console.WriteLine(exp.Message);
+#endif
+
+                    transaction.Rollback();
+                    return BadRequest();
+                }
+            }
+
+            return CreatedAtRoute("GetTodoItem", new { controller = "TodoItem", id = vm.TodoID}, vm);
         }
 
         // PUT api/todoitem/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public IActionResult Update(int id, [FromBody]string value)
         {
+            var tdi = _dbContext.TodoItem.Single(x => x.ToDoID == id);
+            if (tdi == null)
+            {
+                return NotFound();
+            }
+
+            // Todo
+
+            return new NoContentResult();
         }
 
         // DELETE api/todoitem/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            var tdi = _dbContext.TodoItem.Single(x => x.ToDoID == id);
+            if (tdi == null)
+            {
+                return NotFound();
+            }
+
+            return new NoContentResult();
         }
     }
 }

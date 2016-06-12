@@ -74,8 +74,8 @@ namespace achihapi.Controllers
         [HttpGet("{id}", Name = "GetSentence")]
         public IActionResult Get(int id)
         {
-            var word = _dbContext.EnSentence.Single(x => x.SentenceID == id);
-            if (word == null)
+            var sent = _dbContext.EnSentence.Single(x => x.SentenceID == id);
+            if (sent == null)
             {
                 return NotFound();
             }
