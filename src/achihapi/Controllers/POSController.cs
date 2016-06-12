@@ -26,17 +26,48 @@ namespace achihapi.Controllers
                           into view
                           from item in view.DefaultIfEmpty()                          
                           select new { POSAbb = item.POSAbb, POSNativeName = item.POSName, LangID = item.LangID, POSName = p1.POSName };
-            List<POSViewModel> listPOS = new List<POSViewModel>();
-            foreach(var pos in poslist)
-            {
-                POSViewModel vm = new POSViewModel();
-                vm.POSAbb = pos.POSAbb;
-                vm.POSName = pos.POSName;
-                vm.LangID = pos.LangID;
-                vm.POSNativeName = pos.POSNativeName;
 
-                listPOS.Add(vm);
+            List<POSViewModel> listPOS = new List<POSViewModel>();
+            try
+            {
+                foreach (var pos2 in poslist)
+                {
+                    POSViewModel vm = new POSViewModel();
+                    vm.POSAbb = pos2.POSAbb;
+                    vm.POSName = pos2.POSName;
+                    vm.LangID = pos2.LangID;
+                    vm.POSNativeName = pos2.POSNativeName;
+
+                    listPOS.Add(vm);
+                }
             }
+            catch(Exception exp)
+            {
+                // Do nothing!
+            }
+
+            // 1. First Try
+            //for (int i = 0; i < poslist.Count(); i++)
+            //{
+            //    POSViewModel vm = new POSViewModel();
+            //    vm.POSAbb = poslist.ElementAt(i).POSAbb;
+            //    vm.POSName = poslist.ElementAt(i).POSName;
+            //    vm.LangID = poslist.ElementAt(i).LangID;
+            //    vm.POSNativeName = poslist.ElementAt(i).POSNativeName;
+
+            //    listPOS.Add(vm);
+            //}
+            // 2. Second Try
+            //poslist.ToList().ForEach(pos =>
+            //{
+            //    POSViewModel vm = new POSViewModel();
+            //    vm.POSAbb = pos.POSAbb;
+            //    vm.POSName = pos.POSName;
+            //    vm.LangID = pos.LangID;
+            //    vm.POSNativeName = pos.POSNativeName;
+
+            //    listPOS.Add(vm);
+            //});
             return listPOS;
         }
 
