@@ -16,9 +16,9 @@ namespace achihapi.Controllers
         public IEnumerable<LanguageViewModel> Get()
         {
             List<LanguageViewModel> listCI = new List<LanguageViewModel>();
-            //CultureInfo ci = new CultureInfo("");
             listCI.Add(new LanguageViewModel() { LCID = 4, Name="Chinese (Simplified)", NativeName="简体中文" });
             listCI.Add(new LanguageViewModel() { LCID = 9, Name = "English", NativeName = "English" });
+
             //listCI.Add(new LanguageViewModel() { LCID = 31748, Name = "Chinese (Traditional)", NativeName = "繁体中文" });
             //CultureInfo[] cinfo = CultureInfo.GetCultures(CultureTypes.AllCultures);
             //foreach (CultureInfo cul in cinfo)

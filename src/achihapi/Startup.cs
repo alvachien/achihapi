@@ -43,13 +43,16 @@ namespace achihapi
             // Add framework services.
             services.AddMvc();
 
-            var strConn = Configuration.GetSection("ConnectionStrings")["DefaultConnection"];
+            //var strConn = @"Server=(LocalDB)\MSSQLLocalDB;Initial Catalog=achihdb;User ID=actest;Password=actest;MultipleActiveResultSets=True";
+            ////var strConn = Configuration.GetSection("ConnectionStrings")["DefaultConnection"];
+            var strConn = Configuration.GetConnectionString("DefaultConnection");
+
             if (String.IsNullOrEmpty(strConn))
             {
                 // Do nothing!
             }
 
-            services.AddDbContext<achihdbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<achihdbContext>(options => options.UseSqlServer(strConn));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -65,8 +68,11 @@ namespace achihapi
             app.UseStatusCodePages();
 
             app.UseCors(builder =>
+                //builder.WithOrigins("http://localhost:29521")
                 builder.WithOrigins("http://achihui.azurewebsites.net")
-                .AllowAnyHeader());
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                );
 
             app.UseMvc();
         }
