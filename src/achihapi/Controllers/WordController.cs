@@ -28,17 +28,21 @@ namespace achihapi.Controllers
             List<WordViewModel> listWords = new List<WordViewModel>();
             var poslist = from p1 in _dbContext.EnWord
                           join p2 in _dbContext.EnWordExplain
-                            on p1.WordID equals p2.WordID into p12
+                            on p1.WordID equals p2.WordID 
+                            into p12
+
                           from p3 in p12.DefaultIfEmpty()
                           join p4 in _dbContext.ENPOS on p3.POSAbb equals p4.POSAbb 
-                          join p6 in _dbContext.EnPOST 
-                            on p4.POSAbb equals p6.POSAbb into p14
+                          join p6 in _dbContext.EnPOST on p4.POSAbb equals p6.POSAbb 
+                            into p14
+
                           from p7 in p14.DefaultIfEmpty()
                           join p8 in _dbContext.EnWordExplainT
                             on new { p7.LangID, p3.WordID, p3.ExplainID }  equals new { p8.LangID, p8.WordID, p8.ExplainID }
                           orderby p3.WordID, p3.ExplainID
                           select new { p3.WordID, p3.ExplainID, p1.WordString, p1.Tags, p3.POSAbb, p7.LangID, p7.POSName, p8.ExplainString }                            
                         ;
+
             foreach(var worddb in poslist)
             {
                 WordViewModel vm = null;

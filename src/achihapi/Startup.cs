@@ -73,6 +73,7 @@ namespace achihapi
 #endif
                 .AllowAnyHeader()
                 .AllowAnyMethod()
+                .AllowCredentials()
                 );
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
