@@ -6,10 +6,12 @@ using Microsoft.AspNetCore.Mvc;
 using achihapi.ViewModels;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Authorization;
 
 namespace achihapi.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class WordController : Controller
     {
         public WordController(achihdbContext context)

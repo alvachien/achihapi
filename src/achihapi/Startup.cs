@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Cors;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace achihapi
 {
@@ -20,7 +20,8 @@ namespace achihapi
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                .AddEnvironmentVariables();
+                .AddEnvironmentVariables()                
+                ;
 
             if (env.IsDevelopment())
             {
@@ -35,18 +36,14 @@ namespace achihapi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddOptions();
-            //services.A<IConfigurationRoot>(Configuration);
-
             services.AddCors();
 
             // Add framework services.
-            services.AddMvc();
+            services.AddMvcCore()
+                .AddJsonFormatters()
+                .AddAuthorization();            
 
-            //var strConn = @"Server=(LocalDB)\MSSQLLocalDB;Initial Catalog=achihdb;User ID=actest;Password=actest;MultipleActiveResultSets=True";
-            ////var strConn = Configuration.GetSection("ConnectionStrings")["DefaultConnection"];
             var strConn = Configuration.GetConnectionString("DefaultConnection");
-
             if (String.IsNullOrEmpty(strConn))
             {
                 // Do nothing!
@@ -65,14 +62,33 @@ namespace achihapi
             {
                 app.UseDeveloperExceptionPage();
             }
+
             app.UseStatusCodePages();
 
             app.UseCors(builder =>
-                //builder.WithOrigins("http://localhost:29521")
+#if DEBUG
+                builder.WithOrigins("http://localhost:29521")
+#else
                 builder.WithOrigins("http://achihui.azurewebsites.net")
+#endif
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 );
+
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+            app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
+            {
+#if DEBUG
+                Authority = "http://localhost:29521",
+#else
+                Authority = "http://achihui.azurewebsites.net",
+#endif
+                RequireHttpsMetadata = false,
+
+                ScopeName = "api.hihapi",
+                AutomaticAuthenticate = true
+            });
 
             app.UseMvc();
         }
