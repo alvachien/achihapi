@@ -16,14 +16,10 @@ namespace achihapi.Controllers
         public IEnumerable<LanguageViewModel> Get()
         {
             List<LanguageViewModel> listCI = new List<LanguageViewModel>();
-            listCI.Add(new LanguageViewModel() { LCID = 4, Name="Chinese (Simplified)", NativeName="简体中文" });
-            listCI.Add(new LanguageViewModel() { LCID = 9, Name = "English", NativeName = "English" });
+            listCI.Add(new LanguageViewModel() { LCID = 4, ISOName="zh", EnglishName = "Chinese (Simplified)", NativeName="简体中文" });
+            listCI.Add(new LanguageViewModel() { LCID = 9, ISOName = "en", EnglishName = "English", NativeName = "English" });
 
-            //listCI.Add(new LanguageViewModel() { LCID = 31748, Name = "Chinese (Traditional)", NativeName = "繁体中文" });
             //CultureInfo[] cinfo = CultureInfo.GetCultures(CultureTypes.AllCultures);
-            //foreach (CultureInfo cul in cinfo)
-            //{
-            //}
             return listCI;
         }
     }

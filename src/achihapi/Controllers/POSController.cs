@@ -44,6 +44,9 @@ namespace achihapi.Controllers
             catch(Exception exp)
             {
                 // Do nothing!
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
             }
 
             // 1. First Try
