@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace achihapi.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     public class WordController : Controller
     {
         public WordController(achihdbContext context)
@@ -47,20 +47,14 @@ namespace achihapi.Controllers
                           select new { p3.WordID, p3.ExplainID, p1.WordString, p1.Tags, p3.POSAbb, p8.LangID, p5.POSName, p8.ExplainString }                            
                         ;
 
+            Boolean bNeedAdd = false;
             foreach(var worddb in poslist)
             {
                 WordViewModel vm = null;
 
                 if (listWords.Count >= 1)
                 {
-                    if (listWords.Count == 1)
-                    {
-                        vm = listWords[0];
-                    }
-                    else
-                    {
-                        vm = listWords.Find(x => x.WordID == worddb.WordID);
-                    }
+                    vm = listWords.Find(x => x.WordID == worddb.WordID);
                 }
 
                 if (vm == null)
@@ -68,6 +62,7 @@ namespace achihapi.Controllers
                     vm = new WordViewModel();
                     vm.WordID = worddb.WordID;
                     vm.WordString = worddb.WordString;
+                    bNeedAdd = true;
                 }
 
                 WordExplainViewModel expvm = null;
@@ -86,8 +81,12 @@ namespace achihapi.Controllers
                     vm.Explains.Add(expvm);
                 }
 
-                listWords.Add(vm);
+                if (bNeedAdd) 
+                    listWords.Add(vm);
             }
+
+            // Filter on Explain based on the language inputted
+            // To-Do
 
             return listWords;
         }
@@ -106,39 +105,51 @@ namespace achihapi.Controllers
             var poslist = from p1 in _dbContext.EnWord
                           join p2 in _dbContext.EnWordExplain
                             on p1.WordID equals p2.WordID
-                          into p12
+                            into p12
+
                           from p3 in p12.DefaultIfEmpty()
-                          join p4 in _dbContext.ENPOS
-                            on p3.POSAbb equals p4.POSAbb
-                          into p13
-                          from p5 in p13.DefaultIfEmpty()
-                          join p6 in _dbContext.EnPOST
-                            on p5.POSAbb equals p6.POSAbb
-                          into p14
-                          from p7 in p14.DefaultIfEmpty()
+                          join p4 in _dbContext.ENPOS on p3.POSAbb equals p4.POSAbb
+                            into p13
+
+                          from p5 in p13
+                              //join p6 in _dbContext.EnPOST on p5.POSAbb equals p6.POSAbb
+                              //  into p14
+
+                              //from p7 in p14.DefaultIfEmpty()
                           join p8 in _dbContext.EnWordExplainT
-                            on new { p7.LangID, p3.WordID, p3.ExplainID } equals new { p8.LangID, p8.WordID, p8.ExplainID }
+                            on new { p3.WordID, p3.ExplainID } equals new { p8.WordID, p8.ExplainID }
                           where p1.WordID == id
-                          select new { p3.WordID, p3.ExplainID, p1.WordString, p1.Tags, p3.POSAbb, p7.LangID, p7.POSName, p8.ExplainString }
+                          select new { p3.WordID, p3.ExplainID, p1.WordString, p1.Tags, p3.POSAbb, p8.LangID, p5.POSName, p8.ExplainString }
                         ;
+
             WordViewModel vm = null;
             vm = new WordViewModel();
 
-            if (poslist.Count() > 0)
+            Boolean bNeedAdd = false;
+            foreach (var worddb in poslist)
             {
-                var worddb = poslist.First();
-
-                vm.WordID = worddb.WordID;
-                vm.WordString = worddb.WordString;
+                if (vm == null)
+                {
+                    vm = new WordViewModel();
+                    vm.WordID = worddb.WordID;
+                    vm.WordString = worddb.WordString;
+                    bNeedAdd = true;
+                }
 
                 WordExplainViewModel expvm = null;
-                expvm = new WordExplainViewModel();
-                expvm.ExplainID = worddb.ExplainID;
-                expvm.LangID = worddb.LangID;
-                expvm.POSAbb = worddb.POSAbb;
-                expvm.ExplainString = worddb.ExplainString;
-                vm.Explains.Add(expvm);
+                if (expvm == null)
+                {
+                    expvm = new WordExplainViewModel();
+                    expvm.ExplainID = worddb.ExplainID;
+                    expvm.LangID = worddb.LangID;
+                    expvm.POSAbb = worddb.POSAbb;
+                    expvm.ExplainString = worddb.ExplainString;
+                    vm.Explains.Add(expvm);
+                }
             }
+
+            // Filter on Explain based on the language inputted
+            // To-Do
 
             return new ObjectResult(vm);
         }
