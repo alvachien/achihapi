@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace achihapi.Controllers
 {
     [Route("api/[controller]")]
-    //[Authorize]
+    [Authorize]
     public class WordController : Controller
     {
         public WordController(achihdbContext context)
