@@ -82,9 +82,9 @@ namespace achihapi
             app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
             {
 #if DEBUG
-                Authority = "http://localhost:29521",
+                Authority = "http://localhost:41016",
 #else
-                Authority = "http://achihui.azurewebsites.net",
+                Authority = "http://acidserver.azurewebsites.net",
 #endif
                 RequireHttpsMetadata = false,
 
