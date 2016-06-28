@@ -41,7 +41,9 @@ namespace achihapi
             // Add framework services.
             services.AddMvcCore()
                 .AddJsonFormatters()
-                .AddAuthorization();            
+                .AddAuthorization(
+                    options => { options.AddPolicy("LearningAdmin", policy => policy.RequireClaim("LearningAdmin", "1")); }
+                );            
 
             var strConn = Configuration.GetConnectionString("DefaultConnection");
             if (String.IsNullOrEmpty(strConn))
@@ -77,7 +79,6 @@ namespace achihapi
                 );
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-
             app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
             {
 #if DEBUG
@@ -88,8 +89,9 @@ namespace achihapi
                 RequireHttpsMetadata = false,
 
                 ScopeName = "api.hihapi",
-                AutomaticAuthenticate = true
-            });
+                AutomaticAuthenticate = true,
+                AutomaticChallenge = true
+            });            
 
             app.UseMvc();
         }
