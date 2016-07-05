@@ -125,7 +125,6 @@ namespace achihapi.Controllers
             WordViewModel vm = null;
             vm = new WordViewModel();
 
-            Boolean bNeedAdd = false;
             foreach (var worddb in poslist)
             {
                 if (vm == null)
@@ -133,7 +132,6 @@ namespace achihapi.Controllers
                     vm = new WordViewModel();
                     vm.WordID = worddb.WordID;
                     vm.WordString = worddb.WordString;
-                    bNeedAdd = true;
                 }
 
                 WordExplainViewModel expvm = null;
