@@ -57,9 +57,54 @@ namespace achihapi.Controllers
 
         // POST api/knowledgetype
         [HttpPost]
-        public IActionResult Post([FromBody]string value)
+        public async Task<IActionResult> Create([FromBody]KnowledgeTypeViewModel vm)
         {
-            return BadRequest();
+            // Create a new knowledge type
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted");
+            }
+
+            if (TryValidateModel(vm))
+            {
+                // Do nothing here
+            }
+            else
+            {
+                return BadRequest();
+            }
+
+            // Add it into the database
+            KnowledgeType db = new KnowledgeType();
+
+            using (var transaction = await _dbContext.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    db.Name = vm.Name;
+                    if (vm.ParentID.HasValue)
+                        db.ParentId = (short)vm.ParentID.Value;
+                    else
+                        db.ParentId = null;
+                    db.Comment = vm.Comment;
+                    _dbContext.KnowledgeType.Add(db);
+                    _dbContext.SaveChanges();
+
+                    transaction.Commit();
+                }
+                catch (Exception exp)
+                {
+#if DEBUG
+                    Console.WriteLine(exp.Message);
+#endif
+
+                    transaction.Rollback();
+                    return BadRequest();
+                }
+            }
+
+            return CreatedAtRoute("GetKnowledgeType", new { controller = "KnowledgeType", id = db.Id }, db);
+
         }
 
         // PUT api/knowledgetype/5
@@ -73,7 +118,28 @@ namespace achihapi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            return BadRequest();
+            //var dbs = from kt in _dbContext.KnowledgeType
+            //          where (kt.ParentId == id || kt.Id == id)
+            //          select kt;
+
+            //Int32 nFirst = dbs.Count();
+            //Int32 nIter = 0;
+            //while(nIter < nFirst)
+            //{
+            //    var dbs2 = from kt in _dbContext.KnowledgeType
+            //               //where dbs.Contains(x => x.)
+            //                select kt;
+            //}
+            ////_dbContext.KnowledgeType.Single(x => x.Id == id);
+            ////if (db == null)
+            ////{
+            ////    return NotFound();
+            ////}
+
+            //_dbContext.KnowledgeType.Remove(dbs);
+            //_dbContext.SaveChangesAsync().Wait();
+
+            return new NoContentResult();
         }
     }
 }

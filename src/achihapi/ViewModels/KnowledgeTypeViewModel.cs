@@ -12,5 +12,6 @@ namespace achihapi.ViewModels
         public Int32? ParentID { get; set; }
         [Required]
         public String Name { get; set; }
+        public String Comment { get; set; }
     }
 }
