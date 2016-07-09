@@ -32,6 +32,8 @@ namespace achihapi.Controllers
                 vm.ID = dbkt.Id;
                 vm.Name = dbkt.Name;
                 vm.ParentID = dbkt.ParentId;
+
+                listVMs.Add(vm);
             }
 
             return listVMs;
