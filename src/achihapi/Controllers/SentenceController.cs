@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using achihapi.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using achihapi.Models;
 
 namespace achihapi.Controllers
 {
@@ -26,12 +27,12 @@ namespace achihapi.Controllers
             List<SentenceViewModel> listSents = new List<SentenceViewModel>();
             var poslist = from p1 in _dbContext.EnSentence
                           join p2 in _dbContext.EnSentenceExplain
-                            on p1.SentenceID equals p2.SentenceID into p12
+                            on p1.SentenceId equals p2.SentenceId into p12
                           from p3 in p12.DefaultIfEmpty()
                           join p8 in _dbContext.EnSentenceExplainT
-                            on new { p3.SentenceID, p3.ExplainID } equals new { p8.SentenceID, p8.ExplainID }
-                          orderby p3.SentenceID, p3.ExplainID, p8.LangID
-                          select new { p3.SentenceID, p3.ExplainID, p1.SentenceString, p1.Tags, p8.LangID, p8.ExplainString }
+                            on new { p3.SentenceId, p3.ExplainId } equals new { p8.SentenceId, p8.ExplainId }
+                          orderby p3.SentenceId, p3.ExplainId, p8.LangId
+                          select new { p3.SentenceId, p3.ExplainId, p1.SentenceString, p1.Tags, p8.LangId, p8.ExplainString }
                         ;
             foreach (var sentdb in poslist)
             {
@@ -45,14 +46,14 @@ namespace achihapi.Controllers
                     }
                     else
                     {
-                        vm = listSents.Find(x => x.SentenceID == sentdb.SentenceID);
+                        vm = listSents.Find(x => x.SentenceID == sentdb.SentenceId);
                     }
                 }
 
                 if (vm == null)
                 {
                     vm = new SentenceViewModel();
-                    vm.SentenceID = sentdb.SentenceID;
+                    vm.SentenceID = sentdb.SentenceId;
                     vm.SentenceString = sentdb.SentenceString;
                 }
 
@@ -60,8 +61,8 @@ namespace achihapi.Controllers
                 if (expvm == null)
                 {
                     expvm = new SentenceExplainViewModel();
-                    expvm.ExplainID = sentdb.ExplainID;
-                    expvm.LangID = sentdb.LangID;
+                    expvm.ExplainID = sentdb.ExplainId;
+                    expvm.LangID = sentdb.LangId;
                     expvm.ExplainString = sentdb.ExplainString;
                     vm.Explains.Add(expvm);
                 }
@@ -76,7 +77,7 @@ namespace achihapi.Controllers
         [HttpGet("{id}", Name = "GetSentence")]
         public IActionResult Get(int id)
         {
-            var sent = _dbContext.EnSentence.Single(x => x.SentenceID == id);
+            var sent = _dbContext.EnSentence.Single(x => x.SentenceId == id);
             if (sent == null)
             {
                 return NotFound();
@@ -85,13 +86,13 @@ namespace achihapi.Controllers
             List<SentenceViewModel> listSents = new List<SentenceViewModel>();
             var poslist = from p1 in _dbContext.EnSentence
                           join p2 in _dbContext.EnSentenceExplain
-                            on p1.SentenceID equals p2.SentenceID into p12
+                            on p1.SentenceId equals p2.SentenceId into p12
                           from p3 in p12.DefaultIfEmpty()
                           join p8 in _dbContext.EnSentenceExplainT
-                            on new { p3.SentenceID, p3.ExplainID } equals new { p8.SentenceID, p8.ExplainID }
-                          orderby p3.SentenceID, p3.ExplainID, p8.LangID
-                          where p1.SentenceID == id
-                          select new { p3.SentenceID, p3.ExplainID, p1.SentenceString, p1.Tags, p8.LangID, p8.ExplainString }
+                            on new { p3.SentenceId, p3.ExplainId } equals new { p8.SentenceId, p8.ExplainId }
+                          orderby p3.SentenceId, p3.ExplainId, p8.LangId
+                          where p1.SentenceId == id
+                          select new { p3.SentenceId, p3.ExplainId, p1.SentenceString, p1.Tags, p8.LangId, p8.ExplainString }
                         ;
             SentenceViewModel vm = null;
             vm = new SentenceViewModel();
@@ -100,13 +101,13 @@ namespace achihapi.Controllers
             {
                 var sentdb = poslist.First();
 
-                vm.SentenceID = sentdb.SentenceID;
+                vm.SentenceID = sentdb.SentenceId;
                 vm.SentenceString = sentdb.SentenceString;
 
                 SentenceExplainViewModel expvm = null;
                 expvm = new SentenceExplainViewModel();
-                expvm.ExplainID = sentdb.ExplainID;
-                expvm.LangID = sentdb.LangID;
+                expvm.ExplainID = sentdb.ExplainId;
+                expvm.LangID = sentdb.LangId;
                 expvm.ExplainString = sentdb.ExplainString;
                 vm.Explains.Add(expvm);
             }
@@ -150,14 +151,14 @@ namespace achihapi.Controllers
                     foreach (var exp in ch.Explains)
                     {
                         EnSentenceExplain ewexp = new EnSentenceExplain();
-                        ewexp.ExplainID = i++;
-                        ewexp.SentenceID = sent.SentenceID;
+                        ewexp.ExplainId = i++;
+                        ewexp.SentenceId = sent.SentenceId;
                         _dbContext.EnSentenceExplain.Add(ewexp);
 
                         EnSentenceExplainT ewexpt = new EnSentenceExplainT();
-                        ewexpt.ExplainID = ewexp.ExplainID;
-                        ewexpt.LangID = exp.LangID;
-                        ewexpt.SentenceID = sent.SentenceID;
+                        ewexpt.ExplainId = ewexp.ExplainId;
+                        ewexpt.LangId = exp.LangID;
+                        ewexpt.SentenceId = sent.SentenceId;
                         ewexpt.ExplainString = exp.ExplainString;
                         _dbContext.EnSentenceExplainT.Add(ewexpt);
                     }
@@ -176,13 +177,13 @@ namespace achihapi.Controllers
                 }
             }
 
-            return CreatedAtRoute("GetSentence", new { controller = "Sentence", id = sent.SentenceID }, ch);
+            return CreatedAtRoute("GetSentence", new { controller = "Sentence", id = sent.SentenceId }, ch);
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var sent = _dbContext.EnSentence.Single(x => x.SentenceID == id);
+            var sent = _dbContext.EnSentence.Single(x => x.SentenceId == id);
             if (sent == null)
             {
                 return NotFound();

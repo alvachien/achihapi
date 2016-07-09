@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace achihapi
+namespace achihapi.Models
 {
-    public partial class EnPOST
+    public partial class EnPost
     {
-        public string POSAbb { get; set; }
-        public string LangID { get; set; }
-        public string POSName { get; set; }
+        public string Posabb { get; set; }
+        public string LangId { get; set; }
+        public string Posname { get; set; }
 
-        public virtual ENPOS POSAbbNavigation { get; set; }
+        public virtual Enpos PosabbNavigation { get; set; }
     }
 }

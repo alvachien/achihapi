@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace achihapi
+namespace achihapi.Models
 {
     public partial class EnWordExplainT
     {
-        public int WordID { get; set; }
-        public int ExplainID { get; set; }
-        public string LangID { get; set; }
+        public int WordId { get; set; }
+        public int ExplainId { get; set; }
+        public string LangId { get; set; }
         public string ExplainString { get; set; }
 
         public virtual EnWordExplain EnWordExplain { get; set; }

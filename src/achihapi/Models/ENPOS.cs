@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace achihapi
+namespace achihapi.Models
 {
-    public partial class ENPOS
+    public partial class Enpos
     {
-        public ENPOS()
+        public Enpos()
         {
-            EnPOST = new HashSet<EnPOST>();
+            EnPost = new HashSet<EnPost>();
         }
 
-        public string POSAbb { get; set; }
-        public string POSName { get; set; }
+        public string Posabb { get; set; }
+        public string Posname { get; set; }
 
-        public virtual ICollection<EnPOST> EnPOST { get; set; }
+        public virtual ICollection<EnPost> EnPost { get; set; }
     }
 }

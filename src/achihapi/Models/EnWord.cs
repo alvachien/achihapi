@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace achihapi
+namespace achihapi.Models
 {
     public partial class EnWord
     {
@@ -11,7 +11,7 @@ namespace achihapi
             EnWordExplain = new HashSet<EnWordExplain>();
         }
 
-        public int WordID { get; set; }
+        public int WordId { get; set; }
         public string WordString { get; set; }
         public string Tags { get; set; }
 

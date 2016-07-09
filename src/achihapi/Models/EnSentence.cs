@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace achihapi
+namespace achihapi.Models
 {
     public partial class EnSentence
     {
@@ -11,7 +11,7 @@ namespace achihapi
             EnSentenceWord = new HashSet<EnSentenceWord>();
         }
 
-        public int SentenceID { get; set; }
+        public int SentenceId { get; set; }
         public string SentenceString { get; set; }
         public string Tags { get; set; }
 

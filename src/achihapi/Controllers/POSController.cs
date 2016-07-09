@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using achihapi.Models;
 using achihapi.ViewModels;
 
 namespace achihapi.Controllers
@@ -21,11 +22,11 @@ namespace achihapi.Controllers
         [HttpGet]
         public IEnumerable<POSViewModel> Get()
         {
-            var poslist = from p1 in _dbContext.ENPOS
-                          join p2 in _dbContext.EnPOST on p1.POSAbb equals p2.POSAbb
+            var poslist = from p1 in _dbContext.Enpos
+                          join p2 in _dbContext.EnPost on p1.Posabb equals p2.Posabb
                           into view
                           from item in view.DefaultIfEmpty()                          
-                          select new { POSAbb = item.POSAbb, POSNativeName = item.POSName, LangID = item.LangID, POSName = p1.POSName };
+                          select new { POSAbb = item.Posabb, POSNativeName = item.Posname, LangID = item.LangId, POSName = p1.Posname };
 
             List<POSViewModel> listPOS = new List<POSViewModel>();
             try
@@ -78,12 +79,12 @@ namespace achihapi.Controllers
         [HttpGet("{id}", Name = "GetPOS")]
         public IActionResult Get(String id)
         {
-            var poslist = from p1 in _dbContext.ENPOS
-                          join p2 in _dbContext.EnPOST on p1.POSAbb equals p2.POSAbb                          
+            var poslist = from p1 in _dbContext.Enpos
+                          join p2 in _dbContext.EnPost on p1.Posabb equals p2.Posabb
                           into view
                           from item in view.DefaultIfEmpty()
-                          where p1.POSAbb == id
-                          select new POSViewModel { POSAbb = item.POSAbb, POSName = item.POSName, LangID = item.LangID, POSNativeName = p1.POSName }
+                          where p1.Posabb == id
+                          select new POSViewModel { POSAbb = item.Posabb, POSName = item.Posname, LangID = item.LangId, POSNativeName = p1.Posname }
                           ;
 
             if (poslist.Count() <= 0)

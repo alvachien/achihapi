@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using achihapi.Models;
 
 namespace achihapi.ViewModels
 {
@@ -38,7 +39,7 @@ namespace achihapi.ViewModels
             this.Priority = tdi.Priority;
             this.StartDate = tdi.StartDate;
             this.Tags = tdi.Tags;
-            this.TodoID = tdi.ToDoID;
+            this.TodoID = tdi.ToDoId;
         }
 
         public TodoItem Convert2DB()
@@ -52,7 +53,7 @@ namespace achihapi.ViewModels
             tdi.Priority = this.Priority;
             tdi.StartDate = this.StartDate;
             tdi.Tags = this.Tags;
-            tdi.ToDoID = this.TodoID;
+            tdi.ToDoId = this.TodoID;
 
             return tdi;
         }

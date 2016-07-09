@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace achihapi
+namespace achihapi.Models
 {
     public partial class EnSentenceExplain
     {
@@ -10,8 +10,8 @@ namespace achihapi
             EnSentenceExplainT = new HashSet<EnSentenceExplainT>();
         }
 
-        public int SentenceID { get; set; }
-        public int ExplainID { get; set; }
+        public int SentenceId { get; set; }
+        public int ExplainId { get; set; }
 
         public virtual ICollection<EnSentenceExplainT> EnSentenceExplainT { get; set; }
         public virtual EnSentence Sentence { get; set; }

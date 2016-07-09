@@ -7,6 +7,7 @@ using achihapi.ViewModels;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
+using achihapi.Models;
 
 namespace achihapi.Controllers
 {
@@ -28,11 +29,11 @@ namespace achihapi.Controllers
             List<WordViewModel> listWords = new List<WordViewModel>();
             var poslist = from p1 in _dbContext.EnWord
                           join  p2 in _dbContext.EnWordExplain
-                            on p1.WordID equals p2.WordID 
+                            on p1.WordId equals p2.WordId 
                             into p12
 
                           from p3 in p12.DefaultIfEmpty()
-                          join p4 in _dbContext.ENPOS on p3.POSAbb equals p4.POSAbb 
+                          join p4 in _dbContext.Enpos on p3.Posabb equals p4.Posabb
                             into p13
                           
                           from p5 in p13
@@ -41,10 +42,10 @@ namespace achihapi.Controllers
 
                           //from p7 in p14.DefaultIfEmpty()
                           join p8 in _dbContext.EnWordExplainT
-                            on new { p3.WordID, p3.ExplainID }  equals new { p8.WordID, p8.ExplainID }
-                          //where p8.LangID == lang
-                          orderby p3.WordID, p3.ExplainID
-                          select new { p3.WordID, p3.ExplainID, p1.WordString, p1.Tags, p3.POSAbb, p8.LangID, p5.POSName, p8.ExplainString }                            
+                            on new { p3.WordId, p3.ExplainId }  equals new { p8.WordId, p8.ExplainId }
+                          //where p8.LangId == lang
+                          orderby p3.WordId, p3.ExplainId
+                          select new { p3.WordId, p3.ExplainId, p1.WordString, p1.Tags, p3.Posabb, p8.LangId, p5.Posname, p8.ExplainString }                            
                         ;
 
             Boolean bNeedAdd = false;
@@ -54,13 +55,13 @@ namespace achihapi.Controllers
 
                 if (listWords.Count >= 1)
                 {
-                    vm = listWords.Find(x => x.WordID == worddb.WordID);
+                    vm = listWords.Find(x => x.WordID == worddb.WordId);
                 }
 
                 if (vm == null)
                 {
                     vm = new WordViewModel();
-                    vm.WordID = worddb.WordID;
+                    vm.WordID = worddb.WordId;
                     vm.WordString = worddb.WordString;
                     bNeedAdd = true;
                 }
@@ -74,9 +75,9 @@ namespace achihapi.Controllers
                 if (expvm == null)
                 {
                     expvm = new WordExplainViewModel();
-                    expvm.ExplainID = worddb.ExplainID;
-                    expvm.LangID = worddb.LangID;
-                    expvm.POSAbb = worddb.POSAbb;
+                    expvm.ExplainID = worddb.ExplainId;
+                    expvm.LangID = worddb.LangId;
+                    expvm.POSAbb = worddb.Posabb;
                     expvm.ExplainString = worddb.ExplainString;
                     vm.Explains.Add(expvm);
                 }
@@ -95,7 +96,7 @@ namespace achihapi.Controllers
         [HttpGet("{id}", Name = "GetWord")]
         public IActionResult Get(int id)
         {
-            var word = _dbContext.EnWord.Single(x => x.WordID == id);
+            var word = _dbContext.EnWord.Single(x => x.WordId == id);
             if (word == null)
             {
                 return NotFound();
@@ -104,11 +105,11 @@ namespace achihapi.Controllers
             List<WordViewModel> listWords = new List<WordViewModel>();
             var poslist = from p1 in _dbContext.EnWord
                           join p2 in _dbContext.EnWordExplain
-                            on p1.WordID equals p2.WordID
+                            on p1.WordId equals p2.WordId
                             into p12
 
                           from p3 in p12.DefaultIfEmpty()
-                          join p4 in _dbContext.ENPOS on p3.POSAbb equals p4.POSAbb
+                          join p4 in _dbContext.Enpos on p3.Posabb equals p4.Posabb
                             into p13
 
                           from p5 in p13
@@ -117,9 +118,9 @@ namespace achihapi.Controllers
 
                               //from p7 in p14.DefaultIfEmpty()
                           join p8 in _dbContext.EnWordExplainT
-                            on new { p3.WordID, p3.ExplainID } equals new { p8.WordID, p8.ExplainID }
-                          where p1.WordID == id
-                          select new { p3.WordID, p3.ExplainID, p1.WordString, p1.Tags, p3.POSAbb, p8.LangID, p5.POSName, p8.ExplainString }
+                            on new { p3.WordId, p3.ExplainId } equals new { p8.WordId, p8.ExplainId }
+                          where p1.WordId == id
+                          select new { p3.WordId, p3.ExplainId, p1.WordString, p1.Tags, p3.Posabb, p8.LangId, p5.Posname, p8.ExplainString }
                         ;
 
             WordViewModel vm = null;
@@ -130,7 +131,7 @@ namespace achihapi.Controllers
                 if (vm == null)
                 {
                     vm = new WordViewModel();
-                    vm.WordID = worddb.WordID;
+                    vm.WordID = worddb.WordId;
                     vm.WordString = worddb.WordString;
                 }
 
@@ -138,9 +139,9 @@ namespace achihapi.Controllers
                 if (expvm == null)
                 {
                     expvm = new WordExplainViewModel();
-                    expvm.ExplainID = worddb.ExplainID;
-                    expvm.LangID = worddb.LangID;
-                    expvm.POSAbb = worddb.POSAbb;
+                    expvm.ExplainID = worddb.ExplainId;
+                    expvm.LangID = worddb.LangId;
+                    expvm.POSAbb = worddb.Posabb;
                     expvm.ExplainString = worddb.ExplainString;
                     vm.Explains.Add(expvm);
                 }
@@ -190,15 +191,15 @@ namespace achihapi.Controllers
                     foreach (var exp in ch.Explains)
                     {
                         EnWordExplain ewexp = new EnWordExplain();
-                        ewexp.POSAbb = exp.POSAbb;
-                        ewexp.ExplainID = i++;
-                        ewexp.WordID = word.WordID;
+                        ewexp.Posabb = exp.POSAbb;
+                        ewexp.ExplainId = i++;
+                        ewexp.WordId = word.WordId;
                         _dbContext.EnWordExplain.Add(ewexp);
 
                         EnWordExplainT ewexpt = new EnWordExplainT();
-                        ewexpt.ExplainID = ewexp.ExplainID;
-                        ewexpt.LangID = exp.LangID;
-                        ewexpt.WordID = word.WordID;
+                        ewexpt.ExplainId = ewexp.ExplainId;
+                        ewexpt.LangId = exp.LangID;
+                        ewexpt.WordId = word.WordId;
                         ewexpt.ExplainString = exp.ExplainString;
                         _dbContext.EnWordExplainT.Add(ewexpt);
                     }
@@ -217,7 +218,7 @@ namespace achihapi.Controllers
                 }
             }
 
-            return CreatedAtRoute("GetWord", new { controller = "Word", id = word.WordID }, ch);
+            return CreatedAtRoute("GetWord", new { controller = "Word", id = word.WordId }, ch);
         }
 
         [HttpPut("{id}")]
@@ -228,7 +229,7 @@ namespace achihapi.Controllers
                 return BadRequest();
             }
 
-            var oldCH = _dbContext.EnWord.Single(chit => chit.WordID== id);
+            var oldCH = _dbContext.EnWord.Single(chit => chit.WordId == id);
             if (oldCH == null)
             {
                 return NotFound();
@@ -243,7 +244,7 @@ namespace achihapi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var word = _dbContext.EnWord.Single(x => x.WordID == id);
+            var word = _dbContext.EnWord.Single(x => x.WordId == id);
             if (word == null)
             {
                 return NotFound();

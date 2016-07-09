@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using achihapi.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using achihapi.Models;
 
 namespace achihapi.Controllers
 {
@@ -39,7 +40,7 @@ namespace achihapi.Controllers
         [HttpGet("{id}", Name = "GetTodoItem")]
         public IActionResult Get(int id)
         {
-            var tdi = _dbContext.TodoItem.Single(x => x.ToDoID == id);
+            var tdi = _dbContext.TodoItem.Single(x => x.ToDoId == id);
             if (tdi == null)
             {
                 return NotFound();
@@ -98,7 +99,7 @@ namespace achihapi.Controllers
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody]string value)
         {
-            var tdi = _dbContext.TodoItem.Single(x => x.ToDoID == id);
+            var tdi = _dbContext.TodoItem.Single(x => x.ToDoId == id);
             if (tdi == null)
             {
                 return NotFound();
@@ -113,7 +114,7 @@ namespace achihapi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var tdi = _dbContext.TodoItem.Single(x => x.ToDoID == id);
+            var tdi = _dbContext.TodoItem.Single(x => x.ToDoId == id);
             if (tdi == null)
             {
                 return NotFound();

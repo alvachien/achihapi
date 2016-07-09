@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace achihapi
+namespace achihapi.Models
 {
     public partial class TodoItem
     {
-        public int ToDoID { get; set; }
+        public int ToDoId { get; set; }
         public string ItemName { get; set; }
         public int Priority { get; set; }
         public string Assignee { get; set; }
