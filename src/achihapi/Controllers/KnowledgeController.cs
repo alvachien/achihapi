@@ -28,7 +28,7 @@ namespace achihapi.Controllers
                         on kl.ContentType equals kt.Id
                       into klt
                       from kl2 in klt.DefaultIfEmpty()
-                      select new { kl.Id, kl.ContentType, ContentTypeName = kl2.Name, ContentTypeParent = kl2.ParentId, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt };
+                      select new { kl.Id, kl.ContentType, ContentTypeName = kl2 == null? null : kl2.Name, ContentTypeParent = kl2 == null ? null : kl2.ParentId, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt };
 
             foreach(var db in dbs)
             {
@@ -56,7 +56,7 @@ namespace achihapi.Controllers
                       into klt
                       from kl2 in klt.DefaultIfEmpty()
                       where kl.Id == id
-                      select new { kl.Id, kl.ContentType, ContentTypeName = kl2.Name, ContentTypeParent = kl2.ParentId, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt };
+                      select new { kl.Id, kl.ContentType, ContentTypeName = kl2 == null ? null : kl2.Name, ContentTypeParent = kl2 == null ? null : kl2.ParentId, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt };
             var db = dbs.FirstOrDefault();
             if (db == null)
                 return NotFound();
