@@ -23,22 +23,39 @@ namespace achihapi.Controllers
         public IEnumerable<KnowledgeViewModel> Get()
         {
             List<KnowledgeViewModel> vms = new List<KnowledgeViewModel>();
-            var dbs = from kl in _dbContext.Knowledge
+
+            var db1 = from kl in _dbContext.Knowledge
                       join kt in _dbContext.KnowledgeType
                         on kl.ContentType equals kt.Id
-                      into klt
-                      from kl2 in klt.DefaultIfEmpty()
-                      select new { kl.Id, kl.ContentType, ContentTypeName = kl2 == null? null : kl2.Name, ContentTypeParent = kl2 == null ? null : kl2.ParentId, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt };
+                      where kl.ContentType != null
+                      select new { kl.Id, kl.ContentType, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt, ContentTypeName = kt.Name, ContentTypeParent = kt.ParentId };
+            var db2 = from kl in _dbContext.Knowledge
+                      where kl.ContentType == null
+                      select new { kl.Id, kl.ContentType, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt, ContentTypeName = String.Empty, ContentTypeParent = 0 };
 
-            foreach(var db in dbs)
+            foreach (var db in db1)
             {
                 KnowledgeViewModel vm = new KnowledgeViewModel();
-                vm.Content = db.Content;
-                vm.CreatedAt = db.CreatedAt;
                 vm.ID = db.Id;
-                vm.ModifiedAt = db.ModifiedAt;
-                vm.Title = db.Title;
                 vm.TypeID = db.ContentType;
+                vm.Title = db.Title;
+                vm.Content = db.Content;
+                vm.Tags = db.Tags == null ? null : db.Tags.Trim();
+                vm.CreatedAt = db.CreatedAt;
+                vm.ModifiedAt = db.ModifiedAt;
+
+                vms.Add(vm);
+            }
+            foreach (var db in db2)
+            {
+                KnowledgeViewModel vm = new KnowledgeViewModel();
+                vm.ID = db.Id;
+                vm.TypeID = db.ContentType;
+                vm.Title = db.Title;
+                vm.Content = db.Content;
+                vm.Tags = db.Tags == null ? null : db.Tags.Trim();
+                vm.CreatedAt = db.CreatedAt;
+                vm.ModifiedAt = db.ModifiedAt;
 
                 vms.Add(vm);
             }
@@ -50,24 +67,45 @@ namespace achihapi.Controllers
         [HttpGet("{id}", Name = "GetKnowledge")]
         public IActionResult Get(int id)
         {
-            var dbs = from kl in _dbContext.Knowledge
+            KnowledgeViewModel vm = new KnowledgeViewModel();
+
+            var db1 = from kl in _dbContext.Knowledge
                       join kt in _dbContext.KnowledgeType
                         on kl.ContentType equals kt.Id
-                      into klt
-                      from kl2 in klt.DefaultIfEmpty()
-                      where kl.Id == id
-                      select new { kl.Id, kl.ContentType, ContentTypeName = kl2 == null ? null : kl2.Name, ContentTypeParent = kl2 == null ? null : kl2.ParentId, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt };
-            var db = dbs.FirstOrDefault();
+                      where kl.ContentType != null
+                            && kl.Id == id
+                      select new { kl.Id, kl.ContentType, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt, ContentTypeName = kt.Name, ContentTypeParent = kt.ParentId };
+            var db = db1.FirstOrDefault();
             if (db == null)
-                return NotFound();
+            {
+                var db2 = from kl in _dbContext.Knowledge
+                          where kl.ContentType == null
+                            && kl.Id == id
+                          select new { kl.Id, kl.ContentType, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt, ContentTypeName = String.Empty, ContentTypeParent = 0 };
 
-            KnowledgeViewModel vm = new KnowledgeViewModel();
-            vm.Content = db.Content;
-            vm.CreatedAt = db.CreatedAt;
-            vm.ID = db.Id;
-            vm.ModifiedAt = db.ModifiedAt;
-            vm.Title = db.Title;
-            vm.TypeID = db.ContentType;
+                var odb = db2.FirstOrDefault();
+                if (odb == null)
+                    return NotFound();
+
+                vm.ID = odb.Id;
+                vm.TypeID = odb.ContentType;
+                vm.Title = odb.Title;
+                vm.Content = odb.Content;
+                vm.Tags = odb.Tags == null ? null : odb.Tags.Trim();
+                vm.CreatedAt = odb.CreatedAt;
+                vm.ModifiedAt = odb.ModifiedAt;
+
+            }
+            else
+            {
+                vm.ID = db.Id;
+                vm.TypeID = db.ContentType;
+                vm.Title = db.Title;
+                vm.Content = db.Content;
+                vm.Tags = db.Tags == null ? null : db.Tags.Trim();
+                vm.CreatedAt = db.CreatedAt;
+                vm.ModifiedAt = db.ModifiedAt;
+            }
 
             return new ObjectResult(vm);
         }
