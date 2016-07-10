@@ -108,8 +108,9 @@ namespace achihapi.Controllers
                     {
                         word.ContentType = null;
                     }
+                    word.Title = vm.Title;
                     word.ModifiedAt = DateTime.Now;
-                    word.CreatedAt = vm.CreatedAt;
+                    word.CreatedAt = word.ModifiedAt;
                     word.Tags = vm.Tags;
                     _dbContext.Knowledge.Add(word);
                     _dbContext.SaveChanges();

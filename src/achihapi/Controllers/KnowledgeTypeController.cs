@@ -32,6 +32,7 @@ namespace achihapi.Controllers
                 vm.ID = dbkt.Id;
                 vm.Name = dbkt.Name;
                 vm.ParentID = dbkt.ParentId;
+                vm.Comment = dbkt.Comment;
 
                 listVMs.Add(vm);
             }
@@ -53,6 +54,7 @@ namespace achihapi.Controllers
             vm.ID = dbkt.Id;
             vm.Name = dbkt.Name;
             vm.ParentID = dbkt.ParentId;
+            vm.Comment = dbkt.Comment;
 
             return new ObjectResult(vm);
         }
