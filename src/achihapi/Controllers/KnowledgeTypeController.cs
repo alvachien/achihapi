@@ -86,7 +86,7 @@ namespace achihapi.Controllers
                 try
                 {
                     db.Name = vm.Name;
-                    if (vm.ParentID.HasValue)
+                    if (vm.ParentID.HasValue && vm.ParentID != 0)
                         db.ParentId = (short)vm.ParentID.Value;
                     else
                         db.ParentId = null;
@@ -108,7 +108,6 @@ namespace achihapi.Controllers
             }
 
             return CreatedAtRoute("GetKnowledgeType", new { controller = "KnowledgeType", id = db.Id }, db);
-
         }
 
         // PUT api/knowledgetype/5
@@ -122,26 +121,14 @@ namespace achihapi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            //var dbs = from kt in _dbContext.KnowledgeType
-            //          where (kt.ParentId == id || kt.Id == id)
-            //          select kt;
+            var dbkt = _dbContext.KnowledgeType.Single(x => x.Id == id);
+            if (dbkt == null)
+            {
+                return NotFound();
+            }
 
-            //Int32 nFirst = dbs.Count();
-            //Int32 nIter = 0;
-            //while(nIter < nFirst)
-            //{
-            //    var dbs2 = from kt in _dbContext.KnowledgeType
-            //               //where dbs.Contains(x => x.)
-            //                select kt;
-            //}
-            ////_dbContext.KnowledgeType.Single(x => x.Id == id);
-            ////if (db == null)
-            ////{
-            ////    return NotFound();
-            ////}
-
-            //_dbContext.KnowledgeType.Remove(dbs);
-            //_dbContext.SaveChangesAsync().Wait();
+            _dbContext.KnowledgeType.Remove(dbkt);
+            _dbContext.SaveChangesAsync().Wait();
 
             return new NoContentResult();
         }
