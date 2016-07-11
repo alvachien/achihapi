@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using achihapi.Models;
 using achihapi.ViewModels;
+using System.Data.Common;
+using System.Data.SqlClient;
 
 namespace achihapi.Controllers
 {
@@ -24,14 +26,12 @@ namespace achihapi.Controllers
         {
             List<KnowledgeViewModel> vms = new List<KnowledgeViewModel>();
 
+
+#if USE_EFCORE // In current EFCore 1.0, there alwasy returns duplicated records and I don't know why!
             var db1 = from kl in _dbContext.Knowledge
                       join kt in _dbContext.KnowledgeType
                         on kl.ContentType equals kt.Id
-                      where kl.ContentType != null
                       select new { kl.Id, kl.ContentType, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt, ContentTypeName = kt.Name, ContentTypeParent = kt.ParentId };
-            var db2 = from kl in _dbContext.Knowledge
-                      where kl.ContentType == null
-                      select new { kl.Id, kl.ContentType, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt, ContentTypeName = String.Empty, ContentTypeParent = 0 };
 
             foreach (var db in db1)
             {
@@ -46,18 +46,50 @@ namespace achihapi.Controllers
 
                 vms.Add(vm);
             }
-            foreach (var db in db2)
+#endif
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = @"select taba.ID, taba.ContentType, taba.Title, taba.Content, taba.Tags, taba.CreatedAt, taba.ModifiedAt, tabb.ParentID as TypeParentID, tabb.Name as TypeName from dbo.Knowledge as taba
+	                        left outer join dbo.KnowledgeType as tabb
+	                        on taba.ContentType = tabb.Id";
+            try
             {
-                KnowledgeViewModel vm = new KnowledgeViewModel();
-                vm.ID = db.Id;
-                vm.TypeID = db.ContentType;
-                vm.Title = db.Title;
-                vm.Content = db.Content;
-                vm.Tags = db.Tags == null ? null : db.Tags.Trim();
-                vm.CreatedAt = db.CreatedAt;
-                vm.ModifiedAt = db.ModifiedAt;
+                conn.Open();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    KnowledgeViewModel vm = new KnowledgeViewModel();
+                    vm.ID = reader.GetInt32(0);
+                    if (reader.IsDBNull(1))
+                        vm.TypeID = null;
+                    else
+                        vm.TypeID = reader.GetInt16(1);
+                    vm.Title = reader.GetString(2).Trim();
+                    vm.Content = reader.GetString(3).Trim();
+                    if (reader.IsDBNull(4))
+                        vm.Tags = null;
+                    else
+                        vm.Tags = reader.GetString(4).Trim();
+                    vm.CreatedAt = reader.GetDateTime(5);
+                    vm.ModifiedAt = reader.GetDateTime(6);
 
-                vms.Add(vm);
+                    // Type parent
+                    //if (reader.IsDBNull(7)) { }
+                    //else { reader.GetInt32(7)}
+                    // Type name 
+                    //reader.IsDBNull(8) { } else reader.GetString(8)
+
+                    vms.Add(vm);
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
             }
 
             return vms;
@@ -69,6 +101,7 @@ namespace achihapi.Controllers
         {
             KnowledgeViewModel vm = new KnowledgeViewModel();
 
+#if USE_EFCORE // In current EFCore 1.0, there alwasy returns duplicated records and I don't know why!
             var db1 = from kl in _dbContext.Knowledge
                       join kt in _dbContext.KnowledgeType
                         on kl.ContentType equals kt.Id
@@ -105,6 +138,51 @@ namespace achihapi.Controllers
                 vm.Tags = db.Tags == null ? null : db.Tags.Trim();
                 vm.CreatedAt = db.CreatedAt;
                 vm.ModifiedAt = db.ModifiedAt;
+            }
+#endif
+
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = @"select taba.ID, taba.ContentType, taba.Title, taba.Content, taba.Tags, taba.CreatedAt, taba.ModifiedAt, tabb.ParentID as TypeParentID, tabb.Name as TypeName from dbo.Knowledge as taba
+	                        left outer join dbo.KnowledgeType as tabb
+	                        on taba.ContentType = tabb.Id where taba.[ID] = " + id.ToString();
+            try
+            {
+                conn.Open();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        vm.ID = reader.GetInt32(0);
+                        if (reader.IsDBNull(1))
+                            vm.TypeID = null;
+                        else
+                            vm.TypeID = reader.GetInt16(1);
+                        vm.Title = reader.GetString(2).Trim();
+                        vm.Content = reader.GetString(3).Trim();
+                        if (reader.IsDBNull(4))
+                            vm.Tags = null;
+                        else
+                            vm.Tags = reader.GetString(4).Trim();
+                        vm.CreatedAt = reader.GetDateTime(5);
+                        vm.ModifiedAt = reader.GetDateTime(6);
+                    }
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
             }
 
             return new ObjectResult(vm);
