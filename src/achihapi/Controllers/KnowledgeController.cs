@@ -79,7 +79,7 @@ namespace achihapi.Controllers
             if (db == null)
             {
                 var db2 = from kl in _dbContext.Knowledge
-                          where kl.ContentType == null
+                          where kl.ContentType != null 
                             && kl.Id == id
                           select new { kl.Id, kl.ContentType, kl.Title, kl.Content, kl.Tags, kl.CreatedAt, kl.ModifiedAt, ContentTypeName = String.Empty, ContentTypeParent = 0 };
 
@@ -138,7 +138,7 @@ namespace achihapi.Controllers
                 {
                     //word.Id = vm.ID;
                     word.Content = vm.Content;
-                    if (vm.TypeID.HasValue)
+                    if (vm.TypeID.HasValue && vm.TypeID.Value != 0)
                     {
                         word.ContentType = (short) vm.TypeID.Value;
                     } 
