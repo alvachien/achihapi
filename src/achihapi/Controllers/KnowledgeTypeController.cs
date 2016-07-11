@@ -42,7 +42,7 @@ namespace achihapi.Controllers
 
         // GET api/knowledgetype/5
         [HttpGet("{id}", Name = "GetKnowledgeType")]
-        public IActionResult Get(int id)
+        public IActionResult Get(Int16 id)
         {
             var dbkt = _dbContext.KnowledgeType.Single(x => x.Id == id);
             if (dbkt == null)
@@ -85,6 +85,7 @@ namespace achihapi.Controllers
             {
                 try
                 {
+                    db.Id = vm.ID;
                     db.Name = vm.Name;
                     if (vm.ParentID.HasValue && vm.ParentID != 0)
                         db.ParentId = (short)vm.ParentID.Value;
@@ -103,7 +104,7 @@ namespace achihapi.Controllers
 #endif
 
                     transaction.Rollback();
-                    return BadRequest();
+                    return BadRequest(exp.Message);
                 }
             }
 
@@ -112,14 +113,59 @@ namespace achihapi.Controllers
 
         // PUT api/knowledgetype/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody]string value)
+        public async Task<IActionResult> Put(Int16 id, [FromBody]KnowledgeTypeViewModel vm)
         {
-            return BadRequest();
+            // Create a new knowledge type
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted");
+            }
+
+            if (TryValidateModel(vm))
+            {
+                // Do nothing here
+            }
+            else
+            {
+                return BadRequest();
+            }
+
+            // Add it into the database
+            KnowledgeType db = new KnowledgeType();
+
+            using (var transaction = await _dbContext.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    db.Id = vm.ID;
+                    db.Name = vm.Name;
+                    if (vm.ParentID.HasValue && vm.ParentID != 0)
+                        db.ParentId = (short)vm.ParentID.Value;
+                    else
+                        db.ParentId = null;
+                    db.Comment = vm.Comment;
+                    _dbContext.KnowledgeType.Update(db);
+                    _dbContext.SaveChanges();
+
+                    transaction.Commit();
+                }
+                catch (Exception exp)
+                {
+#if DEBUG
+                    Console.WriteLine(exp.Message);
+#endif
+
+                    transaction.Rollback();
+                    return BadRequest(exp.Message);
+                }
+            }
+
+            return new NoContentResult();
         }
 
         // DELETE api/knowledgetype/5
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(Int16 id)
         {
             var dbkt = _dbContext.KnowledgeType.Single(x => x.Id == id);
             if (dbkt == null)

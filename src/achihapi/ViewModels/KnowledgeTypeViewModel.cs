@@ -8,8 +8,9 @@ namespace achihapi.ViewModels
 {
     public class KnowledgeTypeViewModel
     {
-        public Int32 ID { get; set; }
-        public Int32? ParentID { get; set; }
+        [Required]
+        public Int16 ID { get; set; }
+        public Int16? ParentID { get; set; }
         [Required]
         public String Name { get; set; }
         public String Comment { get; set; }
