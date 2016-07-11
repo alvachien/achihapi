@@ -267,7 +267,7 @@ namespace achihapi.Controllers
                 db.ContentType = null;
             }
             db.ModifiedAt = DateTime.Now;
-            db.CreatedAt = vm.CreatedAt;
+            db.CreatedAt = db.CreatedAt;
             db.Tags = vm.Tags;
             _dbContext.Knowledge.Update(db);
             _dbContext.SaveChangesAsync().Wait();
@@ -276,16 +276,25 @@ namespace achihapi.Controllers
         }
 
         // DELETE api/knowledge/5
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        [HttpDelete("{ids}")]
+        public IActionResult Delete(string ids)
         {
-            var db = _dbContext.Knowledge.Single(x => x.Id == id);
-            if (db == null)
+            string[] stringSeparators = new string[] { "," };
+            var idarr = ids.Split(stringSeparators, StringSplitOptions.RemoveEmptyEntries);
+            List<Int32> realids = new List<int>(); ;
+
+            foreach(var idelem in idarr)
+            {
+                realids.Add(Int32.Parse(idelem));
+            }
+
+            var dbentries = _dbContext.Knowledge.Where(x => realids.Contains(x.Id));
+            if (dbentries == null || dbentries.Count() <= 0)
             {
                 return NotFound();
             }
 
-            _dbContext.Knowledge.Remove(db);
+            _dbContext.Knowledge.RemoveRange(dbentries);
             _dbContext.SaveChangesAsync().Wait();
 
             return new NoContentResult();
