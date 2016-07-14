@@ -25,7 +25,9 @@ namespace achihapi.Controllers
             List<KnowledgeTypeViewModel> listVMs = new List<KnowledgeTypeViewModel>();
 
             var ktlist = from kt in _dbContext.KnowledgeType
-                         select kt;
+                         orderby kt.ParentId
+                         select kt
+                         ;
             foreach(var dbkt in ktlist)
             {
                 KnowledgeTypeViewModel vm = new KnowledgeTypeViewModel();
@@ -71,7 +73,18 @@ namespace achihapi.Controllers
 
             if (TryValidateModel(vm))
             {
-                // Do nothing here
+                // Validate the ID
+                if (vm.ID == 0 || vm.ID == -1)
+                {
+                    return BadRequest("ID is invalid");
+                }
+
+                // Check existence
+                Boolean bExists = _dbContext.KnowledgeType.Any(x => x.Id == vm.ID);
+                if (bExists)
+                {
+                    return BadRequest("ID exists already");
+                }
             }
             else
             {
@@ -108,7 +121,7 @@ namespace achihapi.Controllers
                 }
             }
 
-            return CreatedAtRoute("GetKnowledgeType", new { controller = "KnowledgeType", id = db.Id }, db);
+            return CreatedAtRoute("GetKnowledgeType", new { id = db.Id });
         }
 
         // PUT api/knowledgetype/5
@@ -123,7 +136,10 @@ namespace achihapi.Controllers
 
             if (TryValidateModel(vm))
             {
-                // Do nothing here
+                // Verify the existence
+                Boolean bExists = _dbContext.KnowledgeType.Any(x => x.Id == vm.ID);
+                if (!bExists)
+                    return BadRequest("ID not exists!");
             }
             else
             {
@@ -160,7 +176,8 @@ namespace achihapi.Controllers
                 }
             }
 
-            return new NoContentResult();
+            //return Ok(vm);
+            return new ObjectResult(vm);
         }
 
         // DELETE api/knowledgetype/5
@@ -176,7 +193,7 @@ namespace achihapi.Controllers
             _dbContext.KnowledgeType.Remove(dbkt);
             _dbContext.SaveChangesAsync().Wait();
 
-            return new NoContentResult();
+            return Ok(id);
         }
     }
 }

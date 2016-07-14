@@ -279,7 +279,7 @@ namespace achihapi.Controllers
                 }
             }
 
-            return CreatedAtRoute("GetKnowledge", new { controller = "Knowledge", id = word.Id }, word);
+            return CreatedAtRoute("GetKnowledge", new { id = word.Id });
         }
 
         // PUT api/knowledge/5
@@ -307,7 +307,7 @@ namespace achihapi.Controllers
             _dbContext.Knowledge.Update(db);
             _dbContext.SaveChangesAsync().Wait();
 
-            return new NoContentResult();
+            return new ObjectResult(vm);
         }
 
         // DELETE api/knowledge/5
@@ -332,7 +332,7 @@ namespace achihapi.Controllers
             _dbContext.Knowledge.RemoveRange(dbentries);
             _dbContext.SaveChangesAsync().Wait();
 
-            return new NoContentResult();
+            return Ok(ids);
         }
     }
 }
