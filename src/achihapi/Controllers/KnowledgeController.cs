@@ -22,10 +22,10 @@ namespace achihapi.Controllers
 
         // GET: api/knowledge
         [HttpGet]
-        public IEnumerable<KnowledgeViewModel> Get()
+        public IEnumerable<KnowledgeViewModel> Get([FromQuery] Int16? typeid = null, 
+            [FromQuery] DateTime? datefrom = null, [FromQuery] DateTime? dateto = null, [FromQuery] Int32? maxhit=null)
         {
             List<KnowledgeViewModel> vms = new List<KnowledgeViewModel>();
-
 
 #if USE_EFCORE // In current EFCore 1.0, there alwasy returns duplicated records and I don't know why!
             var db1 = from kl in _dbContext.Knowledge
@@ -48,9 +48,44 @@ namespace achihapi.Controllers
             }
 #endif
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
-            String queryString = @"select taba.ID, taba.ContentType, taba.Title, taba.Content, taba.Tags, taba.CreatedAt, taba.ModifiedAt, tabb.ParentID as TypeParentID, tabb.Name as TypeName from dbo.Knowledge as taba
+            List<String> arWhereStr = new List<string>();
+            String strTop = "";
+            String strWhere = "";
+            if (typeid.HasValue)
+            {
+                arWhereStr.Add(" taba.ContentType = " + typeid.Value.ToString());
+            }
+            if (datefrom.HasValue)
+            {
+                arWhereStr.Add(" taba.ModifiedAt >= " + datefrom.Value.ToString());
+            }
+            if (dateto.HasValue)
+            {
+                arWhereStr.Add(" taba.ModifiedAt <= " + dateto.Value.ToString());
+            }
+            if (maxhit.HasValue && maxhit.Value > 0)
+            {
+                strTop = " TOP " + maxhit.Value.ToString();
+            }
+            if (arWhereStr.Count > 0)
+            {
+                for(Int32 i = 0; i < arWhereStr.Count; i ++)
+                {
+                    if (i == 0)
+                        strWhere = arWhereStr[0];
+                    else
+                    {
+                        strWhere += " AND " + arWhereStr[i];
+                    }
+                }
+            }
+
+            String queryString = "select " + strTop + @" taba.ID, taba.ContentType, taba.Title, taba.Content, taba.Tags, taba.CreatedAt, taba.ModifiedAt, tabb.ParentID as TypeParentID, tabb.Name as TypeName from dbo.Knowledge as taba
 	                        left outer join dbo.KnowledgeType as tabb
 	                        on taba.ContentType = tabb.Id";
+            if (arWhereStr.Count > 0)
+                queryString += " WHERE " + strWhere;
+
             try
             {
                 conn.Open();
@@ -65,7 +100,7 @@ namespace achihapi.Controllers
                     else
                         vm.TypeID = reader.GetInt16(1);
                     vm.Title = reader.GetString(2).Trim();
-                    vm.Content = reader.GetString(3).Trim();
+                    vm.Content = reader.GetString(3).Trim().Substring(0, 30);
                     if (reader.IsDBNull(4))
                         vm.Tags = null;
                     else
