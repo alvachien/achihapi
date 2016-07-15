@@ -22,8 +22,9 @@ namespace achihapi.Controllers
 
         // GET: api/knowledge
         [HttpGet]
-        public IEnumerable<KnowledgeViewModel> Get([FromQuery] Int16? typeid = null, 
-            [FromQuery] DateTime? datefrom = null, [FromQuery] DateTime? dateto = null, [FromQuery] Int32? maxhit=null)
+        public IEnumerable<KnowledgeViewModel> Get([FromQuery] String typeid = null, 
+            [FromQuery] DateTime? datefrom = null, [FromQuery] DateTime? dateto = null, [FromQuery] String tags = null, 
+            [FromQuery] Int32? maxhit=null)
         {
             List<KnowledgeViewModel> vms = new List<KnowledgeViewModel>();
 
@@ -51,9 +52,34 @@ namespace achihapi.Controllers
             List<String> arWhereStr = new List<string>();
             String strTop = "";
             String strWhere = "";
-            if (typeid.HasValue)
+            if (!String.IsNullOrEmpty(typeid))
             {
-                arWhereStr.Add(" taba.ContentType = " + typeid.Value.ToString());
+                // Need split the strings for searching!
+                String[] artypeid = typeid.Split(',');
+                if (artypeid.Length > 0)
+                {
+                    String strTypeWhere = "(";
+                    Boolean bFirstType = true;
+                    foreach (String tid in artypeid)
+                    {
+                        Int16 ntid = 0;
+                        if (Int16.TryParse(tid, out ntid) && ntid > 0)
+                        {
+                            if (bFirstType)
+                            {
+                                strTypeWhere += " taba.ContentType = " + ntid.ToString();
+                                bFirstType = false;
+                            }
+                            else
+                            {
+                                strTypeWhere += " OR taba.ContentType = " + ntid.ToString();
+                            }
+                        }
+                    }
+                    strTypeWhere += ")";
+
+                    arWhereStr.Add(strTypeWhere);
+                }
             }
             if (datefrom.HasValue)
             {
@@ -62,6 +88,31 @@ namespace achihapi.Controllers
             if (dateto.HasValue)
             {
                 arWhereStr.Add(" taba.ModifiedAt <= " + dateto.Value.ToString());
+            }
+            if (!String.IsNullOrEmpty(tags))
+            {
+                // Need split the strings for searching!
+                String[] arTags = tags.Split(',');
+                if (arTags.Length > 0)
+                {
+                    String strTagWhere = "(";
+                    Boolean bFirstTag = true;
+                    foreach (String strtag in arTags)
+                    {
+                        if (bFirstTag)
+                        {
+                            strTagWhere += " CHARINDEX(N'" + strtag + "', taba.Tags) > 0";
+                            bFirstTag = false;
+                        }
+                        else
+                        {
+                            strTagWhere += " OR CHARINDEX(N'" + strtag + "', taba.Tags) > 0";
+                        }
+                    }
+                    strTagWhere += ")";
+
+                    arWhereStr.Add(strTagWhere);
+                }
             }
             if (maxhit.HasValue && maxhit.Value > 0)
             {
