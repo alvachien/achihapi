@@ -12,7 +12,9 @@ namespace achihapi.ViewModels
         public Int16 ID { get; set; }
         public Int16? ParentID { get; set; }
         [Required]
+        [StringLength(50)]
         public String Name { get; set; }
+        [StringLength(100)]
         public String Comment { get; set; }
     }
 }

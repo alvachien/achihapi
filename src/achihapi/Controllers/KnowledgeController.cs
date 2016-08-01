@@ -337,7 +337,7 @@ namespace achihapi.Controllers
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody]KnowledgeViewModel vm)
         {
-            var db = _dbContext.Knowledge.Single(x => x.Id == id);
+            var db = _dbContext.Knowledge.SingleOrDefault(x => x.Id == id);
             if (db == null)
             {
                 return NotFound();

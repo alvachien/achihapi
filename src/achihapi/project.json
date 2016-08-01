@@ -1,4 +1,4 @@
-﻿{
+{
   "dependencies": {
     "Microsoft.NETCore.App": {
       "version": "1.0.0",
@@ -18,7 +18,9 @@
     "Microsoft.Extensions.Logging": "1.0.0",
     "Microsoft.Extensions.Logging.Console": "1.0.0",
     "Microsoft.Extensions.Logging.Debug": "1.0.0",
-    "IdentityServer4.AccessTokenValidation": "1.0.0-beta8"
+    "IdentityServer4.AccessTokenValidation": "1.0.1-beta2",
+    "WindowsAzure.Storage": "7.1.3-preview",
+    "Magick.NET.Core-Q8": "7.0.0.0102"
   },
 
   "tools": {
@@ -39,7 +41,8 @@
     "netcoreapp1.0": {
       "imports": [
         "dotnet5.6",
-        "portable-net45+win8"
+        "dnxcore50",
+        "portable-net451+win8"
       ]
     }
   },

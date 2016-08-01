@@ -1,92 +1,6 @@
-﻿USE [master]
+﻿USE [alvachiendb]
 GO
-/****** Object:  Database [alvachiendb]    Script Date: 7/11/2016 5:00:06 PM ******/
-CREATE DATABASE [alvachiendb]
-GO
-ALTER DATABASE [alvachiendb] SET COMPATIBILITY_LEVEL = 120
-GO
-IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
-begin
-EXEC [alvachiendb].[dbo].[sp_fulltext_database] @action = 'enable'
-end
-GO
-ALTER DATABASE [alvachiendb] SET ANSI_NULL_DEFAULT OFF 
-GO
-ALTER DATABASE [alvachiendb] SET ANSI_NULLS OFF 
-GO
-ALTER DATABASE [alvachiendb] SET ANSI_PADDING OFF 
-GO
-ALTER DATABASE [alvachiendb] SET ANSI_WARNINGS OFF 
-GO
-ALTER DATABASE [alvachiendb] SET ARITHABORT OFF 
-GO
-ALTER DATABASE [alvachiendb] SET AUTO_CLOSE OFF 
-GO
-ALTER DATABASE [alvachiendb] SET AUTO_SHRINK OFF 
-GO
-ALTER DATABASE [alvachiendb] SET AUTO_UPDATE_STATISTICS ON 
-GO
-ALTER DATABASE [alvachiendb] SET CURSOR_CLOSE_ON_COMMIT OFF 
-GO
-ALTER DATABASE [alvachiendb] SET CURSOR_DEFAULT  GLOBAL 
-GO
-ALTER DATABASE [alvachiendb] SET CONCAT_NULL_YIELDS_NULL OFF 
-GO
-ALTER DATABASE [alvachiendb] SET NUMERIC_ROUNDABORT OFF 
-GO
-ALTER DATABASE [alvachiendb] SET QUOTED_IDENTIFIER OFF 
-GO
-ALTER DATABASE [alvachiendb] SET RECURSIVE_TRIGGERS OFF 
-GO
-ALTER DATABASE [alvachiendb] SET  ENABLE_BROKER 
-GO
-ALTER DATABASE [alvachiendb] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
-GO
-ALTER DATABASE [alvachiendb] SET DATE_CORRELATION_OPTIMIZATION OFF 
-GO
-ALTER DATABASE [alvachiendb] SET TRUSTWORTHY OFF 
-GO
-ALTER DATABASE [alvachiendb] SET ALLOW_SNAPSHOT_ISOLATION ON 
-GO
-ALTER DATABASE [alvachiendb] SET PARAMETERIZATION SIMPLE 
-GO
-ALTER DATABASE [alvachiendb] SET READ_COMMITTED_SNAPSHOT ON 
-GO
-ALTER DATABASE [alvachiendb] SET HONOR_BROKER_PRIORITY OFF 
-GO
-ALTER DATABASE [alvachiendb] SET RECOVERY FULL 
-GO
-ALTER DATABASE [alvachiendb] SET  MULTI_USER 
-GO
-ALTER DATABASE [alvachiendb] SET PAGE_VERIFY CHECKSUM  
-GO
-ALTER DATABASE [alvachiendb] SET DB_CHAINING OFF 
-GO
-ALTER DATABASE [alvachiendb] SET QUERY_STORE = ON
-GO
-ALTER DATABASE [alvachiendb] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEANUP_POLICY = (STALE_QUERY_THRESHOLD_DAYS = 30), DATA_FLUSH_INTERVAL_SECONDS = 900, INTERVAL_LENGTH_MINUTES = 60, MAX_STORAGE_SIZE_MB = 100, QUERY_CAPTURE_MODE = AUTO, SIZE_BASED_CLEANUP_MODE = AUTO)
-GO
-USE [alvachiendb]
-GO
-ALTER DATABASE SCOPED CONFIGURATION SET MAXDOP = 0;
-GO
-ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET MAXDOP = PRIMARY;
-GO
-ALTER DATABASE SCOPED CONFIGURATION SET LEGACY_CARDINALITY_ESTIMATION = OFF;
-GO
-ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET LEGACY_CARDINALITY_ESTIMATION = PRIMARY;
-GO
-ALTER DATABASE SCOPED CONFIGURATION SET PARAMETER_SNIFFING = ON;
-GO
-ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET PARAMETER_SNIFFING = PRIMARY;
-GO
-ALTER DATABASE SCOPED CONFIGURATION SET QUERY_OPTIMIZER_HOTFIXES = OFF;
-GO
-ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET QUERY_OPTIMIZER_HOTFIXES = PRIMARY;
-GO
-USE [alvachiendb]
-GO
-/****** Object:  Table [dbo].[EnWordExplain]    Script Date: 7/11/2016 5:00:07 PM ******/
+/****** Object:  Table [dbo].[EnWordExplain]    Script Date: 7/19/2016 11:50:08 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -103,7 +17,7 @@ CREATE TABLE [dbo].[EnWordExplain](
 )
 
 GO
-/****** Object:  Table [dbo].[EnWord]    Script Date: 7/11/2016 5:00:08 PM ******/
+/****** Object:  Table [dbo].[EnWord]    Script Date: 7/19/2016 11:50:12 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -119,7 +33,7 @@ CREATE TABLE [dbo].[EnWord](
 )
 
 GO
-/****** Object:  Table [dbo].[EnWordExplainT]    Script Date: 7/11/2016 5:00:10 PM ******/
+/****** Object:  Table [dbo].[EnWordExplainT]    Script Date: 7/19/2016 11:50:14 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -138,7 +52,7 @@ CREATE TABLE [dbo].[EnWordExplainT](
 )
 
 GO
-/****** Object:  View [dbo].[VEnWord]    Script Date: 7/11/2016 5:00:12 PM ******/
+/****** Object:  View [dbo].[VEnWord]    Script Date: 7/19/2016 11:50:15 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -154,7 +68,7 @@ FROM            dbo.EnWord INNER JOIN
 
 
 GO
-/****** Object:  Table [dbo].[ENPOS]    Script Date: 7/11/2016 5:00:12 PM ******/
+/****** Object:  Table [dbo].[ENPOS]    Script Date: 7/19/2016 11:50:16 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -169,7 +83,7 @@ CREATE TABLE [dbo].[ENPOS](
 )
 
 GO
-/****** Object:  Table [dbo].[EnPOST]    Script Date: 7/11/2016 5:00:13 PM ******/
+/****** Object:  Table [dbo].[EnPOST]    Script Date: 7/19/2016 11:50:17 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -186,7 +100,7 @@ CREATE TABLE [dbo].[EnPOST](
 )
 
 GO
-/****** Object:  View [dbo].[VEnPOS]    Script Date: 7/11/2016 5:00:14 PM ******/
+/****** Object:  View [dbo].[VEnPOS]    Script Date: 7/19/2016 11:50:18 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -199,7 +113,7 @@ FROM            dbo.ENPOS INNER JOIN
 
 
 GO
-/****** Object:  Table [dbo].[EnSentence]    Script Date: 7/11/2016 5:00:14 PM ******/
+/****** Object:  Table [dbo].[EnSentence]    Script Date: 7/19/2016 11:50:18 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -215,7 +129,7 @@ CREATE TABLE [dbo].[EnSentence](
 )
 
 GO
-/****** Object:  Table [dbo].[EnSentenceExplain]    Script Date: 7/11/2016 5:00:16 PM ******/
+/****** Object:  Table [dbo].[EnSentenceExplain]    Script Date: 7/19/2016 11:50:20 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -231,7 +145,7 @@ CREATE TABLE [dbo].[EnSentenceExplain](
 )
 
 GO
-/****** Object:  Table [dbo].[EnSentenceExplainT]    Script Date: 7/11/2016 5:00:17 PM ******/
+/****** Object:  Table [dbo].[EnSentenceExplainT]    Script Date: 7/19/2016 11:50:21 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -250,7 +164,7 @@ CREATE TABLE [dbo].[EnSentenceExplainT](
 )
 
 GO
-/****** Object:  View [dbo].[VEnSentence]    Script Date: 7/11/2016 5:00:19 PM ******/
+/****** Object:  View [dbo].[VEnSentence]    Script Date: 7/19/2016 11:50:23 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -264,7 +178,7 @@ FROM            dbo.EnSentence INNER JOIN
 
 
 GO
-/****** Object:  Table [dbo].[EnSentenceWord]    Script Date: 7/11/2016 5:00:19 PM ******/
+/****** Object:  Table [dbo].[EnSentenceWord]    Script Date: 7/19/2016 11:50:23 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -280,48 +194,7 @@ CREATE TABLE [dbo].[EnSentenceWord](
 )
 
 GO
-/****** Object:  Table [dbo].[Knowledge]    Script Date: 7/11/2016 5:00:20 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[Knowledge](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[ContentType] [smallint] NULL,
-	[Title] [nvarchar](50) NOT NULL,
-	[Content] [nvarchar](max) NOT NULL,
-	[Tags] [nchar](100) NULL,
-	[CreatedAt] [datetime] NULL,
-	[ModifiedAt] [datetime] NULL,
- CONSTRAINT [PK_Knowledge] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-)
-
-GO
-/****** Object:  Table [dbo].[KnowledgeType]    Script Date: 7/11/2016 5:00:23 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[KnowledgeType](
-	[ID] [smallint] NOT NULL,
-	[ParentID] [smallint] NULL,
-	[Name] [nvarchar](50) NOT NULL,
-	[Comment] [nvarchar](100) NULL,
- CONSTRAINT [PK_KnowledgeType] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON),
- CONSTRAINT [IX_KnowledgeTypeName] UNIQUE NONCLUSTERED 
-(
-	[Name] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-)
-
-GO
-/****** Object:  Table [dbo].[TagRelation]    Script Date: 7/11/2016 5:00:25 PM ******/
+/****** Object:  Table [dbo].[TagRelation]    Script Date: 7/19/2016 11:50:37 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -333,7 +206,7 @@ CREATE TABLE [dbo].[TagRelation](
 )
 
 GO
-/****** Object:  Table [dbo].[TodoItem]    Script Date: 7/11/2016 5:00:27 PM ******/
+/****** Object:  Table [dbo].[TodoItem]    Script Date: 7/19/2016 11:50:38 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -357,16 +230,6 @@ CREATE TABLE [dbo].[TodoItem](
 GO
 SET ANSI_PADDING ON
 
-GO
-/****** Object:  Index [IX_KnowledgeTitle]    Script Date: 7/11/2016 5:00:30 PM ******/
-CREATE UNIQUE NONCLUSTERED INDEX [IX_KnowledgeTitle] ON [dbo].[Knowledge]
-(
-	[Title] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-GO
-ALTER TABLE [dbo].[Knowledge] ADD  CONSTRAINT [DF_Knowledge_CreatedAt]  DEFAULT (getdate()) FOR [CreatedAt]
-GO
-ALTER TABLE [dbo].[Knowledge] ADD  CONSTRAINT [DF_Knowledge_ModifiedAt]  DEFAULT (getdate()) FOR [ModifiedAt]
 GO
 ALTER TABLE [dbo].[EnPOST]  WITH CHECK ADD  CONSTRAINT [FK_EnPOST_POS] FOREIGN KEY([POSAbb])
 REFERENCES [dbo].[ENPOS] ([POSAbb])
@@ -416,8 +279,4 @@ ON UPDATE CASCADE
 ON DELETE CASCADE
 GO
 ALTER TABLE [dbo].[EnWordExplainT] CHECK CONSTRAINT [FK_EnWordExplainT_WordExplain]
-GO
-USE [master]
-GO
-ALTER DATABASE [alvachiendb] SET  READ_WRITE 
 GO

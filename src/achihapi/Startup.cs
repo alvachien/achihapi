@@ -44,7 +44,12 @@ namespace achihapi
             services.AddMvcCore()
                 .AddJsonFormatters()
                 .AddAuthorization(
-                    options => { options.AddPolicy("LearningAdmin", policy => policy.RequireClaim("LearningAdmin", "1")); }
+                    options => {
+                        options.AddPolicy("LearningAdmin", policy => policy.RequireClaim("LearningAdmin", "1"));
+                        options.AddPolicy("KnowledgeAdmin", policy => policy.RequireClaim("KnowledgeAdmin", "1"));
+                        options.AddPolicy("GalleryAdmin", policy => policy.RequireClaim("GalleryAdmin", "1"));
+                        options.AddPolicy("TodoAdmin", policy => policy.RequireClaim("TodoAdmin", "1"));
+                    }
                 );            
 
             var strConn = Configuration.GetConnectionString("DefaultConnection");
@@ -72,9 +77,15 @@ namespace achihapi
 
             app.UseCors(builder =>
 #if DEBUG
-                builder.WithOrigins("http://localhost:29521")
+                builder.WithOrigins(
+                    "http://localhost:29521",
+                    "http://localhost:1601"
+                    )
 #else
-                builder.WithOrigins("http://achihui.azurewebsites.net")
+                builder.WithOrigins(
+                    "http://achihui.azurewebsites.net",
+                    "http://acgallery.azurewebsites.net"
+                    )
 #endif
                 .AllowAnyHeader()
                 .AllowAnyMethod()

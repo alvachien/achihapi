@@ -184,6 +184,78 @@ namespace achihapi.Models
                     .HasMaxLength(50);
             });
 
+            modelBuilder.Entity<GalleryAlbum>(entity =>
+            {
+                entity.HasIndex(e => e.Name)
+                    .HasName("IX_GalleryAlbum_Name")
+                    .IsUnique();
+
+                entity.Property(e => e.Id).HasColumnName("ID");
+
+                entity.Property(e => e.Comment).HasMaxLength(50);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<GalleryAlbumItems>(entity =>
+            {
+                entity.HasKey(e => new { e.AlbumId, e.PhotoId })
+                    .HasName("PK_GalleryAlbumItems");
+
+                entity.Property(e => e.AlbumId).HasColumnName("AlbumID");
+
+                entity.Property(e => e.PhotoId).HasColumnName("PhotoID");
+
+                entity.HasOne(d => d.Album)
+                    .WithMany(p => p.GalleryAlbumItems)
+                    .HasForeignKey(d => d.AlbumId)
+                    .HasConstraintName("FK_GalleryAlbumItems_Album");
+
+                entity.HasOne(d => d.Photo)
+                    .WithMany(p => p.GalleryAlbumItems)
+                    .HasForeignKey(d => d.PhotoId)
+                    .HasConstraintName("FK_GalleryAlbumItems_Photo");
+            });
+
+            modelBuilder.Entity<GalleryItem>(entity =>
+            {
+                entity.HasIndex(e => e.Name)
+                    .HasName("IX_GalleryItem_Name")
+                    .IsUnique();
+
+                entity.Property(e => e.Id).HasColumnName("ID");
+
+                entity.Property(e => e.CameraInfo).HasMaxLength(50);
+
+                entity.Property(e => e.Comment).HasMaxLength(100);
+
+                entity.Property(e => e.Exifinfo)
+                    .HasColumnName("EXIFInfo")
+                    .HasColumnType("nchar(100)");
+
+                entity.Property(e => e.FileFormat).HasColumnType("nchar(10)");
+
+                entity.Property(e => e.FullUrl)
+                    .HasColumnName("FullURL")
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.LensInfo).HasMaxLength(50);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.Tags).HasMaxLength(50);
+
+                entity.Property(e => e.UploadedBy).HasMaxLength(50);
+
+                entity.Property(e => e.UploadedDate)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("getdate()");
+            });
+
             modelBuilder.Entity<Knowledge>(entity =>
             {
                 entity.HasIndex(e => e.Title)
@@ -262,6 +334,9 @@ namespace achihapi.Models
         public virtual DbSet<EnWordExplain> EnWordExplain { get; set; }
         public virtual DbSet<EnWordExplainT> EnWordExplainT { get; set; }
         public virtual DbSet<Enpos> Enpos { get; set; }
+        public virtual DbSet<GalleryAlbum> GalleryAlbum { get; set; }
+        public virtual DbSet<GalleryAlbumItems> GalleryAlbumItems { get; set; }
+        public virtual DbSet<GalleryItem> GalleryItem { get; set; }
         public virtual DbSet<Knowledge> Knowledge { get; set; }
         public virtual DbSet<KnowledgeType> KnowledgeType { get; set; }
         public virtual DbSet<TodoItem> TodoItem { get; set; }
