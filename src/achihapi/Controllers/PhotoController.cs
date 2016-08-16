@@ -13,18 +13,11 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class PhotoController : Controller
     {
-        private IConfiguration Configuration { get; set; }
-
-        public PhotoController(IConfiguration config)
-        {
-            Configuration = config;
-        }
-
         [HttpGet]
         public List<PhotoViewModel> GetPhotos()
         {
             List<PhotoViewModel> rstFiles = new List<PhotoViewModel>();
-            SqlConnection conn = new SqlConnection(Configuration.GetConnectionString("DefaultConnection"));
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             try
             {
                 String queryString = @"SELECT [PhotoID]
@@ -113,7 +106,7 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Post([FromBody]PhotoViewModel vm)
         {
             // Update the database
-            SqlConnection conn = new SqlConnection(Configuration.GetConnectionString("DefaultConnection"));
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             try
             {
                 // ID is set to identity

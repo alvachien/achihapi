@@ -13,19 +13,12 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class AlbumController : Controller
     {
-        private IConfiguration Configuration { get; set; }
-
-        public AlbumController(IConfiguration config)
-        {
-            Configuration = config;
-        }
-
         // GET: api/album
         [HttpGet]
         public IEnumerable<AlbumViewModel> Get()
         {
             List<AlbumViewModel> listVm = new List<AlbumViewModel>();
-            SqlConnection conn = new SqlConnection(Configuration.GetConnectionString("DefaultConnection"));
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             try
             {
                 String queryString = @"With albumfirstphoto as (select tabb.AlbumID, count(tabb.PhotoID) as PhotoCount, min(tabc.PhotoThumbUrl) as ThumbUrl from dbo.AlbumPhoto as tabb
@@ -84,7 +77,7 @@ namespace achihapi.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
-            SqlConnection conn = new SqlConnection(Configuration.GetConnectionString("DefaultConnection"));
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             AlbumWithPhotoViewModel avm = null;
 
             try
