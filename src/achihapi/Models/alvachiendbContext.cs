@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
-namespace achihapi.Models
+namespace achihapi
 {
     public partial class achihdbContext : DbContext
     {
@@ -11,6 +11,43 @@ namespace achihapi.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Album>(entity =>
+            {
+                entity.HasIndex(e => e.Title)
+                    .HasName("UX_AlbumTitle")
+                    .IsUnique();
+
+                entity.Property(e => e.AlbumId).HasColumnName("AlbumID");
+
+                entity.Property(e => e.AccessCode).HasMaxLength(50);
+
+                entity.Property(e => e.CreateAt)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("getdate()");
+
+                entity.Property(e => e.CreatedBy).HasMaxLength(50);
+
+                entity.Property(e => e.Desp).HasMaxLength(100);
+
+                entity.Property(e => e.IsPublic).HasDefaultValueSql("1");
+
+                entity.Property(e => e.Title)
+                    .IsRequired()
+                    .HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<AlbumPhoto>(entity =>
+            {
+                entity.HasKey(e => new { e.AlbumId, e.PhotoId })
+                    .HasName("PK_AlbumPhoto");
+
+                entity.Property(e => e.AlbumId).HasColumnName("AlbumID");
+
+                entity.Property(e => e.PhotoId)
+                    .HasColumnName("PhotoID")
+                    .HasMaxLength(50);
+            });
+
             modelBuilder.Entity<EnPost>(entity =>
             {
                 entity.HasKey(e => new { e.Posabb, e.LangId })
@@ -184,78 +221,6 @@ namespace achihapi.Models
                     .HasMaxLength(50);
             });
 
-            modelBuilder.Entity<GalleryAlbum>(entity =>
-            {
-                entity.HasIndex(e => e.Name)
-                    .HasName("IX_GalleryAlbum_Name")
-                    .IsUnique();
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.Comment).HasMaxLength(50);
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasMaxLength(50);
-            });
-
-            modelBuilder.Entity<GalleryAlbumItems>(entity =>
-            {
-                entity.HasKey(e => new { e.AlbumId, e.PhotoId })
-                    .HasName("PK_GalleryAlbumItems");
-
-                entity.Property(e => e.AlbumId).HasColumnName("AlbumID");
-
-                entity.Property(e => e.PhotoId).HasColumnName("PhotoID");
-
-                entity.HasOne(d => d.Album)
-                    .WithMany(p => p.GalleryAlbumItems)
-                    .HasForeignKey(d => d.AlbumId)
-                    .HasConstraintName("FK_GalleryAlbumItems_Album");
-
-                entity.HasOne(d => d.Photo)
-                    .WithMany(p => p.GalleryAlbumItems)
-                    .HasForeignKey(d => d.PhotoId)
-                    .HasConstraintName("FK_GalleryAlbumItems_Photo");
-            });
-
-            modelBuilder.Entity<GalleryItem>(entity =>
-            {
-                entity.HasIndex(e => e.Name)
-                    .HasName("IX_GalleryItem_Name")
-                    .IsUnique();
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.CameraInfo).HasMaxLength(50);
-
-                entity.Property(e => e.Comment).HasMaxLength(100);
-
-                entity.Property(e => e.Exifinfo)
-                    .HasColumnName("EXIFInfo")
-                    .HasColumnType("nchar(100)");
-
-                entity.Property(e => e.FileFormat).HasColumnType("nchar(10)");
-
-                entity.Property(e => e.FullUrl)
-                    .HasColumnName("FullURL")
-                    .HasMaxLength(100);
-
-                entity.Property(e => e.LensInfo).HasMaxLength(50);
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Tags).HasMaxLength(50);
-
-                entity.Property(e => e.UploadedBy).HasMaxLength(50);
-
-                entity.Property(e => e.UploadedDate)
-                    .HasColumnType("datetime")
-                    .HasDefaultValueSql("getdate()");
-            });
-
             modelBuilder.Entity<Knowledge>(entity =>
             {
                 entity.HasIndex(e => e.Title)
@@ -300,6 +265,51 @@ namespace achihapi.Models
                 entity.Property(e => e.ParentId).HasColumnName("ParentID");
             });
 
+            modelBuilder.Entity<Photo>(entity =>
+            {
+                entity.Property(e => e.PhotoId)
+                    .HasColumnName("PhotoID")
+                    .HasMaxLength(40);
+
+                entity.Property(e => e.Avnumber)
+                    .HasColumnName("AVNumber")
+                    .HasMaxLength(20);
+
+                entity.Property(e => e.CameraMaker).HasMaxLength(50);
+
+                entity.Property(e => e.CameraModel).HasMaxLength(100);
+
+                entity.Property(e => e.Desp).HasMaxLength(100);
+
+                entity.Property(e => e.Exifinfo).HasColumnName("EXIFInfo");
+
+                entity.Property(e => e.IsPublic).HasDefaultValueSql("1");
+
+                entity.Property(e => e.Isonumber).HasColumnName("ISONumber");
+
+                entity.Property(e => e.LensModel).HasMaxLength(100);
+
+                entity.Property(e => e.OrgFileName).HasMaxLength(100);
+
+                entity.Property(e => e.PhotoThumbUrl).HasMaxLength(100);
+
+                entity.Property(e => e.PhotoUrl)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.ShutterSpeed).HasMaxLength(50);
+
+                entity.Property(e => e.Title)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.UploadedAt)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("getdate()");
+
+                entity.Property(e => e.UploadedBy).HasMaxLength(50);
+            });
+
             modelBuilder.Entity<TodoItem>(entity =>
             {
                 entity.HasKey(e => e.ToDoId)
@@ -325,6 +335,8 @@ namespace achihapi.Models
             });
         }
 
+        public virtual DbSet<Album> Album { get; set; }
+        public virtual DbSet<AlbumPhoto> AlbumPhoto { get; set; }
         public virtual DbSet<EnPost> EnPost { get; set; }
         public virtual DbSet<EnSentence> EnSentence { get; set; }
         public virtual DbSet<EnSentenceExplain> EnSentenceExplain { get; set; }
@@ -334,11 +346,9 @@ namespace achihapi.Models
         public virtual DbSet<EnWordExplain> EnWordExplain { get; set; }
         public virtual DbSet<EnWordExplainT> EnWordExplainT { get; set; }
         public virtual DbSet<Enpos> Enpos { get; set; }
-        public virtual DbSet<GalleryAlbum> GalleryAlbum { get; set; }
-        public virtual DbSet<GalleryAlbumItems> GalleryAlbumItems { get; set; }
-        public virtual DbSet<GalleryItem> GalleryItem { get; set; }
         public virtual DbSet<Knowledge> Knowledge { get; set; }
         public virtual DbSet<KnowledgeType> KnowledgeType { get; set; }
+        public virtual DbSet<Photo> Photo { get; set; }
         public virtual DbSet<TodoItem> TodoItem { get; set; }
 
         // Unable to generate entity type for table 'dbo.TagRelation'. Please see the warning messages.

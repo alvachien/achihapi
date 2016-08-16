@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace achihapi.Models
+namespace achihapi
 {
     public partial class Enpos
     {

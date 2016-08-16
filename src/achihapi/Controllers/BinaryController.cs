@@ -47,45 +47,45 @@ namespace achihapi.Controllers
                     String strOrgName = file.FileName;
                     var id = Guid.NewGuid();
 
-                    GalleryItem gi = new GalleryItem();
-                    gi.Name = id.ToString();
-                    gi.UploadedDate = DateTime.Now;
-                    gi.FileFormat = Path.GetExtension(strOrgName).TrimStart('.');
-                    gi.FullUrl = "uploads/" + id.ToString() + gi.FileFormat;
-                    dictmap.Add(strOrgName, gi.FullUrl);
+                    //GalleryItem gi = new GalleryItem();
+                    //gi.Name = id.ToString();
+                    //gi.UploadedDate = DateTime.Now;
+                    //gi.FileFormat = Path.GetExtension(strOrgName).TrimStart('.');
+                    //gi.FullUrl = "uploads/" + id.ToString() + gi.FileFormat;
+                    //dictmap.Add(strOrgName, gi.FullUrl);
 
 
-                    using (var fileStream = new FileStream(Path.Combine(uploads, id.ToString() + gi.FileFormat), FileMode.Create))
-                    {
-                        using (MagickImage image = new MagickImage(fileStream))
-                        {
-                            // Retrieve the exif information
-                            ExifProfile profile = image.GetExifProfile();
+                    //using (var fileStream = new FileStream(Path.Combine(uploads, id.ToString() + gi.FileFormat), FileMode.Create))
+                    //{
+                    //    using (MagickImage image = new MagickImage(fileStream))
+                    //    {
+                    //        // Retrieve the exif information
+                    //        ExifProfile profile = image.GetExifProfile();
 
-                            // Check if image contains an exif profile
-                            if (profile == null)
-                                Console.WriteLine("Image does not contain exif information.");
-                            else
-                            {
-                                // Write all values to the console
-                                foreach (ExifValue value in profile.Values)
-                                {
-                                    Console.WriteLine("{0}({1}): {2}", value.Tag, value.DataType, value.ToString());
-                                }
-                            }
-                        }
+                    //        // Check if image contains an exif profile
+                    //        if (profile == null)
+                    //            Console.WriteLine("Image does not contain exif information.");
+                    //        else
+                    //        {
+                    //            // Write all values to the console
+                    //            foreach (ExifValue value in profile.Values)
+                    //            {
+                    //                Console.WriteLine("{0}({1}): {2}", value.Tag, value.DataType, value.ToString());
+                    //            }
+                    //        }
+                    //    }
 
-                        var info = new MagickImageInfo(fileStream);
-                        Console.WriteLine(info.Width);
-                        Console.WriteLine(info.Height);
-                        Console.WriteLine(info.ColorSpace);                        
-                        Console.WriteLine(info.Format);
-                        Console.WriteLine(info.Density.X);
-                        Console.WriteLine(info.Density.Y);
-                        Console.WriteLine(info.Density.Units);
+                        //var info = new MagickImageInfo(fileStream);
+                        //Console.WriteLine(info.Width);
+                        //Console.WriteLine(info.Height);
+                        //Console.WriteLine(info.ColorSpace);                        
+                        //Console.WriteLine(info.Format);
+                        //Console.WriteLine(info.Density.X);
+                        //Console.WriteLine(info.Density.Y);
+                        //Console.WriteLine(info.Density.Units);
 
-                        await file.CopyToAsync(fileStream);
-                    }
+                        //await file.CopyToAsync(fileStream);
+                    //}
                 }
             }
 
