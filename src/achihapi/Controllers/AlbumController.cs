@@ -190,5 +190,70 @@ namespace achihapi.Controllers
 
             return NotFound();
         }
+
+        // POST api/album
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody]AlbumViewModel vm)
+        {
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted");
+            }
+
+            if (TryValidateModel(vm))
+            {
+                vm.IsPublic = true;
+                // Check existence
+                //Boolean bExists = _dbContext.KnowledgeType.Any(x => x.Id == vm.ID);
+                //if (bExists)
+                //{
+                //    return BadRequest("ID exists already");
+                //}
+            }
+            else
+            {
+                return BadRequest();
+            }
+
+            // Create it into DB            
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    String cmdText = @"INSERT INTO [dbo].[Album]
+                               ([Title]
+                               ,[Desp]
+                               ,[CreatedBy]
+                               ,[CreateAt]
+                               ,[IsPublic]
+                               ,[AccessCode])
+                         VALUES
+                               (@Title
+                               ,@Desp
+                               ,@CreatedBy
+                               ,@CreatedAt
+                               ,@IsPublic
+                               ,@AccessCode
+                                )";
+                    await conn.OpenAsync();
+
+                    SqlCommand cmd = new SqlCommand(cmdText, conn);
+                    cmd.Parameters.AddWithValue("@Title", vm.Title);
+                    cmd.Parameters.AddWithValue("@Desp", String.IsNullOrEmpty(vm.Desp) ? String.Empty : vm.Desp);
+                    cmd.Parameters.AddWithValue("@CreatedBy", vm.CreatedBy);
+                    cmd.Parameters.AddWithValue("@CreatedAt", vm.CreatedAt);
+                    cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
+                    cmd.Parameters.AddWithValue("@AccessCode", String.IsNullOrEmpty(vm.AccessCode) ? String.Empty : vm.AccessCode);
+
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+            }
+
+            return Json(true);
+        }
     }
 }
