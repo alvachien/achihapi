@@ -199,7 +199,7 @@ namespace achihapi.Controllers
         }
 
         // PUT api/photo/5
-        [HttpPut("{id}")]
+        [HttpPut]
         public async Task<IActionResult> Put([FromBody]PhotoViewModel vm)
         {
             if (vm == null)
