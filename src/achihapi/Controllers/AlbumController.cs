@@ -255,5 +255,55 @@ namespace achihapi.Controllers
 
             return Json(true);
         }
+
+        [HttpPut]
+        public async Task<IActionResult> Update([FromBody] AlbumViewModel vm)
+        {
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted");
+            }
+
+            if (vm.Title != null)
+                vm.Title = vm.Title.Trim();
+            if (String.IsNullOrEmpty(vm.Title))
+            {
+                return BadRequest("Title is a must!");
+            }
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    String cmdText = @"UPDATE [Album]
+                               SET [Title] = @Title
+                                  ,[Desp] = @Desp
+                                  ,[IsPublic] = @IsPublic
+                                  ,[AccessCode] = @AccessCode
+                             WHERE [AlbumID] = @Id
+                            ";
+
+                    conn.Open();
+                    SqlCommand cmd = new SqlCommand(cmdText, conn);
+                    cmd.Parameters.AddWithValue("@Id", vm.Id);
+                    cmd.Parameters.AddWithValue("@Title", vm.Title);
+                    cmd.Parameters.AddWithValue("@Desp", vm.Desp);
+                    cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
+                    cmd.Parameters.AddWithValue("@AccessCode", vm.AccessCode);
+
+                    await cmd.ExecuteNonQueryAsync();
+                    return new ObjectResult(true);
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+            }
+            finally
+            {
+            }
+
+            return new ObjectResult(false);
+        }
     }
 }

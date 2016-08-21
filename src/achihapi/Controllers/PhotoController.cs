@@ -197,10 +197,51 @@ namespace achihapi.Controllers
             return new ObjectResult(vm);
         }
 
-        // PUT api/values/5
+        // PUT api/photo/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public async Task<IActionResult> Put([FromBody]PhotoViewModel vm)
         {
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted");
+            }
+
+            if (vm.Title != null)
+                vm.Title = vm.Title.Trim();
+            if (String.IsNullOrEmpty(vm.Title))
+            {
+                return BadRequest("Title is a must!");
+            }
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    String cmdText = @"UPDATE [Photo]
+                               SET [Title] = @Title
+                                  ,[Desp] = @Desp
+                             WHERE [PhotoID] = @PhotoID
+                            ";
+
+                    conn.Open();
+                    SqlCommand cmd = new SqlCommand(cmdText, conn);
+                    cmd.Parameters.AddWithValue("@PhotoID", vm.PhotoId);
+                    cmd.Parameters.AddWithValue("@Title", vm.Title);
+                    cmd.Parameters.AddWithValue("@Desp", vm.Desp);
+
+                    await cmd.ExecuteNonQueryAsync();
+                    return new ObjectResult(true);
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+            }
+            finally
+            {
+            }
+
+            return new ObjectResult(false);
         }
 
         // DELETE api/values/5
