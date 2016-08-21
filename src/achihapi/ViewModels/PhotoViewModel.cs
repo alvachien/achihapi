@@ -24,6 +24,7 @@ namespace achihapi.ViewModels
         [StringLength(100)]
         public String OrgFileName { get; set; }
         public Boolean IsOrgThumbnail { get; set; }
+        public Boolean IsPublic { get; set; }
     }
 
     public class PhotoViewModel : PhotoViewModelBase

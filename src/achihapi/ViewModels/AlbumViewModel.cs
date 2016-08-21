@@ -27,7 +27,7 @@ namespace achihapi.ViewModels
     }
     public class AlbumWithPhotoViewModel : AlbumViewModel
     {
-        public List<PhotoViewModelBase> PhotoList = new List<PhotoViewModelBase>();
+        public List<PhotoViewModel> PhotoList = new List<PhotoViewModel>();
     }
 
 }

@@ -149,7 +149,7 @@ namespace achihapi.Controllers
                     {
                         while (reader.Read())
                         {
-                            PhotoViewModelBase pvm = new PhotoViewModelBase();
+                            PhotoViewModel pvm = new PhotoViewModel();
                             //cmd.Parameters.AddWithValue("@PhotoID", nid.ToString("N"));   // 1
                             pvm.PhotoId = reader.GetString(0);
                             //cmd.Parameters.AddWithValue("@Title", nid.ToString("N"));     // 2
@@ -169,6 +169,11 @@ namespace achihapi.Controllers
                             //cmd.Parameters.AddWithValue("@PhotoThumbUrl", rst.ThumbnailFileUrl); // 8
                             if (!reader.IsDBNull(7)) // 8 - 1
                                 pvm.ThumbnailFileUrl = reader.GetString(7);
+
+                            if (!reader.IsDBNull(16))
+                                pvm.IsPublic = reader.GetBoolean(16);
+                            if (!reader.IsDBNull(17))
+                                pvm.ExifTags = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ExifTagItem>>(reader.GetString(17));
 
                             avm.PhotoList.Add(pvm);
                         }

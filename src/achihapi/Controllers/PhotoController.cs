@@ -71,9 +71,10 @@ namespace achihapi.Controllers
                     //cmd.Parameters.AddWithValue("@LensModel", "To-do");   // 13
                     //cmd.Parameters.AddWithValue("@AVNumber", "To-do");    // 14
                     //cmd.Parameters.AddWithValue("@ShutterSpeed", "To-do"); // 15
-                    //cmd.Parameters.AddWithValue("@IsPublic", true);       // 16
-                    //cmd.Parameters.AddWithValue("@ISONumber", 0);         // 17
-
+                    //cmd.Parameters.AddWithValue("@ISONumber", 0);         // 16
+                    //cmd.Parameters.AddWithValue("@IsPublic", true);       // 17
+                    if (!reader.IsDBNull(16))
+                        rst.IsPublic = reader.GetBoolean(16);
                     //String strJson = Newtonsoft.Json.JsonConvert.SerializeObject(rst.ExifTags);
                     //cmd.Parameters.AddWithValue("@EXIF", strJson);        // 18
                     if (!reader.IsDBNull(17))
