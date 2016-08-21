@@ -287,9 +287,15 @@ namespace achihapi.Controllers
                     SqlCommand cmd = new SqlCommand(cmdText, conn);
                     cmd.Parameters.AddWithValue("@Id", vm.Id);
                     cmd.Parameters.AddWithValue("@Title", vm.Title);
-                    cmd.Parameters.AddWithValue("@Desp", vm.Desp);
+                    if (String.IsNullOrEmpty(vm.Desp))
+                        cmd.Parameters.AddWithValue("@Desp", DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue("@Desp", vm.Desp);
                     cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
-                    cmd.Parameters.AddWithValue("@AccessCode", vm.AccessCode);
+                    if (vm.AccessCode == null)
+                        cmd.Parameters.AddWithValue("@AccessCode", DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue("@AccessCode", vm.AccessCode);
 
                     await cmd.ExecuteNonQueryAsync();
                     return new ObjectResult(true);
