@@ -30,4 +30,27 @@ namespace achihapi.ViewModels
         public List<PhotoViewModel> PhotoList = new List<PhotoViewModel>();
     }
 
+    public class AlbumPhotoLinkViewModel
+    {
+        [Required]
+        public Int32 AlbumID { get; set; }
+        [Required]
+        [StringLength(40)]
+        public String PhotoID { get; set; }
+    }
+
+    public class AlbumPhotoByAlbumViewModel
+    {
+        [Required]
+        public Int32 AlbumID { get; set; }
+        public List<String> PhotoIDList = new List<string>();
+    }
+
+    public class AlbumPhotoByPhotoViewModel
+    {
+        [Required]
+        [StringLength(40)]
+        public String PhotoID { get; set; }
+        public List<Int32> AlbumIDList = new List<Int32>();
+    }
 }
