@@ -15,13 +15,17 @@ namespace achihapi.Controllers
     {
         // GET: api/album
         [HttpGet]
-        public IEnumerable<AlbumViewModel> Get()
+        public IEnumerable<AlbumViewModel> Get([FromQuery] String photoid = null)
         {
             List<AlbumViewModel> listVm = new List<AlbumViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+
             try
             {
-                String queryString = @"With albumfirstphoto as (select tabb.AlbumID, count(tabb.PhotoID) as PhotoCount, min(tabc.PhotoThumbUrl) as ThumbUrl from dbo.AlbumPhoto as tabb
+                if (String.IsNullOrEmpty(photoid))
+                {
+                    queryString = @"With albumfirstphoto as (select tabb.AlbumID, count(tabb.PhotoID) as PhotoCount, min(tabc.PhotoThumbUrl) as ThumbUrl from dbo.AlbumPhoto as tabb
 	                    join dbo.Photo as tabc
 	                    on tabb.PhotoID = tabc.PhotoID
 	                    group by tabb.AlbumID)
@@ -30,6 +34,25 @@ namespace achihapi.Controllers
 	                    from dbo.Album as taba
 	                    left outer join albumfirstphoto as tabb
 		                    on taba.AlbumID = tabb.AlbumID";
+                }
+                else
+                {
+                    queryString = @"With albumfirstphoto as (
+	                        select tabb.AlbumID, count(tabb.PhotoID) as PhotoCount, min(tabc.PhotoThumbUrl) as ThumbUrl from dbo.AlbumPhoto as tabb
+	                        join dbo.Photo as tabc
+	                        on tabb.PhotoID = tabc.PhotoID
+	                        group by tabb.AlbumID)
+                        select taba.AlbumID, taba.Title, taba.Desp, taba.IsPublic, taba.AccessCode, taba.CreateAt, taba.CreatedBy,
+	                        tabb.PhotoCount, tabb.ThumbUrl
+	                        from dbo.AlbumPhoto as tabc
+	                        inner join dbo.Album as taba
+		                        on tabc.AlbumID = taba.AlbumID
+	                        left outer join albumfirstphoto as tabb
+		                        on taba.AlbumID = tabb.AlbumID
+                            where tabc.PhotoID = N'";
+                    queryString += photoid;
+                    queryString += @"'";
+                }
 
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
