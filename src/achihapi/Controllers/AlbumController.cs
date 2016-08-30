@@ -7,6 +7,7 @@ using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Authorization;
 
 namespace achihapi.Controllers
 {
@@ -221,6 +222,7 @@ namespace achihapi.Controllers
 
         // POST api/album
         [HttpPost]
+        [Authorize(Roles = "GalleryAdmin, GalleryPro")]
         public async Task<IActionResult> Create([FromBody]AlbumViewModel vm)
         {
             if (vm == null)
@@ -286,6 +288,7 @@ namespace achihapi.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = "GalleryAdmin, GalleryPro")]
         public async Task<IActionResult> Update([FromBody] AlbumViewModel vm)
         {
             if (vm == null)
@@ -346,6 +349,7 @@ namespace achihapi.Controllers
     public class AlbumPhotoByAlbumController : Controller
     {
         [HttpPost]
+        [Authorize(Roles = "GalleryAdmin, GalleryPro")]
         public async Task<IActionResult> Create([FromBody]AlbumPhotoByAlbumViewModel vm)
         {
             if (vm == null)
@@ -402,6 +406,7 @@ namespace achihapi.Controllers
     public class AlbumPhotoByPhotoController : Controller
     {
         [HttpPost]
+        [Authorize(Roles = "GalleryAdmin, GalleryPro")]
         public async Task<IActionResult> Create([FromBody]AlbumPhotoByPhotoViewModel vm)
         {
             if (vm == null)
@@ -453,5 +458,4 @@ namespace achihapi.Controllers
             return Json(true);
         }
     }
-
 }

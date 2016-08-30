@@ -47,7 +47,8 @@ namespace achihapi
                     options => {
                         options.AddPolicy("LearningAdmin", policy => policy.RequireClaim("LearningAdmin", "1"));
                         options.AddPolicy("KnowledgeAdmin", policy => policy.RequireClaim("KnowledgeAdmin", "1"));
-                        options.AddPolicy("GalleryAdmin", policy => policy.RequireClaim("GalleryAdmin", "1"));
+                        options.AddPolicy("GalleryAdmin", policy => policy.RequireRole("GalleryAdmin"));
+                        options.AddPolicy("GalleryPro", policy => policy.RequireRole("GalleryPro"));
                         options.AddPolicy("TodoAdmin", policy => policy.RequireClaim("TodoAdmin", "1"));
                     }
                 );            
