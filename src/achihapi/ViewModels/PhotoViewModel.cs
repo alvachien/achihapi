@@ -21,6 +21,8 @@ namespace achihapi.ViewModels
         public String ThumbnailFileUrl { get; set; }
         public String FileFormat { get; set; }
         public DateTime UploadedTime { get; set; }
+        [StringLength(50)]
+        public String UploadedBy { get; set; }
         [StringLength(100)]
         public String OrgFileName { get; set; }
         public Boolean IsOrgThumbnail { get; set; }

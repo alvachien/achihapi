@@ -80,12 +80,16 @@ namespace achihapi
 #if DEBUG
                 builder.WithOrigins(
                     "http://localhost:29521",
-                    "http://localhost:1601"
+                    "http://localhost:1601",
+                    "https://localhost:29521",
+                    "https://localhost:1601"
                     )
 #else
                 builder.WithOrigins(
                     "http://achihui.azurewebsites.net",
-                    "http://acgallery.azurewebsites.net"
+                    "http://acgallery.azurewebsites.net",
+                    "https://achihui.azurewebsites.net",
+                    "https://acgallery.azurewebsites.net"
                     )
 #endif
                 .AllowAnyHeader()
@@ -106,7 +110,7 @@ namespace achihapi
                 ScopeName = "api.hihapi",
                 AutomaticAuthenticate = true,
                 AutomaticChallenge = true
-            });            
+            });
 
             app.UseMvc();
         }

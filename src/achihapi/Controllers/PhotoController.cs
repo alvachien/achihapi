@@ -155,8 +155,8 @@ namespace achihapi.Controllers
                 cmd.Parameters.AddWithValue("@PhotoID", vm.PhotoId);
                 cmd.Parameters.AddWithValue("@Title", vm.Title);
                 cmd.Parameters.AddWithValue("@Desp", vm.Desp);
-                cmd.Parameters.AddWithValue("@UploadedAt", DateTime.Now);
-                cmd.Parameters.AddWithValue("@UploadedBy", "Tester");
+                cmd.Parameters.AddWithValue("@UploadedAt", vm.UploadedTime);
+                cmd.Parameters.AddWithValue("@UploadedBy", vm.UploadedBy);
                 cmd.Parameters.AddWithValue("@OrgFileName", vm.OrgFileName);
                 cmd.Parameters.AddWithValue("@PhotoUrl", vm.FileUrl);
                 cmd.Parameters.AddWithValue("@PhotoThumbUrl", vm.ThumbnailFileUrl);
