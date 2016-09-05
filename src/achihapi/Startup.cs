@@ -33,6 +33,9 @@ namespace achihapi
         }
 
         public IConfigurationRoot Configuration { get; }
+#if DEBUG
+        internal static String DebugConnectionString { get; private set; }
+#endif
         internal static String DBConnectionString { get; private set; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -51,16 +54,13 @@ namespace achihapi
                         options.AddPolicy("GalleryPro", policy => policy.RequireRole("GalleryPro"));
                         options.AddPolicy("TodoAdmin", policy => policy.RequireClaim("TodoAdmin", "1"));
                     }
-                );            
+                );
 
-            var strConn = Configuration.GetConnectionString("DefaultConnection");
-            DBConnectionString = strConn;
-            if (String.IsNullOrEmpty(strConn))
-            {
-                // Do nothing!
-            }
-
-            services.AddDbContext<achihdbContext>(options => options.UseSqlServer(strConn));
+            DBConnectionString = Configuration.GetConnectionString("DefaultConnection");
+#if DEBUG
+            DebugConnectionString = Configuration.GetConnectionString("DebugConnection");
+#endif
+            services.AddDbContext<achihdbContext>(options => options.UseSqlServer(DBConnectionString));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

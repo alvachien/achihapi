@@ -19,40 +19,95 @@ namespace achihapi.Controllers
         public IEnumerable<AlbumViewModel> Get([FromQuery] String photoid = null)
         {
             List<AlbumViewModel> listVm = new List<AlbumViewModel>();
+#if DEBUG
+            SqlConnection conn = new SqlConnection(Startup.DebugConnectionString);
+#else
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+#endif
             String queryString = "";
 
             try
             {
-                if (String.IsNullOrEmpty(photoid))
+#if DEBUG
+                foreach (var clm in User.Claims.AsEnumerable())
                 {
-                    queryString = @"With albumfirstphoto as (select tabb.AlbumID, count(tabb.PhotoID) as PhotoCount, min(tabc.PhotoThumbUrl) as ThumbUrl from dbo.AlbumPhoto as tabb
+                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
+                }
+#endif
+                var usrObj = User.FindFirst(c => c.Type == "sub");
+
+                if (usrObj == null)
+                {
+                    // Anonymous user
+                    if (String.IsNullOrEmpty(photoid))
+                    {
+                        queryString = @"With albumfirstphoto as (select tabb.AlbumID, count(tabb.PhotoID) as PhotoCount, min(tabc.PhotoThumbUrl) as ThumbUrl from dbo.AlbumPhoto as tabb
 	                    join dbo.Photo as tabc
 	                    on tabb.PhotoID = tabc.PhotoID
 	                    group by tabb.AlbumID)
-                    select taba.AlbumID, taba.Title, taba.Desp, taba.IsPublic, taba.AccessCode, taba.CreateAt, taba.CreatedBy,
-	                    tabb.PhotoCount, tabb.ThumbUrl
+                        select taba.AlbumID, taba.Title, taba.Desp, taba.IsPublic, taba.AccessCode, taba.CreateAt, taba.CreatedBy,
+	                        tabb.PhotoCount, tabb.ThumbUrl
 	                    from dbo.Album as taba
 	                    left outer join albumfirstphoto as tabb
-		                    on taba.AlbumID = tabb.AlbumID";
-                }
-                else
-                {
-                    queryString = @"With albumfirstphoto as (
+		                    on taba.AlbumID = tabb.AlbumID
+                        where taba.IsPublic = 1";
+                    }
+                    else
+                    {
+                        queryString = @"With albumfirstphoto as (
 	                        select tabb.AlbumID, count(tabb.PhotoID) as PhotoCount, min(tabc.PhotoThumbUrl) as ThumbUrl from dbo.AlbumPhoto as tabb
 	                        join dbo.Photo as tabc
 	                        on tabb.PhotoID = tabc.PhotoID
 	                        group by tabb.AlbumID)
-                        select taba.AlbumID, taba.Title, taba.Desp, taba.IsPublic, taba.AccessCode, taba.CreateAt, taba.CreatedBy,
-	                        tabb.PhotoCount, tabb.ThumbUrl
+                            select taba.AlbumID, taba.Title, taba.Desp, taba.IsPublic, taba.AccessCode, taba.CreateAt, taba.CreatedBy,
+	                            tabb.PhotoCount, tabb.ThumbUrl
 	                        from dbo.AlbumPhoto as tabc
 	                        inner join dbo.Album as taba
 		                        on tabc.AlbumID = taba.AlbumID
+                                and taba.IsPublic = 1
 	                        left outer join albumfirstphoto as tabb
 		                        on taba.AlbumID = tabb.AlbumID
                             where tabc.PhotoID = N'";
-                    queryString += photoid;
-                    queryString += @"'";
+                        queryString += photoid;
+                        queryString += @"'";
+                    }
+                }
+                else
+                {
+                    // Signed in user
+                    if (String.IsNullOrEmpty(photoid))
+                    {
+                        queryString = @"With albumfirstphoto as (select tabb.AlbumID, count(tabb.PhotoID) as PhotoCount, min(tabc.PhotoThumbUrl) as ThumbUrl from dbo.AlbumPhoto as tabb
+	                    join dbo.Photo as tabc
+	                    on tabb.PhotoID = tabc.PhotoID
+	                    group by tabb.AlbumID)
+                        select taba.AlbumID, taba.Title, taba.Desp, taba.IsPublic, taba.AccessCode, taba.CreateAt, taba.CreatedBy,
+	                        tabb.PhotoCount, tabb.ThumbUrl
+	                    from dbo.Album as taba
+	                    left outer join albumfirstphoto as tabb
+		                    on taba.AlbumID = tabb.AlbumID
+                        where taba.IsPublic = 1 or (taba.IsPublic = 0 and taba.CreatedBy = N'" + usrObj.Value + "'";
+                    }
+                    else
+                    {
+                        queryString = @"With albumfirstphoto as (
+	                        select tabb.AlbumID, count(tabb.PhotoID) as PhotoCount, min(tabc.PhotoThumbUrl) as ThumbUrl from dbo.AlbumPhoto as tabb
+	                        join dbo.Photo as tabc
+	                        on tabb.PhotoID = tabc.PhotoID
+	                        group by tabb.AlbumID)
+                            select taba.AlbumID, taba.Title, taba.Desp, taba.IsPublic, taba.AccessCode, taba.CreateAt, taba.CreatedBy,
+	                            tabb.PhotoCount, tabb.ThumbUrl
+	                        from dbo.AlbumPhoto as tabc
+	                        inner join dbo.Album as taba
+		                        on tabc.AlbumID = taba.AlbumID
+                                on taba.IsPublic = 1 or (taba.IsPublic = 0 and taba.CreatedBy = N'" + usrObj.Value + "'" 
+                                + 
+                                @" left outer join albumfirstphoto as tabb
+		                        on taba.AlbumID = tabb.AlbumID
+                            where tabc.PhotoID = N'";
+                        queryString += photoid;
+                        queryString += @"'";
+                    }
                 }
 
                 conn.Open();
@@ -70,7 +125,12 @@ namespace achihapi.Controllers
                         if (!reader.IsDBNull(3))
                             avm.IsPublic = reader.GetBoolean(3);
                         if (!reader.IsDBNull(4))
-                            avm.AccessCode = reader.GetString(4);
+                        {
+                            // Cannot just release the AccessCode
+                            //avm.AccessCode = reader.GetString(4);
+                            if (String.IsNullOrEmpty(reader.GetString(4)))
+                                avm.AccessCode = "1";
+                        }
                         if (!reader.IsDBNull(5))
                             avm.CreatedAt = reader.GetDateTime(5);
                         if (!reader.IsDBNull(6))
@@ -99,14 +159,17 @@ namespace achihapi.Controllers
 
         // GET api/album/5
         [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        public IActionResult Get(int id, [FromQuery] String accessCode = null)
         {
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             AlbumWithPhotoViewModel avm = null;
 
+            var usrObj = User.FindFirst(c => c.Type == "sub");
+            String queryString = "";
+
             try
             {
-                String queryString = @"SELECT [AlbumID]
+                queryString = @"SELECT [AlbumID]
                           ,[Title]
                           ,[Desp]
                           ,[CreatedBy]
@@ -122,6 +185,83 @@ namespace achihapi.Controllers
 
                 if (reader.HasRows)
                 {
+                    String strAlbumAC = String.Empty;
+                    String strCreatedBy = String.Empty;
+                    Boolean bIsPublic = false;
+                    if (!reader.IsDBNull(3))
+                        strCreatedBy = reader.GetString(3);
+                    if (!reader.IsDBNull(5))
+                        bIsPublic = reader.GetBoolean(5);
+                    if (!reader.IsDBNull(6))
+                        strAlbumAC = reader.GetString(6);
+
+                    if (usrObj == null)
+                    {
+                        // Anonymouse user
+                        if (!bIsPublic)
+                        {
+                            return Unauthorized();
+                        }
+
+                        if (!String.IsNullOrEmpty(strAlbumAC))
+                        {
+                            if (String.IsNullOrEmpty(accessCode))
+                            {
+                                return Unauthorized();
+                            }
+                            else
+                            {
+                                if (String.CompareOrdinal(strAlbumAC, accessCode) != 0)
+                                {
+                                    return Unauthorized();
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Signed-in user
+                        if (bIsPublic)
+                        {
+                            if (!String.IsNullOrEmpty(strAlbumAC))
+                            {
+                                if (String.IsNullOrEmpty(accessCode))
+                                {
+                                    return Unauthorized();
+                                }
+                                else
+                                {
+                                    if (String.CompareOrdinal(strAlbumAC, accessCode) != 0)
+                                    {
+                                        return Unauthorized();
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var scopeStr = User.FindFirst(c => c.Type == "GalleryNonPublicAlbumRead").Value;
+                            var usrName = User.FindFirst(c => c.Type == "sub").Value;
+
+                            if (String.CompareOrdinal(scopeStr, "OnlyOwner") == 0)
+                            {
+                                if (String.CompareOrdinal(strCreatedBy, usrName) != 0)
+                                {
+                                    return Unauthorized();
+                                }
+                            }
+                            else if(String.CompareOrdinal(scopeStr, "All") == 0)
+                            {
+                                // Do nothing~
+                            }
+                            else
+                            {
+                                // Shall never happened!
+                                return Unauthorized();
+                            }
+                        }
+                    }
+
                     avm = new AlbumWithPhotoViewModel();
                     while (reader.Read())
                     {
@@ -248,6 +388,7 @@ namespace achihapi.Controllers
             // Create it into DB            
             try
             {
+                var usrName = User.FindFirst(c => c.Type == "sub").Value;
                 using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
                 {
                     String cmdText = @"INSERT INTO [dbo].[Album]
@@ -270,7 +411,7 @@ namespace achihapi.Controllers
                     SqlCommand cmd = new SqlCommand(cmdText, conn);
                     cmd.Parameters.AddWithValue("@Title", vm.Title);
                     cmd.Parameters.AddWithValue("@Desp", String.IsNullOrEmpty(vm.Desp) ? String.Empty : vm.Desp);
-                    cmd.Parameters.AddWithValue("@CreatedBy", vm.CreatedBy);
+                    cmd.Parameters.AddWithValue("@CreatedBy", usrName);
                     cmd.Parameters.AddWithValue("@CreatedAt", vm.CreatedAt);
                     cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
                     cmd.Parameters.AddWithValue("@AccessCode", String.IsNullOrEmpty(vm.AccessCode) ? String.Empty : vm.AccessCode);
@@ -302,21 +443,71 @@ namespace achihapi.Controllers
             {
                 return BadRequest("Title is a must!");
             }
-
+            
             try
             {
+                var usrName = User.FindFirst(c => c.Type == "sub").Value;
+                var scopeStr = User.FindFirst(c => c.Type == "GalleryAlbumChange").Value;
                 using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    String cmdText = @"UPDATE [Album]
-                               SET [Title] = @Title
-                                  ,[Desp] = @Desp
-                                  ,[IsPublic] = @IsPublic
-                                  ,[AccessCode] = @AccessCode
-                             WHERE [AlbumID] = @Id
-                            ";
+                    String cmdText = String.Empty;
+
+                    String queryString = @"SELECT [AlbumID]
+                          ,[Title]
+                          ,[Desp]
+                          ,[CreatedBy]
+                          ,[CreateAt]
+                          ,[IsPublic]
+                          ,[AccessCode]
+                      FROM [dbo].[Album]
+                      WHERE [AlbumID] = " + vm.Id.ToString() + " FOR UPDATE ";
 
                     conn.Open();
-                    SqlCommand cmd = new SqlCommand(cmdText, conn);
+                    SqlCommand cmd = new SqlCommand(queryString, conn);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        String strCreatedBy = String.Empty;
+                        if (!reader.IsDBNull(3))
+                            strCreatedBy = reader.GetString(3);
+
+                        if (String.CompareOrdinal(scopeStr, "All") == 0)
+                        {
+                            // Do nothing
+                        }
+                        else if (String.CompareOrdinal(scopeStr, "OnlyOwner") == 0)
+                        {
+                            if (String.CompareOrdinal(strCreatedBy, usrName) != 0)
+                            {
+                                return Unauthorized();
+                            }
+                            else
+                            {
+                                // Do nothing
+                            }
+                        }
+                        else
+                        {
+                            return BadRequest();
+                        }
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+
+                    cmd.Dispose();
+                    cmd = null;
+
+                    cmdText = @"UPDATE [Album]
+                            SET [Title] = @Title
+                                ,[Desp] = @Desp
+                                ,[IsPublic] = @IsPublic
+                                ,[AccessCode] = @AccessCode
+                            WHERE [AlbumID] = @Id
+                        ";
+                    cmd = new SqlCommand(cmdText, conn);
                     cmd.Parameters.AddWithValue("@Id", vm.Id);
                     cmd.Parameters.AddWithValue("@Title", vm.Title);
                     if (String.IsNullOrEmpty(vm.Desp))
@@ -336,6 +527,85 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+            }
+            finally
+            {
+            }
+
+            return new ObjectResult(false);
+        }
+
+        [HttpDelete]
+        [Authorize(Roles = "GalleryAdmin, GalleryPro")]
+        public async Task<IActionResult> Delete(Int32 nID)
+        {
+            try
+            {
+                var usrName = User.FindFirst(c => c.Type == "sub").Value;
+                var scopeStr = User.FindFirst(c => c.Type == "GalleryAlbumDelete").Value;
+                using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    String cmdText = String.Empty;
+
+                    String queryString = @"SELECT [AlbumID]
+                          ,[Title]
+                          ,[Desp]
+                          ,[CreatedBy]
+                          ,[CreateAt]
+                          ,[IsPublic]
+                          ,[AccessCode]
+                      FROM [dbo].[Album]
+                      WHERE [AlbumID] = " + nID.ToString() + " FOR UPDATE ";
+
+                    conn.Open();
+                    SqlCommand cmd = new SqlCommand(queryString, conn);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        String strCreatedBy = String.Empty;
+                        if (!reader.IsDBNull(3))
+                            strCreatedBy = reader.GetString(3);
+
+                        if (String.CompareOrdinal(scopeStr, "All") == 0)
+                        {
+                            // Do nothing
+                        }
+                        else if (String.CompareOrdinal(scopeStr, "OnlyOwner") == 0)
+                        {
+                            if (String.CompareOrdinal(strCreatedBy, usrName) != 0)
+                            {
+                                return Unauthorized();
+                            }
+                            else
+                            {
+                                // Do nothing
+                            }
+                        }
+                        else
+                        {
+                            return BadRequest();
+                        }
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+
+                    cmd.Dispose();
+                    cmd = null;
+
+                    cmdText = @"DELETE FROM [Album] WHERE [AlbumID] = " + nID.ToString();
+                    cmd = new SqlCommand(cmdText, conn);
+
+                    await cmd.ExecuteNonQueryAsync();
+                    return new ObjectResult(true);
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                
             }
             finally
             {
