@@ -86,7 +86,7 @@ namespace achihapi.Controllers
 	                    from dbo.Album as taba
 	                    left outer join albumfirstphoto as tabb
 		                    on taba.AlbumID = tabb.AlbumID
-                        where taba.IsPublic = 1 or (taba.IsPublic = 0 and taba.CreatedBy = N'" + usrObj.Value + "'";
+                        where taba.IsPublic = 1 or (taba.IsPublic = 0 and taba.CreatedBy = N'" + usrObj.Value + "')";
                     }
                     else
                     {
@@ -100,7 +100,7 @@ namespace achihapi.Controllers
 	                        from dbo.AlbumPhoto as tabc
 	                        inner join dbo.Album as taba
 		                        on tabc.AlbumID = taba.AlbumID
-                                on taba.IsPublic = 1 or (taba.IsPublic = 0 and taba.CreatedBy = N'" + usrObj.Value + "'" 
+                                on taba.IsPublic = 1 or (taba.IsPublic = 0 and taba.CreatedBy = N'" + usrObj.Value + "') " 
                                 + 
                                 @" left outer join albumfirstphoto as tabb
 		                        on taba.AlbumID = tabb.AlbumID
@@ -128,7 +128,7 @@ namespace achihapi.Controllers
                         {
                             // Cannot just release the AccessCode
                             //avm.AccessCode = reader.GetString(4);
-                            if (String.IsNullOrEmpty(reader.GetString(4)))
+                            if (!String.IsNullOrEmpty(reader.GetString(4)))
                                 avm.AccessCode = "1";
                         }
                         if (!reader.IsDBNull(5))
@@ -138,7 +138,13 @@ namespace achihapi.Controllers
                         if (!reader.IsDBNull(7))
                             avm.PhotoCount = (Int32)reader.GetInt32(7);
                         if (!reader.IsDBNull(8))
+                        {
                             avm.FirstPhotoThumnailUrl = reader.GetString(8);
+
+                            if (!String.IsNullOrEmpty(avm.AccessCode))
+                                avm.FirstPhotoThumnailUrl = String.Empty;
+                        }
+                            
 
                         listVm.Add(avm);
                     }
@@ -161,7 +167,11 @@ namespace achihapi.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(int id, [FromQuery] String accessCode = null)
         {
+#if DEBUG
+            SqlConnection conn = new SqlConnection(Startup.DebugConnectionString);
+#else
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+#endif
             AlbumWithPhotoViewModel avm = null;
 
             var usrObj = User.FindFirst(c => c.Type == "sub");
@@ -177,7 +187,7 @@ namespace achihapi.Controllers
                           ,[IsPublic]
                           ,[AccessCode]
                       FROM [dbo].[Album]
-                        where [AlbumID] = " + id.ToString();
+                      WHERE [AlbumID] = " + id.ToString();
 
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -185,6 +195,8 @@ namespace achihapi.Controllers
 
                 if (reader.HasRows)
                 {
+                    reader.Read(); // Only one record!
+
                     String strAlbumAC = String.Empty;
                     String strCreatedBy = String.Empty;
                     Boolean bIsPublic = false;
@@ -221,63 +233,68 @@ namespace achihapi.Controllers
                     else
                     {
                         // Signed-in user
-                        if (bIsPublic)
+                        var scopeStr = User.FindFirst(c => c.Type == "GalleryNonPublicAlbumRead").Value;
+                        var usrName = User.FindFirst(c => c.Type == "sub").Value;
+
+                        if (String.CompareOrdinal(scopeStr, "OnlyOwner") == 0)
                         {
-                            if (!String.IsNullOrEmpty(strAlbumAC))
+                            if (String.CompareOrdinal(strCreatedBy, usrName) != 0)
                             {
-                                if (String.IsNullOrEmpty(accessCode))
+                                // Not the album creator then needs the access code
+                                if (bIsPublic)
                                 {
-                                    return Unauthorized();
+                                    if (!String.IsNullOrEmpty(strAlbumAC))
+                                    {
+                                        if (String.IsNullOrEmpty(accessCode))
+                                        {
+                                            return Unauthorized();
+                                        }
+                                        else
+                                        {
+                                            if (String.CompareOrdinal(strAlbumAC, accessCode) != 0)
+                                            {
+                                                return Unauthorized();
+                                            }
+                                            else
+                                            {
+                                                // Access code accepted, do nothing
+                                            }
+                                        }
+                                    }
                                 }
                                 else
                                 {
-                                    if (String.CompareOrdinal(strAlbumAC, accessCode) != 0)
-                                    {
-                                        return Unauthorized();
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            var scopeStr = User.FindFirst(c => c.Type == "GalleryNonPublicAlbumRead").Value;
-                            var usrName = User.FindFirst(c => c.Type == "sub").Value;
-
-                            if (String.CompareOrdinal(scopeStr, "OnlyOwner") == 0)
-                            {
-                                if (String.CompareOrdinal(strCreatedBy, usrName) != 0)
-                                {
+                                    // Non public album, current user has no authority to view it.
                                     return Unauthorized();
                                 }
                             }
-                            else if(String.CompareOrdinal(scopeStr, "All") == 0)
-                            {
-                                // Do nothing~
-                            }
                             else
                             {
-                                // Shall never happened!
-                                return Unauthorized();
+                                // Creator of album, no need to access code at all
                             }
+                        }
+                        else if (String.CompareOrdinal(scopeStr, "All") == 0)
+                        {
+                            // Do nothing~
+                        }
+                        else
+                        {
+                            // Shall never happened!
+                            return BadRequest();
                         }
                     }
 
                     avm = new AlbumWithPhotoViewModel();
-                    while (reader.Read())
-                    {
-                        avm.Id = reader.GetInt32(0);
-                        avm.Title = reader.GetString(1);
-                        if (!reader.IsDBNull(2))
-                            avm.Desp = reader.GetString(2);
-                        if (!reader.IsDBNull(3))
-                            avm.CreatedBy = reader.GetString(3);
-                        if (!reader.IsDBNull(4))
-                            avm.CreatedAt = reader.GetDateTime(4);
-                        if (!reader.IsDBNull(5))
-                            avm.IsPublic = reader.GetBoolean(5);
-                        if (!reader.IsDBNull(6))
-                            avm.AccessCode = reader.GetString(6);
-                    }
+                    avm.Id = reader.GetInt32(0);
+                    avm.Title = reader.GetString(1);
+                    if (!reader.IsDBNull(2))
+                        avm.Desp = reader.GetString(2);
+                    avm.CreatedBy = strCreatedBy;
+                    if (!reader.IsDBNull(4))
+                        avm.CreatedAt = reader.GetDateTime(4);
+                    avm.IsPublic = bIsPublic;
+                    avm.AccessCode = strAlbumAC;
+
                     reader.Dispose();
                     cmd.Dispose();
                     reader = null;
@@ -362,7 +379,7 @@ namespace achihapi.Controllers
 
         // POST api/album
         [HttpPost]
-        [Authorize(Roles = "GalleryAdmin, GalleryPro")]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody]AlbumViewModel vm)
         {
             if (vm == null)
@@ -385,11 +402,15 @@ namespace achihapi.Controllers
                 return BadRequest();
             }
 
-            // Create it into DB            
+            // Create it into DB
             try
             {
                 var usrName = User.FindFirst(c => c.Type == "sub").Value;
+#if DEBUG
+                using (SqlConnection conn = new SqlConnection(Startup.DebugConnectionString))
+#else
                 using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
+#endif
                 {
                     String cmdText = @"INSERT INTO [dbo].[Album]
                                ([Title]
@@ -429,7 +450,7 @@ namespace achihapi.Controllers
         }
 
         [HttpPut]
-        [Authorize(Roles = "GalleryAdmin, GalleryPro")]
+        [Authorize]
         public async Task<IActionResult> Update([FromBody] AlbumViewModel vm)
         {
             if (vm == null)
@@ -448,7 +469,12 @@ namespace achihapi.Controllers
             {
                 var usrName = User.FindFirst(c => c.Type == "sub").Value;
                 var scopeStr = User.FindFirst(c => c.Type == "GalleryAlbumChange").Value;
+
+#if DEBUG
+                using (SqlConnection conn = new SqlConnection(Startup.DebugConnectionString))
+#else
                 using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
+#endif
                 {
                     String cmdText = String.Empty;
 
@@ -468,6 +494,8 @@ namespace achihapi.Controllers
 
                     if (reader.HasRows)
                     {
+                        reader.Read();
+
                         String strCreatedBy = String.Empty;
                         if (!reader.IsDBNull(3))
                             strCreatedBy = reader.GetString(3);
@@ -536,14 +564,19 @@ namespace achihapi.Controllers
         }
 
         [HttpDelete]
-        [Authorize(Roles = "GalleryAdmin, GalleryPro")]
+        [Authorize]
         public async Task<IActionResult> Delete(Int32 nID)
         {
             try
             {
                 var usrName = User.FindFirst(c => c.Type == "sub").Value;
                 var scopeStr = User.FindFirst(c => c.Type == "GalleryAlbumDelete").Value;
+
+#if DEBUG
+                using (SqlConnection conn = new SqlConnection(Startup.DebugConnectionString))
+#else
                 using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
+#endif
                 {
                     String cmdText = String.Empty;
 
@@ -563,6 +596,8 @@ namespace achihapi.Controllers
 
                     if (reader.HasRows)
                     {
+                        reader.Read();
+
                         String strCreatedBy = String.Empty;
                         if (!reader.IsDBNull(3))
                             strCreatedBy = reader.GetString(3);
@@ -619,7 +654,7 @@ namespace achihapi.Controllers
     public class AlbumPhotoByAlbumController : Controller
     {
         [HttpPost]
-        [Authorize(Roles = "GalleryAdmin, GalleryPro")]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody]AlbumPhotoByAlbumViewModel vm)
         {
             if (vm == null)
@@ -635,11 +670,71 @@ namespace achihapi.Controllers
                 return BadRequest();
             }
 
-            // Create it into DB            
+            // Create it into DB
+            var usrName = User.FindFirst(c => c.Type == "sub").Value;
+            var scopeStr = User.FindFirst(c => c.Type == "GalleryAlbumChange").Value;
+
             try
             {
+#if DEBUG
+                using (SqlConnection conn = new SqlConnection(Startup.DebugConnectionString))
+#else
                 using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
+#endif
                 {
+                    await conn.OpenAsync();
+
+                    String queryString = @"SELECT [AlbumID]
+                          ,[Title]
+                          ,[Desp]
+                          ,[CreatedBy]
+                          ,[CreateAt]
+                          ,[IsPublic]
+                          ,[AccessCode]
+                      FROM [dbo].[Album]
+                      WHERE [AlbumID] = " + vm.AlbumID.ToString();
+
+                    SqlCommand cmd = new SqlCommand(queryString, conn);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        reader.Read();
+
+                        String strCreatedBy = String.Empty;
+                        if (!reader.IsDBNull(3))
+                            strCreatedBy = reader.GetString(3);
+
+                        if (String.CompareOrdinal(scopeStr, "All") == 0)
+                        {
+                            // Do nothing
+                        }
+                        else if (String.CompareOrdinal(scopeStr, "OnlyOwner") == 0)
+                        {
+                            if (String.CompareOrdinal(strCreatedBy, usrName) != 0)
+                            {
+                                return Unauthorized();
+                            }
+                            else
+                            {
+                                // Do nothing
+                            }
+                        }
+                        else
+                        {
+                            return BadRequest();
+                        }
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+
+                    reader.Dispose();
+                    reader = null;
+                    cmd.Dispose();
+                    cmd = null;
+
                     List<String> listCmds = new List<string>();
                     // Delete the records from album                    
                     String cmdText = @"DELETE FROM [dbo].[AlbumPhoto] WHERE [AlbumID] = " + vm.AlbumID.ToString();
@@ -650,15 +745,14 @@ namespace achihapi.Controllers
                         cmdText = @"INSERT INTO [dbo].[AlbumPhoto]
                                ([AlbumID]
                                ,[PhotoID])
-                         VALUES(" + vm.AlbumID.ToString()
-                         + @", N'" + pid
-                         + @"')";
+                             VALUES(" + vm.AlbumID.ToString()
+                             + @", N'" + pid
+                             + @"')";
                         listCmds.Add(cmdText);
                     }
                     String allQueries = String.Join(";", listCmds);
-                    await conn.OpenAsync();
 
-                    SqlCommand cmd = new SqlCommand(allQueries, conn);
+                    cmd = new SqlCommand(allQueries, conn);
                     await cmd.ExecuteNonQueryAsync();
                 }
             }
@@ -676,7 +770,7 @@ namespace achihapi.Controllers
     public class AlbumPhotoByPhotoController : Controller
     {
         [HttpPost]
-        [Authorize(Roles = "GalleryAdmin, GalleryPro")]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody]AlbumPhotoByPhotoViewModel vm)
         {
             if (vm == null)
@@ -692,11 +786,72 @@ namespace achihapi.Controllers
                 return BadRequest();
             }
 
-            // Create it into DB            
+            var usrName = User.FindFirst(c => c.Type == "sub").Value;
+            var scopeStr = User.FindFirst(c => c.Type == "GalleryAlbumChange").Value;
             try
             {
+#if DEBUG
+                using (SqlConnection conn = new SqlConnection(Startup.DebugConnectionString))
+#else
                 using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
+#endif
                 {
+                    await conn.OpenAsync();
+
+                    String albumList = String.Join(",", vm.AlbumIDList);
+
+                    String queryString = @"SELECT [AlbumID]
+                          ,[Title]
+                          ,[Desp]
+                          ,[CreatedBy]
+                          ,[CreateAt]
+                          ,[IsPublic]
+                          ,[AccessCode]
+                      FROM [dbo].[Album]
+                      WHERE [AlbumID] IN ( " + albumList + " )";
+
+                    SqlCommand cmd = new SqlCommand(queryString, conn);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        String strCreatedBy = String.Empty;
+                        while(reader.Read())
+                        {
+                            if (!reader.IsDBNull(3))
+                                strCreatedBy = reader.GetString(3);
+
+                            if (String.CompareOrdinal(scopeStr, "All") == 0)
+                            {
+                                // Do nothing
+                            }
+                            else if (String.CompareOrdinal(scopeStr, "OnlyOwner") == 0)
+                            {
+                                if (String.CompareOrdinal(strCreatedBy, usrName) != 0)
+                                {
+                                    return Unauthorized();
+                                }
+                                else
+                                {
+                                    // Do nothing
+                                }
+                            }
+                            else
+                            {
+                                return BadRequest();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+
+                    reader.Dispose();
+                    reader = null;
+                    cmd.Dispose();
+                    cmd = null;
+
                     List<String> listCmds = new List<string>();
                     // Delete the records from album                    
                     String cmdText = @"DELETE FROM [dbo].[AlbumPhoto] WHERE [PhotoID] = N'" + vm.PhotoID + "'";
@@ -713,9 +868,8 @@ namespace achihapi.Controllers
                         listCmds.Add(cmdText);
                     }
                     String allQueries = String.Join(";", listCmds);
-                    await conn.OpenAsync();
 
-                    SqlCommand cmd = new SqlCommand(allQueries, conn);
+                    cmd = new SqlCommand(allQueries, conn);
                     await cmd.ExecuteNonQueryAsync();
                 }
             }

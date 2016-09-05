@@ -18,7 +18,12 @@ namespace achihapi.Controllers
         public List<PhotoViewModel> GetPhotos()
         {
             List<PhotoViewModel> rstFiles = new List<PhotoViewModel>();
+#if DEBUG
+            SqlConnection conn = new SqlConnection(Startup.DebugConnectionString);
+#else
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+#endif
+
             try
             {
                 String queryString = @"SELECT [PhotoID]
@@ -108,7 +113,12 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Post([FromBody]PhotoViewModel vm)
         {
             // Update the database
+#if DEBUG
+            SqlConnection conn = new SqlConnection(Startup.DebugConnectionString);
+#else
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+#endif
+
             try
             {
                 // ID is set to identity
@@ -217,7 +227,11 @@ namespace achihapi.Controllers
 
             try
             {
+#if DEBUG
+                using (SqlConnection conn = new SqlConnection(Startup.DebugConnectionString))
+#else
                 using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
+#endif
                 {
                     String cmdText = @"UPDATE [Photo]
                                SET [Title] = @Title
