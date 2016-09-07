@@ -3,7 +3,7 @@
   "version": 2,
   "targets": {
     ".NETCoreApp,Version=v1.0": {
-      "IdentityModel/2.0.0-rc2": {
+      "IdentityModel/2.0.0-rc3": {
         "type": "package",
         "dependencies": {
           "Newtonsoft.Json": "9.0.1",
@@ -19,10 +19,10 @@
           "lib/netstandard1.3/IdentityModel.dll": {}
         }
       },
-      "IdentityModel.AspNetCore.OAuth2Introspection/1.0.1-beta2": {
+      "IdentityModel.AspNetCore.OAuth2Introspection/1.0.1-rc1": {
         "type": "package",
         "dependencies": {
-          "IdentityModel": "2.0.0-rc2",
+          "IdentityModel": "2.0.0-rc3",
           "Microsoft.AspNetCore.Authentication": "1.0.0",
           "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
           "Microsoft.Extensions.Caching.Memory": "1.0.0"
@@ -34,7 +34,7 @@
           "lib/netstandard1.3/IdentityModel.AspNetCore.OAuth2Introspection.dll": {}
         }
       },
-      "IdentityModel.AspNetCore.ScopeValidation/1.0.0-beta3": {
+      "IdentityModel.AspNetCore.ScopeValidation/1.0.0-rc1": {
         "type": "package",
         "dependencies": {
           "Microsoft.AspNetCore.Http.Abstractions": "1.0.0"
@@ -46,11 +46,11 @@
           "lib/netstandard1.3/IdentityModel.AspNetCore.ScopeValidation.dll": {}
         }
       },
-      "IdentityServer4.AccessTokenValidation/1.0.1-beta4": {
+      "IdentityServer4.AccessTokenValidation/1.0.1-rc1": {
         "type": "package",
         "dependencies": {
-          "IdentityModel.AspNetCore.OAuth2Introspection": "1.0.1-beta2",
-          "IdentityModel.AspNetCore.ScopeValidation": "1.0.0-beta3",
+          "IdentityModel.AspNetCore.OAuth2Introspection": "1.0.1-rc1",
+          "IdentityModel.AspNetCore.ScopeValidation": "1.0.0-rc1",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "1.0.0"
         },
         "compile": {
@@ -100,10 +100,10 @@
           }
         }
       },
-      "Magick.NET.Core-Q8/7.0.3": {
+      "Magick.NET.Core-Q8/7.0.3.1": {
         "type": "package",
         "dependencies": {
-          "Magick.NET.Core-Q8.Native": "7.0.3",
+          "Magick.NET.Core-Q8.Native": "7.0.3.1",
           "NETStandard.Library": "1.6.0",
           "System.Collections.NonGeneric": "4.0.1",
           "System.Xml.XDocument": "4.0.11",
@@ -118,7 +118,7 @@
           "lib/netstandard1.3/Magick.NET.Core-Q8.dll": {}
         }
       },
-      "Magick.NET.Core-Q8.Native/7.0.3": {
+      "Magick.NET.Core-Q8.Native/7.0.3.1": {
         "type": "package",
         "runtimeTargets": {
           "runtimes/win7-x64/native/Magick.NET-Q8-x64.Native.dll": {
@@ -4410,45 +4410,45 @@
     }
   },
   "libraries": {
-    "IdentityModel/2.0.0-rc2": {
-      "sha512": "bsDGgPyQuff3KGVAZUXXwPTiqaTl1UHl/LbeaKbzNBxxglF95CIKudGOjiFhIZ/tO0TBOSLw7HJK1VqtGPxP0w==",
+    "IdentityModel/2.0.0-rc3": {
+      "sha512": "YY+QJEQ4FPM8DcdGAD+dcrGX9Xohn1QI8Z2Uwp4l/dnfCFzvclR1pHQdo2/gcCnsQB+hILHPxbCbFB4+bbJRTA==",
       "type": "package",
-      "path": "IdentityModel/2.0.0-rc2",
+      "path": "IdentityModel/2.0.0-rc3",
       "files": [
-        "IdentityModel.2.0.0-rc2.nupkg.sha512",
+        "IdentityModel.2.0.0-rc3.nupkg.sha512",
         "IdentityModel.nuspec",
         "lib/net45/IdentityModel.dll",
         "lib/netstandard1.3/IdentityModel.dll"
       ]
     },
-    "IdentityModel.AspNetCore.OAuth2Introspection/1.0.1-beta2": {
-      "sha512": "z0RnhHABk0VcQmEYI5ZaWqo16lR/sEFokHxDYlzZ+7rk6jfcmsot9s186fXRB0nx9UIjHKfk2lyNVXfNDYfzkQ==",
+    "IdentityModel.AspNetCore.OAuth2Introspection/1.0.1-rc1": {
+      "sha512": "YOJjEfBFQGJnJhbf9bJXlfpF4BQinMfOS2D0TPi530zt0awLTGmA7nEi4ndvYnbqVt7iC4ZSj037OHZ6MgAViw==",
       "type": "package",
-      "path": "IdentityModel.AspNetCore.OAuth2Introspection/1.0.1-beta2",
+      "path": "IdentityModel.AspNetCore.OAuth2Introspection/1.0.1-rc1",
       "files": [
-        "IdentityModel.AspNetCore.OAuth2Introspection.1.0.1-beta2.nupkg.sha512",
+        "IdentityModel.AspNetCore.OAuth2Introspection.1.0.1-rc1.nupkg.sha512",
         "IdentityModel.AspNetCore.OAuth2Introspection.nuspec",
         "lib/net452/IdentityModel.AspNetCore.OAuth2Introspection.dll",
         "lib/netstandard1.3/IdentityModel.AspNetCore.OAuth2Introspection.dll"
       ]
     },
-    "IdentityModel.AspNetCore.ScopeValidation/1.0.0-beta3": {
-      "sha512": "2gD+S6w2QmC9S6ZhJ2HkIfTDsvByb6TGR+Mtk7bdK3mVBRq5DPj2H7mflsfyQxp3pdGuEEH3we5Ajp231mNoKQ==",
+    "IdentityModel.AspNetCore.ScopeValidation/1.0.0-rc1": {
+      "sha512": "vbOVAQ8DQEViRlwlikO+JjfRDHIt3CIx4Jl7h9uqNG94yA/fI2gmKNd8kD60qjUYBQaOdNNKRi8U7/jFwWUt4w==",
       "type": "package",
-      "path": "IdentityModel.AspNetCore.ScopeValidation/1.0.0-beta3",
+      "path": "IdentityModel.AspNetCore.ScopeValidation/1.0.0-rc1",
       "files": [
-        "IdentityModel.AspNetCore.ScopeValidation.1.0.0-beta3.nupkg.sha512",
+        "IdentityModel.AspNetCore.ScopeValidation.1.0.0-rc1.nupkg.sha512",
         "IdentityModel.AspNetCore.ScopeValidation.nuspec",
         "lib/net452/IdentityModel.AspNetCore.ScopeValidation.dll",
         "lib/netstandard1.3/IdentityModel.AspNetCore.ScopeValidation.dll"
       ]
     },
-    "IdentityServer4.AccessTokenValidation/1.0.1-beta4": {
-      "sha512": "vh6Yv9U/X8v06XE2Ezp/cpvwR89ow9moCGA0KgrmOqRpqiQhgIxsS++7ZspWM/VZH/8WAs06H384oLo25wFewA==",
+    "IdentityServer4.AccessTokenValidation/1.0.1-rc1": {
+      "sha512": "ovJT1PxvyOF8bKgEyDxq/BIg7ywn7BfekKzbql3cbxTKhjw6YOm33AYcT4tfOKr0VgMVRMnU3SBOBdKCIqhifQ==",
       "type": "package",
-      "path": "IdentityServer4.AccessTokenValidation/1.0.1-beta4",
+      "path": "IdentityServer4.AccessTokenValidation/1.0.1-rc1",
       "files": [
-        "IdentityServer4.AccessTokenValidation.1.0.1-beta4.nupkg.sha512",
+        "IdentityServer4.AccessTokenValidation.1.0.1-rc1.nupkg.sha512",
         "IdentityServer4.AccessTokenValidation.nuspec",
         "lib/net452/IdentityServer4.AccessTokenValidation.dll",
         "lib/netstandard1.4/IdentityServer4.AccessTokenValidation.dll"
@@ -4472,23 +4472,23 @@
         "runtimes/win7-x86/native/libuv.dll"
       ]
     },
-    "Magick.NET.Core-Q8/7.0.3": {
-      "sha512": "azOhgiaWy5qO7lDu6oUaoekuWjOu67lvfAsRnI7wl3JDAwUh8Kqhyx/OGi7zTRVELUTgD+zkqjT/3mDq7vHtfA==",
+    "Magick.NET.Core-Q8/7.0.3.1": {
+      "sha512": "kI+8u5m3BEBVbur4ZnzGn6aR6LUzkH7Wj1D8taFu0xEb6M33X9P77TUxJujucn/oIi4LqIVbyLYjz6PjbX9zQA==",
       "type": "package",
-      "path": "Magick.NET.Core-Q8/7.0.3",
+      "path": "Magick.NET.Core-Q8/7.0.3.1",
       "files": [
-        "Magick.NET.Core-Q8.7.0.3.nupkg.sha512",
+        "Magick.NET.Core-Q8.7.0.3.1.nupkg.sha512",
         "Magick.NET.Core-Q8.nuspec",
         "lib/netstandard1.3/Magick.NET.Core-Q8.dll",
         "lib/netstandard1.3/Magick.NET.Core-Q8.xml"
       ]
     },
-    "Magick.NET.Core-Q8.Native/7.0.3": {
-      "sha512": "RkE92ve4NH3Gf8/EKEuNMIUgqaggPMYFsIHutZDC0O6CCkO6DjamF4GH42xtXQ6LJUY1LqNb6IP88sIwclG5sg==",
+    "Magick.NET.Core-Q8.Native/7.0.3.1": {
+      "sha512": "4/TW6WPXZzGzIrXBEOk9/foZonZoq8bU0hzBIpJXzbK2ySH7ukXC893Uo+qn/JaNqh6q77M6ikWx0VTE0rgBGg==",
       "type": "package",
-      "path": "Magick.NET.Core-Q8.Native/7.0.3",
+      "path": "Magick.NET.Core-Q8.Native/7.0.3.1",
       "files": [
-        "Magick.NET.Core-Q8.Native.7.0.3.nupkg.sha512",
+        "Magick.NET.Core-Q8.Native.7.0.3.1.nupkg.sha512",
         "Magick.NET.Core-Q8.Native.nuspec",
         "runtimes/win7-x64/native/Magick.NET-Q8-x64.Native.dll",
         "runtimes/win7-x86/native/Magick.NET-Q8-x86.Native.dll"
@@ -11132,8 +11132,8 @@
   },
   "projectFileDependencyGroups": {
     "": [
-      "IdentityServer4.AccessTokenValidation >= 1.0.1-beta4",
-      "Magick.NET.Core-Q8 >= 7.0.3",
+      "IdentityServer4.AccessTokenValidation >= 1.0.1-rc1",
+      "Magick.NET.Core-Q8 >= 7.0.3.1",
       "Microsoft.AspNetCore.Cors >= 1.0.0",
       "Microsoft.AspNetCore.Diagnostics >= 1.0.0",
       "Microsoft.AspNetCore.Mvc >= 1.0.0",
