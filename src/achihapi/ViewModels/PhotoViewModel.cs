@@ -15,6 +15,10 @@ namespace achihapi.ViewModels
         public String Title { get; set; }
         [StringLength(100)]
         public String Desp { get; set; }
+        public Int32 Width { get; set; }
+        public Int32 Height { get; set; }
+        public Int32 ThumbWidth { get; set; }
+        public Int32 ThumbHeight { get; set; }
         [StringLength(100)]
         public String FileUrl { get; set; }
         [StringLength(100)]

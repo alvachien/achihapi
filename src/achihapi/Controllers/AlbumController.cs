@@ -78,15 +78,15 @@ namespace achihapi.Controllers
                     if (String.IsNullOrEmpty(photoid))
                     {
                         queryString = @"With albumfirstphoto as (select tabb.AlbumID, count(tabb.PhotoID) as PhotoCount, min(tabc.PhotoThumbUrl) as ThumbUrl from dbo.AlbumPhoto as tabb
-	                    join dbo.Photo as tabc
-	                    on tabb.PhotoID = tabc.PhotoID
-	                    group by tabb.AlbumID)
-                        select taba.AlbumID, taba.Title, taba.Desp, taba.IsPublic, taba.AccessCode, taba.CreateAt, taba.CreatedBy,
-	                        tabb.PhotoCount, tabb.ThumbUrl
-	                    from dbo.Album as taba
-	                    left outer join albumfirstphoto as tabb
-		                    on taba.AlbumID = tabb.AlbumID
-                        where taba.IsPublic = 1 or (taba.IsPublic = 0 and taba.CreatedBy = N'" + usrObj.Value + "')";
+	                        join dbo.Photo as tabc
+	                        on tabb.PhotoID = tabc.PhotoID
+	                        group by tabb.AlbumID)
+                            select taba.AlbumID, taba.Title, taba.Desp, taba.IsPublic, taba.AccessCode, taba.CreateAt, taba.CreatedBy,
+	                            tabb.PhotoCount, tabb.ThumbUrl
+	                        from dbo.Album as taba
+	                        left outer join albumfirstphoto as tabb
+		                        on taba.AlbumID = tabb.AlbumID
+                            where taba.IsPublic = 1 or (taba.IsPublic = 0 and taba.CreatedBy = N'" + usrObj.Value + "')";
                     }
                     else
                     {
@@ -165,14 +165,14 @@ namespace achihapi.Controllers
 
         // GET api/album/5
         [HttpGet("{id}")]
-        public IActionResult Get(int id, [FromQuery] String accessCode = null)
+        public IActionResult Get(int id)
         {
 #if DEBUG
             SqlConnection conn = new SqlConnection(Startup.DebugConnectionString);
 #else
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
 #endif
-            AlbumWithPhotoViewModel avm = null;
+            AlbumViewModel avm = null;
 
             var usrObj = User.FindFirst(c => c.Type == "sub");
             String queryString = "";
@@ -207,84 +207,7 @@ namespace achihapi.Controllers
                     if (!reader.IsDBNull(6))
                         strAlbumAC = reader.GetString(6);
 
-                    if (usrObj == null)
-                    {
-                        // Anonymouse user
-                        if (!bIsPublic)
-                        {
-                            return Unauthorized();
-                        }
-
-                        if (!String.IsNullOrEmpty(strAlbumAC))
-                        {
-                            if (String.IsNullOrEmpty(accessCode))
-                            {
-                                return Unauthorized();
-                            }
-                            else
-                            {
-                                if (String.CompareOrdinal(strAlbumAC, accessCode) != 0)
-                                {
-                                    return Unauthorized();
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Signed-in user
-                        var scopeStr = User.FindFirst(c => c.Type == "GalleryNonPublicAlbumRead").Value;
-                        var usrName = User.FindFirst(c => c.Type == "sub").Value;
-
-                        if (String.CompareOrdinal(scopeStr, "OnlyOwner") == 0)
-                        {
-                            if (String.CompareOrdinal(strCreatedBy, usrName) != 0)
-                            {
-                                // Not the album creator then needs the access code
-                                if (bIsPublic)
-                                {
-                                    if (!String.IsNullOrEmpty(strAlbumAC))
-                                    {
-                                        if (String.IsNullOrEmpty(accessCode))
-                                        {
-                                            return Unauthorized();
-                                        }
-                                        else
-                                        {
-                                            if (String.CompareOrdinal(strAlbumAC, accessCode) != 0)
-                                            {
-                                                return Unauthorized();
-                                            }
-                                            else
-                                            {
-                                                // Access code accepted, do nothing
-                                            }
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    // Non public album, current user has no authority to view it.
-                                    return Unauthorized();
-                                }
-                            }
-                            else
-                            {
-                                // Creator of album, no need to access code at all
-                            }
-                        }
-                        else if (String.CompareOrdinal(scopeStr, "All") == 0)
-                        {
-                            // Do nothing~
-                        }
-                        else
-                        {
-                            // Shall never happened!
-                            return BadRequest();
-                        }
-                    }
-
-                    avm = new AlbumWithPhotoViewModel();
+                    avm = new AlbumViewModel();
                     avm.Id = reader.GetInt32(0);
                     avm.Title = reader.GetString(1);
                     if (!reader.IsDBNull(2))
@@ -293,72 +216,12 @@ namespace achihapi.Controllers
                     if (!reader.IsDBNull(4))
                         avm.CreatedAt = reader.GetDateTime(4);
                     avm.IsPublic = bIsPublic;
-                    avm.AccessCode = strAlbumAC;
+                    avm.AccessCode = String.IsNullOrEmpty(strAlbumAC)? String.Empty : "1";
 
                     reader.Dispose();
                     cmd.Dispose();
                     reader = null;
                     cmd = null;
-
-                    queryString = @"select tabb.[PhotoID]
-                       ,tabb.[Title]
-                       ,tabb.[Desp]
-                       ,tabb.[UploadedAt]
-                       ,tabb.[UploadedBy]
-                       ,tabb.[OrgFileName]
-                       ,tabb.[PhotoUrl]
-                       ,tabb.[PhotoThumbUrl]
-                       ,tabb.[IsOrgThumb]
-                       ,tabb.[ThumbCreatedBy]
-                       ,tabb.[CameraMaker]
-                       ,tabb.[CameraModel]
-                       ,tabb.[LensModel]
-                       ,tabb.[AVNumber]
-                       ,tabb.[ShutterSpeed]
-                       ,tabb.[ISONumber]
-                       ,tabb.[IsPublic]
-                       ,tabb.[EXIFInfo]
-	                 from dbo.AlbumPhoto as taba
-	                left outer join dbo.Photo as tabb
-		                on taba.PhotoID = tabb.PhotoID
-	                where taba.AlbumID = " + id.ToString();
-
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            PhotoViewModel pvm = new PhotoViewModel();
-                            //cmd.Parameters.AddWithValue("@PhotoID", nid.ToString("N"));   // 1
-                            pvm.PhotoId = reader.GetString(0);
-                            //cmd.Parameters.AddWithValue("@Title", nid.ToString("N"));     // 2
-                            pvm.Title = reader.GetString(1);
-                            //cmd.Parameters.AddWithValue("@Desp", nid.ToString("N"));      // 3
-                            if (!reader.IsDBNull(2))
-                                pvm.Desp = reader.GetString(2);
-                            //cmd.Parameters.AddWithValue("@UploadedAt", DateTime.Now);     // 4
-                            if (!reader.IsDBNull(3))
-                                pvm.UploadedTime = reader.GetDateTime(3);
-                            //cmd.Parameters.AddWithValue("@UploadedBy", "Tester");         // 5
-                            //cmd.Parameters.AddWithValue("@OrgFileName", rst.OrgFileName); // 6
-                            if (!reader.IsDBNull(5))
-                                pvm.OrgFileName = reader.GetString(5);
-                            //cmd.Parameters.AddWithValue("@PhotoUrl", rst.FileUrl);        // 7
-                            pvm.FileUrl = reader.GetString(6); // 7 - 1
-                            //cmd.Parameters.AddWithValue("@PhotoThumbUrl", rst.ThumbnailFileUrl); // 8
-                            if (!reader.IsDBNull(7)) // 8 - 1
-                                pvm.ThumbnailFileUrl = reader.GetString(7);
-
-                            if (!reader.IsDBNull(16))
-                                pvm.IsPublic = reader.GetBoolean(16);
-                            if (!reader.IsDBNull(17))
-                                pvm.ExifTags = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ExifTagItem>>(reader.GetString(17));
-
-                            avm.PhotoList.Add(pvm);
-                        }
-                    }
                 }
             }
             catch (Exception exp)
