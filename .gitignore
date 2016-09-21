@@ -243,3 +243,5 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/src/achihapi/appsettings.json
+.vs/achihapi/v14/.suo

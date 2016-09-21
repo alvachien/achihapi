@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define USINGAZURE
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -85,12 +87,21 @@ namespace achihapi
                     "https://localhost:1601"
                     )
 #else
+#if USINGAZURE
                 builder.WithOrigins(
                     "http://achihui.azurewebsites.net",
                     "http://acgallery.azurewebsites.net",
                     "https://achihui.azurewebsites.net",
                     "https://acgallery.azurewebsites.net"
                     )
+#else
+                builder.WithOrigins(
+                    "http://118.178.58.187:5220",
+                    "http://118.178.58.187:5300",
+                    "https://118.178.58.187:5220",
+                    "https://118.178.58.187:5300",
+                    )
+#endif
 #endif
                 .AllowAnyHeader()
                 .AllowAnyMethod()
@@ -103,7 +114,11 @@ namespace achihapi
 #if DEBUG
                 Authority = "http://localhost:41016",
 #else
+#if USINGAZURE
                 Authority = "http://acidserver.azurewebsites.net",
+#else
+                Authority = "http://118.178.58.187:5100/",
+#endif
 #endif
                 RequireHttpsMetadata = false,
 
