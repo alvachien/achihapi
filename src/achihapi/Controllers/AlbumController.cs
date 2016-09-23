@@ -252,13 +252,7 @@ namespace achihapi.Controllers
 
             if (TryValidateModel(vm))
             {
-                vm.IsPublic = true;
-                // Check existence
-                //Boolean bExists = _dbContext.KnowledgeType.Any(x => x.Id == vm.ID);
-                //if (bExists)
-                //{
-                //    return BadRequest("ID exists already");
-                //}
+                // Additional checks
             }
             else
             {
