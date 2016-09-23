@@ -245,6 +245,7 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Create([FromBody]AlbumViewModel vm)
         {
+            Int32 nNewID = -1;
             if (vm == null)
             {
                 return BadRequest("No data is inputted");
@@ -283,7 +284,8 @@ namespace achihapi.Controllers
                                ,@CreatedAt
                                ,@IsPublic
                                ,@AccessCode
-                                )";
+                                )
+                         ; SELECT @Identity = SCOPE_IDENTITY();";
                     await conn.OpenAsync();
 
                     SqlCommand cmd = new SqlCommand(cmdText, conn);
@@ -293,17 +295,21 @@ namespace achihapi.Controllers
                     cmd.Parameters.AddWithValue("@CreatedAt", vm.CreatedAt);
                     cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
                     cmd.Parameters.AddWithValue("@AccessCode", String.IsNullOrEmpty(vm.AccessCode) ? String.Empty : vm.AccessCode);
+                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                    idparam.Direction = ParameterDirection.Output;
 
-                    await cmd.ExecuteNonQueryAsync();
+                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                    nNewID = (Int32)idparam.Value;
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                return Json(false);
+                return Json(-1);
             }
 
-            return Json(true);
+            vm.Id = nNewID;
+            return new ObjectResult(vm);
         }
 
         [HttpPut]

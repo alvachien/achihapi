@@ -2,7 +2,8 @@
 Web API for HIH, built on ASP.NET Core 1.0.
 
 ## appsettings.json 
-The appsettings.json has been removed.
+The appsettings.json has been removed. This file is manadatory to make the API works. The file defines the connection strings to the database.
+
 An example file look like following:
 
 {
