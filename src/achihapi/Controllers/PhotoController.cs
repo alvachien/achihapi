@@ -306,8 +306,21 @@ namespace achihapi.Controllers
 
         // POST api/photo
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> Post([FromBody]PhotoViewModel vm)
         {
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted");
+            }
+
+            if (vm.Title != null)
+                vm.Title = vm.Title.Trim();
+            if (String.IsNullOrEmpty(vm.Title))
+            {
+                return BadRequest("Title is a must!");
+            }
+
             // Update the database
 #if DEBUG
             SqlConnection conn = new SqlConnection(Startup.DebugConnectionString);
@@ -386,14 +399,11 @@ namespace achihapi.Controllers
                 cmd.Parameters.AddWithValue("@LensModel", "To-do");
                 cmd.Parameters.AddWithValue("@AVNumber", "To-do");
                 cmd.Parameters.AddWithValue("@ShutterSpeed", "To-do");
-                cmd.Parameters.AddWithValue("@IsPublic", true);
+                cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
                 cmd.Parameters.AddWithValue("@ISONumber", 0);
 
                 String strJson = Newtonsoft.Json.JsonConvert.SerializeObject(vm.ExifTags);
                 cmd.Parameters.AddWithValue("@EXIF", strJson);
-
-                //SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                //idparam.Direction = ParameterDirection.Output;
 
                 try
                 {
@@ -419,6 +429,7 @@ namespace achihapi.Controllers
 
         // PUT api/photo/5
         [HttpPut]
+        [Authorize]
         public async Task<IActionResult> Put([FromBody]PhotoViewModel vm)
         {
             if (vm == null)
@@ -470,8 +481,43 @@ namespace achihapi.Controllers
 
         // DELETE api/values/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        [Authorize]
+        public async Task<IActionResult> Delete(string pid)
         {
+            if (String.IsNullOrEmpty(pid))
+            {
+                return BadRequest("No data is inputted");
+            }
+
+            try
+            {
+#if DEBUG
+                using (SqlConnection conn = new SqlConnection(Startup.DebugConnectionString))
+#else
+                using (SqlConnection conn = new SqlConnection(Startup.DBConnectionString))
+#endif
+                {
+                    String cmdText = @"DELETE [Photo]
+                             WHERE [PhotoID] = @PhotoID
+                            ";
+
+                    conn.Open();
+                    SqlCommand cmd = new SqlCommand(cmdText, conn);
+                    cmd.Parameters.AddWithValue("@PhotoID", pid);
+
+                    await cmd.ExecuteNonQueryAsync();
+                    return new ObjectResult(true);
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+            }
+            finally
+            {
+            }
+
+            return new ObjectResult(false);
         }
     }
 }
