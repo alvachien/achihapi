@@ -6,15 +6,15 @@ using System.ComponentModel.DataAnnotations;
 
 namespace achihapi.ViewModels
 {
-    public class KnowledgeTypeViewModel
+    public class FinanceAccountCtgyViewModel : BaseViewModel
     {
+        public Int32 ID { get; set; }
         [Required]
-        public Int16 ID { get; set; }
-        public Int16? ParentID { get; set; }
-        [Required]
-        [StringLength(50)]
+        [StringLength(30)]
         public String Name { get; set; }
-        [StringLength(100)]
+        public Boolean AssetFlag { get; set; }
+        [StringLength(45)]
         public String Comment { get; set; }
+        public Boolean SysFlag { get; set; }
     }
 }

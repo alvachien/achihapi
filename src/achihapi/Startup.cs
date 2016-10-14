@@ -35,9 +35,6 @@ namespace achihapi
         }
 
         public IConfigurationRoot Configuration { get; }
-#if DEBUG
-        internal static String DebugConnectionString { get; private set; }
-#endif
         internal static String DBConnectionString { get; private set; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -52,17 +49,11 @@ namespace achihapi
                     options => {
                         options.AddPolicy("LearningAdmin", policy => policy.RequireClaim("LearningAdmin", "1"));
                         options.AddPolicy("KnowledgeAdmin", policy => policy.RequireClaim("KnowledgeAdmin", "1"));
-                        options.AddPolicy("GalleryAdmin", policy => policy.RequireRole("GalleryAdmin"));
-                        options.AddPolicy("GalleryPro", policy => policy.RequireRole("GalleryPro"));
                         options.AddPolicy("TodoAdmin", policy => policy.RequireClaim("TodoAdmin", "1"));
                     }
                 );
 
             DBConnectionString = Configuration.GetConnectionString("DefaultConnection");
-#if DEBUG
-            DebugConnectionString = Configuration.GetConnectionString("DebugConnection");
-#endif
-            services.AddDbContext<achihdbContext>(options => options.UseSqlServer(DBConnectionString));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -81,25 +72,19 @@ namespace achihapi
             app.UseCors(builder =>
 #if DEBUG
                 builder.WithOrigins(
-                    "http://localhost:29521",
-                    "http://localhost:1601",
-                    "https://localhost:29521",
-                    "https://localhost:1601"
+                    "http://localhost:29521", // AC HIH
+                    "https://localhost:29521"
                     )
 #else
 #if USINGAZURE
                 builder.WithOrigins(
                     "http://achihui.azurewebsites.net",
-                    "http://acgallery.azurewebsites.net",
-                    "https://achihui.azurewebsites.net",
-                    "https://acgallery.azurewebsites.net"
+                    "https://achihui.azurewebsites.net"
                     )
 #else
                 builder.WithOrigins(
                     "http://118.178.58.187:5220",
-                    "http://118.178.58.187:5300",
-                    "https://118.178.58.187:5220",
-                    "https://118.178.58.187:5300",
+                    "https://118.178.58.187:5220"
                     )
 #endif
 #endif
