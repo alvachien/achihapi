@@ -12,12 +12,12 @@ using Microsoft.AspNetCore.Authorization;
 namespace achihapi.Controllers
 {
     [Route("api/[controller]")]
-    public class FinanceSettingController : Controller
+    public class FinanceAccountController : Controller
     {
         [HttpGet]
-        public IEnumerable<FinanceSettingViewModel> Get()
+        public IEnumerable<FinanceAccountViewModel> Get()
         {
-            List<FinanceSettingViewModel> listVm = new List<FinanceSettingViewModel>();
+            List<FinanceAccountViewModel> listVm = new List<FinanceAccountViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
 
@@ -31,14 +31,16 @@ namespace achihapi.Controllers
 #endif
                 var usrObj = User.FindFirst(c => c.Type == "sub");
 
-                queryString = @"SELECT TOP (100) [SETID]
-                        ,[SETVALUE]
-                        ,[COMMENT]
-                        ,[CREATEDBY]
-                        ,[CREATEDAT]
-                        ,[UPDATEDBY]
-                        ,[UPDATEDAT]
-                    FROM [achihdb].[dbo].[t_fin_setting]";
+                queryString = @"SELECT TOP (100) [ID]
+                      ,[CTGYID]
+                      ,[NAME]
+                      ,[COMMENT]
+                      ,[OWNER]
+                      ,[CREATEDBY]
+                      ,[CREATEDAT]
+                      ,[UPDATEDBY]
+                      ,[UPDATEDAT]
+                  FROM [achihdb].[dbo].[t_fin_account]";
 
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -47,19 +49,22 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        FinanceSettingViewModel avm = new FinanceSettingViewModel();
-                        avm.SetID = reader.GetString(0);
-                        avm.SetValue = reader.GetString(1);
-                        if (!reader.IsDBNull(2))
-                            avm.Comment = reader.GetString(2);
+                        FinanceAccountViewModel avm = new FinanceAccountViewModel();
+                        avm.ID = reader.GetInt32(0);
+                        avm.CtgyID = reader.GetInt32(1);
+                        avm.Name = reader.GetName(2);
                         if (!reader.IsDBNull(3))
-                            avm.CreatedBy = reader.GetString(3);
+                            avm.Comment = reader.GetString(3);
                         if (!reader.IsDBNull(4))
-                            avm.CreatedAt = reader.GetDateTime(4);
+                            avm.Owner = reader.GetString(4);
                         if (!reader.IsDBNull(5))
-                            avm.UpdatedBy = reader.GetString(5);
+                            avm.CreatedBy = reader.GetString(5);
                         if (!reader.IsDBNull(6))
-                            avm.UpdatedAt = reader.GetDateTime(6);
+                            avm.CreatedAt = reader.GetDateTime(6);
+                        if (!reader.IsDBNull(7))
+                            avm.UpdatedBy = reader.GetString(7);
+                        if (!reader.IsDBNull(8))
+                            avm.UpdatedAt = reader.GetDateTime(8);
 
                         listVm.Add(avm);
                     }
