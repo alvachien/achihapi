@@ -17,4 +17,18 @@ namespace achihapi.ViewModels
         [StringLength(40)]
         public String Owner { get; set; }
     }
+
+    public class FinanceAccountExtDPViewModel
+    {
+        public Int32 AccountID { get; set; }
+        public Boolean Direct { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public Byte RptType { get; set; }
+        public Int32 RefDocID { get; set; }
+        [StringLength(100)]
+        public String DefrrDays { get; set; }
+        [StringLength(45)]
+        public String Comment { get; set; }
+    }
 }
