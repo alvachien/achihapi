@@ -9,13 +9,13 @@ using System.Data.SqlClient;
 namespace achihapi.Controllers
 {
     [Route("api/[controller]")]
-    public class FinanceAccountCategoryController : Controller
+    public class FinanceDocTypeController : Controller
     {
-        // GET: api/financeaccountcategory
+        // GET: api/financedoctype
         [HttpGet]
-        public IEnumerable<FinanceAccountCtgyViewModel> Get()
+        public IEnumerable<FinanceDocTypeViewModel> Get()
         {
-            List<FinanceAccountCtgyViewModel> listVMs = new List<FinanceAccountCtgyViewModel>();
+            List<FinanceDocTypeViewModel> listVMs = new List<FinanceDocTypeViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
 
@@ -30,15 +30,14 @@ namespace achihapi.Controllers
                 var usrObj = User.FindFirst(c => c.Type == "sub");
 
                 queryString = @"SELECT TOP (1000) [ID]
-                          ,[NAME]
-                          ,[ASSETFLAG]
-                          ,[COMMENT]
-                          ,[SYSFLAG]
-                          ,[CREATEDBY]
-                          ,[CREATEDAT]
-                          ,[UPDATEDBY]
-                          ,[UPDATEDAT]
-                      FROM [achihdb].[dbo].[t_fin_account_ctgy]";
+                              ,[NAME]
+                              ,[COMMENT]
+                              ,[SYSFLAG]
+                              ,[CREATEDBY]
+                              ,[CREATEDAT]
+                              ,[UPDATEDBY]
+                              ,[UPDATEDAT]
+                          FROM [achihdb].[dbo].[t_fin_doc_type]";
 
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -47,23 +46,21 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        FinanceAccountCtgyViewModel avm = new FinanceAccountCtgyViewModel();
-                        avm.ID = reader.GetInt32(0);
+                        FinanceDocTypeViewModel avm = new FinanceDocTypeViewModel();
+                        avm.ID = reader.GetInt16(0);
                         avm.Name = reader.GetString(1);
                         if (!reader.IsDBNull(2))
-                            avm.AssetFlag = reader.GetBoolean(2);
+                            avm.Comment = reader.GetString(2);
                         if (!reader.IsDBNull(3))
-                            avm.Comment = reader.GetString(3);
+                            avm.SysFlag = reader.GetBoolean(3);
                         if (!reader.IsDBNull(4))
-                            avm.SysFlag = reader.GetBoolean(4);
+                            avm.CreatedBy = reader.GetString(4);
                         if (!reader.IsDBNull(5))
-                            avm.CreatedBy = reader.GetString(5);
+                            avm.CreatedAt = reader.GetDateTime(5);
                         if (!reader.IsDBNull(6))
-                            avm.CreatedAt = reader.GetDateTime(6);
+                            avm.UpdatedBy = reader.GetString(6);
                         if (!reader.IsDBNull(7))
-                            avm.UpdatedBy = reader.GetString(7);
-                        if (!reader.IsDBNull(8))
-                            avm.UpdatedAt = reader.GetDateTime(8);
+                            avm.UpdatedAt = reader.GetDateTime(7);
 
                         listVMs.Add(avm);
                     }
@@ -82,26 +79,26 @@ namespace achihapi.Controllers
             return listVMs;
         }
 
-        // GET api/financeaccountcateogry/5
-        [HttpGet("{ id}")]
+        // GET api/financedoctype/5
+        [HttpGet("{id}")]
         public string Get(int id)
         {
             return "value";
         }
 
-        // POST api/financeaccountcateogry
+        // POST api/financedoctype
         [HttpPost]
         public void Post([FromBody]string value)
         {
         }
 
-        // PUT api/financeaccountcateogry/5
+        // PUT api/financedoctype/5
         [HttpPut("{id}")]
         public void Put(int id, [FromBody]string value)
         {
         }
 
-        // DELETE api/financeaccountcateogry/5
+        // DELETE api/financedoctype/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {

@@ -18,6 +18,12 @@ namespace achihapi
     {
         public Startup(IHostingEnvironment env)
         {
+#if DEBUG
+            env.EnvironmentName = "Development";
+#else
+            env.EnvironmentName = "Production";
+#endif
+
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
