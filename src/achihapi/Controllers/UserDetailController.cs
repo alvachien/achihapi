@@ -15,16 +15,7 @@ namespace achihapi.Controllers
         // GET: api/userdetail
         [HttpGet]
         [Authorize]
-        public IActionResult Get()
-        {
-            // It is not allowed
-            return BadRequest();
-        }
-
-        // GET api/userdetail/id5
-        [HttpGet("{id}")]
-        [Authorize]
-        public async Task<IActionResult> Get(String id)
+        public async Task<IActionResult> Get()
         {
 #if DEBUG
             foreach (var clm in User.Claims.AsEnumerable())
@@ -33,8 +24,6 @@ namespace achihapi.Controllers
             }
 #endif
             var usrName = User.FindFirst(c => c.Type == "sub").Value;
-            if (String.CompareOrdinal(id, usrName) != 0)
-                return BadRequest();
 
             UserDetailViewModel vm = new UserDetailViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -48,7 +37,7 @@ namespace achihapi.Controllers
                       ,[EMAIL]
                       ,[OTHERS]
                   FROM [dbo].[t_userdetail]
-                  WHERE [USERID] = N'" + id + "'";
+                  WHERE [USERID] = N'" + usrName + "'";
 
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -92,6 +81,13 @@ namespace achihapi.Controllers
             }
 
             return new ObjectResult(vm);
+        }
+
+        // GET api/userdetail/id5
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(String id)
+        {
+            return Forbid();
         }
 
         // POST api/userdetail

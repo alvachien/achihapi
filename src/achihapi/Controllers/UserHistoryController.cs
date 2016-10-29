@@ -14,14 +14,8 @@ namespace achihapi.Controllers
     {
         // GET: api/userhistory
         [HttpGet]
-        public IActionResult Get()
-        {
-            return Forbid();
-        }
-
-        // GET api/userhistory/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(String usrid)
+        [Authorize]
+        public async Task<IActionResult> Get()
         {
             List<UserHistoryViewModel> listVMs = new List<UserHistoryViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -30,13 +24,15 @@ namespace achihapi.Controllers
 
             try
             {
+                var usrName = User.FindFirst(c => c.Type == "sub").Value;
+
                 queryString = @"SELECT [USERID]
                               ,[SEQNO]
                               ,[HISTTYP]
                               ,[TIMEPOINT]
                               ,[OTHERS]
                           FROM [dbo].[t_userhist]
-                        WHERE [USERID] = N'" + usrid + "'";
+                        WHERE [USERID] = N'" + usrName + "'";
 
                 conn.Open();
 
@@ -84,8 +80,17 @@ namespace achihapi.Controllers
             return new ObjectResult(listVMs);
         }
 
+        // GET api/userhistory/5
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<IActionResult> Get(String usrid)
+        {
+            return Forbid();
+        }
+
         // POST api/userhistory
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> Post([FromBody]UserHistoryViewModel vm)
         {
             if (vm == null)
@@ -126,13 +131,9 @@ namespace achihapi.Controllers
                                    ,[HISTTYP]
                                    ,[TIMEPOINT]
                                    ,[OTHERS])
-                             VALUES
-                                   (@USERID
-                                   ,@SEQNO
-                                   ,@HISTTYP
-                                   ,@TIMEPOINT
-                                   ,@OTHERS
-                                   )";
+                             select @USERID as [USERID], COUNT(SEQNO) + 1 AS SEQNO, @HISTTYP as HISTTYPE,@TIMEPOINT
+                                   ,@OTHERS FROM [dbo].[t_userhist] WHERE [USERID] = @USERID 
+                                ";
 
                 conn.Open();
 
