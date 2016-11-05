@@ -83,7 +83,7 @@ namespace achihapi.Controllers
         }
 
         // GET api/financeaccountcateogry/5
-        [HttpGet("{ id}")]
+        [HttpGet("{id}")]
         public string Get(int id)
         {
             return "value";
