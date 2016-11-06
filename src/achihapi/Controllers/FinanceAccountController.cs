@@ -41,7 +41,7 @@ namespace achihapi.Controllers
                       ,[CREATEDAT]
                       ,[UPDATEDBY]
                       ,[UPDATEDAT]
-                  FROM [achihdb].[dbo].[t_fin_account]";
+                  FROM [dbo].[t_fin_account]";
 
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -97,7 +97,7 @@ namespace achihapi.Controllers
                       ,[CREATEDAT]
                       ,[UPDATEDBY]
                       ,[UPDATEDAT]
-                  FROM [achihdb].[dbo].[t_fin_account]
+                  FROM [dbo].[t_fin_account]
                   WHERE [ID] = " + id.ToString();
 
                 await conn.OpenAsync();
@@ -188,7 +188,7 @@ namespace achihapi.Controllers
                 var usrName = User.FindFirst(c => c.Type == "sub").Value;
 
                 queryString = @"SELECT [ID]
-                  FROM [achihdb].[dbo].[t_fin_account] WHERE [Name] = N'" + vm.Name + "'";
+                  FROM [dbo].[t_fin_account] WHERE [Name] = N'" + vm.Name + "'";
 
                 await conn.OpenAsync();
 

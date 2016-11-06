@@ -38,7 +38,7 @@ namespace achihapi.Controllers
                         ,[CREATEDAT]
                         ,[UPDATEDBY]
                         ,[UPDATEDAT]
-                    FROM [achihdb].[dbo].[t_fin_setting]";
+                    FROM [dbo].[t_fin_setting]";
 
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(queryString, conn);

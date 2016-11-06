@@ -21,20 +21,12 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
-                var usrObj = User.FindFirst(c => c.Type == "sub");
-
                 queryString = @"SELECT TOP (1000) [LCID]
                               ,[ISONAME]
                               ,[ENNAME]
                               ,[NAVNAME]
                               ,[APPFLAG]
-                          FROM [achihdb].[dbo].[t_language]";
+                          FROM [dbo].[t_language]";
 
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(queryString, conn);

@@ -31,7 +31,7 @@ namespace achihapi.Controllers
 
                 queryString = @"SELECT TOP (1000) [ID]
                               ,[NAME]
-                          FROM [achihdb].[dbo].[t_tag]";
+                          FROM [dbo].[t_tag]";
 
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(queryString, conn);

@@ -21,19 +21,11 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
-                var usrObj = User.FindFirst(c => c.Type == "sub");
-
                 queryString = @"SELECT TOP (1000) [MODULE]
                           ,[NAME]
                           ,[AUTHFLAG]
                           ,[TAGFLAG]
-                      FROM [achihdb].[dbo].[t_module]";
+                      FROM [dbo].[t_module]";
 
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(queryString, conn);

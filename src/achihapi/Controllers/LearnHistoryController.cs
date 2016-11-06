@@ -11,33 +11,89 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class LearnHistoryController : Controller
     {
-        // GET: api/values
+        // GET: api/learnhistory
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IEnumerable<LearnHistoryViewModel> Get()
         {
-            return new string[] { "value1", "value2" };
+            List<LearnHistoryViewModel> listVm = new List<LearnHistoryViewModel>();
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+
+            try
+            {
+                queryString = @"SELECT TOP (1000) [USERID]
+                          ,[OBJECTID]
+                          ,[LEARNDATE]
+                          ,[COMMENT]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                      FROM [dbo].[t_learn_hist]";
+
+                conn.Open();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        LearnHistoryViewModel vm = new LearnHistoryViewModel();
+                        onDB2VM(reader, vm);
+                        listVm.Add(vm);
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            return listVm;
         }
 
-        // GET api/values/5
+        private void onDB2VM(SqlDataReader reader, LearnHistoryViewModel vm)
+        {
+            vm.UserID = reader.GetString(0);
+            vm.ObjectID = reader.GetInt32(1);
+            vm.LearnDate = reader.GetDateTime(2);
+            if (!reader.IsDBNull(3))
+                vm.Comment = reader.GetString(3);
+            if (!reader.IsDBNull(4))
+                vm.CreatedBy = reader.GetString(4);
+            if (!reader.IsDBNull(5))
+                vm.CreatedAt = reader.GetDateTime(5);
+            if (!reader.IsDBNull(6))
+                vm.UpdatedBy = reader.GetString(6);
+            if (!reader.IsDBNull(7))
+                vm.UpdatedAt = reader.GetDateTime(7);
+        }
+
+        // GET api/learnhistory/5
         [HttpGet("{id}")]
         public string Get(int id)
         {
             return "value";
         }
 
-        // POST api/values
+        // POST api/learnhistory
         [HttpPost]
         public void Post([FromBody]string value)
         {
         }
 
-        // PUT api/values/5
+        // PUT api/learnhistory/5
         [HttpPut("{id}")]
         public void Put(int id, [FromBody]string value)
         {
         }
 
-        // DELETE api/values/5
+        // DELETE api/learnhistory/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {

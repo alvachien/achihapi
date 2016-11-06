@@ -6,16 +6,18 @@ using System.ComponentModel.DataAnnotations;
 
 namespace achihapi.ViewModels
 {
-    public class LearnHistoryViewModel : BaseViewModel
+    public class LearnAwardViewModel : BaseViewModel
     {
+        public Int32 ID { get; set; }
         [Required]
         [StringLength(40)]
         public String UserID { get; set; }
         [Required]
-        public Int32 ObjectID { get; set; }
+        public DateTime AwardDate { get; set; }
         [Required]
-        public DateTime LearnDate { get; set; }
-        [StringLength(45)]
-        public String Comment { get; set; }
+        public Int32 Score { get; set; }
+        [Required]
+        [StringLength(40)]
+        public String Reason { get; set; }
     }
 }

@@ -32,7 +32,7 @@ namespace achihapi.Controllers
                 queryString = @"SELECT TOP (1000) [TAGID]
                               ,[MODULE]
                               ,[OBJID]
-                          FROM [achihdb].[dbo].[t_tag_link]";
+                          FROM [dbo].[t_tag_link]";
 
                 conn.Open();
 

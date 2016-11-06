@@ -21,24 +21,16 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
-                var usrObj = User.FindFirst(c => c.Type == "sub");
-
-                queryString = @"SELECT TOP (100) [ID]
-                      ,[CTGYID]
-                      ,[NAME]
-                      ,[COMMENT]
-                      ,[OWNER]
-                      ,[CREATEDBY]
-                      ,[CREATEDAT]
-                      ,[UPDATEDBY]
-                      ,[UPDATEDAT]
-                  FROM [achihdb].[dbo].[t_fin_account]";
+                queryString = @"SELECT TOP (1000) [ID]
+                              ,[PARID]
+                              ,[NAME]
+                              ,[COMMENT]
+                              ,[SYSFLAG]
+                              ,[CREATEDBY]
+                              ,[CREATEDAT]
+                              ,[UPDATEDBY]
+                              ,[UPDATEDAT]
+                          FROM [dbo].[t_learn_ctgy]";
 
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -48,7 +40,7 @@ namespace achihapi.Controllers
                     while (reader.Read())
                     {
                         LearnCategoryViewModel vm = new LearnCategoryViewModel();
-                        //onDB2VM(reader, vm);
+                        onDB2VM(reader, vm);
                         listVm.Add(vm);
                     }
                 }
@@ -64,6 +56,26 @@ namespace achihapi.Controllers
             }
 
             return listVm;
+        }
+
+        private void onDB2VM(SqlDataReader reader, LearnCategoryViewModel vm)
+        {
+            vm.ID = reader.GetInt32(0);
+            if (!reader.IsDBNull(1))
+                vm.ParID = reader.GetInt32(1);
+            vm.Name = reader.GetString(2);
+            if (!reader.IsDBNull(3))
+                vm.Comment = reader.GetString(3);
+            if (!reader.IsDBNull(4))
+                vm.SysFlag = reader.GetBoolean(4);
+            if (!reader.IsDBNull(5))
+                vm.CreatedBy = reader.GetString(5);
+            if (!reader.IsDBNull(6))
+                vm.CreatedAt = reader.GetDateTime(6);
+            if (!reader.IsDBNull(7))
+                vm.UpdatedBy = reader.GetString(7);
+            if (!reader.IsDBNull(8))
+                vm.UpdatedAt = reader.GetDateTime(8);
         }
 
         // GET api/learncategory/5

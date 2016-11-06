@@ -11,33 +11,90 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class LearnAwardController : Controller
     {
-        // GET: api/values
+        // GET: api/learnaward
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IEnumerable<LearnAwardViewModel> Get()
         {
-            return new string[] { "value1", "value2" };
+            List<LearnAwardViewModel> listVm = new List<LearnAwardViewModel>();
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+
+            try
+            {
+                queryString = @"SELECT TOP (1000) [ID]
+                              ,[USERID]
+                              ,[ADATE]
+                              ,[SCORE]
+                              ,[REASON]
+                              ,[CREATEDBY]
+                              ,[CREATEDAT]
+                              ,[UPDATEDBY]
+                              ,[UPDATEDAT]
+                          FROM [dbo].[t_learn_award]";
+
+                conn.Open();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        LearnAwardViewModel vm = new LearnAwardViewModel();
+                        onDB2VM(reader, vm);
+                        listVm.Add(vm);
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            return listVm;
         }
 
-        // GET api/values/5
+        private void onDB2VM(SqlDataReader reader, LearnAwardViewModel vm)
+        {
+            vm.ID = reader.GetInt32(0);
+            vm.UserID = reader.GetString(1);
+            vm.AwardDate = reader.GetDateTime(2);
+            vm.Score = reader.GetInt32(3);
+            vm.Reason = reader.GetString(4);
+            if (!reader.IsDBNull(5))
+                vm.CreatedBy = reader.GetString(5);
+            if (!reader.IsDBNull(6))
+                vm.CreatedAt = reader.GetDateTime(6);
+            if (!reader.IsDBNull(7))
+                vm.UpdatedBy = reader.GetString(7);
+            if (!reader.IsDBNull(8))
+                vm.UpdatedAt = reader.GetDateTime(8);
+        }
+
+        // GET api/learnaward/5
         [HttpGet("{id}")]
         public string Get(int id)
         {
             return "value";
         }
 
-        // POST api/values
+        // POST api/learnaward
         [HttpPost]
         public void Post([FromBody]string value)
         {
         }
 
-        // PUT api/values/5
+        // PUT api/learnaward/5
         [HttpPut("{id}")]
         public void Put(int id, [FromBody]string value)
         {
         }
 
-        // DELETE api/values/5
+        // DELETE api/learnaward/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
