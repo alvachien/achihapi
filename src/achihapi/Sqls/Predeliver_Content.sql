@@ -1,4 +1,8 @@
 ﻿
+-- Content for language
+
+-- Content for currency
+
 -- Content for learn category
 SET IDENTITY_INSERT dbo.[t_learn_ctgy] ON;
 
