@@ -77,9 +77,63 @@ namespace achihapi.Controllers
 
         // GET api/learnobject/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            return "value";
+            LearnObjectViewModel vm = new LearnObjectViewModel();
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            Boolean bNotFound = false;
+
+            try
+            {
+                queryString = @"SELECT [ID]
+                      ,[CATEGORY]
+                      ,[NAME]
+                      ,[CONTENT]
+                      ,[CREATEDBY]
+                      ,[CREATEDAT]
+                      ,[UPDATEDBY]
+                      ,[UPDATEDAT]
+                        FROM [dbo].[t_learn_obj] WHERE [ID] = " + id.ToString();
+
+                await conn.OpenAsync();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        onDB2VM(reader, vm);
+                        break; // Should only one result!!!
+                    }
+                }
+                else
+                {
+                    bNotFound = true;
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            if (bNotFound)
+            {
+                return NotFound();
+            } 
+            else if(bError)
+            {
+                return new StatusCodeResult(500);
+            }
+
+            return new ObjectResult(vm);
         }
 
         // POST api/learnobject
@@ -104,7 +158,10 @@ namespace achihapi.Controllers
             Boolean bDuplicatedEntry = false;
             Int32 nDuplicatedID = -1;
             Int32 nNewID = -1;
-            var usrName = User.FindFirst(c => c.Type == "sub").Value;
+            var usr = User.FindFirst(c => c.Type == "sub");
+            String usrName = String.Empty;
+            if (usr != null)
+                usrName = usr.Value;
 
             try
             {

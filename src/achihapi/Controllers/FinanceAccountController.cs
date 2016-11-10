@@ -16,11 +16,12 @@ namespace achihapi.Controllers
     {
         // GET: api/financeaccount
         [HttpGet]
-        public IEnumerable<FinanceAccountViewModel> Get()
+        public async Task<IActionResult> Get()
         {
             List<FinanceAccountViewModel> listVm = new List<FinanceAccountViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
+            Boolean bError = false;
 
             try
             {
@@ -43,7 +44,7 @@ namespace achihapi.Controllers
                       ,[UPDATEDAT]
                   FROM [dbo].[t_fin_account]";
 
-                conn.Open();
+                await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -59,6 +60,7 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
             }
             finally
             {
@@ -66,7 +68,12 @@ namespace achihapi.Controllers
                 conn.Dispose();
             }
 
-            return listVm;
+            if (bError)
+            {
+                return StatusCode(500, "Error occurred!");
+            }
+
+            return new ObjectResult(listVm);
         }
 
         // GET api/financeaccount/5
@@ -77,6 +84,7 @@ namespace achihapi.Controllers
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bExist = false;
+            Boolean bError = false;
 
             try
             {
@@ -119,6 +127,7 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
             }
             finally
             {
@@ -129,6 +138,8 @@ namespace achihapi.Controllers
             // In case not found, return a 404
             if (!bExist)
                 return NotFound();
+            else if (bError)
+                return StatusCode(500, "Error occurred!");
 
             // Only return the meaningful object
             return new ObjectResult(vmAccount);
