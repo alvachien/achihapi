@@ -13,11 +13,13 @@ namespace achihapi.Controllers
     {
         // GET: api/learnaward
         [HttpGet]
-        public IEnumerable<LearnAwardViewModel> Get()
+        public async Task<IActionResult> Get()
         {
             List<LearnAwardViewModel> listVm = new List<LearnAwardViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -32,7 +34,7 @@ namespace achihapi.Controllers
                               ,[UPDATEDAT]
                           FROM [dbo].[t_learn_award]";
 
-                conn.Open();
+                await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -48,14 +50,18 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
                 conn.Close();
                 conn.Dispose();
             }
+            if (bError)
+                return StatusCode(500, strErrMsg);
 
-            return listVm;
+            return new ObjectResult(listVm);
         }
 
         private void onDB2VM(SqlDataReader reader, LearnAwardViewModel vm)

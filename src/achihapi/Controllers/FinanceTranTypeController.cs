@@ -13,11 +13,13 @@ namespace achihapi.Controllers
     {
         // GET: api/values
         [HttpGet]
-        public IEnumerable<FinanceTranTypeViewModel> Get()
+        public async Task<IActionResult> Get()
         {
             List<FinanceTranTypeViewModel> listVM = new List<ViewModels.FinanceTranTypeViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -41,7 +43,7 @@ namespace achihapi.Controllers
                               ,[UPDATEDAT]
                           FROM [dbo].[t_fin_tran_type]";
 
-                conn.Open();
+                await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -75,13 +77,19 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
                 conn.Close();
                 conn.Dispose();
             }
-            return listVM;
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return new ObjectResult(listVM);
         }
 
         // GET api/values/5

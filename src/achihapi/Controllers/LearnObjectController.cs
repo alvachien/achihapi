@@ -14,11 +14,13 @@ namespace achihapi.Controllers
     {
         // GET: api/learnobject
         [HttpGet]
-        public IEnumerable<LearnObjectViewModel> Get()
+        public async Task<IActionResult> Get()
         {
             List<LearnObjectViewModel> listVm = new List<LearnObjectViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -32,7 +34,7 @@ namespace achihapi.Controllers
                       ,[UPDATEDAT]
                         FROM [dbo].[t_learn_obj]";
 
-                conn.Open();
+                await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -48,6 +50,8 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                strErrMsg = exp.Message;
+                bError = true;
             }
             finally
             {
@@ -55,7 +59,10 @@ namespace achihapi.Controllers
                 conn.Dispose();
             }
 
-            return listVm;
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return new ObjectResult(listVm);
         }
 
         private void onDB2VM(SqlDataReader reader, LearnObjectViewModel vm)
@@ -83,6 +90,7 @@ namespace achihapi.Controllers
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
+            String strErrMsg = "";
             Boolean bNotFound = false;
 
             try
@@ -117,6 +125,7 @@ namespace achihapi.Controllers
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -130,7 +139,7 @@ namespace achihapi.Controllers
             } 
             else if(bError)
             {
-                return new StatusCodeResult(500);
+                return StatusCode(500, strErrMsg);
             }
 
             return new ObjectResult(vm);
@@ -158,6 +167,8 @@ namespace achihapi.Controllers
             Boolean bDuplicatedEntry = false;
             Int32 nDuplicatedID = -1;
             Int32 nNewID = -1;
+            Boolean bError = false;
+            String strErrMsg = "";
             var usr = User.FindFirst(c => c.Type == "sub");
             String usrName = String.Empty;
             if (usr != null)
@@ -226,6 +237,8 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -236,6 +249,11 @@ namespace achihapi.Controllers
             if (bDuplicatedEntry)
             {
                 return BadRequest("Object with name already exists: " + nDuplicatedID.ToString());
+            }
+
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
             }
 
             vm.ID = nNewID;

@@ -13,11 +13,13 @@ namespace achihapi.Controllers
     {
         // GET: api/financeaccountcategory
         [HttpGet]
-        public IEnumerable<FinanceAccountCtgyViewModel> Get()
+        public async Task<IActionResult> Get()
         {
             List<FinanceAccountCtgyViewModel> listVMs = new List<FinanceAccountCtgyViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -29,7 +31,7 @@ namespace achihapi.Controllers
 #endif
                 var usrObj = User.FindFirst(c => c.Type == "sub");
 
-                queryString = @"SELECT TOP (1000) [ID]
+                queryString = @"SELECT [ID]
                           ,[NAME]
                           ,[ASSETFLAG]
                           ,[COMMENT]
@@ -40,7 +42,7 @@ namespace achihapi.Controllers
                           ,[UPDATEDAT]
                       FROM [dbo].[t_fin_account_ctgy]";
 
-                conn.Open();
+                await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -72,6 +74,8 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -79,7 +83,10 @@ namespace achihapi.Controllers
                 conn.Dispose();
             }
 
-            return listVMs;
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return new ObjectResult(listVMs);
         }
 
         // GET api/financeaccountcateogry/5

@@ -22,6 +22,7 @@ namespace achihapi.Controllers
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -61,6 +62,7 @@ namespace achihapi.Controllers
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -70,7 +72,7 @@ namespace achihapi.Controllers
 
             if (bError)
             {
-                return StatusCode(500, "Error occurred!");
+                return StatusCode(500, strErrMsg);
             }
 
             return new ObjectResult(listVm);
@@ -85,6 +87,7 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bExist = false;
             Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -128,6 +131,7 @@ namespace achihapi.Controllers
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -139,7 +143,7 @@ namespace achihapi.Controllers
             if (!bExist)
                 return NotFound();
             else if (bError)
-                return StatusCode(500, "Error occurred!");
+                return StatusCode(500, strErrMsg);
 
             // Only return the meaningful object
             return new ObjectResult(vmAccount);
@@ -187,6 +191,8 @@ namespace achihapi.Controllers
             Boolean bDuplicatedEntry = false;
             Int32 nDuplicatedID = -1;
             Int32 nNewID = -1;
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -269,6 +275,8 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -280,6 +288,9 @@ namespace achihapi.Controllers
             {
                 return BadRequest("Account already exists: " + nDuplicatedID.ToString());
             }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
 
             vm.ID = nNewID;
             return new ObjectResult(vm);

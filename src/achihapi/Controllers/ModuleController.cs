@@ -13,11 +13,13 @@ namespace achihapi.Controllers
     {
         // GET: api/module
         [HttpGet]
-        public IEnumerable<ModuleViewModel> Get()
+        public async Task<IActionResult> Get()
         {
             List<ModuleViewModel> listVMs = new List<ModuleViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -27,7 +29,7 @@ namespace achihapi.Controllers
                           ,[TAGFLAG]
                       FROM [dbo].[t_module]";
 
-                conn.Open();
+                await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -49,6 +51,8 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -56,7 +60,10 @@ namespace achihapi.Controllers
                 conn.Dispose();
             }
 
-            return listVMs;
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return new ObjectResult(listVMs);
         }
 
         // GET api/module/5

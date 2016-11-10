@@ -29,6 +29,8 @@ namespace achihapi.Controllers
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bUserNotExist = false;
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -39,7 +41,7 @@ namespace achihapi.Controllers
                   FROM [dbo].[t_userdetail]
                   WHERE [USERID] = N'" + usrName + "'";
 
-                conn.Open();
+                await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = await cmd.ExecuteReaderAsync();
                 if (reader.HasRows)
@@ -68,6 +70,8 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -79,6 +83,8 @@ namespace achihapi.Controllers
             {
                 return NotFound();
             }
+            if (bError)
+                return StatusCode(500, strErrMsg);
 
             return new ObjectResult(vm);
         }

@@ -13,11 +13,13 @@ namespace achihapi.Controllers
     {
         // GET: api/financedoctype
         [HttpGet]
-        public IEnumerable<FinanceDocTypeViewModel> Get()
+        public async Task<IActionResult> Get()
         {
             List<FinanceDocTypeViewModel> listVMs = new List<FinanceDocTypeViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -39,7 +41,7 @@ namespace achihapi.Controllers
                               ,[UPDATEDAT]
                           FROM [dbo].[t_fin_doc_type]";
 
-                conn.Open();
+                await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -69,6 +71,8 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -76,7 +80,10 @@ namespace achihapi.Controllers
                 conn.Dispose();
             }
 
-            return listVMs;
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return new ObjectResult(listVMs);
         }
 
         // GET api/financedoctype/5

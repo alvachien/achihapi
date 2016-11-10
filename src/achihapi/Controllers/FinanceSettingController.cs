@@ -15,11 +15,13 @@ namespace achihapi.Controllers
     public class FinanceSettingController : Controller
     {
         [HttpGet]
-        public IEnumerable<FinanceSettingViewModel> Get()
+        public async Task<IActionResult> Get()
         {
             List<FinanceSettingViewModel> listVm = new List<FinanceSettingViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -40,7 +42,7 @@ namespace achihapi.Controllers
                         ,[UPDATEDAT]
                     FROM [dbo].[t_fin_setting]";
 
-                conn.Open();
+                await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -68,6 +70,8 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -75,7 +79,10 @@ namespace achihapi.Controllers
                 conn.Dispose();
             }
 
-            return listVm;
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return new ObjectResult(listVm);
         }
     }
 }
