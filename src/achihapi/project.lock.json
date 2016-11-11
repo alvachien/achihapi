@@ -100,10 +100,10 @@
           }
         }
       },
-      "Magick.NET.Core-Q8/7.0.3.1": {
+      "Magick.NET.Core-Q8/7.0.3.502": {
         "type": "package",
         "dependencies": {
-          "Magick.NET.Core-Q8.Native": "7.0.3.1",
+          "Magick.NET.Core-Q8.Native": "7.0.3.502",
           "NETStandard.Library": "1.6.0",
           "System.Collections.NonGeneric": "4.0.1",
           "System.Xml.XDocument": "4.0.11",
@@ -118,7 +118,7 @@
           "lib/netstandard1.3/Magick.NET.Core-Q8.dll": {}
         }
       },
-      "Magick.NET.Core-Q8.Native/7.0.3.1": {
+      "Magick.NET.Core-Q8.Native/7.0.3.502": {
         "type": "package",
         "runtimeTargets": {
           "runtimes/win7-x64/native/Magick.NET-Q8-x64.Native.dll": {
@@ -4391,7 +4391,7 @@
           "lib/netstandard1.3/System.Xml.XPath.XmlDocument.dll": {}
         }
       },
-      "WindowsAzure.Storage/7.2.0": {
+      "WindowsAzure.Storage/7.2.1": {
         "type": "package",
         "dependencies": {
           "Microsoft.Data.OData": "5.6.4",
@@ -4472,23 +4472,23 @@
         "runtimes/win7-x86/native/libuv.dll"
       ]
     },
-    "Magick.NET.Core-Q8/7.0.3.1": {
-      "sha512": "kI+8u5m3BEBVbur4ZnzGn6aR6LUzkH7Wj1D8taFu0xEb6M33X9P77TUxJujucn/oIi4LqIVbyLYjz6PjbX9zQA==",
+    "Magick.NET.Core-Q8/7.0.3.502": {
+      "sha512": "bLVPgrGTWDAj98Bg2OORQqz60bvYub9y7GSyOnDeeCHcGYuvwZrhTwfjvi1PKeigQ0uy6bqJAFgfmX+VbbNCYg==",
       "type": "package",
-      "path": "Magick.NET.Core-Q8/7.0.3.1",
+      "path": "Magick.NET.Core-Q8/7.0.3.502",
       "files": [
-        "Magick.NET.Core-Q8.7.0.3.1.nupkg.sha512",
+        "Magick.NET.Core-Q8.7.0.3.502.nupkg.sha512",
         "Magick.NET.Core-Q8.nuspec",
         "lib/netstandard1.3/Magick.NET.Core-Q8.dll",
         "lib/netstandard1.3/Magick.NET.Core-Q8.xml"
       ]
     },
-    "Magick.NET.Core-Q8.Native/7.0.3.1": {
-      "sha512": "4/TW6WPXZzGzIrXBEOk9/foZonZoq8bU0hzBIpJXzbK2ySH7ukXC893Uo+qn/JaNqh6q77M6ikWx0VTE0rgBGg==",
+    "Magick.NET.Core-Q8.Native/7.0.3.502": {
+      "sha512": "yPSZoCBI94pBx6ENiFMc3BYXmymrSyOmEHn8yBxI+h+I0PbmHSQr4a+6okzC4wAupZLncDMKMgNzv79YorxQ7A==",
       "type": "package",
-      "path": "Magick.NET.Core-Q8.Native/7.0.3.1",
+      "path": "Magick.NET.Core-Q8.Native/7.0.3.502",
       "files": [
-        "Magick.NET.Core-Q8.Native.7.0.3.1.nupkg.sha512",
+        "Magick.NET.Core-Q8.Native.7.0.3.502.nupkg.sha512",
         "Magick.NET.Core-Q8.Native.nuspec",
         "runtimes/win7-x64/native/Magick.NET-Q8-x64.Native.dll",
         "runtimes/win7-x86/native/Magick.NET-Q8-x86.Native.dll"
@@ -11109,12 +11109,12 @@
         "ref/xamarinwatchos10/_._"
       ]
     },
-    "WindowsAzure.Storage/7.2.0": {
-      "sha512": "EngH7mPZpFgBnkhLRMz4XQi1s2zZp+Yh9nnyv6Dr0ewxcVagyerdH/fp74vDIgaPpy/GTO3q6mqpwuW9WFkN/A==",
+    "WindowsAzure.Storage/7.2.1": {
+      "sha512": "PWSqaIFaUvi2DgHeDotoRtv1new1m3jfwsb+T6nZfpVdYYIzyYUOFPBxJ0f8yHUq8C9Na8avNc08YsdgDIoTZg==",
       "type": "package",
-      "path": "WindowsAzure.Storage/7.2.0",
+      "path": "WindowsAzure.Storage/7.2.1",
       "files": [
-        "WindowsAzure.Storage.7.2.0.nupkg.sha512",
+        "WindowsAzure.Storage.7.2.1.nupkg.sha512",
         "WindowsAzure.Storage.nuspec",
         "lib/net40/Microsoft.WindowsAzure.Storage.dll",
         "lib/net40/Microsoft.WindowsAzure.Storage.pdb",
@@ -11133,7 +11133,7 @@
   "projectFileDependencyGroups": {
     "": [
       "IdentityServer4.AccessTokenValidation >= 1.0.1-rc1",
-      "Magick.NET.Core-Q8 >= 7.0.3.1",
+      "Magick.NET.Core-Q8 >= 7.0.3.502",
       "Microsoft.AspNetCore.Cors >= 1.0.0",
       "Microsoft.AspNetCore.Diagnostics >= 1.0.0",
       "Microsoft.AspNetCore.Mvc >= 1.0.1",
@@ -11149,7 +11149,7 @@
       "Microsoft.Extensions.Logging.Console >= 1.0.0",
       "Microsoft.Extensions.Logging.Debug >= 1.0.0",
       "Microsoft.NETCore.App >= 1.0.1",
-      "WindowsAzure.Storage >= 7.2.0"
+      "WindowsAzure.Storage >= 7.2.1"
     ],
     ".NETCoreApp,Version=v1.0": []
   },

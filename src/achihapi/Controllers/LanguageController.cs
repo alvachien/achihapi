@@ -23,7 +23,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT TOP (1000) [LCID]
+                queryString = @"SELECT [LCID]
                               ,[ISONAME]
                               ,[ENNAME]
                               ,[NAVNAME]
@@ -78,7 +78,7 @@ namespace achihapi.Controllers
         [HttpPost]
         public void Post([FromBody]string value)
         {
-            
+           
         }
 
         // PUT api/language/5

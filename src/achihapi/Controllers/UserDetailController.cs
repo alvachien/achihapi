@@ -17,6 +17,65 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get()
         {
+            List<UserDetailViewModel> listVMs = new List<UserDetailViewModel>();
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            try
+            {
+                queryString = @"SELECT [USERID]
+                      ,[DISPLAYAS]
+                      ,[EMAIL]
+                      ,[OTHERS]
+                  FROM [dbo].[t_userdetail]";
+
+                await conn.OpenAsync();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        UserDetailViewModel vm = new UserDetailViewModel();
+                        vm.UserID = reader.GetString(0);
+                        vm.DisplayAs = reader.GetString(1);
+                        if (!reader.IsDBNull(2))
+                            vm.Email = reader.GetString(2);
+                        if (!reader.IsDBNull(3))
+                            vm.Others = reader.GetString(3);
+
+                        listVMs.Add(vm);
+                    }
+                }
+
+                reader.Dispose();
+                cmd.Dispose();
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return new ObjectResult(listVMs);
+        }
+
+        // GET api/userdetail/id5
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<IActionResult> Get(String id)
+        {
 #if DEBUG
             foreach (var clm in User.Claims.AsEnumerable())
             {
@@ -24,6 +83,8 @@ namespace achihapi.Controllers
             }
 #endif
             var usrName = User.FindFirst(c => c.Type == "sub").Value;
+            if (String.CompareOrdinal(id, usrName) != 0)
+                return Forbid();
 
             UserDetailViewModel vm = new UserDetailViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -89,13 +150,6 @@ namespace achihapi.Controllers
             return new ObjectResult(vm);
         }
 
-        // GET api/userdetail/id5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(String id)
-        {
-            return Forbid();
-        }
-
         // POST api/userdetail
         [HttpPost]
         [Authorize]
@@ -130,6 +184,8 @@ namespace achihapi.Controllers
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Int32 nRst = -1;
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -142,8 +198,7 @@ namespace achihapi.Controllers
                        (@USERID
                        ,@DISPLAYAS
                        ,@EMAIL
-                       ,@OTHERS
-                        )";
+                       ,@OTHERS)";
 
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -164,6 +219,8 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -171,9 +228,13 @@ namespace achihapi.Controllers
                 conn.Dispose();
             }
 
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
             if (nRst != 1)
             {
-                return StatusCode(500, "Failed in DB operation");
+                return StatusCode(500, "DB operation is not succeed.");
             }
 
             return new ObjectResult(value);
@@ -213,6 +274,8 @@ namespace achihapi.Controllers
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Int32 nRst = -1;
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -241,6 +304,8 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -248,9 +313,13 @@ namespace achihapi.Controllers
                 conn.Dispose();
             }
 
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
             if (nRst != 1)
             {
-                return StatusCode(500, "Failed in DB operation");
+                return StatusCode(500, "DB operation is not succeed.");
             }
 
             return new ObjectResult(value);
@@ -276,6 +345,8 @@ namespace achihapi.Controllers
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Int32 nRst = -1;
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -292,6 +363,8 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
@@ -299,9 +372,13 @@ namespace achihapi.Controllers
                 conn.Dispose();
             }
 
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
             if (nRst != 1)
             {
-                return StatusCode(500, "Failed in DB operation");
+                return StatusCode(500, "DB operation is not succeed.");
             }
 
             return new ObjectResult(nRst);
