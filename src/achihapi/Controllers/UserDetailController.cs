@@ -243,7 +243,7 @@ namespace achihapi.Controllers
         // PUT api/userdetail/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(String id, [FromBody]UserDetailViewModel value)
+        public async Task<IActionResult> Put([FromBody]UserDetailViewModel value)
         {
             if (value == null)
             {
