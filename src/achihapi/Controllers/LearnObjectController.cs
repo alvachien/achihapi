@@ -14,9 +14,9 @@ namespace achihapi.Controllers
     {
         // GET: api/learnobject
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
-            List<LearnObjectViewModel> listVm = new List<LearnObjectViewModel>();
+            BaseListViewModel<LearnObjectViewModel> listVm = new BaseListViewModel<LearnObjectViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -24,27 +24,46 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT TOP(1000)[ID]
+                queryString = @"SELECT count(*) FROM [dbo].[t_learn_obj];
+                    SELECT [ID]
                       ,[CATEGORY]
                       ,[NAME]
                       ,[CONTENT]
                       ,[CREATEDBY]
                       ,[CREATEDAT]
                       ,[UPDATEDBY]
-                      ,[UPDATEDAT]
-                        FROM [dbo].[t_learn_obj]";
+                      ,[UPDATEDAT] FROM [dbo].[t_learn_obj]
+                        ORDER BY (SELECT NULL)
+                        OFFSET " + skip.ToString() + " ROWS FETCH NEXT " + top.ToString() + " ROWS ONLY;";
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
+
+                Int32 nRstBatch = 0;
+                while (reader.HasRows)
                 {
-                    while (reader.Read())
+                    if (nRstBatch == 0)
                     {
-                        LearnObjectViewModel vm = new LearnObjectViewModel();
-                        onDB2VM(reader, vm);
-                        listVm.Add(vm);
+                        while(reader.Read())
+                        {
+                            listVm.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
                     }
+                    else
+                    {
+                        while (reader.Read())
+                        {
+                            LearnObjectViewModel vm = new LearnObjectViewModel();
+                            onDB2VM(reader, vm);
+                            listVm.Add(vm);
+                        }
+                    }
+
+                    ++nRstBatch;
+
+                    reader.NextResult();
                 }
             }
             catch (Exception exp)
@@ -102,8 +121,7 @@ namespace achihapi.Controllers
                       ,[CREATEDBY]
                       ,[CREATEDAT]
                       ,[UPDATEDBY]
-                      ,[UPDATEDAT]
-                        FROM [dbo].[t_learn_obj] WHERE [ID] = " + id.ToString();
+                      ,[UPDATEDAT] FROM [dbo].[t_learn_obj] WHERE [ID] = " + id.ToString();
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -115,6 +133,8 @@ namespace achihapi.Controllers
                         onDB2VM(reader, vm);
                         break; // Should only one result!!!
                     }
+
+                    reader.NextResult();
                 }
                 else
                 {

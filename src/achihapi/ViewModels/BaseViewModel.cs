@@ -15,4 +15,16 @@ namespace achihapi.ViewModels
         public String UpdatedBy { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
+
+    public class BaseListViewModel<T> where T : BaseViewModel
+    {
+        // Runtime information
+        public Int32 TotalCount { get; set; }
+        public List<T> ContentList = new List<T>();
+
+        public void Add(T tObj)
+        {
+            this.ContentList.Add(tObj);
+        }
+    }
 }

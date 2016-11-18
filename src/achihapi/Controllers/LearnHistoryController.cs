@@ -13,7 +13,7 @@ namespace achihapi.Controllers
     {
         // GET: api/learnhistory
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
             List<LearnHistoryViewModel> listVm = new List<LearnHistoryViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
