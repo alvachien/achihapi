@@ -569,9 +569,33 @@ CREATE TABLE [dbo].[t_userhist](
 ) ON [PRIMARY]
 
 GO
-SET ANSI_PADDING ON
+/****** Object:  Table [dbo].[t_event]    Script Date: 2016-11-20 6:17:00 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_event](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](50) NOT NULL,
+	[StartTime] [datetime] NOT NULL,
+	[EndTime] [datetime] NOT NULL,
+	[Content] [nvarchar](max) NULL,
+	[IsPublic] [bit] NOT NULL,
+	[Owner] [nvarchar](40) NULL,
+	[RefID] [int] NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 
 GO
+
+SET ANSI_PADDING ON
+GO
+
 /****** Object:  Index [IUX_t_tag_NAME]    Script Date: 2016-10-27 3:31:27 PM ******/
 CREATE UNIQUE NONCLUSTERED INDEX [IUX_t_tag_NAME] ON [dbo].[t_tag]
 (
@@ -713,4 +737,13 @@ ON UPDATE CASCADE
 ON DELETE CASCADE
 GO
 ALTER TABLE [dbo].[t_tag_link] CHECK CONSTRAINT [FK_t_tag_link_tag]
+GO
+
+ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_StartTime]  DEFAULT (getdate()) FOR [StartTime]
+GO
+
+ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_EndTime]  DEFAULT (getdate()) FOR [EndTime]
+GO
+
+ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
 GO
