@@ -21,5 +21,7 @@ namespace achihapi.ViewModels
         [StringLength(40)]
         public String Owner { get; set; }
         public Int32? RefID { get; set; }
+
+        public String Tags { get; set; }
     }
 }

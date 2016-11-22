@@ -103,15 +103,15 @@ namespace achihapi.Controllers
             if (!reader.IsDBNull(6))
                 vm.Owner = reader.GetString(6);
             if (!reader.IsDBNull(7))
-                vm.RefID = reader.GetInt32(8);
+                vm.RefID = reader.GetInt32(7);
+            if (!reader.IsDBNull(8))
+                vm.CreatedBy = reader.GetString(8);
             if (!reader.IsDBNull(9))
-                vm.CreatedBy = reader.GetString(9);
+                vm.CreatedAt = reader.GetDateTime(9);
             if (!reader.IsDBNull(10))
-                vm.CreatedAt = reader.GetDateTime(10);
+                vm.UpdatedBy = reader.GetString(10);
             if (!reader.IsDBNull(11))
-                vm.UpdatedBy = reader.GetString(11);
-            if (!reader.IsDBNull(12))
-                vm.UpdatedAt = reader.GetDateTime(12);
+                vm.UpdatedAt = reader.GetDateTime(11);
         }
 
         // GET api/event/5
@@ -256,7 +256,6 @@ namespace achihapi.Controllers
 
             vm.ID = nNewID;
             return new ObjectResult(vm);
-
         }
 
         // PUT api/event/5
