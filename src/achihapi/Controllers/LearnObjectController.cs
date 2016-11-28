@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
+using Microsoft.AspNetCore.Authorization;
 
 namespace achihapi.Controllers
 {
@@ -167,6 +168,7 @@ namespace achihapi.Controllers
 
         // POST api/learnobject
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> Post([FromBody]LearnObjectViewModel vm)
         {
             if (vm == null)

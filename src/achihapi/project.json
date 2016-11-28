@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "IdentityServer4.AccessTokenValidation": "1.0.1-rc3",
-    "Magick.NET.Core-Q8": "7.0.3.502",
+    "Magick.NET.Core-Q8": "7.0.3.901",
     "Microsoft.AspNetCore.Cors": "1.1.0",
     "Microsoft.AspNetCore.Diagnostics": "1.1.0",
     "Microsoft.AspNetCore.Mvc": "1.1.0",
@@ -28,8 +28,9 @@
       "dependencies": {
         "Microsoft.NETCore.App": {
           "type": "platform",
-          "version": "1.1.0-preview1-001100-00"
+          "version": "1.1.0"
         }
+
       },
       "imports": "dnxcore50"
     }
