@@ -116,9 +116,71 @@ namespace achihapi.Controllers
 
         // GET api/event/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            return "value";
+            EventViewModel vm = new EventViewModel();
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+            Boolean bNotFound = false;
+
+            try
+            {
+                queryString = @"SELECT [ID]
+                          ,[Name]
+                          ,[StartTime]
+                          ,[EndTime]
+                          ,[Content]
+                          ,[IsPublic]
+                          ,[Owner]
+                          ,[RefID]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                      FROM [dbo].[t_event] WHERE [ID] = " + id.ToString();
+
+                await conn.OpenAsync();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        onDB2VM(reader, vm);
+                        break; // Should only one result!!!
+                    }
+
+                    reader.NextResult();
+                }
+                else
+                {
+                    bNotFound = true;
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            if (bNotFound)
+            {
+                return NotFound();
+            }
+            else if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
+
+            return new ObjectResult(vm);
         }
 
         // POST api/event
