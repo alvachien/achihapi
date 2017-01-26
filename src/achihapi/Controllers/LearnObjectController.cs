@@ -59,7 +59,7 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             LearnObjectViewModel vm = new LearnObjectViewModel();
-                            onDB2VM(reader, vm);
+                            onDB2VM(reader, bIncContent, vm);
                             listVm.Add(vm);
                         }
                     }
@@ -87,21 +87,26 @@ namespace achihapi.Controllers
             return new ObjectResult(listVm);
         }
 
-        private void onDB2VM(SqlDataReader reader, LearnObjectViewModel vm)
+        private void onDB2VM(SqlDataReader reader, Boolean bIncContent, LearnObjectViewModel vm)
         {
             vm.ID = reader.GetInt32(0);
             vm.CategoryID = reader.GetInt32(1);
             vm.Name = reader.GetString(2);
-            if (!reader.IsDBNull(3))
-                vm.Content = reader.GetString(3);
-            if (!reader.IsDBNull(4))
-                vm.CreatedBy = reader.GetString(4);
-            if (!reader.IsDBNull(5))
-                vm.CreatedAt = reader.GetDateTime(5);
-            if (!reader.IsDBNull(6))
-                vm.UpdatedBy = reader.GetString(6);
-            if (!reader.IsDBNull(7))
-                vm.UpdatedAt = reader.GetDateTime(7);
+
+            Int32 idx = 3;
+            if (bIncContent)
+            {
+                if (!reader.IsDBNull(idx))
+                    vm.Content = reader.GetString(idx ++);
+            }
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
         }
 
         // GET api/learnobject/5
@@ -133,7 +138,7 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        onDB2VM(reader, vm);
+                        onDB2VM(reader, true, vm);
                         break; // Should only one result!!!
                     }
 
