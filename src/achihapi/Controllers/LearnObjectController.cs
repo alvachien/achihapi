@@ -15,7 +15,7 @@ namespace achihapi.Controllers
     {
         // GET: api/learnobject
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0, Boolean bIncContent = false)
         {
             BaseListViewModel<LearnObjectViewModel> listVm = new BaseListViewModel<LearnObjectViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -28,9 +28,11 @@ namespace achihapi.Controllers
                 queryString = @"SELECT count(*) FROM [dbo].[t_learn_obj];
                     SELECT [ID]
                       ,[CATEGORY]
-                      ,[NAME]
-                      ,[CONTENT]
-                      ,[CREATEDBY]
+                      ,[NAME]";
+                if (bIncContent)
+                    queryString += ",[CONTENT] ";
+
+                queryString += @",[CREATEDBY]
                       ,[CREATEDAT]
                       ,[UPDATEDBY]
                       ,[UPDATEDAT] FROM [dbo].[t_learn_obj]

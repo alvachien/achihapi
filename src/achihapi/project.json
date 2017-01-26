@@ -1,7 +1,6 @@
 {
   "dependencies": {
-    "IdentityServer4.AccessTokenValidation": "1.0.1-rc3",
-    "Magick.NET.Core-Q8": "7.0.3.901",
+    "IdentityServer4.AccessTokenValidation": "1.0.4",
     "Microsoft.AspNetCore.Cors": "1.1.0",
     "Microsoft.AspNetCore.Diagnostics": "1.1.0",
     "Microsoft.AspNetCore.Mvc": "1.1.0",

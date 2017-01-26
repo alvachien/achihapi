@@ -15,7 +15,7 @@ namespace achihapi.Controllers
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
-            List<LearnHistoryViewModel> listVm = new List<LearnHistoryViewModel>();
+            BaseListViewModel<LearnHistoryViewModel> listVm = new BaseListViewModel<LearnHistoryViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -23,27 +23,46 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT TOP (1000) [USERID]
+                queryString = @"SELECT count(*) FROM [dbo].[t_learn_hist];
+                    SELECT [USERID]
                           ,[OBJECTID]
                           ,[LEARNDATE]
                           ,[COMMENT]
                           ,[CREATEDBY]
                           ,[CREATEDAT]
                           ,[UPDATEDBY]
-                          ,[UPDATEDAT]
-                      FROM [dbo].[t_learn_hist]";
+                          ,[UPDATEDAT] FROM [dbo].[t_learn_obj]
+                        ORDER BY (SELECT NULL)
+                        OFFSET " + skip.ToString() + " ROWS FETCH NEXT " + top.ToString() + " ROWS ONLY;";
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
+
+                Int32 nRstBatch = 0;
+                while (reader.HasRows)
                 {
-                    while (reader.Read())
+                    if (nRstBatch == 0)
                     {
-                        LearnHistoryViewModel vm = new LearnHistoryViewModel();
-                        onDB2VM(reader, vm);
-                        listVm.Add(vm);
+                        while (reader.Read())
+                        {
+                            listVm.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
                     }
+                    else
+                    {
+                        while (reader.Read())
+                        {
+                            LearnHistoryViewModel vm = new LearnHistoryViewModel();
+                            onDB2VM(reader, vm);
+                            listVm.Add(vm);
+                        }
+                    }
+
+                    ++nRstBatch;
+
+                    reader.NextResult();
                 }
             }
             catch (Exception exp)

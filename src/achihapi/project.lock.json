@@ -3,7 +3,7 @@
   "version": 2,
   "targets": {
     ".NETCoreApp,Version=v1.1": {
-      "IdentityModel/2.0.0": {
+      "IdentityModel/2.1.1": {
         "type": "package",
         "dependencies": {
           "Newtonsoft.Json": "9.0.1",
@@ -19,10 +19,10 @@
           "lib/netstandard1.3/IdentityModel.dll": {}
         }
       },
-      "IdentityModel.AspNetCore.OAuth2Introspection/1.0.1": {
+      "IdentityModel.AspNetCore.OAuth2Introspection/2.0.0": {
         "type": "package",
         "dependencies": {
-          "IdentityModel": "2.0.0",
+          "IdentityModel": "2.1.1",
           "Microsoft.AspNetCore.Authentication": "1.0.0",
           "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
           "Microsoft.Extensions.Caching.Memory": "1.0.0"
@@ -47,10 +47,10 @@
           "lib/netstandard1.3/IdentityModel.AspNetCore.ScopeValidation.dll": {}
         }
       },
-      "IdentityServer4.AccessTokenValidation/1.0.1-rc3": {
+      "IdentityServer4.AccessTokenValidation/1.0.4": {
         "type": "package",
         "dependencies": {
-          "IdentityModel.AspNetCore.OAuth2Introspection": "1.0.1",
+          "IdentityModel.AspNetCore.OAuth2Introspection": "2.0.0",
           "IdentityModel.AspNetCore.ScopeValidation": "1.0.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "1.0.0"
         },
@@ -96,37 +96,6 @@
             "rid": "win7-x64"
           },
           "runtimes/win7-x86/native/libuv.dll": {
-            "assetType": "native",
-            "rid": "win7-x86"
-          }
-        }
-      },
-      "Magick.NET.Core-Q8/7.0.3.901": {
-        "type": "package",
-        "dependencies": {
-          "Magick.NET.Core-Q8.Native": "7.0.3.901",
-          "NETStandard.Library": "1.6.0",
-          "System.Collections.NonGeneric": "4.0.1",
-          "System.Xml.XDocument": "4.0.11",
-          "System.Xml.XPath.XDocument": "4.0.1",
-          "System.Xml.XPath.XmlDocument": "4.0.1",
-          "System.Xml.XmlDocument": "4.0.1"
-        },
-        "compile": {
-          "lib/netstandard1.3/Magick.NET.Core-Q8.dll": {}
-        },
-        "runtime": {
-          "lib/netstandard1.3/Magick.NET.Core-Q8.dll": {}
-        }
-      },
-      "Magick.NET.Core-Q8.Native/7.0.3.901": {
-        "type": "package",
-        "runtimeTargets": {
-          "runtimes/win7-x64/native/Magick.NET-Q8-x64.Native.dll": {
-            "assetType": "native",
-            "rid": "win7-x64"
-          },
-          "runtimes/win7-x86/native/Magick.NET-Q8-x86.Native.dll": {
             "assetType": "native",
             "rid": "win7-x86"
           }
@@ -3851,7 +3820,7 @@
           "System.Xml.ReaderWriter": "4.0.11"
         },
         "compile": {
-          "ref/netstandard1.3/System.Xml.XmlDocument.dll": {}
+          "ref/netstandard1.3/_._": {}
         },
         "runtime": {
           "lib/netstandard1.3/System.Xml.XmlDocument.dll": {}
@@ -3871,7 +3840,7 @@
           "System.Xml.ReaderWriter": "4.0.11"
         },
         "compile": {
-          "ref/netstandard1.3/System.Xml.XPath.dll": {}
+          "ref/netstandard1.3/_._": {}
         },
         "runtime": {
           "lib/netstandard1.3/System.Xml.XPath.dll": {}
@@ -3891,53 +3860,32 @@
           "System.Xml.XPath": "4.0.1"
         },
         "compile": {
-          "ref/netstandard1.3/System.Xml.XPath.XDocument.dll": {}
+          "ref/netstandard1.3/_._": {}
         },
         "runtime": {
           "lib/netstandard1.3/System.Xml.XPath.XDocument.dll": {}
-        }
-      },
-      "System.Xml.XPath.XmlDocument/4.0.1": {
-        "type": "package",
-        "dependencies": {
-          "System.Collections": "4.0.11",
-          "System.Globalization": "4.0.11",
-          "System.IO": "4.1.0",
-          "System.Resources.ResourceManager": "4.0.1",
-          "System.Runtime": "4.1.0",
-          "System.Runtime.Extensions": "4.1.0",
-          "System.Threading": "4.0.11",
-          "System.Xml.ReaderWriter": "4.0.11",
-          "System.Xml.XPath": "4.0.1",
-          "System.Xml.XmlDocument": "4.0.1"
-        },
-        "compile": {
-          "ref/netstandard1.3/System.Xml.XPath.XmlDocument.dll": {}
-        },
-        "runtime": {
-          "lib/netstandard1.3/System.Xml.XPath.XmlDocument.dll": {}
         }
       }
     }
   },
   "libraries": {
-    "IdentityModel/2.0.0": {
-      "sha512": "c5+zB+ADJ7QB2LC4tE5p4ESMHfR8HCBOD/LOjkNUiEh4AtbBgcZHYMKbBw/+rS5QyXNmMT0c+IMF1xb49XcYlQ==",
+    "IdentityModel/2.1.1": {
+      "sha512": "PnwsQt1oA6gLWcXlYff6idVFnzmw0I3nlg1VlsPgje7WPQfOPSZ5zrvc/W5NsJPoZFlOw8DI0OEbn20TnDkTOw==",
       "type": "package",
-      "path": "IdentityModel/2.0.0",
+      "path": "IdentityModel/2.1.1",
       "files": [
-        "IdentityModel.2.0.0.nupkg.sha512",
+        "IdentityModel.2.1.1.nupkg.sha512",
         "IdentityModel.nuspec",
         "lib/net45/IdentityModel.dll",
         "lib/netstandard1.3/IdentityModel.dll"
       ]
     },
-    "IdentityModel.AspNetCore.OAuth2Introspection/1.0.1": {
-      "sha512": "QxmDpffncXXl/MWEAFoQDCM/3vCvwz+cy0iul12hxvfnBTLhaug687PMBv7BAodInmbQxsRZpKxu9dFjdaNJAQ==",
+    "IdentityModel.AspNetCore.OAuth2Introspection/2.0.0": {
+      "sha512": "bbDaL6hYbCuzarnVkH+Z8Eza4wgsI3jXVCURqBnq1rFvRn14Kwtvbqa7BfEH1E8m/usnJMOp1uUk/qCQmQobCA==",
       "type": "package",
-      "path": "IdentityModel.AspNetCore.OAuth2Introspection/1.0.1",
+      "path": "IdentityModel.AspNetCore.OAuth2Introspection/2.0.0",
       "files": [
-        "IdentityModel.AspNetCore.OAuth2Introspection.1.0.1.nupkg.sha512",
+        "IdentityModel.AspNetCore.OAuth2Introspection.2.0.0.nupkg.sha512",
         "IdentityModel.AspNetCore.OAuth2Introspection.nuspec",
         "lib/net452/IdentityModel.AspNetCore.OAuth2Introspection.dll",
         "lib/netstandard1.3/IdentityModel.AspNetCore.OAuth2Introspection.dll"
@@ -3954,13 +3902,13 @@
         "lib/netstandard1.3/IdentityModel.AspNetCore.ScopeValidation.dll"
       ]
     },
-    "IdentityServer4.AccessTokenValidation/1.0.1-rc3": {
-      "sha512": "hLuQ6S3RFanKfaA8/xy5Qi6AyePA7ilXfR3w/iNI4PjgZMfcYx3XNrz6/jdBHyO6QC6vbzukQaLgV83zgbqOKw==",
+    "IdentityServer4.AccessTokenValidation/1.0.4": {
+      "sha512": "k7kYMHV/aRCVooo48gt580alj9WudvT4yaCakjWrbKTnCsAAFgGKTwq8Zpc9d5aBc8zeMY/6dkiMPjwVM1YJ0w==",
       "type": "package",
-      "path": "IdentityServer4.AccessTokenValidation/1.0.1-rc3",
+      "path": "IdentityServer4.AccessTokenValidation/1.0.4",
       "files": [
-        "IdentityServer4.AccessTokenValidation.1.0.1-rc3.nupkg.sha512",
-        "IdentityServer4.AccessTokenValidation.nuspec",
+        "identityserver4.accesstokenvalidation.1.0.4.nupkg.sha512",
+        "identityserver4.accesstokenvalidation.nuspec",
         "lib/net452/IdentityServer4.AccessTokenValidation.dll",
         "lib/netstandard1.4/IdentityServer4.AccessTokenValidation.dll"
       ]
@@ -3981,28 +3929,6 @@
         "runtimes/win7-arm/native/libuv.dll",
         "runtimes/win7-x64/native/libuv.dll",
         "runtimes/win7-x86/native/libuv.dll"
-      ]
-    },
-    "Magick.NET.Core-Q8/7.0.3.901": {
-      "sha512": "XlGu2+07VWHSIz0Q5GS6plGyx53D7APcdKScahMFdrWLPk6llVdMOSstj6gvfoyc6AnrnmloDQtV8KyEOPEfHQ==",
-      "type": "package",
-      "path": "Magick.NET.Core-Q8/7.0.3.901",
-      "files": [
-        "lib/netstandard1.3/Magick.NET.Core-Q8.dll",
-        "lib/netstandard1.3/Magick.NET.Core-Q8.xml",
-        "magick.net.core-q8.7.0.3.901.nupkg.sha512",
-        "magick.net.core-q8.nuspec"
-      ]
-    },
-    "Magick.NET.Core-Q8.Native/7.0.3.901": {
-      "sha512": "8cZFUo7Znoev1Nf8u7sIsuLpBbVZm/OG+sUzXOVjG2G32Qt5MSM+f5Z/EwPhViiwvF12YwB3ds01RwBCgGORYA==",
-      "type": "package",
-      "path": "Magick.NET.Core-Q8.Native/7.0.3.901",
-      "files": [
-        "Magick.NET.Core-Q8.Native.7.0.3.901.nupkg.sha512",
-        "Magick.NET.Core-Q8.Native.nuspec",
-        "runtimes/win7-x64/native/Magick.NET-Q8-x64.Native.dll",
-        "runtimes/win7-x86/native/Magick.NET-Q8-x86.Native.dll"
       ]
     },
     "Microsoft.AspNetCore.Antiforgery/1.1.0": {
@@ -10354,47 +10280,11 @@
         "ref/xamarintvos10/_._",
         "ref/xamarinwatchos10/_._"
       ]
-    },
-    "System.Xml.XPath.XmlDocument/4.0.1": {
-      "sha512": "Zm2BdeanuncYs3NhCj4c9e1x3EXFzFBVv2wPEc/Dj4ZbI9R8ecLSR5frAsx4zJCPBtKQreQ7Q/KxJEohJZbfzA==",
-      "type": "package",
-      "path": "System.Xml.XPath.XmlDocument/4.0.1",
-      "files": [
-        "System.Xml.XPath.XmlDocument.4.0.1.nupkg.sha512",
-        "System.Xml.XPath.XmlDocument.nuspec",
-        "ThirdPartyNotices.txt",
-        "dotnet_library_license.txt",
-        "lib/MonoAndroid10/_._",
-        "lib/MonoTouch10/_._",
-        "lib/netstandard1.3/System.Xml.XPath.XmlDocument.dll",
-        "lib/xamarinios10/_._",
-        "lib/xamarinmac20/_._",
-        "lib/xamarintvos10/_._",
-        "lib/xamarinwatchos10/_._",
-        "ref/MonoAndroid10/_._",
-        "ref/MonoTouch10/_._",
-        "ref/netstandard1.3/System.Xml.XPath.XmlDocument.dll",
-        "ref/netstandard1.3/System.Xml.XPath.XmlDocument.xml",
-        "ref/netstandard1.3/de/System.Xml.XPath.XmlDocument.xml",
-        "ref/netstandard1.3/es/System.Xml.XPath.XmlDocument.xml",
-        "ref/netstandard1.3/fr/System.Xml.XPath.XmlDocument.xml",
-        "ref/netstandard1.3/it/System.Xml.XPath.XmlDocument.xml",
-        "ref/netstandard1.3/ja/System.Xml.XPath.XmlDocument.xml",
-        "ref/netstandard1.3/ko/System.Xml.XPath.XmlDocument.xml",
-        "ref/netstandard1.3/ru/System.Xml.XPath.XmlDocument.xml",
-        "ref/netstandard1.3/zh-hans/System.Xml.XPath.XmlDocument.xml",
-        "ref/netstandard1.3/zh-hant/System.Xml.XPath.XmlDocument.xml",
-        "ref/xamarinios10/_._",
-        "ref/xamarinmac20/_._",
-        "ref/xamarintvos10/_._",
-        "ref/xamarinwatchos10/_._"
-      ]
     }
   },
   "projectFileDependencyGroups": {
     "": [
-      "IdentityServer4.AccessTokenValidation >= 1.0.1-rc3",
-      "Magick.NET.Core-Q8 >= 7.0.3.901",
+      "IdentityServer4.AccessTokenValidation >= 1.0.4",
       "Microsoft.AspNetCore.Cors >= 1.1.0",
       "Microsoft.AspNetCore.Diagnostics >= 1.1.0",
       "Microsoft.AspNetCore.Mvc >= 1.1.0",

@@ -18,7 +18,7 @@ namespace achihapi.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            List<LearnCategoryViewModel> listVm = new List<LearnCategoryViewModel>();
+            BaseListViewModel<LearnCategoryViewModel> listVm = new BaseListViewModel<LearnCategoryViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -26,7 +26,8 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT [ID]
+                queryString = @"SELECT count(*) FROM [dbo].[t_learn_ctgy];
+                        SELECT [ID]
                               ,[PARID]
                               ,[NAME]
                               ,[COMMENT]
@@ -40,14 +41,31 @@ namespace achihapi.Controllers
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
+                Int32 nRstBatch = 0;
+
+                while (reader.HasRows)
                 {
-                    while (reader.Read())
+                    if (nRstBatch == 0)
                     {
-                        LearnCategoryViewModel vm = new LearnCategoryViewModel();
-                        onDB2VM(reader, vm);
-                        listVm.Add(vm);
+                        while (reader.Read())
+                        {
+                            listVm.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
                     }
+                    else
+                    {
+                        while (reader.Read())
+                        {
+                            LearnCategoryViewModel vm = new LearnCategoryViewModel();
+                            onDB2VM(reader, vm);
+                            listVm.Add(vm);
+                        }
+                    }
+
+                    ++nRstBatch;
+
+                    reader.NextResult();
                 }
             }
             catch (Exception exp)

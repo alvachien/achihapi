@@ -112,7 +112,7 @@ namespace achihapi
 #endif
                 RequireHttpsMetadata = false,
 
-                ScopeName = "api.hihapi",
+                AllowedScopes = { "api.hihapi" },
                 AutomaticAuthenticate = true,
                 AutomaticChallenge = true
             });
