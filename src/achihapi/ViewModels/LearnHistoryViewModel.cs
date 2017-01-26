@@ -18,4 +18,10 @@ namespace achihapi.ViewModels
         [StringLength(45)]
         public String Comment { get; set; }
     }
+
+    public class LearnHistoryUIViewModel : LearnHistoryViewModel
+    {
+        public string UserDisplayAs { get; set; }
+        public string ObjectName { get; set; }
+    }
 }

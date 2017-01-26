@@ -16,4 +16,9 @@ namespace achihapi.ViewModels
         [Required]
         public String Content { get; set; }
     }
+    public class LearnObjectUIViewModel : LearnObjectViewModel
+    {
+        // UI part string
+        public String CategoryName { get; set; }
+    }
 }

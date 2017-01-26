@@ -15,7 +15,7 @@ namespace achihapi.Controllers
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
-            BaseListViewModel<LearnHistoryViewModel> listVm = new BaseListViewModel<LearnHistoryViewModel>();
+            BaseListViewModel<LearnHistoryUIViewModel> listVm = new BaseListViewModel<LearnHistoryUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -23,17 +23,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT count(*) FROM [dbo].[t_learn_hist];
-                    SELECT [USERID]
-                          ,[OBJECTID]
-                          ,[LEARNDATE]
-                          ,[COMMENT]
-                          ,[CREATEDBY]
-                          ,[CREATEDAT]
-                          ,[UPDATEDBY]
-                          ,[UPDATEDAT] FROM [dbo].[t_learn_obj]
-                        ORDER BY (SELECT NULL)
-                        OFFSET " + skip.ToString() + " ROWS FETCH NEXT " + top.ToString() + " ROWS ONLY;";
+                queryString = this.getSQLString(true, top, skip, null, null);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -54,7 +44,7 @@ namespace achihapi.Controllers
                     {
                         while (reader.Read())
                         {
-                            LearnHistoryViewModel vm = new LearnHistoryViewModel();
+                            LearnHistoryUIViewModel vm = new LearnHistoryUIViewModel();
                             onDB2VM(reader, vm);
                             listVm.Add(vm);
                         }
@@ -83,26 +73,64 @@ namespace achihapi.Controllers
             return new ObjectResult(listVm);
         }
 
-        private void onDB2VM(SqlDataReader reader, LearnHistoryViewModel vm)
+        private string getSQLString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nUserID, Int32? nObjID)
         {
-            vm.UserID = reader.GetString(0);
-            vm.ObjectID = reader.GetInt32(1);
-            vm.LearnDate = reader.GetDateTime(2);
-            if (!reader.IsDBNull(3))
-                vm.Comment = reader.GetString(3);
-            if (!reader.IsDBNull(4))
-                vm.CreatedBy = reader.GetString(4);
-            if (!reader.IsDBNull(5))
-                vm.CreatedAt = reader.GetDateTime(5);
-            if (!reader.IsDBNull(6))
-                vm.UpdatedBy = reader.GetString(6);
-            if (!reader.IsDBNull(7))
-                vm.UpdatedAt = reader.GetDateTime(7);
+            String strSQL = "";
+            if (bListMode)
+            {
+                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_hist];";
+            }
+
+            strSQL += @"SELECT [t_learn_hist].[USERID]
+                      ,[t_userdetail].[DISPLAYAS] as [USERDISPLAYAS]
+                      ,[t_learn_hist].[OBJECTID]
+                      ,[t_learn_obj].[NAME] as [OBJECTNAME]
+                      ,[t_learn_hist].[LEARNDATE]
+                      ,[t_learn_hist].[COMMENT]
+                      ,[t_learn_hist].[CREATEDBY]
+                      ,[t_learn_hist].[CREATEDAT]
+                      ,[t_learn_hist].[UPDATEDBY]
+                      ,[t_learn_hist].[UPDATEDAT] 
+                        FROM [dbo].[t_learn_hist]
+                            INNER JOIN [dbo].[t_userdetail] ON [t_learn_hist].[USERID] = [t_userdetail].[USERID]
+                            INNER JOIN [dbo].[t_learn_obj] ON [t_learn_hist].[OBJECTID] = [t_learn_obj].[ID]
+                        ";
+            if (bListMode && nTop.HasValue && nSkip.HasValue)
+            {
+                strSQL += @" ORDER BY (SELECT NULL)
+                        OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
+            }
+            else if (!bListMode && nUserID.HasValue && nObjID.HasValue)
+            {
+                strSQL += " WHERE [t_learn_hist].[USERID] = " + nUserID.Value.ToString() + " AND [t_learn_hist].[OBJECTID] = " + nObjID.Value.ToString();
+            }
+
+            return strSQL;
+        }
+
+        private void onDB2VM(SqlDataReader reader, LearnHistoryUIViewModel vm)
+        {
+            Int32 idx = 0;
+            vm.UserID = reader.GetString(idx++);
+            vm.UserDisplayAs = reader.GetString(idx++);
+            vm.ObjectID = reader.GetInt32(idx++);
+            vm.ObjectName = reader.GetString(idx++);
+            vm.LearnDate = reader.GetDateTime(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.Comment = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
         }
 
         // GET api/learnhistory/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public string Get(String strid)
         {
             return "value";
         }

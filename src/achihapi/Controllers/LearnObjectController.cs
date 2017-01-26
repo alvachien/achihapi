@@ -17,7 +17,7 @@ namespace achihapi.Controllers
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0, Boolean bIncContent = false)
         {
-            BaseListViewModel<LearnObjectViewModel> listVm = new BaseListViewModel<LearnObjectViewModel>();
+            BaseListViewModel<LearnObjectUIViewModel> listVm = new BaseListViewModel<LearnObjectUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -25,19 +25,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT count(*) FROM [dbo].[t_learn_obj];
-                    SELECT [ID]
-                      ,[CATEGORY]
-                      ,[NAME]";
-                if (bIncContent)
-                    queryString += ",[CONTENT] ";
-
-                queryString += @",[CREATEDBY]
-                      ,[CREATEDAT]
-                      ,[UPDATEDBY]
-                      ,[UPDATEDAT] FROM [dbo].[t_learn_obj]
-                        ORDER BY (SELECT NULL)
-                        OFFSET " + skip.ToString() + " ROWS FETCH NEXT " + top.ToString() + " ROWS ONLY;";
+                queryString = this.getQueryString(bIncContent, true, top, skip, null);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -58,7 +46,7 @@ namespace achihapi.Controllers
                     {
                         while (reader.Read())
                         {
-                            LearnObjectViewModel vm = new LearnObjectViewModel();
+                            LearnObjectUIViewModel vm = new LearnObjectUIViewModel();
                             onDB2VM(reader, bIncContent, vm);
                             listVm.Add(vm);
                         }
@@ -87,13 +75,52 @@ namespace achihapi.Controllers
             return new ObjectResult(listVm);
         }
 
-        private void onDB2VM(SqlDataReader reader, Boolean bIncContent, LearnObjectViewModel vm)
+        private string getQueryString(Boolean bIncContent, Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
+        {
+            String strSQL = "";
+            if (bListMode)
+            {
+                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_obj];";
+            }
+            
+            strSQL += @"SELECT [t_learn_obj].[ID]
+                      ,[t_learn_obj].[CATEGORY]
+                      ,[t_learn_ctgy].[NAME] as [CATEGORYNAME]
+                      ,[t_learn_obj].[NAME]";
+            if (bIncContent)
+                strSQL += ",[t_learn_obj].[CONTENT] ";
+
+            strSQL += @",[t_learn_obj].[CREATEDBY]
+                      ,[t_learn_obj].[CREATEDAT]
+                      ,[t_learn_obj].[UPDATEDBY]
+                      ,[t_learn_obj].[UPDATEDAT] 
+                        FROM [dbo].[t_learn_obj]
+                            INNER JOIN [dbo].[t_learn_ctgy]
+                        ON [t_learn_obj].[CATEGORY] = [t_learn_ctgy].[ID]";
+            if (bListMode && nTop.HasValue && nSkip.HasValue)
+            {
+                strSQL += @" ORDER BY (SELECT NULL)
+                        OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
+            }
+            else if (!bListMode && nSearchID.HasValue)
+            {
+                strSQL += " WHERE [t_learn_obj].[ID] = " + nSearchID.Value.ToString();
+            }
+
+            return strSQL;
+        }
+
+        private void onDB2VM(SqlDataReader reader, Boolean bIncContent, LearnObjectUIViewModel vm)
         {
             vm.ID = reader.GetInt32(0);
             vm.CategoryID = reader.GetInt32(1);
             vm.Name = reader.GetString(2);
+            if (!reader.IsDBNull(3))
+                vm.CategoryName = reader.GetString(3);
+            else
+                vm.CategoryName = String.Empty;
 
-            Int32 idx = 3;
+            Int32 idx = 4;
             if (bIncContent)
             {
                 if (!reader.IsDBNull(idx))
@@ -113,7 +140,7 @@ namespace achihapi.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            LearnObjectViewModel vm = new LearnObjectViewModel();
+            LearnObjectUIViewModel vm = new LearnObjectUIViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -122,14 +149,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT [ID]
-                      ,[CATEGORY]
-                      ,[NAME]
-                      ,[CONTENT]
-                      ,[CREATEDBY]
-                      ,[CREATEDAT]
-                      ,[UPDATEDBY]
-                      ,[UPDATEDAT] FROM [dbo].[t_learn_obj] WHERE [ID] = " + id.ToString();
+                queryString = this.getQueryString(true, false, null, null, id);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
