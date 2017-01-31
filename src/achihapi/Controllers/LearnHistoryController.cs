@@ -187,6 +187,22 @@ namespace achihapi.Controllers
                 chkcmd.Dispose();
                 chkcmd = null;
 
+                // Do the check: primary key check
+                checkString = @"SELECT [USERID], [OBJECTID], [LEARNDATE] FROM [dbo].[t_learn_hist] WHERE [USERID] = @USERID AND [OBJECTID] = @OBJECTID AND [LEARNDATE] = @LEARNDATE";
+                chkcmd = new SqlCommand(checkString, conn);
+                chkcmd.Parameters.AddWithValue("@USERID", vm.UserID);
+                chkcmd.Parameters.AddWithValue("@OBJECTID", vm.ObjectID);
+                chkcmd.Parameters.AddWithValue("@LEARNDATE", vm.LearnDate);
+                chkreader = chkcmd.ExecuteReader();
+                if (chkreader.HasRows)
+                {
+                    return BadRequest("Duplicated entry: user (" + vm.UserID + "), object (" + vm.ObjectID.ToString() + ") at date (" + vm.LearnDate.ToString() + ")");
+                }
+                chkreader.Dispose();
+                chkreader = null;
+                chkcmd.Dispose();
+                chkcmd = null;
+
                 // Now go ahead for the creating
                 queryString = @"INSERT INTO [dbo].[t_learn_hist]
                            ([USERID]
