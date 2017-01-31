@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using achihapi.ViewModels;
 using System.Data.SqlClient;
+using Microsoft.AspNetCore.Authorization;
 
 namespace achihapi.Controllers
 {
@@ -130,26 +131,124 @@ namespace achihapi.Controllers
 
         // GET api/learnhistory/5
         [HttpGet("{id}")]
-        public string Get(String strid)
+        public string Get(String sid)
         {
             return "value";
         }
 
-        // POST api/learnhistory
+        // POST api/learnhistory, create a learn history
         [HttpPost]
-        public void Post([FromBody]string value)
+        [Authorize]
+        public async Task<IActionResult> Post([FromBody]LearnHistoryViewModel vm)
         {
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted");
+            }
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+            var usr = User.FindFirst(c => c.Type == "sub");
+            String usrName = String.Empty;
+            if (usr != null)
+                usrName = usr.Value;
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Do the check first: object id
+                String checkString = @"SELECT [ID]
+                            FROM [dbo].[t_learn_obj] WHERE [ID] = " + vm.ObjectID.ToString();
+                SqlCommand chkcmd = new SqlCommand(checkString, conn);
+                SqlDataReader chkreader = chkcmd.ExecuteReader();
+                if (!chkreader.HasRows)
+                {
+                    return BadRequest("Invalid Object ID : " + vm.ObjectID.ToString());
+                }
+                chkreader.Dispose();
+                chkreader = null;
+                chkcmd.Dispose();
+                chkcmd = null;
+
+                // Do the check: name
+                checkString = @"SELECT [USERID] FROM [dbo].[t_userdetail] WHERE [USERID] = N'" + vm.UserID + "'";
+                chkcmd = new SqlCommand(checkString, conn);
+                chkreader = chkcmd.ExecuteReader();
+                if (!chkreader.HasRows)
+                {
+                    return BadRequest("Invalid user ID : " + vm.UserID);
+                }
+                chkreader.Dispose();
+                chkreader = null;
+                chkcmd.Dispose();
+                chkcmd = null;
+
+                // Now go ahead for the creating
+                queryString = @"INSERT INTO [dbo].[t_learn_hist]
+                           ([USERID]
+                           ,[OBJECTID]
+                           ,[LEARNDATE]
+                           ,[COMMENT]
+                           ,[CREATEDBY]
+                           ,[CREATEDAT]
+                           ,[UPDATEDBY]
+                           ,[UPDATEDAT])
+                     VALUES
+                           (@USERID
+                           ,@OBJECTID
+                           ,@LEARNDATE
+                           ,@COMMENT
+                           ,@CREATEDBY
+                           ,@CREATEDAT
+                           ,@UPDATEDBY
+                           ,@UPDATEDAT);";
+
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Parameters.AddWithValue("@USERID", vm.UserID);
+                cmd.Parameters.AddWithValue("@OBJECTID", vm.ObjectID);
+                cmd.Parameters.AddWithValue("@LEARNDATE", vm.LearnDate);
+                cmd.Parameters.AddWithValue("@COMMENT", vm.Comment);
+                cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+                cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
+                cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
+                cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
+
+                Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                //if (nRst )
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
+
+            return new ObjectResult(vm);
         }
 
-        // PUT api/learnhistory/5
+        // PUT api/learnhistory/5_a, change
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public void Put(string sid, [FromBody]string value)
         {
         }
 
         // DELETE api/learnhistory/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public void Delete(string sid)
         {
         }
     }

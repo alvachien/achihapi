@@ -193,7 +193,7 @@ namespace achihapi.Controllers
             return new ObjectResult(vm);
         }
 
-        // POST api/learnobject
+        // POST api/learnobject, create an object
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Post([FromBody]LearnObjectViewModel vm)
