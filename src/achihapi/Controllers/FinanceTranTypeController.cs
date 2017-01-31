@@ -5,17 +5,19 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using achihapi.ViewModels;
 using System.Data.SqlClient;
+using Microsoft.AspNetCore.Authorization;
 
 namespace achihapi.Controllers
 {
     [Route("api/[controller]")]
     public class FinanceTranTypeController : Controller
     {
-        // GET: api/values
+        // GET: api/trantype
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
-            List<FinanceTranTypeViewModel> listVM = new List<ViewModels.FinanceTranTypeViewModel>();
+            BaseListViewModel<FinanceTranTypeViewModel> listVMs = new BaseListViewModel<FinanceTranTypeViewModel>();
+
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -23,55 +25,39 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
-                var usrObj = User.FindFirst(c => c.Type == "sub");
-
-                queryString = @"SELECT TOP (1000) [ID]
-                              ,[NAME]
-                              ,[EXPENSE]
-                              ,[PARID]
-                              ,[COMMENT]
-                              ,[SYSFLAG]
-                              ,[CREATEDBY]
-                              ,[CREATEDAT]
-                              ,[UPDATEDBY]
-                              ,[UPDATEDAT]
-                          FROM [dbo].[t_fin_tran_type]";
+                queryString = this.getQueryString(true, top, skip, null);
 
                 await conn.OpenAsync();
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        FinanceTranTypeViewModel avm = new FinanceTranTypeViewModel();
-                        avm.ID = reader.GetInt32(0);
-                        avm.Name = reader.GetString(1);
-                        if (!reader.IsDBNull(2))
-                            avm.Expense = reader.GetBoolean(2);
-                        if (!reader.IsDBNull(3))
-                            avm.ParID = reader.GetInt32(3);
-                        if (!reader.IsDBNull(4))
-                            avm.Comment = reader.GetString(4);
-                        if (!reader.IsDBNull(5))
-                            avm.SysFlag = reader.GetBoolean(5);
-                        if (!reader.IsDBNull(6))
-                            avm.CreatedBy = reader.GetString(6);
-                        if (!reader.IsDBNull(7))
-                            avm.CreatedAt = reader.GetDateTime(7);
-                        if (!reader.IsDBNull(8))
-                            avm.UpdatedBy = reader.GetString(8);
-                        if (!reader.IsDBNull(9))
-                            avm.UpdatedAt = reader.GetDateTime(9);
 
-                        listVM.Add(avm);
+                Int32 nRstBatch = 0;
+                while (reader.HasRows)
+                {
+                    if (nRstBatch == 0)
+                    {
+                        while (reader.Read())
+                        {
+                            listVMs.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
                     }
+                    else
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                FinanceTranTypeViewModel avm = new FinanceTranTypeViewModel();
+                                this.onDB2VM(reader, avm);
+                                listVMs.Add(avm);
+                            }
+                        }
+                    }
+                    ++nRstBatch;
+
+                    reader.NextResult();
                 }
             }
             catch (Exception exp)
@@ -89,32 +75,140 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            return new ObjectResult(listVM);
+            return new ObjectResult(listVMs);
         }
 
-        // GET api/values/5
+        // GET api/trantype/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            return "value";
+            FinanceTranTypeViewModel vm = new FinanceTranTypeViewModel();
+
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+            Boolean bNotFound = false;
+
+            try
+            {
+                queryString = this.getQueryString(false, null, null, id);
+
+                await conn.OpenAsync();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        onDB2VM(reader, vm);
+                        break; // Should only one result!!!
+                    }
+                }
+                else
+                {
+                    bNotFound = true;
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            if (bNotFound)
+            {
+                return NotFound();
+            }
+            else if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
+
+            return new ObjectResult(vm);
         }
 
-        // POST api/values
+        // POST api/trantype
         [HttpPost]
+        [Authorize]
         public void Post([FromBody]string value)
         {
         }
 
-        // PUT api/values/5
+        // PUT api/trantype/5
         [HttpPut("{id}")]
+        [Authorize]
         public void Put(int id, [FromBody]string value)
         {
         }
 
-        // DELETE api/values/5
+        // DELETE api/trantype/5
         [HttpDelete("{id}")]
+        [Authorize]
         public void Delete(int id)
         {
+        }
+
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
+        {
+            String strSQL = "";
+            if (bListMode)
+            {
+                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_tran_type];";
+            }
+
+            strSQL += @"SELECT [ID]
+                              ,[NAME]
+                              ,[EXPENSE]
+                              ,[PARID]
+                              ,[COMMENT]
+                              ,[SYSFLAG]
+                              ,[CREATEDBY]
+                              ,[CREATEDAT]
+                              ,[UPDATEDBY]
+                              ,[UPDATEDAT]
+                          FROM [dbo].[t_fin_tran_type] ";
+            if (bListMode && nTop.HasValue && nSkip.HasValue)
+            {
+                strSQL += @" ORDER BY (SELECT NULL)
+                        OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
+            }
+            else if (!bListMode && nSearchID.HasValue)
+            {
+                strSQL += " WHERE [t_fin_tran_type].[ID] = " + nSearchID.Value.ToString();
+            }
+
+            return strSQL;
+        }
+
+        private void onDB2VM(SqlDataReader reader, FinanceTranTypeViewModel vm)
+        {
+            Int32 idx = 0;
+            vm.ID = reader.GetInt32(idx++);
+            vm.Name = reader.GetString(idx++);
+
+            if (!reader.IsDBNull(idx))
+                vm.Expense = reader.GetBoolean(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.ParID = reader.GetInt32(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.Comment = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.SysFlag = reader.GetBoolean(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
         }
     }
 }

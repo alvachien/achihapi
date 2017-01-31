@@ -88,7 +88,7 @@ namespace achihapi.Controllers
                       ,[t_learn_ctgy].[NAME] as [CATEGORYNAME]
                       ,[t_learn_obj].[NAME]";
             if (bIncContent)
-                strSQL += ",[t_learn_obj].[CONTENT] ";
+                strSQL += @",[t_learn_obj].[CONTENT] ";
 
             strSQL += @",[t_learn_obj].[CREATEDBY]
                       ,[t_learn_obj].[CREATEDAT]
@@ -161,8 +161,6 @@ namespace achihapi.Controllers
                         onDB2VM(reader, true, vm);
                         break; // Should only one result!!!
                     }
-
-                    reader.NextResult();
                 }
                 else
                 {

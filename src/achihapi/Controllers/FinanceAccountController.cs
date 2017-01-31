@@ -16,7 +16,7 @@ namespace achihapi.Controllers
     {
         // GET: api/financeaccount
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
             List<FinanceAccountViewModel> listVm = new List<FinanceAccountViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -298,15 +298,77 @@ namespace achihapi.Controllers
 
         // PUT api/financeaccount/5
         [HttpPut("{id}")]
+        [Authorize]
         public void Put(int id, [FromBody]string value)
         {
         }
 
         // DELETE api/financeaccount/5
         [HttpDelete("{id}")]
+        [Authorize]
         public void Delete(int id)
         {
         }
 
+        private string getQueryString(Boolean bIncContent, Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
+        {
+            String strSQL = "";
+            if (bListMode)
+            {
+                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_obj];";
+            }
+
+            strSQL += @"SELECT [t_learn_obj].[ID]
+                      ,[t_learn_obj].[CATEGORY]
+                      ,[t_learn_ctgy].[NAME] as [CATEGORYNAME]
+                      ,[t_learn_obj].[NAME]";
+            if (bIncContent)
+                strSQL += ",[t_learn_obj].[CONTENT] ";
+
+            strSQL += @",[t_learn_obj].[CREATEDBY]
+                      ,[t_learn_obj].[CREATEDAT]
+                      ,[t_learn_obj].[UPDATEDBY]
+                      ,[t_learn_obj].[UPDATEDAT] 
+                        FROM [dbo].[t_learn_obj]
+                            INNER JOIN [dbo].[t_learn_ctgy]
+                        ON [t_learn_obj].[CATEGORY] = [t_learn_ctgy].[ID]";
+            if (bListMode && nTop.HasValue && nSkip.HasValue)
+            {
+                strSQL += @" ORDER BY (SELECT NULL)
+                        OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
+            }
+            else if (!bListMode && nSearchID.HasValue)
+            {
+                strSQL += " WHERE [t_learn_obj].[ID] = " + nSearchID.Value.ToString();
+            }
+
+            return strSQL;
+        }
+
+        private void onDB2VM(SqlDataReader reader, Boolean bIncContent, LearnObjectUIViewModel vm)
+        {
+            vm.ID = reader.GetInt32(0);
+            vm.CategoryID = reader.GetInt32(1);
+            vm.Name = reader.GetString(2);
+            if (!reader.IsDBNull(3))
+                vm.CategoryName = reader.GetString(3);
+            else
+                vm.CategoryName = String.Empty;
+
+            Int32 idx = 4;
+            if (bIncContent)
+            {
+                if (!reader.IsDBNull(idx))
+                    vm.Content = reader.GetString(idx++);
+            }
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
+        }
     }
 }
