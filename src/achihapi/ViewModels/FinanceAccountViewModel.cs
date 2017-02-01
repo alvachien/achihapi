@@ -18,6 +18,11 @@ namespace achihapi.ViewModels
         public String Owner { get; set; }
     }
 
+    public class FinanceAccountUIViewModel : FinanceAccountViewModel
+    {
+        public string CtgyName { get; set; }
+    }
+
     public class FinanceAccountExtDPViewModel
     {
         public Int32 AccountID { get; set; }
@@ -30,5 +35,10 @@ namespace achihapi.ViewModels
         public String DefrrDays { get; set; }
         [StringLength(45)]
         public String Comment { get; set; }
+    }
+
+    public class FinanceAccountExtDPUIViewModel : FinanceAccountExtDPViewModel
+    {
+
     }
 }

@@ -18,7 +18,7 @@ namespace achihapi.Controllers
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
-            List<FinanceAccountViewModel> listVm = new List<FinanceAccountViewModel>();
+            BaseListViewModel<FinanceAccountUIViewModel> listVm = new BaseListViewModel<FinanceAccountUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -34,28 +34,38 @@ namespace achihapi.Controllers
 #endif
                 var usrObj = User.FindFirst(c => c.Type == "sub");
 
-                queryString = @"SELECT TOP (100) [ID]
-                      ,[CTGYID]
-                      ,[NAME]
-                      ,[COMMENT]
-                      ,[OWNER]
-                      ,[CREATEDBY]
-                      ,[CREATEDAT]
-                      ,[UPDATEDBY]
-                      ,[UPDATEDAT]
-                  FROM [dbo].[t_fin_account]";
+                queryString = this.getQueryString(true, top, skip, null);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
+
+                Int32 nRstBatch = 0;
+                while (reader.HasRows)
                 {
-                    while (reader.Read())
+                    if (nRstBatch == 0)
                     {
-                        FinanceAccountViewModel vm = new FinanceAccountViewModel();
-                        onDB2VM(reader, vm);
-                        listVm.Add(vm);
+                        while (reader.Read())
+                        {
+                            listVm.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
                     }
+                    else
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                FinanceAccountUIViewModel vm = new FinanceAccountUIViewModel();
+                                onDB2VM(reader, vm);
+                                listVm.Add(vm);
+                            }
+                        }
+                    }
+                    ++nRstBatch;
+
+                    reader.NextResult();
                 }
             }
             catch (Exception exp)
@@ -82,7 +92,7 @@ namespace achihapi.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            FinanceAccountViewModel vmAccount = new FinanceAccountViewModel();
+            FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bExist = false;
@@ -99,17 +109,7 @@ namespace achihapi.Controllers
 #endif
                 var usrObj = User.FindFirst(c => c.Type == "sub");
 
-                queryString = @"SELECT [ID]
-                      ,[CTGYID]
-                      ,[NAME]
-                      ,[COMMENT]
-                      ,[OWNER]
-                      ,[CREATEDBY]
-                      ,[CREATEDAT]
-                      ,[UPDATEDBY]
-                      ,[UPDATEDAT]
-                  FROM [dbo].[t_fin_account]
-                  WHERE [ID] = " + id.ToString();
+                queryString = this.getQueryString(false, null, null, id);
 
                 await conn.OpenAsync();
 
@@ -149,23 +149,25 @@ namespace achihapi.Controllers
             return new ObjectResult(vmAccount);
         }
 
-        private void onDB2VM(SqlDataReader reader, FinanceAccountViewModel vm)
+        private void onDB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm)
         {
-            vm.ID = reader.GetInt32(0);
-            vm.CtgyID = reader.GetInt32(1);
-            vm.Name = reader.GetName(2);
-            if (!reader.IsDBNull(3))
-                vm.Comment = reader.GetString(3);
-            if (!reader.IsDBNull(4))
-                vm.Owner = reader.GetString(4);
-            if (!reader.IsDBNull(5))
-                vm.CreatedBy = reader.GetString(5);
-            if (!reader.IsDBNull(6))
-                vm.CreatedAt = reader.GetDateTime(6);
-            if (!reader.IsDBNull(7))
-                vm.UpdatedBy = reader.GetString(7);
-            if (!reader.IsDBNull(8))
-                vm.UpdatedAt = reader.GetDateTime(8);
+            Int32 idx = 0;
+            vm.ID = reader.GetInt32(idx++);
+            vm.CtgyID = reader.GetInt32(idx++);
+            vm.CtgyName = reader.GetString(idx++);
+            vm.Name = reader.GetName(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.Comment = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.Owner = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
         }
 
         // POST api/financeaccount
@@ -310,28 +312,27 @@ namespace achihapi.Controllers
         {
         }
 
-        private string getQueryString(Boolean bIncContent, Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
         {
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_obj];";
+                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account];";
             }
 
-            strSQL += @"SELECT [t_learn_obj].[ID]
-                      ,[t_learn_obj].[CATEGORY]
-                      ,[t_learn_ctgy].[NAME] as [CATEGORYNAME]
-                      ,[t_learn_obj].[NAME]";
-            if (bIncContent)
-                strSQL += ",[t_learn_obj].[CONTENT] ";
-
-            strSQL += @",[t_learn_obj].[CREATEDBY]
-                      ,[t_learn_obj].[CREATEDAT]
-                      ,[t_learn_obj].[UPDATEDBY]
-                      ,[t_learn_obj].[UPDATEDAT] 
-                        FROM [dbo].[t_learn_obj]
-                            INNER JOIN [dbo].[t_learn_ctgy]
-                        ON [t_learn_obj].[CATEGORY] = [t_learn_ctgy].[ID]";
+            strSQL += @"SELECT [t_fin_account].[ID]
+                      ,[t_fin_account].[CTGYID]
+                      ,[t_fin_account_ctgy].[NAME] as [CTGYNAME]
+                      ,[t_fin_account].[NAME]
+                      ,[t_fin_account].[COMMENT]
+                      ,[t_fin_account].[OWNER]
+                      ,[t_fin_account].[CREATEDBY]
+                      ,[t_fin_account].[CREATEDAT]
+                      ,[t_fin_account].[UPDATEDBY]
+                      ,[t_fin_account].[UPDATEDAT]
+                  FROM [dbo].[t_fin_account]
+                       LEFT OUTER JOIN [dbo].[t_fin_account_ctgy]
+                        ON [t_fin_account].[CTGYID] = [t_fin_account_ctgy].[ID]";
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
                 strSQL += @" ORDER BY (SELECT NULL)
@@ -339,36 +340,10 @@ namespace achihapi.Controllers
             }
             else if (!bListMode && nSearchID.HasValue)
             {
-                strSQL += " WHERE [t_learn_obj].[ID] = " + nSearchID.Value.ToString();
+                strSQL += @" WHERE [t_fin_account].[ID] = " + nSearchID.Value.ToString();
             }
 
             return strSQL;
-        }
-
-        private void onDB2VM(SqlDataReader reader, Boolean bIncContent, LearnObjectUIViewModel vm)
-        {
-            vm.ID = reader.GetInt32(0);
-            vm.CategoryID = reader.GetInt32(1);
-            vm.Name = reader.GetString(2);
-            if (!reader.IsDBNull(3))
-                vm.CategoryName = reader.GetString(3);
-            else
-                vm.CategoryName = String.Empty;
-
-            Int32 idx = 4;
-            if (bIncContent)
-            {
-                if (!reader.IsDBNull(idx))
-                    vm.Content = reader.GetString(idx++);
-            }
-            if (!reader.IsDBNull(idx))
-                vm.CreatedBy = reader.GetString(idx++);
-            if (!reader.IsDBNull(idx))
-                vm.CreatedAt = reader.GetDateTime(idx++);
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedBy = reader.GetString(idx++);
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedAt = reader.GetDateTime(idx++);
         }
     }
 }
