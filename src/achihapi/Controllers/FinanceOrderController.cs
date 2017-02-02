@@ -219,18 +219,34 @@ namespace achihapi.Controllers
 
                     vm.ID = nCurrentID;
                     vm.Name = reader.GetString(idx++);
-                    vm.Valid_From = reader.GetDateTime(idx++);
-                    vm.Valid_To = reader.GetDateTime(idx++);
+                    if (!reader.IsDBNull(idx))
+                        vm.Valid_From = reader.GetDateTime(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.Valid_To = reader.GetDateTime(idx++);
+                    else
+                        ++idx;
                     if (!reader.IsDBNull(idx))
                         vm.Comment = reader.GetString(idx++);
+                    else
+                        ++idx;
                     if (!reader.IsDBNull(idx))
                         vm.CreatedBy = reader.GetString(idx++);
+                    else
+                        ++idx;
                     if (!reader.IsDBNull(idx))
                         vm.CreatedAt = reader.GetDateTime(idx++);
+                    else
+                        ++idx;
                     if (!reader.IsDBNull(idx))
                         vm.UpdatedBy = reader.GetString(idx++);
+                    else
+                        ++idx;
                     if (!reader.IsDBNull(idx))
                         vm.UpdatedAt = reader.GetDateTime(idx++);
+                    else
+                        ++idx;
                 }
                 else
                 {
@@ -250,7 +266,12 @@ namespace achihapi.Controllers
                 srvm.ControlCenterID = reader.GetInt32(idx++);
                 if (!reader.IsDBNull(idx))
                     srvm.ControlCenterName = reader.GetString(idx++);
-                srvm.Precent = reader.GetInt32(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    srvm.Precent = reader.GetInt32(idx++);
+                else
+                    ++idx;
                 vm.SRuleList.Add(srvm);
 
                 if (nOrderID != nCurrentID)

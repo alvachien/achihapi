@@ -154,20 +154,35 @@ namespace achihapi.Controllers
             Int32 idx = 0;
             vm.ID = reader.GetInt32(idx++);
             vm.CtgyID = reader.GetInt32(idx++);
-            vm.CtgyName = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.CtgyName = reader.GetString(idx++);
+            else
+                ++idx;
             vm.Name = reader.GetName(idx++);
             if (!reader.IsDBNull(idx))
                 vm.Comment = reader.GetString(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.Owner = reader.GetString(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
         }
 
         // POST api/financeaccount

@@ -125,15 +125,25 @@ namespace achihapi.Controllers
             {
                 if (!reader.IsDBNull(idx))
                     vm.Content = reader.GetString(idx ++);
+                else
+                    ++idx;
             }
             if (!reader.IsDBNull(idx))
                 vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
         }
 
         // GET api/learnobject/5

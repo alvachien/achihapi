@@ -192,18 +192,32 @@ namespace achihapi.Controllers
             vm.Name = reader.GetString(idx++);
             if (!reader.IsDBNull(idx))
                 vm.AssetFlag = reader.GetBoolean(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.Comment = reader.GetString(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.SysFlag = reader.GetBoolean(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
         }
         #endregion
     }

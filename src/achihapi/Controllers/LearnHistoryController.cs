@@ -119,14 +119,24 @@ namespace achihapi.Controllers
             vm.LearnDate = reader.GetDateTime(idx++);
             if (!reader.IsDBNull(idx))
                 vm.Comment = reader.GetString(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
         }
 
         // GET api/learnhistory/5

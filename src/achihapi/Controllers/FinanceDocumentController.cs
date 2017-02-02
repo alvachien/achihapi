@@ -67,25 +67,37 @@ namespace achihapi.Controllers
                 strSQL += @" SELECT [ID] ";
             }
 
-            strSQL += @" ,[NAME]
-                      ,[VALID_FROM]
-                      ,[VALID_TO]
-                      ,[COMMENT]
+            strSQL += @" ,[DOCTYPE]
+                      ,[DOCTYPENAME]
+                      ,[TRANDATE]
+                      ,[TRANCURR]
+                      ,[DESP]
+                      ,[EXGRATE]
+                      ,[EXGRATE_PLAN]
+                      ,[TRANCURR2]
+                      ,[EXGRATE2]
                       ,[CREATEDBY]
                       ,[CREATEDAT]
                       ,[UPDATEDBY]
                       ,[UPDATEDAT]
-                      ,[RULEID]
+                      ,[ITEMID]
+                      ,[ACCOUNTID]
+                      ,[ACCOUNTNAME]
+                      ,[TRANTYPE]
+                      ,[TRANAMOUNT]
+                      ,[USECURR2]
                       ,[CONTROLCENTERID]
                       ,[CONTROLCENTERNAME]
-                      ,[PRECENT] ";
+                      ,[ORDERID]
+                      ,[ORDERNAME]
+                      ,[ITEMDESP] ";
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
-                strSQL += " FROM [ZOrder_CTE] LEFT OUTER JOIN [v_fin_order_srule] ON [ZOrder_CTE].[ID] = [v_fin_order_srule].[ID] ORDER BY [ID] ";
+                strSQL += " FROM [ZOrder_CTE] LEFT OUTER JOIN [v_fin_document_item] ON [ZOrder_CTE].[ID] = [v_fin_document_item].[ID] ORDER BY [ID] ";
             }
             else if (!bListMode && nSearchID.HasValue)
             {
-                strSQL += " FROM [v_fin_order_srule] WHERE [ID] = " + nSearchID.Value.ToString();
+                strSQL += " FROM [v_fin_document_item] WHERE [ID] = " + nSearchID.Value.ToString();
             }
 
 #if DEBUG
@@ -95,37 +107,64 @@ namespace achihapi.Controllers
             return strSQL;
         }
 
-        private void onDB2VM(SqlDataReader reader, BaseListViewModel<FinanceOrderViewModel> listVMs)
+        private void onDB2VM(SqlDataReader reader, BaseListViewModel<FinanceDocumentUIViewModel> listVMs)
         {
-            Int32 nOrderID = -1;
+            Int32 nDocID = -1;
             while (reader.Read())
             {
                 Int32 idx = 0;
                 Int32 nCurrentID = reader.GetInt32(idx++);
-                FinanceOrderViewModel vm = null;
-                if (nOrderID != nCurrentID)
+                FinanceDocumentUIViewModel vm = null;
+                if (nDocID != nCurrentID)
                 {
-                    nOrderID = nCurrentID;
-                    vm = new FinanceOrderViewModel();
+                    nDocID = nCurrentID;
+                    vm = new FinanceDocumentUIViewModel();
 
                     vm.ID = nCurrentID;
-                    vm.Name = reader.GetString(idx++);
-                    vm.Valid_From = reader.GetDateTime(idx++);
-                    vm.Valid_To = reader.GetDateTime(idx++);
+                    vm.DocType = reader.GetInt16(idx++);
+                    vm.DocTypeName = reader.GetString(idx++);
+                    vm.TranDate = reader.GetDateTime(idx++);
+                    vm.TranCurr = reader.GetString(idx++);
                     if (!reader.IsDBNull(idx))
-                        vm.Comment = reader.GetString(idx++);
+                        vm.Desp = reader.GetString(idx++);
+                    else
+                        ++idx;                    
+                    if (!reader.IsDBNull(idx))
+                        vm.ExgRate = reader.GetByte(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.ExgRate_Plan = reader.GetBoolean(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.TranCurr2 = reader.GetString(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.ExgRate2 = reader.GetByte(idx++);
+                    else
+                        ++idx;
                     if (!reader.IsDBNull(idx))
                         vm.CreatedBy = reader.GetString(idx++);
+                    else
+                        ++idx;
                     if (!reader.IsDBNull(idx))
                         vm.CreatedAt = reader.GetDateTime(idx++);
+                    else
+                        ++idx;
                     if (!reader.IsDBNull(idx))
                         vm.UpdatedBy = reader.GetString(idx++);
+                    else
+                        ++idx;
                     if (!reader.IsDBNull(idx))
                         vm.UpdatedAt = reader.GetDateTime(idx++);
+                    else
+                        ++idx;
                 }
                 else
                 {
-                    foreach (FinanceOrderViewModel ovm in listVMs)
+                    foreach (FinanceDocumentUIViewModel ovm in listVMs)
                     {
                         if (ovm.ID == nCurrentID)
                         {
@@ -135,16 +174,55 @@ namespace achihapi.Controllers
                     }
                 }
 
-                idx = 9;
-                FinanceOrderSRuleUIViewModel srvm = new FinanceOrderSRuleUIViewModel();
-                srvm.RuleID = reader.GetInt32(idx++);
-                srvm.ControlCenterID = reader.GetInt32(idx++);
+                idx = 14; // Item part
+                FinanceDocumentItemUIViewModel divm = new FinanceDocumentItemUIViewModel();
                 if (!reader.IsDBNull(idx))
-                    srvm.ControlCenterName = reader.GetString(idx++);
-                srvm.Precent = reader.GetInt32(idx++);
-                vm.SRuleList.Add(srvm);
+                    divm.ItemID = reader.GetInt32(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    divm.AccountID = reader.GetInt32(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    divm.AccountName = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    divm.TranType = reader.GetInt32(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    divm.TranAmount = reader.GetDecimal(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    divm.UseCurr2 = reader.GetBoolean(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    divm.ControlCenterID = reader.GetInt32(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    divm.ControlCenterName = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    divm.OrderID = reader.GetInt32(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    divm.OrderName = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    divm.Desp = reader.GetString(idx++);
+                else
+                    ++idx;
+                vm.Items.Add(divm);
 
-                if (nOrderID != nCurrentID)
+                if (nDocID != nCurrentID)
                 {
                     listVMs.Add(vm);
                 }

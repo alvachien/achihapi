@@ -88,22 +88,37 @@ namespace achihapi.Controllers
 
         private void onDB2VM(SqlDataReader reader, LearnCategoryViewModel vm)
         {
-            vm.ID = reader.GetInt32(0);
-            if (!reader.IsDBNull(1))
-                vm.ParID = reader.GetInt32(1);
-            vm.Name = reader.GetString(2);
-            if (!reader.IsDBNull(3))
-                vm.Comment = reader.GetString(3);
-            if (!reader.IsDBNull(4))
-                vm.SysFlag = reader.GetBoolean(4);
-            if (!reader.IsDBNull(5))
-                vm.CreatedBy = reader.GetString(5);
-            if (!reader.IsDBNull(6))
-                vm.CreatedAt = reader.GetDateTime(6);
-            if (!reader.IsDBNull(7))
-                vm.UpdatedBy = reader.GetString(7);
-            if (!reader.IsDBNull(8))
-                vm.UpdatedAt = reader.GetDateTime(8);
+            Int32 idx = 0;
+            vm.ID = reader.GetInt32(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.ParID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            vm.Name = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.Comment = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.SysFlag = reader.GetBoolean(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
         }
 
         // GET api/learncategory/5
