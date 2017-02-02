@@ -747,3 +747,55 @@ GO
 
 ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
 GO
+
+/* Appended at 2017.2.2 */
+/****** Object:  View [dbo].[v_fin_order_srule]    Script Date: 2017-02-02 4:53:55 PM ******/
+DROP VIEW [dbo].[v_fin_order_srule]
+GO
+
+/****** Object:  View [dbo].[v_fin_order_srule]    Script Date: 2017-02-02 4:53:55 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_fin_order_srule]
+AS
+SELECT        dbo.t_fin_order.ID, dbo.t_fin_order.NAME, dbo.t_fin_order.VALID_FROM, dbo.t_fin_order.VALID_TO, dbo.t_fin_order.COMMENT, dbo.t_fin_order.CREATEDBY, dbo.t_fin_order.CREATEDAT, 
+                         dbo.t_fin_order.UPDATEDBY, dbo.t_fin_order.UPDATEDAT, dbo.t_fin_order_srule.RULEID, dbo.t_fin_order_srule.CONTROLCENTERID, dbo.t_fin_controlcenter.NAME AS CONTROLCENTERNAME, 
+                         dbo.t_fin_order_srule.PRECENT
+FROM            dbo.t_fin_order LEFT OUTER JOIN
+                         dbo.t_fin_order_srule ON dbo.t_fin_order.ID = dbo.t_fin_order_srule.ORDID INNER JOIN
+                         dbo.t_fin_controlcenter ON dbo.t_fin_order_srule.CONTROLCENTERID = dbo.t_fin_controlcenter.ID
+
+GO
+
+/****** Object:  View [dbo].[v_fin_document_item]    Script Date: 2017-02-02 6:14:28 PM ******/
+DROP VIEW [dbo].[v_fin_document_item]
+GO
+
+/****** Object:  View [dbo].[v_fin_document_item]    Script Date: 2017-02-02 6:14:28 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_fin_document_item]
+AS
+SELECT        dbo.t_fin_document.ID, dbo.t_fin_document.DOCTYPE, dbo.t_fin_doc_type.NAME AS DOCTYPENAME, dbo.t_fin_document.TRANDATE, dbo.t_fin_document.TRANCURR, dbo.t_fin_document.DESP, 
+                         dbo.t_fin_document.EXGRATE, dbo.t_fin_document.EXGRATE_PLAN, dbo.t_fin_document.TRANCURR2, dbo.t_fin_document.EXGRATE2, dbo.t_fin_document.CREATEDBY, dbo.t_fin_document.CREATEDAT, 
+                         dbo.t_fin_document.UPDATEDBY, dbo.t_fin_document.UPDATEDAT, dbo.t_fin_document_item.ITEMID, dbo.t_fin_document_item.ACCOUNTID, dbo.t_fin_account.NAME AS ACCOUNTNAME, 
+                         dbo.t_fin_document_item.TRANTYPE, dbo.t_fin_document_item.TRANAMOUNT, dbo.t_fin_document_item.USECURR2, dbo.t_fin_document_item.CONTROLCENTERID, 
+                         dbo.t_fin_controlcenter.NAME AS CONTROLCENTERNAME, dbo.t_fin_document_item.ORDERID, dbo.t_fin_order.NAME AS ORDERNAME, dbo.t_fin_document_item.DESP AS ITEMDESP
+FROM            dbo.t_fin_document LEFT OUTER JOIN
+                         dbo.t_fin_document_item ON dbo.t_fin_document.ID = dbo.t_fin_document_item.DOCID INNER JOIN
+                         dbo.t_fin_doc_type ON dbo.t_fin_document.DOCTYPE = dbo.t_fin_doc_type.ID LEFT OUTER JOIN
+                         dbo.t_fin_account ON dbo.t_fin_document_item.ACCOUNTID = dbo.t_fin_account.ID LEFT OUTER JOIN
+                         dbo.t_fin_controlcenter ON dbo.t_fin_document_item.CONTROLCENTERID = dbo.t_fin_controlcenter.ID LEFT OUTER JOIN
+                         dbo.t_fin_order ON dbo.t_fin_document_item.ORDERID = dbo.t_fin_order.ID
+
+GO
+
+

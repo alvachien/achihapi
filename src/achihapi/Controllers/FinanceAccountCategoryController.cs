@@ -154,6 +154,7 @@ namespace achihapi.Controllers
         {
         }
 
+        #region Implmented methods
         private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
         {
             String strSQL = "";
@@ -204,5 +205,6 @@ namespace achihapi.Controllers
             if (!reader.IsDBNull(idx))
                 vm.UpdatedAt = reader.GetDateTime(idx++);
         }
+        #endregion
     }
 }

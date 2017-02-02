@@ -25,6 +25,13 @@ namespace achihapi.ViewModels
         public Byte ExgRate2 { get; set; }
     }
 
+    public class FinanceDocumentUIViewModel : FinanceDocumentViewModel
+    {
+        public String DocTypeName { get; set; }
+
+        public List<FinanceDocumentItemUIViewModel> Items = new List<FinanceDocumentItemUIViewModel>();
+    }
+
     public class FinanceDocumentItemViewModel
     {
         public Int32 DocID { get; set; }
@@ -40,5 +47,13 @@ namespace achihapi.ViewModels
         public Int32 OrderID { get; set; }
         [StringLength(45)]
         public String Desp { get; set; }
+    }
+
+    public class FinanceDocumentItemUIViewModel : FinanceDocumentItemViewModel
+    {
+        public String AccountName { get; set; }
+        public String TranTypeName { get; set; }
+        public String ControlCenterName { get; set; }
+        public String OrderName { get; set; }
     }
 }

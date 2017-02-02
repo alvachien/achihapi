@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using achihapi.ViewModels;
 using System.Data.SqlClient;
+using Microsoft.AspNetCore.Authorization;
 
 namespace achihapi.Controllers
 {
@@ -13,9 +14,9 @@ namespace achihapi.Controllers
     {
         // GET: api/financeorder
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
-            List<FinanceOrderViewModel> listVMs = new List<FinanceOrderViewModel>();
+            BaseListViewModel<FinanceOrderViewModel> listVMs = new BaseListViewModel<FinanceOrderViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -23,50 +24,33 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
-                var usrObj = User.FindFirst(c => c.Type == "sub");
-
-                queryString = @"SELECT TOP (1000)[ID]
-                              ,[NAME]
-                              ,[VALID_FROM]
-                              ,[VALID_TO]
-                              ,[COMMENT]
-                              ,[CREATEDBY]
-                              ,[CREATEDAT]
-                              ,[UPDATEDBY]
-                              ,[UPDATEDAT]
-                          FROM [dbo].[t_fin_order]";
+                queryString = this.getQueryString(true, top, skip, null);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        FinanceOrderViewModel avm = new FinanceOrderViewModel();
-                        avm.ID = reader.GetInt32(0);
-                        avm.Name = reader.GetString(1);
-                        avm.Valid_From = reader.GetDateTime(2);
-                        avm.Valid_To = reader.GetDateTime(3);
-                        if (!reader.IsDBNull(4))
-                            avm.Comment = reader.GetString(4);
-                        if (!reader.IsDBNull(5))
-                            avm.CreatedBy = reader.GetString(5);
-                        if (!reader.IsDBNull(6))
-                            avm.CreatedAt = reader.GetDateTime(6);
-                        if (!reader.IsDBNull(7))
-                            avm.UpdatedBy = reader.GetString(7);
-                        if (!reader.IsDBNull(8))
-                            avm.UpdatedAt = reader.GetDateTime(8);
 
-                        listVMs.Add(avm);
+                Int32 nRstBatch = 0;
+                while (reader.HasRows)
+                {
+                    if (nRstBatch == 0)
+                    {
+                        while (reader.Read())
+                        {
+                            listVMs.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
                     }
+                    else
+                    {
+                        if (reader.HasRows)
+                        {
+                            this.onDB2VM(reader, listVMs);
+                        }
+                    }
+                    ++nRstBatch;
+
+                    reader.NextResult();
                 }
             }
             catch (Exception exp)
@@ -89,9 +73,67 @@ namespace achihapi.Controllers
 
         // GET api/financeorder/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            return "value";
+            FinanceOrderViewModel vm = new FinanceOrderViewModel();
+
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+            Boolean bNotFound = false;
+
+            try
+            {
+                queryString = this.getQueryString(false, null, null, id);
+
+                await conn.OpenAsync();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        BaseListViewModel<FinanceOrderViewModel> listVM = new BaseListViewModel<FinanceOrderViewModel>();
+                        onDB2VM(reader, listVM);
+                        if (listVM.ContentList.Count == 1)
+                        {
+                            vm = listVM.ContentList[0];
+                        }
+                        else
+                        {
+                            throw new Exception("Failed to read db entry successfully!");
+                        }
+                        break; // Should only one result!!!
+                    }
+                }
+                else
+                {
+                    bNotFound = true;
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            if (bNotFound)
+            {
+                return NotFound();
+            }
+            else if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
+
+            return new ObjectResult(vm);
         }
 
         // POST api/financeorder
@@ -102,14 +144,121 @@ namespace achihapi.Controllers
 
         // PUT api/financeorder/5
         [HttpPut("{id}")]
+        [Authorize]
         public void Put(int id, [FromBody]string value)
         {
         }
 
         // DELETE api/financeorder/5
         [HttpDelete("{id}")]
+        [Authorize]
         public void Delete(int id)
         {
         }
+
+        #region Implmented methods
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
+        {
+            String strSQL = "";
+            if (bListMode)
+            {
+                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_order];";
+            }
+
+            if (bListMode && nTop.HasValue && nSkip.HasValue)
+            {
+                strSQL += @" WITH ZOrder_CTE (ID) AS ( SELECT [ID] FROM [dbo].[t_fin_order]  ORDER BY (SELECT NULL)
+                        OFFSET " + nSkip.Value.ToString() + @" ROWS FETCH NEXT " + nTop.Value.ToString() + @" ROWS ONLY ) ";
+                strSQL += @" SELECT [ZOrder_CTE].[ID] ";
+            }
+            else
+            {
+                strSQL += @" SELECT [ID] ";
+            }
+
+            strSQL += @" ,[NAME]
+                      ,[VALID_FROM]
+                      ,[VALID_TO]
+                      ,[COMMENT]
+                      ,[CREATEDBY]
+                      ,[CREATEDAT]
+                      ,[UPDATEDBY]
+                      ,[UPDATEDAT]
+                      ,[RULEID]
+                      ,[CONTROLCENTERID]
+                      ,[CONTROLCENTERNAME]
+                      ,[PRECENT] ";
+            if (bListMode && nTop.HasValue && nSkip.HasValue)
+            {
+                strSQL += " FROM [ZOrder_CTE] LEFT OUTER JOIN [v_fin_order_srule] ON [ZOrder_CTE].[ID] = [v_fin_order_srule].[ID] ORDER BY [ID] ";
+            }                
+            else if (!bListMode && nSearchID.HasValue)
+            {
+                strSQL += " FROM [v_fin_order_srule] WHERE [ID] = " + nSearchID.Value.ToString();
+            }
+
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine(strSQL);
+#endif
+
+            return strSQL;
+        }
+
+        private void onDB2VM(SqlDataReader reader, BaseListViewModel<FinanceOrderViewModel> listVMs)
+        {
+            Int32 nOrderID = -1;
+            while (reader.Read())
+            {
+                Int32 idx = 0;
+                Int32 nCurrentID = reader.GetInt32(idx++);
+                FinanceOrderViewModel vm = null;
+                if (nOrderID != nCurrentID)
+                {
+                    nOrderID = nCurrentID;
+                    vm = new FinanceOrderViewModel();
+
+                    vm.ID = nCurrentID;
+                    vm.Name = reader.GetString(idx++);
+                    vm.Valid_From = reader.GetDateTime(idx++);
+                    vm.Valid_To = reader.GetDateTime(idx++);
+                    if (!reader.IsDBNull(idx))
+                        vm.Comment = reader.GetString(idx++);
+                    if (!reader.IsDBNull(idx))
+                        vm.CreatedBy = reader.GetString(idx++);
+                    if (!reader.IsDBNull(idx))
+                        vm.CreatedAt = reader.GetDateTime(idx++);
+                    if (!reader.IsDBNull(idx))
+                        vm.UpdatedBy = reader.GetString(idx++);
+                    if (!reader.IsDBNull(idx))
+                        vm.UpdatedAt = reader.GetDateTime(idx++);
+                }
+                else
+                {
+                    foreach (FinanceOrderViewModel ovm in listVMs)
+                    {
+                        if (ovm.ID == nCurrentID)
+                        {
+                            vm = ovm;
+                            break;
+                        }
+                    }
+                }
+
+                idx = 9;
+                FinanceOrderSRuleUIViewModel srvm = new FinanceOrderSRuleUIViewModel();
+                srvm.RuleID = reader.GetInt32(idx++);
+                srvm.ControlCenterID = reader.GetInt32(idx++);
+                if (!reader.IsDBNull(idx))
+                    srvm.ControlCenterName = reader.GetString(idx++);
+                srvm.Precent = reader.GetInt32(idx++);
+                vm.SRuleList.Add(srvm);
+
+                if (nOrderID != nCurrentID)
+                {
+                    listVMs.Add(vm);
+                }
+            }
+        }
+        #endregion
     }
 }

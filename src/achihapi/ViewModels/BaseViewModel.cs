@@ -26,5 +26,10 @@ namespace achihapi.ViewModels
         {
             this.ContentList.Add(tObj);
         }
+
+        public List<T>.Enumerator GetEnumerator()
+        {
+            return this.ContentList.GetEnumerator();
+        }
     }
 }

@@ -18,6 +18,8 @@ namespace achihapi.ViewModels
         public DateTime Valid_To { get; set; }
         [StringLength(45)]
         public String Comment { get; set; }
+
+        public readonly List<FinanceOrderSRuleUIViewModel> SRuleList = new List<FinanceOrderSRuleUIViewModel>();
     }
 
     public class FinanceOrderSRuleViewModel
@@ -31,5 +33,10 @@ namespace achihapi.ViewModels
         public Int32 Precent { get; set; }
         [StringLength(45)]
         public String Comment { get; set; }
+    }
+
+    public class FinanceOrderSRuleUIViewModel : FinanceOrderSRuleViewModel
+    {
+        public String ControlCenterName { get; set; }
     }
 }
