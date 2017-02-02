@@ -71,7 +71,7 @@ GO
 CREATE TABLE [dbo].[t_fin_controlcenter](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[NAME] [nvarchar](30) NOT NULL,
-	[PARID] [int] NOT NULL,
+	[PARID] [int] NULL,
 	[COMMENT] [nvarchar](45) NULL,
 	[OWNER] [nvarchar](40) NULL,
 	[CREATEDBY] [nvarchar](40) NULL,

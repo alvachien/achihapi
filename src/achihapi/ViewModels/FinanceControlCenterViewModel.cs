@@ -12,7 +12,7 @@ namespace achihapi.ViewModels
         [Required]
         [StringLength(30)]
         public String Name { get; set; }
-        public Int32 ParID { get; set; }
+        public Int32? ParID { get; set; }
         [StringLength(45)]
         public String Comment { get; set; }
         [StringLength(40)]
