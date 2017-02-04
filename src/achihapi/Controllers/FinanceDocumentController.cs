@@ -143,8 +143,181 @@ namespace achihapi.Controllers
         // POST api/financedocument
         [HttpPost]
         [Authorize]
-        public void Post([FromBody]string value)
+        public async Task<IActionResult> Post([FromBody]FinanceDocumentUIViewModel vm)
         {
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted");
+            }
+
+            // Todo: checks!
+            // Header check!
+
+            // Check the items
+            if (vm.Items.Count <= 0)
+            {
+                return BadRequest("No item has been assigned yet");
+            }
+
+            // Item check!
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Int32 nNewID = -1;
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            try
+            {
+#if DEBUG
+                foreach (var clm in User.Claims.AsEnumerable())
+                {
+                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
+                }
+#endif
+                var usrName = User.FindFirst(c => c.Type == "sub").Value;
+
+                await conn.OpenAsync();
+                SqlTransaction tran = conn.BeginTransaction();
+
+                SqlCommand cmd = null;
+
+                // Now go ahead for the creating
+                queryString = @"INSERT INTO [dbo].[t_fin_document]
+                           ([DOCTYPE]
+                           ,[TRANDATE]
+                           ,[TRANCURR]
+                           ,[DESP]
+                           ,[EXGRATE]
+                           ,[EXGRATE_PLAN]
+                           ,[TRANCURR2]
+                           ,[EXGRATE2]
+                           ,[CREATEDBY]
+                           ,[CREATEDAT]
+                           ,[UPDATEDBY]
+                           ,[UPDATEDAT])
+                     VALUES
+                           (@DOCTYPE
+                           ,@TRANDATE
+                           ,@TRANCURR
+                           ,@DESP
+                           ,@EXGRATE
+                           ,@EXGRATE_PLAN
+                           ,@TRANCURR2
+                           ,@EXGRATE2
+                           ,@CREATEDBY
+                           ,@CREATEDAT
+                           ,@UPDATEDBY
+                           ,@UPDATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+
+                try
+                {
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Transaction = tran;
+                    cmd.Parameters.AddWithValue("@DOCTYPE", vm.DocType);
+                    cmd.Parameters.AddWithValue("@TRANDATE", vm.TranDate);
+                    cmd.Parameters.AddWithValue("@TRANCURR", vm.TranCurr);
+                    cmd.Parameters.AddWithValue("@DESP", vm.Desp);
+                    if (vm.ExgRate > 0)
+                        cmd.Parameters.AddWithValue("@EXGRATE", vm.ExgRate);
+                    else
+                        cmd.Parameters.AddWithValue("@EXGRATE", DBNull.Value);
+                    if (vm.ExgRate_Plan)
+                        cmd.Parameters.AddWithValue("@EXGRATE_PLAN", vm.ExgRate_Plan);
+                    else
+                        cmd.Parameters.AddWithValue("@EXGRATE_PLAN", DBNull.Value);
+                    if (String.IsNullOrEmpty(vm.TranCurr2))
+                        cmd.Parameters.AddWithValue("@TRANCURR2", DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue("@TRANCURR2", vm.TranCurr2);
+                    if (vm.ExgRate2 > 0) 
+                        cmd.Parameters.AddWithValue("@EXGRATE2", vm.ExgRate2);
+                    else
+                        cmd.Parameters.AddWithValue("@EXGRATE2", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+                    cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
+                    cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
+                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                    idparam.Direction = ParameterDirection.Output;
+
+                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                    nNewID = (Int32)idparam.Value;
+
+                    // Then, creating the srules
+                    foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
+                    {
+                        queryString = @"INSERT INTO [dbo].[t_fin_document_item]
+                                       ([DOCID]
+                                       ,[ITEMID]
+                                       ,[ACCOUNTID]
+                                       ,[TRANTYPE]
+                                       ,[TRANAMOUNT]
+                                       ,[USECURR2]
+                                       ,[CONTROLCENTERID]
+                                       ,[ORDERID]
+                                       ,[DESP])
+                                 VALUES
+                                       (@DOCID
+                                       ,@ITEMID
+                                       ,@ACCOUNTID
+                                       ,@TRANTYPE
+                                       ,@TRANAMOUNT
+                                       ,@USECURR2
+                                       ,@CONTROLCENTERID
+                                       ,@ORDERID
+                                       ,@DESP)";
+                        SqlCommand cmd2 = new SqlCommand(queryString, conn);
+                        cmd2.Transaction = tran;
+                        cmd2.Parameters.AddWithValue("@DOCID", nNewID);
+                        cmd2.Parameters.AddWithValue("@ITEMID", ivm.ItemID);
+                        cmd2.Parameters.AddWithValue("@ACCOUNTID", ivm.AccountID);
+                        cmd2.Parameters.AddWithValue("@TRANTYPE", ivm.TranType);
+                        cmd2.Parameters.AddWithValue("@TRANAMOUNT", ivm.TranAmount);
+                        if (ivm.UseCurr2)
+                            cmd2.Parameters.AddWithValue("@USECURR2", ivm.UseCurr2);
+                        else
+                            cmd2.Parameters.AddWithValue("@USECURR2", DBNull.Value);
+                        if (ivm.ControlCenterID > 0)
+                            cmd2.Parameters.AddWithValue("@CONTROLCENTERID", ivm.ControlCenterID);
+                        else
+                            cmd2.Parameters.AddWithValue("@CONTROLCENTERID", DBNull.Value);
+                        if (ivm.OrderID > 0)
+                            cmd2.Parameters.AddWithValue("@ORDERID", ivm.OrderID);
+                        else
+                            cmd2.Parameters.AddWithValue("@ORDERID", DBNull.Value);
+                        cmd2.Parameters.AddWithValue("@DESP", String.IsNullOrEmpty(ivm.Desp) ? String.Empty : ivm.Desp);
+                        await cmd2.ExecuteNonQueryAsync();
+                    }
+
+                    tran.Commit();
+                }
+                catch (Exception exp)
+                {
+#if DEBUG
+                    System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
+                    tran.Rollback();
+                }                
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            vm.ID = nNewID;
+            return new ObjectResult(vm);
         }
 
         // PUT api/financedocument/5
