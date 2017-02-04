@@ -25,7 +25,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(true, top, skip, null);
+                queryString = this.getListQueryString(top, skip);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -46,7 +46,12 @@ namespace achihapi.Controllers
                     {
                         if (reader.HasRows)
                         {
-                            this.onDB2VM(reader, listVMs);
+                            while (reader.Read())
+                            {
+                                FinanceOrderViewModel vm = new FinanceOrderViewModel();
+                                this.onListDB2VM(reader, vm);
+                                listVMs.Add(vm);
+                            }
                         }
                     }
                     ++nRstBatch;
@@ -93,19 +98,15 @@ namespace achihapi.Controllers
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
                 {
-                    while (reader.Read())
+                    BaseListViewModel<FinanceOrderViewModel> listVM = new BaseListViewModel<FinanceOrderViewModel>();
+                    onDB2VM(reader, listVM);
+                    if (listVM.ContentList.Count == 1)
                     {
-                        BaseListViewModel<FinanceOrderViewModel> listVM = new BaseListViewModel<FinanceOrderViewModel>();
-                        onDB2VM(reader, listVM);
-                        if (listVM.ContentList.Count == 1)
-                        {
-                            vm = listVM.ContentList[0];
-                        }
-                        else
-                        {
-                            throw new Exception("Failed to read db entry successfully!");
-                        }
-                        break; // Should only one result!!!
+                        vm = listVM.ContentList[0];
+                    }
+                    else
+                    {
+                        throw new Exception("Failed to read db entry successfully!");
                     }
                 }
                 else
@@ -335,6 +336,58 @@ namespace achihapi.Controllers
         }
 
         #region Implmented methods
+        private string getListQueryString(Int32 top, Int32 skip)
+        {
+            String strSQL = @"SELECT count(*) FROM [dbo].[t_fin_order];";
+            strSQL += @"SELECT [ID]
+                      ,[NAME]
+                      ,[VALID_FROM]
+                      ,[VALID_TO]
+                      ,[COMMENT]
+                      ,[CREATEDBY]
+                      ,[CREATEDAT]
+                      ,[UPDATEDBY]
+                      ,[UPDATEDAT]
+                  FROM [dbo].[t_fin_order]";
+
+            return strSQL;
+        }
+        private void onListDB2VM(SqlDataReader reader, FinanceOrderViewModel vm)
+        {
+            Int32 idx = 0;
+
+            vm.ID = reader.GetInt32(idx++);
+            vm.Name = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.Valid_From = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.Valid_To = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.Comment = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+        }
+
         private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
         {
             String strSQL = "";
