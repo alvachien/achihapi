@@ -24,7 +24,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getSQLString(true, top, skip, null, null);
+                queryString = this.getSQLString(true, top, skip);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -74,7 +74,7 @@ namespace achihapi.Controllers
             return new ObjectResult(listVm);
         }
 
-        private string getSQLString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nUserID, Int32? nObjID)
+        private string getSQLString(Boolean bListMode, Int32? nTop, Int32? nSkip)
         {
             String strSQL = "";
             if (bListMode)
@@ -101,9 +101,9 @@ namespace achihapi.Controllers
                 strSQL += @" ORDER BY (SELECT NULL)
                         OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
             }
-            else if (!bListMode && nUserID.HasValue && nObjID.HasValue)
+            else if (!bListMode)
             {
-                strSQL += " WHERE [t_learn_hist].[USERID] = " + nUserID.Value.ToString() + " AND [t_learn_hist].[OBJECTID] = " + nObjID.Value.ToString();
+                strSQL += @" WHERE [t_learn_hist].[USERID] = @USERID AND [t_learn_hist].[OBJECTID] = @OBJECTID AND [t_learn_hist].[LEARNDATE] = @LEARNDATE ";
             }
 
             return strSQL;
@@ -141,9 +141,77 @@ namespace achihapi.Controllers
 
         // GET api/learnhistory/5
         [HttpGet("{id}")]
-        public string Get(String sid)
+        public async Task<IActionResult> Get(String sid)
         {
-            return "value";
+            LearnHistoryUIViewModel vm = new LearnHistoryUIViewModel();
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bExist = false;
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            try
+            {
+#if DEBUG
+                foreach (var clm in User.Claims.AsEnumerable())
+                {
+                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
+                }
+#endif
+                var usrObj = User.FindFirst(c => c.Type == "sub");
+
+                // Split the sid
+                String[] arIDs = sid.Split('_');
+                if (arIDs.Length != 3)
+                {
+                    throw new Exception(sid + "is not recognized!");
+
+                }
+
+                String usrID = arIDs[0];
+                Int32 objID = Int32.Parse(arIDs[1]);
+                DateTime dtDate = DateTime.Parse(arIDs[2]);
+                queryString = this.getSQLString(false, null, null);
+
+                await conn.OpenAsync();
+
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Parameters.AddWithValue("@USERID", usrID);
+                cmd.Parameters.AddWithValue("@OBJECTID", objID);
+                cmd.Parameters.AddWithValue("@LEARNDATE", dtDate);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    bExist = true;
+                    while (reader.Read())
+                    {
+                        onDB2VM(reader, vm);
+                        // It should return one entry only!
+                        // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
+                        break;
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            // In case not found, return a 404
+            if (!bExist)
+                return NotFound();
+            else if (bError)
+                return StatusCode(500, strErrMsg);
+
+            // Only return the meaningful object
+            return new ObjectResult(vm);
         }
 
         // POST api/learnhistory, create a learn history
