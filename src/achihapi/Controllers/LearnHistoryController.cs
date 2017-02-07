@@ -140,9 +140,14 @@ namespace achihapi.Controllers
         }
 
         // GET api/learnhistory/5
-        [HttpGet("{id}")]
+        [HttpGet("{sid}")]
         public async Task<IActionResult> Get(String sid)
         {
+            if (String.IsNullOrEmpty(sid))
+            {
+                return BadRequest("No data is inputted");
+            }
+
             LearnHistoryUIViewModel vm = new LearnHistoryUIViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -152,14 +157,6 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
-                var usrObj = User.FindFirst(c => c.Type == "sub");
-
                 // Split the sid
                 String[] arIDs = sid.Split('_');
                 if (arIDs.Length != 3)
