@@ -398,15 +398,157 @@ namespace achihapi.Controllers
         // PUT api/financeaccount/5
         [HttpPut("{id}")]
         [Authorize]
-        public void Put(int id, [FromBody]string value)
-        {
+        public async Task<IActionResult> Put(int id, [FromBody]FinanceAccountViewModel vm)
+        {            
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted");
+            }
+
+            if (vm.Name != null)
+                vm.Name = vm.Name.Trim();
+            if (String.IsNullOrEmpty(vm.Name) || vm.ID != id)
+            {
+                return BadRequest("Name is a must!");
+            }
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            try
+            {
+                var usrName = User.FindFirst(c => c.Type == "sub").Value;
+                queryString = @"UPDATE [dbo].[t_fin_account]
+                       SET [CTGYID] = @CTGYID
+                          ,[NAME] = @NAME
+                          ,[COMMENT] = @COMMENT
+                          ,[OWNER] = @OWNER
+                          ,[UPDATEDBY] = @UPDATEDBY
+                          ,[UPDATEDAT] = @UPDATEDAT
+                     WHERE [ID] = @ID";
+
+                await conn.OpenAsync();
+
+                SqlTransaction tran = conn.BeginTransaction();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Transaction = tran;
+                cmd.Parameters.AddWithValue("@CTGYID", vm.CtgyID);
+                cmd.Parameters.AddWithValue("@NAME", vm.Name);
+                cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
+                if (String.IsNullOrEmpty(vm.Owner))
+                {
+                    cmd.Parameters.AddWithValue("@OWNER", DBNull.Value);
+                }
+                else
+                {
+                    cmd.Parameters.AddWithValue("@OWNER", vm.Owner);
+                }
+                cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+                cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
+                cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                vm.UpdatedAt = DateTime.Now;
+                cmd.Parameters.AddWithValue("@UPDATEDAT", vm.UpdatedAt);
+                cmd.Parameters.AddWithValue("@ID", vm.ID);
+                await cmd.ExecuteNonQueryAsync();
+
+                // ToDo: Ext. info
+                if (vm.CtgyID == FinanceAccountViewModel.AccountCategory_AdvancePayment)
+                {
+                    // UPDATE[dbo].[t_fin_account_ext_dp]
+                    //  SET[ACCOUNTID] = < ACCOUNTID, int,>
+                    //     ,[DIRECT] = <DIRECT, tinyint,>
+                    //     ,[STARTDATE] = <STARTDATE, date,>
+                    //     ,[ENDDATE] = <ENDDATE, date,>
+                    //     ,[RPTTYPE] = <RPTTYPE, tinyint,>
+                    //     ,[REFDOCID] = <REFDOCID, int,>
+                    //     ,[DEFRRDAYS] = <DEFRRDAYS, nvarchar(100),>
+                    //     ,[COMMENT] = <COMMENT, nvarchar(45),>
+                    //WHERE<Search Conditions,,>
+                    //if (vm.CtgyID == )
+                    //{
+                    //}
+                }
+
+                // Now commit it!
+                tran.Commit();
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return new ObjectResult(vm);
         }
 
         // DELETE api/financeaccount/5
         [HttpDelete("{id}")]
         [Authorize]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            // DELETE FROM [dbo].[t_fin_account]
+            // WHERE [ID] = @ID
+
+            // DELETE FROM [dbo].[t_fin_account_ext_dp]
+            // WHERE [ACCOUNTID] = @ACCOUNTID
+
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            try
+            {
+                var usrName = User.FindFirst(c => c.Type == "sub").Value;
+                queryString = @"DELETE FROM [dbo].[t_fin_account] 
+                     WHERE [ID] = @ID";
+
+                await conn.OpenAsync();
+
+                SqlTransaction tran = conn.BeginTransaction();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Transaction = tran;
+                cmd.Parameters.AddWithValue("@ID", id);
+                await cmd.ExecuteNonQueryAsync();
+
+                // Ext. info
+                queryString = @"DELETE FROM [dbo].[t_fin_account_ext_dp] WHERE [ACCOUNTID] = @ACCOUNTID";
+                cmd = new SqlCommand(queryString, conn);
+                cmd.Transaction = tran;
+                cmd.Parameters.AddWithValue("@ACCOUNTID", id);
+                await cmd.ExecuteNonQueryAsync();
+
+                // Now commit it!
+                tran.Commit();
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return Ok();
         }
 
         private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
