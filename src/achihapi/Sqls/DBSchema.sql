@@ -127,11 +127,14 @@ CREATE TABLE [dbo].[t_fin_doc_type](
 ) ON [PRIMARY]
 
 GO
-/****** Object:  Table [dbo].[t_fin_document]    Script Date: 2016-10-27 3:31:27 PM ******/
+
+/****** Object:  Table [dbo].[t_fin_document]    Script Date: 2017-02-20 12:11:41 AM ******/
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
+
 CREATE TABLE [dbo].[t_fin_document](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[DOCTYPE] [smallint] NOT NULL,
@@ -140,6 +143,7 @@ CREATE TABLE [dbo].[t_fin_document](
 	[DESP] [nvarchar](45) NOT NULL,
 	[EXGRATE] [tinyint] NULL,
 	[EXGRATE_PLAN] [tinyint] NULL,
+	[EXGRATE_PLAN2] [tinyint] NULL,
 	[TRANCURR2] [nvarchar](5) NULL,
 	[EXGRATE2] [tinyint] NULL,
 	[CREATEDBY] [nvarchar](40) NULL,
@@ -153,6 +157,7 @@ CREATE TABLE [dbo].[t_fin_document](
 ) ON [PRIMARY]
 
 GO
+
 /****** Object:  Table [dbo].[t_fin_document_item]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -926,4 +931,53 @@ select
 		left outer join [t_fin_account] on [t_fin_document_item].[ACCOUNTID] = [t_fin_account].[ID]
 		left outer join [t_fin_controlcenter] on [t_fin_document_item].[CONTROLCENTERID] = [t_fin_controlcenter].[ID]
 		left outer join [t_fin_order] on [t_fin_document_item].[ORDERID] = [t_fin_order].[ID];
+GO
+
+/****** Object:  View [dbo].[v_fin_document]    Script Date: 2017-02-20 12:14:08 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+create view [dbo].[v_fin_document]
+as
+ select 
+        [t_fin_document].[ID] AS [id],
+        [t_fin_document].[DOCTYPE] AS [doctype],
+        [t_fin_document].[TRANDATE] AS [trandate],
+        [t_fin_document].[TRANCURR] AS [trancurr],
+        [t_fin_document].[DESP] AS [desp],
+        [t_fin_document].[EXGRATE] AS [exgrate],
+        [t_fin_document].[EXGRATE_PLAN] AS [exgrate_plan],
+        [t_fin_document].[TRANCURR2] AS [trancurr2],
+        [t_fin_document].[EXGRATE2] AS [exgrate2],
+        [t_fin_document].[EXGRATE_PLAN2] AS [exgrate_plan2],
+        [item_table].[tranamount]
+    from
+        [t_fin_document]
+        left join (select [DOCID] AS [id], sum([tranamount_lc]) AS [tranamount] from [v_fin_document_item1] 
+			group by [DOCID]
+		) as item_table on ([t_fin_document].[ID] = [item_table].[id])  
+    where [t_fin_document].[DOCTYPE] != 3 AND [t_fin_document].[DOCTYPE] != 2    
+    
+    union all
+    
+    select 
+        [t_fin_document].[ID] AS [id],
+        [t_fin_document].[DOCTYPE] AS [doctype],
+        [t_fin_document].[TRANDATE] AS [trandate],
+        [t_fin_document].[TRANCURR] AS [trancurr],
+        [t_fin_document].[DESP] AS [desp],
+        [t_fin_document].[EXGRATE] AS [exgrate],
+        [t_fin_document].[EXGRATE_PLAN] AS [exgrate_plan],
+        [t_fin_document].[TRANCURR2] AS [trancurr2],
+        [t_fin_document].[EXGRATE2] AS [exgrate2],
+        [t_fin_document].[EXGRATE_PLAN2] AS [exgrate_plan2],
+        0 AS [tranamount]
+    from
+        [t_fin_document]
+    where [t_fin_document].[DOCTYPE] = 3 OR [t_fin_document].[DOCTYPE] = 2;
+
 GO
