@@ -24,6 +24,7 @@ namespace achihapi.ViewModels
         public String TranCurr2 { get; set; }
         public Byte ExgRate2 { get; set; }
         public Boolean ExgRate_Plan2 { get; set; }
+        public Decimal TranAmount { get; set; }
     }
 
     public class FinanceDocumentUIViewModel : FinanceDocumentViewModel

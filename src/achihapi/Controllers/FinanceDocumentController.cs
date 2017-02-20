@@ -97,23 +97,96 @@ namespace achihapi.Controllers
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    BaseListViewModel<FinanceDocumentUIViewModel> listVM = new BaseListViewModel<FinanceDocumentUIViewModel>();
-                    onDB2VM(reader, listVM);
+                //if (reader.HasRows)
+                //{
+                //    BaseListViewModel<FinanceDocumentUIViewModel> listVM = new BaseListViewModel<FinanceDocumentUIViewModel>();
+                //    onDB2VM(reader, listVM);
 
-                    if (listVM.ContentList.Count == 1)
+                //    if (listVM.ContentList.Count == 1)
+                //    {
+                //        vm = listVM.ContentList[0];
+                //    }
+                //    else
+                //    {
+                //        throw new Exception("Failed to read db entry successfully!");
+                //    }
+                //}
+                //else
+                //{
+                //    bNotFound = true;
+                //}
+
+                Int32 nRstBatch = 0;
+                while (reader.HasRows)
+                {
+                    if (nRstBatch == 0)
                     {
-                        vm = listVM.ContentList[0];
+                        // Header
+                        while (reader.Read())
+                        {
+                            Int32 idx = 0;
+                            vm.ID = reader.GetInt32(idx++);
+                            vm.DocType = reader.GetInt16(idx++);
+                            vm.TranDate = reader.GetDateTime(idx++);
+                            vm.TranCurr = reader.GetString(idx++);
+                            if (!reader.IsDBNull(idx))
+                                vm.Desp = reader.GetString(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                vm.ExgRate = reader.GetByte(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                vm.ExgRate_Plan = reader.GetBoolean(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                vm.TranCurr2 = reader.GetString(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                vm.ExgRate2 = reader.GetByte(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                vm.ExgRate_Plan2 = reader.GetBoolean(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                vm.CreatedBy = reader.GetString(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                vm.CreatedAt = reader.GetDateTime(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                vm.UpdatedBy = reader.GetString(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                vm.UpdatedAt = reader.GetDateTime(idx++);
+                            else
+                                ++idx;
+
+                            break;
+                        }
                     }
                     else
                     {
-                        throw new Exception("Failed to read db entry successfully!");
+                        if (reader.HasRows)
+                        {
+                            // Items
+                            while (reader.Read())
+                            {
+
+                            }
+                        }
                     }
-                }
-                else
-                {
-                    bNotFound = true;
+                    ++nRstBatch;
+
+                    reader.NextResult();
                 }
             }
             catch (Exception exp)
@@ -406,63 +479,92 @@ namespace achihapi.Controllers
                 vm.UpdatedAt = reader.GetDateTime(idx++);
             else
                 ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.TranAmount = reader.GetDecimal(idx++);
+            else
+                ++idx;
         }
 
         private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
         {
-            String strSQL = "";
-            if (bListMode)
-            {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_document];";
-            }
+            String strSQL = @"SELECT [ID]
+                          ,[DOCTYPE]
+                          ,[TRANDATE]
+                          ,[TRANCURR]
+                          ,[DESP]
+                          ,[EXGRATE]
+                          ,[EXGRATE_PLAN]
+                          ,[TRANCURR2]
+                          ,[EXGRATE2]
+                          ,[EXGRATE_PLAN2]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                      FROM [dbo].[t_fin_document] WHERE [ID] = " + nSearchID.Value.ToString() + @"; 
+                        SELECT [DOCID]
+                              ,[ITEMID]
+                              ,[ACCOUNTID]
+                              ,[TRANTYPE]
+                              ,[TRANAMOUNT]
+                              ,[USECURR2]
+                              ,[CONTROLCENTERID]
+                              ,[ORDERID]
+                              ,[DESP]
+                          FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + nSearchID.Value.ToString();
+//            if (bListMode)
+//            {
+//                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_document];";
+//            }
 
-            if (bListMode && nTop.HasValue && nSkip.HasValue)
-            {
-                strSQL += @" WITH ZDoc_CTE (ID) AS ( SELECT [ID] FROM [dbo].[t_fin_document]  ORDER BY (SELECT NULL)
-                        OFFSET " + nSkip.Value.ToString() + @" ROWS FETCH NEXT " + nTop.Value.ToString() + @" ROWS ONLY ) ";
-                strSQL += @" SELECT [ZOrder_CTE].[ID] ";
-            }
-            else
-            {
-                strSQL += @" SELECT [ID] ";
-            }
+//            if (bListMode && nTop.HasValue && nSkip.HasValue)
+//            {
+//                strSQL += @" WITH ZDoc_CTE (ID) AS ( SELECT [ID] FROM [dbo].[t_fin_document]  ORDER BY (SELECT NULL)
+//                        OFFSET " + nSkip.Value.ToString() + @" ROWS FETCH NEXT " + nTop.Value.ToString() + @" ROWS ONLY ) ";
+//                strSQL += @" SELECT [ZOrder_CTE].[ID] ";
+//            }
+//            else
+//            {
+//                strSQL += @" SELECT [ID] ";
+//            }
 
-            strSQL += @" ,[DOCTYPE]
-                      ,[DOCTYPENAME]
-                      ,[TRANDATE]
-                      ,[TRANCURR]
-                      ,[DESP]
-                      ,[EXGRATE]
-                      ,[EXGRATE_PLAN]
-                      ,[TRANCURR2]
-                      ,[EXGRATE2]
-                      ,[CREATEDBY]
-                      ,[CREATEDAT]
-                      ,[UPDATEDBY]
-                      ,[UPDATEDAT]
-                      ,[ITEMID]
-                      ,[ACCOUNTID]
-                      ,[ACCOUNTNAME]
-                      ,[TRANTYPE]
-                      ,[TRANAMOUNT]
-                      ,[USECURR2]
-                      ,[CONTROLCENTERID]
-                      ,[CONTROLCENTERNAME]
-                      ,[ORDERID]
-                      ,[ORDERNAME]
-                      ,[ITEMDESP] ";
-            if (bListMode && nTop.HasValue && nSkip.HasValue)
-            {
-                strSQL += @" FROM [ZOrder_CTE] LEFT OUTER JOIN [v_fin_document_item] ON [ZOrder_CTE].[ID] = [v_fin_document_item].[ID] ORDER BY [ID] ";
-            }
-            else if (!bListMode && nSearchID.HasValue)
-            {
-                strSQL += @" FROM [v_fin_document_item] WHERE [ID] = " + nSearchID.Value.ToString();
-            }
+//            strSQL += @" ,[DOCTYPE]
+//                      ,[DOCTYPENAME]
+//                      ,[TRANDATE]
+//                      ,[TRANCURR]
+//                      ,[DESP]
+//                      ,[EXGRATE]
+//                      ,[EXGRATE_PLAN]
+//                      ,[TRANCURR2]
+//                      ,[EXGRATE2]
+//                      ,[CREATEDBY]
+//                      ,[CREATEDAT]
+//                      ,[UPDATEDBY]
+//                      ,[UPDATEDAT]
+//                      ,[ITEMID]
+//                      ,[ACCOUNTID]
+//                      ,[ACCOUNTNAME]
+//                      ,[TRANTYPE]
+//                      ,[TRANAMOUNT]
+//                      ,[USECURR2]
+//                      ,[CONTROLCENTERID]
+//                      ,[CONTROLCENTERNAME]
+//                      ,[ORDERID]
+//                      ,[ORDERNAME]
+//                      ,[ITEMDESP] ";
+//            if (bListMode && nTop.HasValue && nSkip.HasValue)
+//            {
+//                strSQL += @" FROM [ZOrder_CTE] LEFT OUTER JOIN [v_fin_document_item] ON [ZOrder_CTE].[ID] = [v_fin_document_item].[ID] ORDER BY [ID] ";
+//            }
+//            else if (!bListMode && nSearchID.HasValue)
+//            {
+//                strSQL += @" FROM [v_fin_document_item1] WHERE [ID] = " + nSearchID.Value.ToString();
+//            }
 
-#if DEBUG
-            System.Diagnostics.Debug.WriteLine(strSQL);
-#endif
+//#if DEBUG
+//            System.Diagnostics.Debug.WriteLine(strSQL);
+//#endif
+
 
             return strSQL;
         }
