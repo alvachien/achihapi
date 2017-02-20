@@ -337,24 +337,24 @@ namespace achihapi.Controllers
         #region Implmented methods
         private string getListQueryString(Int32 top, Int32 skip)
         {
-            String strSQL = @"SELECT count(*) FROM [dbo].[t_fin_document];";
-            strSQL += @" SELECT [t_fin_document].[ID]
-                      ,[t_fin_document].[DOCTYPE]
-	                  ,[t_fin_doc_type].[NAME] AS [DOCTYPENAME]
-                      ,[t_fin_document].[TRANDATE]
-                      ,[t_fin_document].[TRANCURR]
-                      ,[t_fin_document].[DESP]
-                      ,[t_fin_document].[EXGRATE]
-                      ,[t_fin_document].[EXGRATE_PLAN]
-                      ,[t_fin_document].[TRANCURR2]
-                      ,[t_fin_document].[EXGRATE2]
-                      ,[t_fin_document].[CREATEDBY]
-                      ,[t_fin_document].[CREATEDAT]
-                      ,[t_fin_document].[UPDATEDBY]
-                      ,[t_fin_document].[UPDATEDAT]
-                  FROM [dbo].[t_fin_document]
-	                LEFT OUTER JOIN [dbo].[t_fin_doc_type]
-	                ON [dbo].[t_fin_document].[DOCTYPE] = [dbo].[t_fin_doc_type].[ID]";
+            String strSQL = @"SELECT count(*) FROM [dbo].[v_fin_document];";
+            strSQL += @" SELECT [v_fin_document].[ID]
+                      ,[v_fin_document].[DOCTYPE]
+	                  ,[t_fin_doc_type].[DOCTYPENAME]
+                      ,[v_fin_document].[TRANDATE]
+                      ,[v_fin_document].[TRANCURR]
+                      ,[v_fin_document].[DESP]
+                      ,[v_fin_document].[EXGRATE]
+                      ,[v_fin_document].[EXGRATE_PLAN]
+                      ,[v_fin_document].[TRANCURR2]
+                      ,[v_fin_document].[EXGRATE2]
+                      ,[v_fin_document].[EXGRATE_PLAN2]
+                      ,[v_fin_document].[CREATEDBY]
+                      ,[v_fin_document].[CREATEDAT]
+                      ,[v_fin_document].[UPDATEDBY]
+                      ,[v_fin_document].[UPDATEDAT]
+                      ,[v_fin_document].[TRANAMOUNT]
+                  FROM [dbo].[v_fin_document]";
 
             return strSQL;
         }
@@ -384,6 +384,10 @@ namespace achihapi.Controllers
                 ++idx;
             if (!reader.IsDBNull(idx))
                 vm.ExgRate2 = reader.GetByte(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.ExgRate_Plan2 = reader.GetBoolean(idx++);
             else
                 ++idx;
             if (!reader.IsDBNull(idx))

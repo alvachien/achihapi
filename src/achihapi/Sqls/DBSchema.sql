@@ -944,20 +944,26 @@ GO
 create view [dbo].[v_fin_document]
 as
  select 
-        [t_fin_document].[ID] AS [id],
-        [t_fin_document].[DOCTYPE] AS [doctype],
-        [t_fin_document].[TRANDATE] AS [trandate],
-        [t_fin_document].[TRANCURR] AS [trancurr],
-        [t_fin_document].[DESP] AS [desp],
-        [t_fin_document].[EXGRATE] AS [exgrate],
-        [t_fin_document].[EXGRATE_PLAN] AS [exgrate_plan],
-        [t_fin_document].[TRANCURR2] AS [trancurr2],
-        [t_fin_document].[EXGRATE2] AS [exgrate2],
-        [t_fin_document].[EXGRATE_PLAN2] AS [exgrate_plan2],
-        [item_table].[tranamount]
+        [t_fin_document].[ID] AS [ID],
+        [t_fin_document].[DOCTYPE] AS [DOCTYPE],
+		[t_fin_doc_type].[NAME] AS [DOCTYPENAME],
+        [t_fin_document].[TRANDATE] AS [TRANDATE],
+        [t_fin_document].[TRANCURR] AS [TRANCURR],
+        [t_fin_document].[DESP] AS [DESP],
+        [t_fin_document].[EXGRATE] AS [EXGRATE],
+        [t_fin_document].[EXGRATE_PLAN] AS [EXGRATE_PLAN],
+        [t_fin_document].[TRANCURR2] AS [TRANCURR2],
+        [t_fin_document].[EXGRATE2] AS [EXGRATE2],
+        [t_fin_document].[EXGRATE_PLAN2] AS [EXGRATE_PLAN2],
+		[t_fin_document].[CREATEDBY],
+		[t_fin_document].[CREATEDAT],
+		[t_fin_document].[UPDATEDBY],
+		[t_fin_document].[UPDATEDAT],
+        [item_table].[TRANAMOUNT]
     from
         [t_fin_document]
-        left join (select [DOCID] AS [id], sum([tranamount_lc]) AS [tranamount] from [v_fin_document_item1] 
+		left outer join [t_fin_doc_type] on [t_fin_document].[DOCTYPE] = [t_fin_doc_type].[ID]
+        left outer join (select [DOCID] AS [id], sum([tranamount_lc]) AS [tranamount] from [v_fin_document_item1] 
 			group by [DOCID]
 		) as item_table on ([t_fin_document].[ID] = [item_table].[id])  
     where [t_fin_document].[DOCTYPE] != 3 AND [t_fin_document].[DOCTYPE] != 2    
@@ -965,19 +971,25 @@ as
     union all
     
     select 
-        [t_fin_document].[ID] AS [id],
-        [t_fin_document].[DOCTYPE] AS [doctype],
-        [t_fin_document].[TRANDATE] AS [trandate],
-        [t_fin_document].[TRANCURR] AS [trancurr],
-        [t_fin_document].[DESP] AS [desp],
-        [t_fin_document].[EXGRATE] AS [exgrate],
-        [t_fin_document].[EXGRATE_PLAN] AS [exgrate_plan],
-        [t_fin_document].[TRANCURR2] AS [trancurr2],
-        [t_fin_document].[EXGRATE2] AS [exgrate2],
-        [t_fin_document].[EXGRATE_PLAN2] AS [exgrate_plan2],
-        0 AS [tranamount]
+        [t_fin_document].[ID] AS [ID],
+        [t_fin_document].[DOCTYPE] AS [DOCTYPE],
+		[t_fin_doc_type].[NAME] AS [DOCTYPENAME],
+        [t_fin_document].[TRANDATE] AS [TRANDATE],
+        [t_fin_document].[TRANCURR] AS [TRANCURR],
+        [t_fin_document].[DESP] AS [DESP],
+        [t_fin_document].[EXGRATE] AS [EXGRATE],
+        [t_fin_document].[EXGRATE_PLAN] AS [EXGRATE_PLAN],
+        [t_fin_document].[TRANCURR2] AS [TRANCURR2],
+        [t_fin_document].[EXGRATE2] AS [EXGRATE2],
+        [t_fin_document].[EXGRATE_PLAN2] AS [EXGRATE_PLAN2],
+		[t_fin_document].[CREATEDBY],
+		[t_fin_document].[CREATEDAT],
+		[t_fin_document].[UPDATEDBY],
+		[t_fin_document].[UPDATEDAT],
+        0 AS [TRANAMOUNT]
     from
         [t_fin_document]
+		left outer  join [t_fin_doc_type] on [t_fin_document].[DOCTYPE] = [t_fin_doc_type].[ID]
     where [t_fin_document].[DOCTYPE] = 3 OR [t_fin_document].[DOCTYPE] = 2;
 
 GO

@@ -23,6 +23,7 @@ namespace achihapi.ViewModels
         [StringLength(5)]
         public String TranCurr2 { get; set; }
         public Byte ExgRate2 { get; set; }
+        public Boolean ExgRate_Plan2 { get; set; }
     }
 
     public class FinanceDocumentUIViewModel : FinanceDocumentViewModel
