@@ -180,7 +180,31 @@ namespace achihapi.Controllers
                             // Items
                             while (reader.Read())
                             {
+                                FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
+                                Int32 idx = 0;
+                                itemvm.DocID = reader.GetInt32(idx++);
+                                itemvm.ItemID = reader.GetInt32(idx++);
+                                itemvm.AccountID = reader.GetInt32(idx++);
+                                itemvm.TranType = reader.GetInt32(idx++);
+                                itemvm.TranAmount = reader.GetDecimal(idx++);
+                                if (!reader.IsDBNull(idx))
+                                    itemvm.UseCurr2 = reader.GetBoolean(idx++);
+                                else
+                                    ++idx;
+                                if (!reader.IsDBNull(idx))
+                                    itemvm.ControlCenterID = reader.GetInt32(idx++);
+                                else
+                                    ++idx;
+                                if (!reader.IsDBNull(idx))
+                                    itemvm.OrderID = reader.GetInt32(idx++);
+                                else
+                                    ++idx;
+                                if (!reader.IsDBNull(idx))
+                                    itemvm.Desp = reader.GetString(idx++);
+                                else
+                                    ++idx;
 
+                                vm.Items.Add(itemvm);
                             }
                         }
                     }
@@ -413,7 +437,7 @@ namespace achihapi.Controllers
             String strSQL = @"SELECT count(*) FROM [dbo].[v_fin_document];";
             strSQL += @" SELECT [v_fin_document].[ID]
                       ,[v_fin_document].[DOCTYPE]
-	                  ,[t_fin_doc_type].[DOCTYPENAME]
+	                  ,[v_fin_document].[DOCTYPENAME]
                       ,[v_fin_document].[TRANDATE]
                       ,[v_fin_document].[TRANCURR]
                       ,[v_fin_document].[DESP]
@@ -501,7 +525,7 @@ namespace achihapi.Controllers
                           ,[CREATEDAT]
                           ,[UPDATEDBY]
                           ,[UPDATEDAT]
-                      FROM [dbo].[t_fin_document] WHERE [ID] = " + nSearchID.Value.ToString() + @"; 
+                      FROM [t_fin_document] WHERE [ID] = " + nSearchID.Value.ToString() + @"; 
                         SELECT [DOCID]
                               ,[ITEMID]
                               ,[ACCOUNTID]
@@ -511,59 +535,59 @@ namespace achihapi.Controllers
                               ,[CONTROLCENTERID]
                               ,[ORDERID]
                               ,[DESP]
-                          FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + nSearchID.Value.ToString();
-//            if (bListMode)
-//            {
-//                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_document];";
-//            }
+                          FROM [t_fin_document_item] WHERE [DOCID] = " + nSearchID.Value.ToString();
+            //            if (bListMode)
+            //            {
+            //                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_document];";
+            //            }
 
-//            if (bListMode && nTop.HasValue && nSkip.HasValue)
-//            {
-//                strSQL += @" WITH ZDoc_CTE (ID) AS ( SELECT [ID] FROM [dbo].[t_fin_document]  ORDER BY (SELECT NULL)
-//                        OFFSET " + nSkip.Value.ToString() + @" ROWS FETCH NEXT " + nTop.Value.ToString() + @" ROWS ONLY ) ";
-//                strSQL += @" SELECT [ZOrder_CTE].[ID] ";
-//            }
-//            else
-//            {
-//                strSQL += @" SELECT [ID] ";
-//            }
+            //            if (bListMode && nTop.HasValue && nSkip.HasValue)
+            //            {
+            //                strSQL += @" WITH ZDoc_CTE (ID) AS ( SELECT [ID] FROM [dbo].[t_fin_document]  ORDER BY (SELECT NULL)
+            //                        OFFSET " + nSkip.Value.ToString() + @" ROWS FETCH NEXT " + nTop.Value.ToString() + @" ROWS ONLY ) ";
+            //                strSQL += @" SELECT [ZOrder_CTE].[ID] ";
+            //            }
+            //            else
+            //            {
+            //                strSQL += @" SELECT [ID] ";
+            //            }
 
-//            strSQL += @" ,[DOCTYPE]
-//                      ,[DOCTYPENAME]
-//                      ,[TRANDATE]
-//                      ,[TRANCURR]
-//                      ,[DESP]
-//                      ,[EXGRATE]
-//                      ,[EXGRATE_PLAN]
-//                      ,[TRANCURR2]
-//                      ,[EXGRATE2]
-//                      ,[CREATEDBY]
-//                      ,[CREATEDAT]
-//                      ,[UPDATEDBY]
-//                      ,[UPDATEDAT]
-//                      ,[ITEMID]
-//                      ,[ACCOUNTID]
-//                      ,[ACCOUNTNAME]
-//                      ,[TRANTYPE]
-//                      ,[TRANAMOUNT]
-//                      ,[USECURR2]
-//                      ,[CONTROLCENTERID]
-//                      ,[CONTROLCENTERNAME]
-//                      ,[ORDERID]
-//                      ,[ORDERNAME]
-//                      ,[ITEMDESP] ";
-//            if (bListMode && nTop.HasValue && nSkip.HasValue)
-//            {
-//                strSQL += @" FROM [ZOrder_CTE] LEFT OUTER JOIN [v_fin_document_item] ON [ZOrder_CTE].[ID] = [v_fin_document_item].[ID] ORDER BY [ID] ";
-//            }
-//            else if (!bListMode && nSearchID.HasValue)
-//            {
-//                strSQL += @" FROM [v_fin_document_item1] WHERE [ID] = " + nSearchID.Value.ToString();
-//            }
+            //            strSQL += @" ,[DOCTYPE]
+            //                      ,[DOCTYPENAME]
+            //                      ,[TRANDATE]
+            //                      ,[TRANCURR]
+            //                      ,[DESP]
+            //                      ,[EXGRATE]
+            //                      ,[EXGRATE_PLAN]
+            //                      ,[TRANCURR2]
+            //                      ,[EXGRATE2]
+            //                      ,[CREATEDBY]
+            //                      ,[CREATEDAT]
+            //                      ,[UPDATEDBY]
+            //                      ,[UPDATEDAT]
+            //                      ,[ITEMID]
+            //                      ,[ACCOUNTID]
+            //                      ,[ACCOUNTNAME]
+            //                      ,[TRANTYPE]
+            //                      ,[TRANAMOUNT]
+            //                      ,[USECURR2]
+            //                      ,[CONTROLCENTERID]
+            //                      ,[CONTROLCENTERNAME]
+            //                      ,[ORDERID]
+            //                      ,[ORDERNAME]
+            //                      ,[ITEMDESP] ";
+            //            if (bListMode && nTop.HasValue && nSkip.HasValue)
+            //            {
+            //                strSQL += @" FROM [ZOrder_CTE] LEFT OUTER JOIN [v_fin_document_item] ON [ZOrder_CTE].[ID] = [v_fin_document_item].[ID] ORDER BY [ID] ";
+            //            }
+            //            else if (!bListMode && nSearchID.HasValue)
+            //            {
+            //                strSQL += @" FROM [v_fin_document_item1] WHERE [ID] = " + nSearchID.Value.ToString();
+            //            }
 
-//#if DEBUG
-//            System.Diagnostics.Debug.WriteLine(strSQL);
-//#endif
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine(strSQL);
+#endif
 
 
             return strSQL;
