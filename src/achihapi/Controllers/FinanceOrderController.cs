@@ -91,23 +91,26 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(false, null, null, id);
+                //queryString = this.getQueryString(false, null, null, id);
+                queryString = this.getItemQueryString(id);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
                 {
-                    BaseListViewModel<FinanceOrderViewModel> listVM = new BaseListViewModel<FinanceOrderViewModel>();
-                    onDB2VM(reader, listVM);
-                    if (listVM.ContentList.Count == 1)
-                    {
-                        vm = listVM.ContentList[0];
-                    }
-                    else
-                    {
-                        throw new Exception("Failed to read db entry successfully!");
-                    }
+                    //BaseListViewModel<FinanceOrderViewModel> listVM = new BaseListViewModel<FinanceOrderViewModel>();
+                    //onDB2VM(reader, listVM);
+                    //if (listVM.ContentList.Count == 1)
+                    //{
+                    //    vm = listVM.ContentList[0];
+                    //}
+                    //else
+                    //{
+                    //    throw new Exception("Failed to read db entry successfully!");
+                    //}
+
+                    this.onItemDB2VM(reader, vm);
                 }
                 else
                 {
@@ -248,8 +251,8 @@ namespace achihapi.Controllers
                         cmd = new SqlCommand(queryString, conn);
                         cmd.Transaction = tran;
                         cmd.Parameters.AddWithValue("@NAME", vm.Name);
-                        cmd.Parameters.AddWithValue("@VALID_FROM", vm.Valid_From);
-                        cmd.Parameters.AddWithValue("@VALID_TO", vm.Valid_To);
+                        cmd.Parameters.AddWithValue("@VALID_FROM", vm.ValidFrom);
+                        cmd.Parameters.AddWithValue("@VALID_TO", vm.ValidTo);
                         cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
                         cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
                         cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
@@ -359,11 +362,11 @@ namespace achihapi.Controllers
             vm.ID = reader.GetInt32(idx++);
             vm.Name = reader.GetString(idx++);
             if (!reader.IsDBNull(idx))
-                vm.Valid_From = reader.GetDateTime(idx++);
+                vm.ValidFrom = reader.GetDateTime(idx++);
             else
                 ++idx;
             if (!reader.IsDBNull(idx))
-                vm.Valid_To = reader.GetDateTime(idx++);
+                vm.ValidTo = reader.GetDateTime(idx++);
             else
                 ++idx;
             if (!reader.IsDBNull(idx))
@@ -386,6 +389,102 @@ namespace achihapi.Controllers
                 vm.UpdatedAt = reader.GetDateTime(idx++);
             else
                 ++idx;
+        }
+
+        private string getItemQueryString(Int32 nID)
+        {
+            String strSQL = @"SELECT [ID]
+                              ,[NAME]
+                              ,[VALID_FROM]
+                              ,[VALID_TO]
+                              ,[COMMENT]
+                              ,[CREATEDBY]
+                              ,[CREATEDAT]
+                              ,[UPDATEDBY]
+                              ,[UPDATEDAT]
+                          FROM [t_fin_order] WHERE [ID] = " + nID.ToString() + "; ";
+            strSQL += @"SELECT [ID] AS [ORDID]
+                              ,[RULEID]
+                              ,[CONTROLCENTERID]
+                              ,[CONTROLCENTERNAME]
+                              ,[PRECENT]
+                              ,[COMMENT]
+                          FROM [v_fin_order_srule] WHERE [ID] = " + nID.ToString();
+
+            return strSQL;
+        }
+        private void onItemDB2VM(SqlDataReader reader, FinanceOrderViewModel vm)
+        {
+            Int32 nRstBatch = 0;
+            Int32 idx = 0;
+            while (reader.HasRows)
+            {
+                if (nRstBatch == 0)
+                {
+                    idx = 0;
+                    while (reader.Read())
+                    {
+                        vm.ID = reader.GetInt32(idx++);
+                        vm.Name = reader.GetString(idx++);
+                        if (!reader.IsDBNull(idx))
+                            vm.ValidFrom = reader.GetDateTime(idx++);
+                        else
+                            ++idx;
+                        if (!reader.IsDBNull(idx))
+                            vm.ValidTo = reader.GetDateTime(idx++);
+                        else
+                            ++idx;
+                        if (!reader.IsDBNull(idx))
+                            vm.Comment = reader.GetString(idx++);
+                        else
+                            ++idx;
+                        if (!reader.IsDBNull(idx))
+                            vm.CreatedBy = reader.GetString(idx++);
+                        else
+                            ++idx;
+                        if (!reader.IsDBNull(idx))
+                            vm.CreatedAt = reader.GetDateTime(idx++);
+                        else
+                            ++idx;
+                        if (!reader.IsDBNull(idx))
+                            vm.UpdatedBy = reader.GetString(idx++);
+                        else
+                            ++idx;
+                        if (!reader.IsDBNull(idx))
+                            vm.UpdatedAt = reader.GetDateTime(idx++);
+                        else
+                            ++idx;
+                    }
+                }
+                else if (nRstBatch == 1)
+                {
+                    FinanceOrderSRuleUIViewModel srvm = new FinanceOrderSRuleUIViewModel();
+
+                    idx = 0;
+                    while (reader.Read())
+                    {
+                        srvm.OrdID = reader.GetInt32(idx++);
+                        srvm.RuleID = reader.GetInt32(idx++);
+                        srvm.ControlCenterID = reader.GetInt32(idx++);
+                        if (!reader.IsDBNull(idx))
+                            srvm.ControlCenterName = reader.GetString(idx++);
+                        else
+                            ++idx;
+                        srvm.Precent = reader.GetInt32(idx++);
+                        if (!reader.IsDBNull(idx))
+                        {
+                            srvm.Comment = reader.GetString(idx++);
+                        }
+                        else
+                            ++idx;
+                    }
+
+                    vm.SRuleList.Add(srvm);
+                }
+                ++nRstBatch;
+
+                reader.NextResult();
+            }
         }
 
         private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
@@ -451,11 +550,11 @@ namespace achihapi.Controllers
                     vm.ID = nCurrentID;
                     vm.Name = reader.GetString(idx++);
                     if (!reader.IsDBNull(idx))
-                        vm.Valid_From = reader.GetDateTime(idx++);
+                        vm.ValidFrom = reader.GetDateTime(idx++);
                     else
                         ++idx;
                     if (!reader.IsDBNull(idx))
-                        vm.Valid_To = reader.GetDateTime(idx++);
+                        vm.ValidTo = reader.GetDateTime(idx++);
                     else
                         ++idx;
                     if (!reader.IsDBNull(idx))

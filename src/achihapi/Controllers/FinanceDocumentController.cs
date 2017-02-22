@@ -117,6 +117,7 @@ namespace achihapi.Controllers
                 //}
 
                 Int32 nRstBatch = 0;
+                Int32 idx = 0;
                 while (reader.HasRows)
                 {
                     if (nRstBatch == 0)
@@ -124,7 +125,7 @@ namespace achihapi.Controllers
                         // Header
                         while (reader.Read())
                         {
-                            Int32 idx = 0;
+                            idx = 0;
                             vm.ID = reader.GetInt32(idx++);
                             vm.DocType = reader.GetInt16(idx++);
                             vm.TranDate = reader.GetDateTime(idx++);
@@ -169,43 +170,55 @@ namespace achihapi.Controllers
                                 vm.UpdatedAt = reader.GetDateTime(idx++);
                             else
                                 ++idx;
-
-                            break;
                         }
                     }
-                    else
+                    else if (nRstBatch == 1)
                     {
-                        if (reader.HasRows)
+                        // Items
+                        while (reader.Read())
                         {
-                            // Items
-                            while (reader.Read())
-                            {
-                                FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                                Int32 idx = 0;
-                                itemvm.DocID = reader.GetInt32(idx++);
-                                itemvm.ItemID = reader.GetInt32(idx++);
-                                itemvm.AccountID = reader.GetInt32(idx++);
-                                itemvm.TranType = reader.GetInt32(idx++);
-                                itemvm.TranAmount = reader.GetDecimal(idx++);
-                                if (!reader.IsDBNull(idx))
-                                    itemvm.UseCurr2 = reader.GetBoolean(idx++);
-                                else
-                                    ++idx;
-                                if (!reader.IsDBNull(idx))
-                                    itemvm.ControlCenterID = reader.GetInt32(idx++);
-                                else
-                                    ++idx;
-                                if (!reader.IsDBNull(idx))
-                                    itemvm.OrderID = reader.GetInt32(idx++);
-                                else
-                                    ++idx;
-                                if (!reader.IsDBNull(idx))
-                                    itemvm.Desp = reader.GetString(idx++);
-                                else
-                                    ++idx;
+                            FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
+                            idx = 0;
 
-                                vm.Items.Add(itemvm);
-                            }
+                            itemvm.DocID = reader.GetInt32(idx++);
+                            itemvm.ItemID = reader.GetInt32(idx++);
+                            itemvm.AccountID = reader.GetInt32(idx++);
+                            if (!reader.IsDBNull(idx))
+                                itemvm.AccountName = reader.GetString(idx++);
+                            else
+                                ++idx;
+                            itemvm.TranType = reader.GetInt32(idx++);
+                            if (!reader.IsDBNull(idx))
+                                itemvm.TranTypeName = reader.GetString(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                itemvm.UseCurr2 = reader.GetBoolean(idx++);
+                            else
+                                ++idx;
+                            itemvm.TranAmount = reader.GetDecimal(idx++);
+                            if (!reader.IsDBNull(idx))
+                                itemvm.ControlCenterID = reader.GetInt32(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                itemvm.ControlCenterName = reader.GetString(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                itemvm.OrderID = reader.GetInt32(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                itemvm.OrderName = reader.GetString(idx++);
+                            else
+                                ++idx;
+                            if (!reader.IsDBNull(idx))
+                                itemvm.Desp = reader.GetString(idx++);
+                            else
+                                ++idx;
+
+                            vm.Items.Add(itemvm);
                         }
                     }
                     ++nRstBatch;
@@ -526,16 +539,21 @@ namespace achihapi.Controllers
                           ,[UPDATEDBY]
                           ,[UPDATEDAT]
                       FROM [t_fin_document] WHERE [ID] = " + nSearchID.Value.ToString() + @"; 
-                        SELECT [DOCID]
-                              ,[ITEMID]
-                              ,[ACCOUNTID]
-                              ,[TRANTYPE]
-                              ,[TRANAMOUNT]
-                              ,[USECURR2]
-                              ,[CONTROLCENTERID]
-                              ,[ORDERID]
-                              ,[DESP]
-                          FROM [t_fin_document_item] WHERE [DOCID] = " + nSearchID.Value.ToString();
+                    SELECT [DOCID]
+                            ,[ITEMID]
+                            ,[ACCOUNTID]
+                            ,[ACCOUNTNAME]
+                            ,[TRANTYPE]
+                            ,[TRANTYPENAME]
+                            ,[USECURR2]
+                            ,[TRANAMOUNT_ORG] AS [TRANAMOUNT]
+                            ,[CONTROLCENTERID]
+                            ,[CONTROLCENTERNAME]
+                            ,[ORDERID]
+                            ,[ORDERNAME]
+                            ,[DESP]
+                        FROM [v_fin_document_item1] WHERE [DOCID] = " + nSearchID.Value.ToString();
+
             //            if (bListMode)
             //            {
             //                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_document];";

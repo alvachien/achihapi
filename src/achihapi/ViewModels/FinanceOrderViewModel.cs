@@ -13,9 +13,9 @@ namespace achihapi.ViewModels
         [StringLength(30)]
         public String Name { get; set; }
         [Required]
-        public DateTime Valid_From { get; set; }
+        public DateTime ValidFrom { get; set; }
         [Required]
-        public DateTime Valid_To { get; set; }
+        public DateTime ValidTo { get; set; }
         [StringLength(45)]
         public String Comment { get; set; }
 
