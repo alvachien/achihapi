@@ -158,7 +158,7 @@ namespace achihapi.Controllers
                 vm.CtgyName = reader.GetString(idx++);
             else
                 ++idx;
-            vm.Name = reader.GetName(idx++);
+            vm.Name = reader.GetString(idx++);
             if (!reader.IsDBNull(idx))
                 vm.Comment = reader.GetString(idx++);
             else
