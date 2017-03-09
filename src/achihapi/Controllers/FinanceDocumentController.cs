@@ -293,6 +293,7 @@ namespace achihapi.Controllers
 
                 SqlCommand cmd = null;
 
+                //if (vm.DocType =)
                 // Now go ahead for the creating
                 queryString = @"INSERT INTO [dbo].[t_fin_document]
                            ([DOCTYPE]
@@ -355,7 +356,7 @@ namespace achihapi.Controllers
                     Int32 nRst = await cmd.ExecuteNonQueryAsync();
                     nNewID = (Int32)idparam.Value;
 
-                    // Then, creating the srules
+                    // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
                         queryString = @"INSERT INTO [dbo].[t_fin_document_item]

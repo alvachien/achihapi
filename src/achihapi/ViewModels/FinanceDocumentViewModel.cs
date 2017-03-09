@@ -31,7 +31,14 @@ namespace achihapi.ViewModels
     {
         public String DocTypeName { get; set; }
 
+        // Items
         public List<FinanceDocumentItemUIViewModel> Items = new List<FinanceDocumentItemUIViewModel>();
+
+        // Account -> Advance payment
+        public FinanceAccountViewModel AccountVM = new FinanceAccountViewModel();
+
+        // Templates
+        public List<FinanceTmpDocDPViewModel> TmpDocs = new List<FinanceTmpDocDPViewModel>();
     }
 
     public class FinanceDocumentItemViewModel
