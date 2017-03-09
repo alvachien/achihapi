@@ -271,6 +271,12 @@ namespace achihapi.Controllers
 
             // Item check!
 
+            // Specific check: Advance payment 
+            if (vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment)
+            {
+                //if (vm.AccountVM)
+            }
+
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -293,7 +299,6 @@ namespace achihapi.Controllers
 
                 SqlCommand cmd = null;
 
-                //if (vm.DocType =)
                 // Now go ahead for the creating
                 queryString = @"INSERT INTO [dbo].[t_fin_document]
                            ([DOCTYPE]
@@ -342,7 +347,7 @@ namespace achihapi.Controllers
                         cmd.Parameters.AddWithValue("@TRANCURR2", DBNull.Value);
                     else
                         cmd.Parameters.AddWithValue("@TRANCURR2", vm.TranCurr2);
-                    if (vm.ExgRate2 > 0) 
+                    if (vm.ExgRate2 > 0)
                         cmd.Parameters.AddWithValue("@EXGRATE2", vm.ExgRate2);
                     else
                         cmd.Parameters.AddWithValue("@EXGRATE2", DBNull.Value);
@@ -402,6 +407,15 @@ namespace achihapi.Controllers
                         await cmd2.ExecuteNonQueryAsync();
                     }
 
+                    if (vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment)
+                    {
+                        // Three parts:
+                        //  1. Normal account
+                        //  2. Advance payment account
+                        //  3. Template docs
+
+                    }
+
                     tran.Commit();
                 }
                 catch (Exception exp)
@@ -410,7 +424,7 @@ namespace achihapi.Controllers
                     System.Diagnostics.Debug.WriteLine(exp.Message);
 #endif
                     tran.Rollback();
-                }                
+                }
             }
             catch (Exception exp)
             {

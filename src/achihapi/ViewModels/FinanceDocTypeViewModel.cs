@@ -15,5 +15,9 @@ namespace achihapi.ViewModels
         [StringLength(45)]
         public String Comment { get; set; }
         public Boolean SysFlag { get; set; }
+
+        // Constants
+        public const Int32 DocType_Transfer = 2;
+        public const Int32 DocType_AdvancePayment = 5;
     }
 }
