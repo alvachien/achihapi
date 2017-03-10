@@ -410,9 +410,120 @@ namespace achihapi.Controllers
                     if (vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment)
                     {
                         // Three parts:
-                        //  1. Normal account
+                        //  0. Template docs
+                        //queryString = @"INSERT INTO [dbo].[t_fin_tmpdoc_dp]
+                        //               ([DOCID]
+                        //               ,[REFDOCID]
+                        //               ,[ACCOUNTID]
+                        //               ,[TRANDATE]
+                        //               ,[TRANTYPE]
+                        //               ,[TRANAMOUNT]
+                        //               ,[CONTROLCENTERID]
+                        //               ,[ORDERID]
+                        //               ,[DESP]
+                        //               ,[CREATEDBY]
+                        //               ,[CREATEDAT]
+                        //               ,[UPDATEDBY]
+                        //               ,[UPDATEDAT])
+                        //         VALUES
+                        //               (@DOCID
+                        //               ,@REFDOCID
+                        //               ,@ACCOUNTID
+                        //               ,@TRANDATE
+                        //               ,@TRANTYPE
+                        //               ,@TRANAMOUNT
+                        //               ,@CONTROLCENTERID
+                        //               ,@ORDERID
+                        //               ,@DESP
+                        //               ,@CREATEDBY
+                        //               ,@CREATEDAT
+                        //               ,@UPDATEDBY
+                        //               ,@UPDATEDAT)";
+
+                        //  1. Account
+                        queryString = @"INSERT INTO [dbo].[t_fin_account]
+                                       ([CTGYID]
+                                       ,[NAME]
+                                       ,[COMMENT]
+                                       ,[OWNER]
+                                       ,[CREATEDBY]
+                                       ,[CREATEDAT]
+                                       ,[UPDATEDBY]
+                                       ,[UPDATEDAT])
+                                 VALUES
+                                       (@CTGYID
+                                       ,@NAME
+                                       ,@COMMENT
+                                       ,@OWNER
+                                       ,@CREATEDBY
+                                       ,@CREATEDAT
+                                       ,@UPDATEDBY
+                                       ,@UPDATEDAT
+                                    ); SELECT @Identity = SCOPE_IDENTITY();";
+
+                        cmd = new SqlCommand(queryString, conn);
+                        cmd.Transaction = tran;
+                        cmd.Parameters.AddWithValue("@CTGYID", vm.AccountVM.CtgyID);
+                        cmd.Parameters.AddWithValue("@NAME", vm.AccountVM.Name);
+                        cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.AccountVM.Comment) ? String.Empty : vm.AccountVM.Comment);
+                        if (String.IsNullOrEmpty(vm.AccountVM.Owner))
+                        {
+                            cmd.Parameters.AddWithValue("@OWNER", DBNull.Value);
+                        }
+                        else
+                        {
+                            cmd.Parameters.AddWithValue("@OWNER", vm.AccountVM.Owner);
+                        }
+                        cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+                        cmd.Parameters.AddWithValue("@CREATEDAT", vm.AccountVM.CreatedAt);
+                        cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
+                        cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
+
+                        SqlParameter idparam2 = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                        idparam2.Direction = ParameterDirection.Output;
+
+                        nRst = await cmd.ExecuteNonQueryAsync();
+                        Int32 nNewAccountID = (Int32)idparam2.Value;
+
                         //  2. Advance payment account
-                        //  3. Template docs
+                        if (vm.AccountVM.CtgyID == FinanceAccountViewModel.AccountCategory_AdvancePayment)
+                        {
+                            queryString = @"INSERT INTO [dbo].[t_fin_account_ext_dp]
+                                        ([ACCOUNTID]
+                                        ,[DIRECT]
+                                        ,[STARTDATE]
+                                        ,[ENDDATE]
+                                        ,[RPTTYPE]
+                                        ,[REFDOCID]
+                                        ,[DEFRRDAYS]
+                                        ,[COMMENT])
+                                    VALUES
+                                        (@ACCOUNTID
+                                        ,@DIRECT
+                                        ,@STARTDATE
+                                        ,@ENDDATE
+                                        ,@RPTTYPE
+                                        ,@REFDOCID
+                                        ,@DEFRRDAYS
+                                        ,@COMMENT )";
+
+                            cmd = new SqlCommand(queryString, conn);
+                            cmd.Transaction = tran;
+                            cmd.Parameters.AddWithValue("@ACCOUNTID", nNewAccountID);
+                            cmd.Parameters.AddWithValue("@DIRECT", vm.AccountVM.AdvancePaymentInfo.Direct);
+                            cmd.Parameters.AddWithValue("@STARTDATE", vm.AccountVM.AdvancePaymentInfo.StartDate);
+                            cmd.Parameters.AddWithValue("@ENDDATE", vm.AccountVM.AdvancePaymentInfo.EndDate);
+                            cmd.Parameters.AddWithValue("@RPTTYPE", vm.AccountVM.AdvancePaymentInfo.RptType);
+                            cmd.Parameters.AddWithValue("@REFDOCID", vm.AccountVM.AdvancePaymentInfo.RefDocID);
+                            cmd.Parameters.AddWithValue("@DEFRRDAYS", vm.AccountVM.AdvancePaymentInfo.DefrrDays);
+                            cmd.Parameters.AddWithValue("@COMMENT", 
+                                String.IsNullOrEmpty(vm.AccountVM.AdvancePaymentInfo.Comment) ? String.Empty : vm.AccountVM.AdvancePaymentInfo.Comment);
+
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+
+
+
 
                     }
 
