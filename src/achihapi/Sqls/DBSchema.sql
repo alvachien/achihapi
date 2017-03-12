@@ -264,13 +264,13 @@ CREATE TABLE [dbo].[t_fin_setting](
 ) ON [PRIMARY]
 
 GO
-/****** Object:  Table [dbo].[t_fin_tmpdoc_dp]    Script Date: 2016-10-27 3:31:27 PM ******/
+/****** Object:  Table [dbo].[t_fin_tmpdoc_dp]    Script Date: 2017-03-10 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[t_fin_tmpdoc_dp](
-	[DOCID] [int] NOT NULL,
+	[DOCID] [int] IDENTITY(1,1) NOT NULL,
 	[REFDOCID] [int] NULL,
 	[ACCOUNTID] [int] NOT NULL,
 	[TRANDATE] [date] NOT NULL,

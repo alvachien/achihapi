@@ -274,13 +274,13 @@ namespace achihapi.Controllers
             // Specific check: Advance payment 
             if (vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment)
             {
-                //if (vm.AccountVM)
+                // To-Do
             }
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
-            Int32 nNewID = -1;
+            Int32 nNewDocID = -1;
             Boolean bError = false;
             String strErrMsg = "";
 
@@ -301,31 +301,31 @@ namespace achihapi.Controllers
 
                 // Now go ahead for the creating
                 queryString = @"INSERT INTO [dbo].[t_fin_document]
-                           ([DOCTYPE]
-                           ,[TRANDATE]
-                           ,[TRANCURR]
-                           ,[DESP]
-                           ,[EXGRATE]
-                           ,[EXGRATE_PLAN]
-                           ,[TRANCURR2]
-                           ,[EXGRATE2]
-                           ,[CREATEDBY]
-                           ,[CREATEDAT]
-                           ,[UPDATEDBY]
-                           ,[UPDATEDAT])
-                     VALUES
-                           (@DOCTYPE
-                           ,@TRANDATE
-                           ,@TRANCURR
-                           ,@DESP
-                           ,@EXGRATE
-                           ,@EXGRATE_PLAN
-                           ,@TRANCURR2
-                           ,@EXGRATE2
-                           ,@CREATEDBY
-                           ,@CREATEDAT
-                           ,@UPDATEDBY
-                           ,@UPDATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+                                           ([DOCTYPE]
+                                           ,[TRANDATE]
+                                           ,[TRANCURR]
+                                           ,[DESP]
+                                           ,[EXGRATE]
+                                           ,[EXGRATE_PLAN]
+                                           ,[TRANCURR2]
+                                           ,[EXGRATE2]
+                                           ,[CREATEDBY]
+                                           ,[CREATEDAT]
+                                           ,[UPDATEDBY]
+                                           ,[UPDATEDAT])
+                                     VALUES
+                                           (@DOCTYPE
+                                           ,@TRANDATE
+                                           ,@TRANCURR
+                                           ,@DESP
+                                           ,@EXGRATE
+                                           ,@EXGRATE_PLAN
+                                           ,@TRANCURR2
+                                           ,@EXGRATE2
+                                           ,@CREATEDBY
+                                           ,@CREATEDAT
+                                           ,@UPDATEDBY
+                                           ,@UPDATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
 
                 try
                 {
@@ -359,34 +359,34 @@ namespace achihapi.Controllers
                     idparam.Direction = ParameterDirection.Output;
 
                     Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                    nNewID = (Int32)idparam.Value;
+                    nNewDocID = (Int32)idparam.Value;
 
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
                         queryString = @"INSERT INTO [dbo].[t_fin_document_item]
-                                       ([DOCID]
-                                       ,[ITEMID]
-                                       ,[ACCOUNTID]
-                                       ,[TRANTYPE]
-                                       ,[TRANAMOUNT]
-                                       ,[USECURR2]
-                                       ,[CONTROLCENTERID]
-                                       ,[ORDERID]
-                                       ,[DESP])
-                                 VALUES
-                                       (@DOCID
-                                       ,@ITEMID
-                                       ,@ACCOUNTID
-                                       ,@TRANTYPE
-                                       ,@TRANAMOUNT
-                                       ,@USECURR2
-                                       ,@CONTROLCENTERID
-                                       ,@ORDERID
-                                       ,@DESP)";
+                                                       ([DOCID]
+                                                       ,[ITEMID]
+                                                       ,[ACCOUNTID]
+                                                       ,[TRANTYPE]
+                                                       ,[TRANAMOUNT]
+                                                       ,[USECURR2]
+                                                       ,[CONTROLCENTERID]
+                                                       ,[ORDERID]
+                                                       ,[DESP])
+                                                 VALUES
+                                                       (@DOCID
+                                                       ,@ITEMID
+                                                       ,@ACCOUNTID
+                                                       ,@TRANTYPE
+                                                       ,@TRANAMOUNT
+                                                       ,@USECURR2
+                                                       ,@CONTROLCENTERID
+                                                       ,@ORDERID
+                                                       ,@DESP)";
                         SqlCommand cmd2 = new SqlCommand(queryString, conn);
                         cmd2.Transaction = tran;
-                        cmd2.Parameters.AddWithValue("@DOCID", nNewID);
+                        cmd2.Parameters.AddWithValue("@DOCID", nNewDocID);
                         cmd2.Parameters.AddWithValue("@ITEMID", ivm.ItemID);
                         cmd2.Parameters.AddWithValue("@ACCOUNTID", ivm.AccountID);
                         cmd2.Parameters.AddWithValue("@TRANTYPE", ivm.TranType);
@@ -410,56 +410,26 @@ namespace achihapi.Controllers
                     if (vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment)
                     {
                         // Three parts:
-                        //  0. Template docs
-                        //queryString = @"INSERT INTO [dbo].[t_fin_tmpdoc_dp]
-                        //               ([DOCID]
-                        //               ,[REFDOCID]
-                        //               ,[ACCOUNTID]
-                        //               ,[TRANDATE]
-                        //               ,[TRANTYPE]
-                        //               ,[TRANAMOUNT]
-                        //               ,[CONTROLCENTERID]
-                        //               ,[ORDERID]
-                        //               ,[DESP]
-                        //               ,[CREATEDBY]
-                        //               ,[CREATEDAT]
-                        //               ,[UPDATEDBY]
-                        //               ,[UPDATEDAT])
-                        //         VALUES
-                        //               (@DOCID
-                        //               ,@REFDOCID
-                        //               ,@ACCOUNTID
-                        //               ,@TRANDATE
-                        //               ,@TRANTYPE
-                        //               ,@TRANAMOUNT
-                        //               ,@CONTROLCENTERID
-                        //               ,@ORDERID
-                        //               ,@DESP
-                        //               ,@CREATEDBY
-                        //               ,@CREATEDAT
-                        //               ,@UPDATEDBY
-                        //               ,@UPDATEDAT)";
-
                         //  1. Account
                         queryString = @"INSERT INTO [dbo].[t_fin_account]
-                                       ([CTGYID]
-                                       ,[NAME]
-                                       ,[COMMENT]
-                                       ,[OWNER]
-                                       ,[CREATEDBY]
-                                       ,[CREATEDAT]
-                                       ,[UPDATEDBY]
-                                       ,[UPDATEDAT])
-                                 VALUES
-                                       (@CTGYID
-                                       ,@NAME
-                                       ,@COMMENT
-                                       ,@OWNER
-                                       ,@CREATEDBY
-                                       ,@CREATEDAT
-                                       ,@UPDATEDBY
-                                       ,@UPDATEDAT
-                                    ); SELECT @Identity = SCOPE_IDENTITY();";
+                                                   ([CTGYID]
+                                                   ,[NAME]
+                                                   ,[COMMENT]
+                                                   ,[OWNER]
+                                                   ,[CREATEDBY]
+                                                   ,[CREATEDAT]
+                                                   ,[UPDATEDBY]
+                                                   ,[UPDATEDAT])
+                                             VALUES
+                                                   (@CTGYID
+                                                   ,@NAME
+                                                   ,@COMMENT
+                                                   ,@OWNER
+                                                   ,@CREATEDBY
+                                                   ,@CREATEDAT
+                                                   ,@UPDATEDBY
+                                                   ,@UPDATEDAT
+                                                ); SELECT @Identity = SCOPE_IDENTITY();";
 
                         cmd = new SqlCommand(queryString, conn);
                         cmd.Transaction = tran;
@@ -475,7 +445,7 @@ namespace achihapi.Controllers
                             cmd.Parameters.AddWithValue("@OWNER", vm.AccountVM.Owner);
                         }
                         cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
-                        cmd.Parameters.AddWithValue("@CREATEDAT", vm.AccountVM.CreatedAt);
+                        cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
                         cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
                         cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
 
@@ -495,7 +465,6 @@ namespace achihapi.Controllers
                                         ,[ENDDATE]
                                         ,[RPTTYPE]
                                         ,[REFDOCID]
-                                        ,[DEFRRDAYS]
                                         ,[COMMENT])
                                     VALUES
                                         (@ACCOUNTID
@@ -504,7 +473,6 @@ namespace achihapi.Controllers
                                         ,@ENDDATE
                                         ,@RPTTYPE
                                         ,@REFDOCID
-                                        ,@DEFRRDAYS
                                         ,@COMMENT )";
 
                             cmd = new SqlCommand(queryString, conn);
@@ -514,8 +482,8 @@ namespace achihapi.Controllers
                             cmd.Parameters.AddWithValue("@STARTDATE", vm.AccountVM.AdvancePaymentInfo.StartDate);
                             cmd.Parameters.AddWithValue("@ENDDATE", vm.AccountVM.AdvancePaymentInfo.EndDate);
                             cmd.Parameters.AddWithValue("@RPTTYPE", vm.AccountVM.AdvancePaymentInfo.RptType);
-                            cmd.Parameters.AddWithValue("@REFDOCID", vm.AccountVM.AdvancePaymentInfo.RefDocID);
-                            cmd.Parameters.AddWithValue("@DEFRRDAYS", vm.AccountVM.AdvancePaymentInfo.DefrrDays);
+                            cmd.Parameters.AddWithValue("@REFDOCID", nNewDocID);
+                            //cmd.Parameters.AddWithValue("@DEFRRDAYS", vm.AccountVM.AdvancePaymentInfo.DefrrDays);
                             cmd.Parameters.AddWithValue("@COMMENT", 
                                 String.IsNullOrEmpty(vm.AccountVM.AdvancePaymentInfo.Comment) ? String.Empty : vm.AccountVM.AdvancePaymentInfo.Comment);
 
@@ -523,8 +491,64 @@ namespace achihapi.Controllers
                         }
 
 
+                        //  3. Template docs
+                        foreach(FinanceTmpDocDPViewModel avm in vm.TmpDocs)
+                        {
+                            queryString = @"INSERT INTO [dbo].[t_fin_tmpdoc_dp]
+                                       ([REFDOCID]
+                                       ,[ACCOUNTID]
+                                       ,[TRANDATE]
+                                       ,[TRANTYPE]
+                                       ,[TRANAMOUNT]
+                                       ,[CONTROLCENTERID]
+                                       ,[ORDERID]
+                                       ,[DESP]
+                                       ,[CREATEDBY]
+                                       ,[CREATEDAT]
+                                       ,[UPDATEDBY]
+                                       ,[UPDATEDAT])
+                                 VALUES
+                                       (@REFDOCID
+                                       ,@ACCOUNTID
+                                       ,@TRANDATE
+                                       ,@TRANTYPE
+                                       ,@TRANAMOUNT
+                                       ,@CONTROLCENTERID
+                                       ,@ORDERID
+                                       ,@DESP
+                                       ,@CREATEDBY
+                                       ,@CREATEDAT
+                                       ,@UPDATEDBY
+                                       ,@UPDATEDAT)";
 
+                            cmd = new SqlCommand(queryString, conn);
+                            cmd.Transaction = tran;
+                            if (avm.RefDocID.HasValue)
+                                cmd.Parameters.AddWithValue("@REFDOCID", avm.RefDocID.Value);
+                            else
+                                cmd.Parameters.AddWithValue("@REFDOCID", DBNull.Value);
+                            cmd.Parameters.AddWithValue("@ACCOUNTID", avm.AccountID);
+                            cmd.Parameters.AddWithValue("@TRANDATE", avm.TranDate);
+                            cmd.Parameters.AddWithValue("@TRANTYPE", avm.TranType);
+                            cmd.Parameters.AddWithValue("@TRANAMOUNT", avm.TranAmount);
+                            if (avm.ControlCenterID.HasValue)
+                                cmd.Parameters.AddWithValue("@CONTROLCENTERID", avm.ControlCenterID.Value);
+                            else
+                                cmd.Parameters.AddWithValue("@CONTROLCENTERID", DBNull.Value);
+                            if (avm.OrderID.HasValue)
+                                cmd.Parameters.AddWithValue("@ORDERID", avm.OrderID.Value);
+                            else
+                                cmd.Parameters.AddWithValue("@ORDERID", DBNull.Value);
+                            cmd.Parameters.AddWithValue("@DESP",
+                                String.IsNullOrEmpty(avm.Desp) ? String.Empty : avm.Desp);
 
+                            cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+                            cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
+                            cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
+                            cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
+
+                            await cmd.ExecuteNonQueryAsync();
+                        }
                     }
 
                     tran.Commit();
@@ -552,7 +576,7 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            vm.ID = nNewID;
+            vm.ID = nNewDocID;
             return new ObjectResult(vm);
         }
 
@@ -561,6 +585,7 @@ namespace achihapi.Controllers
         [Authorize]
         public void Put(int id, [FromBody]string value)
         {
+            // Todo
         }
 
         // DELETE api/financedocument/5
@@ -568,6 +593,7 @@ namespace achihapi.Controllers
         [Authorize]
         public void Delete(int id)
         {
+            // Todo
         }
 
         #region Implmented methods

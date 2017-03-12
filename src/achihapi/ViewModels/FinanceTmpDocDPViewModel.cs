@@ -10,7 +10,7 @@ namespace achihapi.ViewModels
     {
         public Int32 DocID { get; set; }
         [Required]
-        public Int32 RefDocID { get; set; }
+        public Int32? RefDocID { get; set; }
         [Required]
         public Int32 AccountID { get; set; }
         [Required]
@@ -19,8 +19,8 @@ namespace achihapi.ViewModels
         public Int32 TranType { get; set; }
         [Required]
         public Decimal TranAmount { get; set; }
-        public Int32 ControlCenterID { get; set; }
-        public Int32 OrderID { get; set; }
+        public Int32? ControlCenterID { get; set; }
+        public Int32? OrderID { get; set; }
         [StringLength(45)]
         public String Desp { get; set; }
     }
