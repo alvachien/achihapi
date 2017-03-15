@@ -42,14 +42,14 @@ CREATE TABLE [dbo].[t_fin_account_ctgy](
 ) ON [PRIMARY]
 
 GO
-/****** Object:  Table [dbo].[t_fin_account_ext_dp]    Script Date: 2016-10-27 3:31:27 PM ******/
+/****** Object:  Table [dbo].[t_fin_account_ext_dp]    Script Date: 2017-03-15 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[t_fin_account_ext_dp](
 	[ACCOUNTID] [int] NOT NULL,
-	[DIRECT] [tinyint] NOT NULL,
+	[DIRECT] [bit] NOT NULL,
 	[STARTDATE] [date] NOT NULL,
 	[ENDDATE] [date] NOT NULL,
 	[RPTTYPE] [tinyint] NOT NULL,

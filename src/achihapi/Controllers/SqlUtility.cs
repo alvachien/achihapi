@@ -654,7 +654,7 @@ namespace achihapi.Controllers
                 ++idx;
             vm.AccountID = reader.GetInt32(idx++);
             vm.TranDate = reader.GetDateTime(idx++);
-            vm.TranType = reader.GetInt16(idx++);
+            vm.TranType = reader.GetInt32(idx++);
             vm.TranAmount = reader.GetDecimal(idx++);
             if (!reader.IsDBNull(idx))
                 vm.ControlCenterID = reader.GetInt32(idx++);
