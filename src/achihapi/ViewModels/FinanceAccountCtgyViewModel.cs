@@ -16,5 +16,7 @@ namespace achihapi.ViewModels
         [StringLength(45)]
         public String Comment { get; set; }
         public Boolean SysFlag { get; set; }
+
+        public const Int32 AccountCategory_AdvancePayment = 8;
     }
 }

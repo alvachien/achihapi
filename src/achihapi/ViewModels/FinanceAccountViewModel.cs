@@ -18,8 +18,6 @@ namespace achihapi.ViewModels
         public String Owner { get; set; }
 
         public FinanceAccountExtDPViewModel AdvancePaymentInfo { get; set; }
-
-        public const Int32 AccountCategory_AdvancePayment = 8;
     }
 
     public class FinanceAccountUIViewModel : FinanceAccountViewModel

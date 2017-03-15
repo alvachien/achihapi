@@ -33,7 +33,10 @@ namespace achihapi.ViewModels
 
         // Items
         public List<FinanceDocumentItemUIViewModel> Items = new List<FinanceDocumentItemUIViewModel>();
+    }
 
+    public class FinanceADPDocumentUIViewModel: FinanceDocumentUIViewModel
+    {
         // Account -> Advance payment
         public FinanceAccountViewModel AccountVM = new FinanceAccountViewModel();
 

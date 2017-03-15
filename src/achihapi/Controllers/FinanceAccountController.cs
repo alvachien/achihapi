@@ -58,7 +58,7 @@ namespace achihapi.Controllers
                             while (reader.Read())
                             {
                                 FinanceAccountUIViewModel vm = new FinanceAccountUIViewModel();
-                                onDB2VM(reader, vm);
+                                SqlUtility.FinAccount_DB2VM(reader, vm);
                                 listVm.Add(vm);
                             }
                         }
@@ -120,9 +120,11 @@ namespace achihapi.Controllers
                     bExist = true;
                     while (reader.Read())
                     {
-                        onDB2VM(reader, vmAccount);
+                        SqlUtility.FinAccount_DB2VM(reader, vmAccount);
+
                         // It should return one entry only!
                         // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
+
                         break;
                     }
                 }
@@ -184,7 +186,7 @@ namespace achihapi.Controllers
             else
                 ++idx;
 
-            if(vm.CtgyID == FinanceAccountViewModel.AccountCategory_AdvancePayment)
+            if(vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
             {
                 vm.AdvancePaymentInfo = new FinanceAccountExtDPViewModel();
                 // Advance payment
@@ -224,7 +226,7 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceAccountViewModel vm)
         {
-            if (vm == null)
+            if (vm == null || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
             {
                 return BadRequest("No data is inputted");
             }
@@ -282,82 +284,37 @@ namespace achihapi.Controllers
                     SqlTransaction tran = conn.BeginTransaction();
 
                     // Now go ahead for the creating
-                    queryString = @"INSERT INTO [dbo].[t_fin_account]
-                                       ([CTGYID]
-                                       ,[NAME]
-                                       ,[COMMENT]
-                                       ,[OWNER]
-                                       ,[CREATEDBY]
-                                       ,[CREATEDAT]
-                                       ,[UPDATEDBY]
-                                       ,[UPDATEDAT])
-                                 VALUES
-                                       (@CTGYID
-                                       ,@NAME
-                                       ,@COMMENT
-                                       ,@OWNER
-                                       ,@CREATEDBY
-                                       ,@CREATEDAT
-                                       ,@UPDATEDBY
-                                       ,@UPDATEDAT
-                                    ); SELECT @Identity = SCOPE_IDENTITY();";
+                    queryString = SqlUtility.getFinanceAccountInsertString();
 
                     try
                     {
                         cmd = new SqlCommand(queryString, conn);
                         cmd.Transaction = tran;
-                        cmd.Parameters.AddWithValue("@CTGYID", vm.CtgyID);
-                        cmd.Parameters.AddWithValue("@NAME", vm.Name);
-                        cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
-                        if (String.IsNullOrEmpty(vm.Owner))
-                        {
-                            cmd.Parameters.AddWithValue("@OWNER", DBNull.Value);
-                        }
-                        else
-                        {
-                            cmd.Parameters.AddWithValue("@OWNER", vm.Owner);
-                        }
-                        cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
-                        cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-                        cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
+
+                        SqlUtility.bindFinAccountParameter(cmd, vm, usrName);
                         SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                         idparam.Direction = ParameterDirection.Output;
 
                         Int32 nRst = await cmd.ExecuteNonQueryAsync();
                         nNewID = (Int32)idparam.Value;
 
-                        if (vm.CtgyID == FinanceAccountViewModel.AccountCategory_AdvancePayment)
-                        {
-                            queryString = @"INSERT INTO [dbo].[t_fin_account_ext_dp]
-                                           ([ACCOUNTID]
-                                           ,[DIRECT]
-                                           ,[STARTDATE]
-                                           ,[ENDDATE]
-                                           ,[RPTTYPE]
-                                           ,[REFDOCID]
-                                           ,[DEFRRDAYS]
-                                           ,[COMMENT])
-                                     VALUES
-                                           (@ACCOUNTID
-                                           ,@DIRECT
-                                           ,@STARTDATE
-                                           ,@ENDDATE
-                                           ,@RPTTYPE
-                                           ,@REFDOCID
-                                           ,@DEFRRDAYS
-                                           ,@COMMENT )";
-                            cmd = new SqlCommand(queryString, conn);
-                            cmd.Transaction = tran;
-                            cmd.Parameters.AddWithValue("@ACCOUNTID", nNewID);
-                            cmd.Parameters.AddWithValue("@DIRECT", vm.AdvancePaymentInfo.Direct);
-                            cmd.Parameters.AddWithValue("@STARTDATE", vm.AdvancePaymentInfo.StartDate);
-                            cmd.Parameters.AddWithValue("@ENDDATE", vm.AdvancePaymentInfo.EndDate);
-                            cmd.Parameters.AddWithValue("@RPTTYPE", vm.AdvancePaymentInfo.RptType);
-                            cmd.Parameters.AddWithValue("@REFDOCID", vm.AdvancePaymentInfo.RefDocID);
-                            cmd.Parameters.AddWithValue("@DEFRRDAYS", vm.AdvancePaymentInfo.DefrrDays);
-                            cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.AdvancePaymentInfo.Comment) ? String.Empty : vm.AdvancePaymentInfo.Comment);
-                        }
+                        //if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
+                        //{
+                        //    queryString = SqlUtility.getFinanceAccountADPInsertString();
+
+                        //    cmd = new SqlCommand(queryString, conn);
+                        //    cmd.Transaction = tran;
+
+                        //    SqlUtility.bindFinAccountADPParameter(cmd, vm.AdvancePaymentInfo, vm.AdvancePaymentInfo.RefDocID, vm.AdvancePaymentInfo.AccountID, usrName);
+                        //    cmd.Parameters.AddWithValue("@ACCOUNTID", nNewID);
+                        //    cmd.Parameters.AddWithValue("@DIRECT", vm.AdvancePaymentInfo.Direct);
+                        //    cmd.Parameters.AddWithValue("@STARTDATE", vm.AdvancePaymentInfo.StartDate);
+                        //    cmd.Parameters.AddWithValue("@ENDDATE", vm.AdvancePaymentInfo.EndDate);
+                        //    cmd.Parameters.AddWithValue("@RPTTYPE", vm.AdvancePaymentInfo.RptType);
+                        //    cmd.Parameters.AddWithValue("@REFDOCID", vm.AdvancePaymentInfo.RefDocID);
+                        //    cmd.Parameters.AddWithValue("@DEFRRDAYS", vm.AdvancePaymentInfo.DefrrDays);
+                        //    cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.AdvancePaymentInfo.Comment) ? String.Empty : vm.AdvancePaymentInfo.Comment);
+                        //}
 
                         // Now commit it!
                         tran.Commit();
@@ -455,7 +412,7 @@ namespace achihapi.Controllers
                 await cmd.ExecuteNonQueryAsync();
 
                 // ToDo: Ext. info
-                if (vm.CtgyID == FinanceAccountViewModel.AccountCategory_AdvancePayment)
+                if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
                 {
                     // UPDATE[dbo].[t_fin_account_ext_dp]
                     //  SET[ACCOUNTID] = < ACCOUNTID, int,>
@@ -559,28 +516,8 @@ namespace achihapi.Controllers
                 strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account];";
             }
 
-            strSQL += @"SELECT [t_fin_account].[ID]
-                      ,[t_fin_account].[CTGYID]
-                      ,[t_fin_account_ctgy].[NAME] as [CTGYNAME]
-                      ,[t_fin_account].[NAME]
-                      ,[t_fin_account].[COMMENT]
-                      ,[t_fin_account].[OWNER]
-                      ,[t_fin_account].[CREATEDBY]
-                      ,[t_fin_account].[CREATEDAT]
-                      ,[t_fin_account].[UPDATEDBY]
-                      ,[t_fin_account].[UPDATEDAT]
-                      ,[t_fin_account_ext_dp].[DIRECT]
-                      ,[t_fin_account_ext_dp].[STARTDATE]
-                      ,[t_fin_account_ext_dp].[ENDDATE]
-                      ,[t_fin_account_ext_dp].[RPTTYPE]
-                      ,[t_fin_account_ext_dp].[REFDOCID]
-                      ,[t_fin_account_ext_dp].[DEFRRDAYS]
-                      ,[t_fin_account_ext_dp].[COMMENT]
-                  FROM [dbo].[t_fin_account]
-                  LEFT OUTER JOIN [dbo].[t_fin_account_ctgy]
-                       ON [t_fin_account].[CTGYID] = [t_fin_account_ctgy].[ID]
-                  LEFT OUTER JOIN [dbo].[t_fin_account_ext_dp]
-                       ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID] ";
+            strSQL += SqlUtility.getFinanceAccountQueryString();
+
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
                 strSQL += @" ORDER BY (SELECT NULL)
