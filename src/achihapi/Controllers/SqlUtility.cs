@@ -687,6 +687,13 @@ namespace achihapi.Controllers
         }
         #endregion
 
+        #region Finance Account Category
+        internal static string getFinanceAccountCategoryQueryString()
+        {
+            return String.Empty;
+        }
+        #endregion
+
         internal static void FinDocDB2VM(SqlDataReader reader, BaseListViewModel<FinanceDocumentUIViewModel> listVMs)
         {
             Int32 nDocID = -1;

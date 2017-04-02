@@ -114,11 +114,14 @@ namespace achihapi.Controllers
         {
             vm.ID = reader.GetInt32(0);
             vm.CategoryID = reader.GetInt32(1);
-            vm.Name = reader.GetString(2);
-            if (!reader.IsDBNull(3))
-                vm.CategoryName = reader.GetString(3);
+            if (!reader.IsDBNull(2))
+                vm.CategoryName = reader.GetString(2);
             else
                 vm.CategoryName = String.Empty;
+            if (!reader.IsDBNull(3))
+                vm.Name = reader.GetString(3);
+            else
+                vm.Name = String.Empty;
 
             Int32 idx = 4;
             if (bIncContent)

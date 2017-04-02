@@ -265,8 +265,9 @@ namespace achihapi.Controllers
 
         // PUT api/financecontrollingcenter/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public void Put(int id, [FromBody]FinanceControlCenterViewModel vm)
         {
+
         }
 
         // DELETE api/financecontrollingcenter/5
