@@ -333,14 +333,155 @@ namespace achihapi.Controllers
 
         // PUT api/learnhistory/5_a, change
         [HttpPut("{id}")]
-        public void Put(string sid, [FromBody]string value)
+        [Authorize]
+        public async Task<IActionResult> Put(String sid, [FromBody]LearnHistoryViewModel vm)
         {
+            if (vm == null || String.CompareOrdinal(sid, vm.GeneratedKey()) != 0)
+            {
+                return BadRequest("No data is inputted");
+            }
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+            var usr = User.FindFirst(c => c.Type == "sub");
+            String usrName = String.Empty;
+            if (usr != null)
+                usrName = usr.Value;
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Do the check first: object id
+                String checkString = @"SELECT [ID]
+                            FROM [dbo].[t_learn_obj] WHERE [ID] = " + vm.ObjectID.ToString();
+                SqlCommand chkcmd = new SqlCommand(checkString, conn);
+                SqlDataReader chkreader = chkcmd.ExecuteReader();
+                if (!chkreader.HasRows)
+                {
+                    return BadRequest("Invalid Object ID : " + vm.ObjectID.ToString());
+                }
+                chkreader.Dispose();
+                chkreader = null;
+                chkcmd.Dispose();
+                chkcmd = null;
+
+                // Do the check: name
+                checkString = @"SELECT [USERID] FROM [dbo].[t_userdetail] WHERE [USERID] = N'" + vm.UserID + "'";
+                chkcmd = new SqlCommand(checkString, conn);
+                chkreader = chkcmd.ExecuteReader();
+                if (!chkreader.HasRows)
+                {
+                    return BadRequest("Invalid user ID : " + vm.UserID);
+                }
+                chkreader.Dispose();
+                chkreader = null;
+                chkcmd.Dispose();
+                chkcmd = null;
+
+                // Now go ahead for the creating
+                queryString = @"UPDATE [dbo].[t_learn_hist]
+                           SET [COMMENT] = @COMMENT
+                              ,[UPDATEDBY] = @UPDATEDBY
+                              ,[UPDATEDAT] = @UPDATEDAT
+                         WHERE [USERID] = @USERID 
+                              AND [OBJECTID] = @OBJECTID
+                              AND [LEARNDATE] = @LEARNDATE";
+
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Parameters.AddWithValue("@COMMENT", vm.Comment);
+                cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+                cmd.Parameters.AddWithValue("@USERID", vm.UserID);
+                cmd.Parameters.AddWithValue("@OBJECTID", vm.ObjectID);
+                cmd.Parameters.AddWithValue("@LEARNDATE", vm.LearnDate);
+
+                Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                //if (nRst )
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
+
+            return new ObjectResult(vm);
         }
 
         // DELETE api/learnhistory/5
         [HttpDelete("{id}")]
-        public void Delete(string sid)
+        [Authorize]
+        public async Task<IActionResult> Delete(string sid)
         {
+            if (String.IsNullOrEmpty(sid))
+            {
+                return BadRequest("No data is inputted");
+            }
+            LearnHistoryViewModel vm = new LearnHistoryViewModel();
+            if (!vm.ParseGeneratedKey(sid))
+            {
+                return BadRequest("Key is not recognized: " + sid);
+            }
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+            var usr = User.FindFirst(c => c.Type == "sub");
+            String usrName = String.Empty;
+            if (usr != null)
+                usrName = usr.Value;
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Now go ahead for the delete
+                queryString = @"DELETE FROM [dbo].[t_learn_hist]
+                           WHERE [USERID] = @USERID
+                             AND [OBJECTID] = @OBJECTID
+                             AND [LEARNDATE] = @LEARNDATE;";
+
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Parameters.AddWithValue("@USERID", vm.UserID);
+                cmd.Parameters.AddWithValue("@OBJECTID", vm.ObjectID);
+                cmd.Parameters.AddWithValue("@LEARNDATE", vm.LearnDate);
+
+                Int32 nRst = await cmd.ExecuteNonQueryAsync();
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
+
+            return Ok();
         }
     }
 }

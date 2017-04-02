@@ -325,112 +325,67 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody]LearnObjectViewModel vm)
         {
-            //if (vm == null)
-            //{
-            //    return BadRequest("No data is inputted");
-            //}
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted");
+            }
 
-            //if (vm.Name != null)
-            //    vm.Name = vm.Name.Trim();
-            //if (String.IsNullOrEmpty(vm.Name))
-            //{
-            //    return BadRequest("Name is a must!");
-            //}
+            if (vm.Name != null)
+                vm.Name = vm.Name.Trim();
+            if (String.IsNullOrEmpty(vm.Name))
+            {
+                return BadRequest("Name is a must!");
+            }
 
-            //// Update the database
-            //SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
-            //String queryString = "";
-            //Boolean bError = false;
-            //String strErrMsg = "";
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
 
-            //var usr = User.FindFirst(c => c.Type == "sub");
-            //String usrName = String.Empty;
-            //if (usr != null)
-            //    usrName = usr.Value;
+            var usr = User.FindFirst(c => c.Type == "sub");
+            String usrName = String.Empty;
+            if (usr != null)
+                usrName = usr.Value;
 
-            //try
-            //{
-            //    queryString = @"SELECT [ID]
-            //                FROM [dbo].[t_learn_obj] WHERE [Name] = N'" + vm.Name + "'";
+            try
+            {
+                queryString = @"UPDATE [dbo].[t_learn_obj]
+                                SET [CATEGORY] = @CTGY
+                                    ,[NAME] = @NAME
+                                    ,[CONTENT] = @CONTENT
+                                    ,[UPDATEDBY] = @UPDATEDBY
+                                    ,[UPDATEDAT] = @UPDATEDAT
+                                WHERE [ID] = @OBJID";
 
-            //    await conn.OpenAsync();
+                await conn.OpenAsync();
 
-            //    SqlCommand cmd = new SqlCommand(queryString, conn);
-            //    SqlDataReader reader = cmd.ExecuteReader();
-            //    if (reader.HasRows)
-            //    {
-            //        bDuplicatedEntry = true;
-            //        while (reader.Read())
-            //        {
-            //            nDuplicatedID = reader.GetInt32(0);
-            //            break;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        reader.Dispose();
-            //        reader = null;
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Parameters.AddWithValue("@CTGY", vm.CategoryID);
+                cmd.Parameters.AddWithValue("@NAME", vm.Name);
+                cmd.Parameters.AddWithValue("@CONTENT", vm.Content);
+                cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+                cmd.Parameters.AddWithValue("@OBJID", vm.ID);
+                Int32 nRst = await cmd.ExecuteNonQueryAsync();
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
 
-            //        cmd.Dispose();
-            //        cmd = null;
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
 
-            //        // Now go ahead for the creating
-            //        queryString = @"INSERT INTO [dbo].[t_learn_obj]
-            //                           ([CATEGORY]
-            //                           ,[NAME]
-            //                           ,[CONTENT]
-            //                           ,[CREATEDBY]
-            //                           ,[CREATEDAT]
-            //                           ,[UPDATEDBY]
-            //                           ,[UPDATEDAT])
-            //                     VALUES
-            //                           (@CTGY
-            //                           ,@NAME
-            //                           ,@CONTENT
-            //                           ,@CREATEDBY
-            //                           ,@CREATEDAT
-            //                           ,@UPDATEDBY
-            //                           ,@UPDATEDAT
-            //                        ); SELECT @Identity = SCOPE_IDENTITY();";
-
-            //        cmd = new SqlCommand(queryString, conn);
-            //        cmd.Parameters.AddWithValue("@CTGY", vm.CategoryID);
-            //        cmd.Parameters.AddWithValue("@NAME", vm.Name);
-            //        cmd.Parameters.AddWithValue("@CONTENT", vm.Content);
-            //        cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
-            //        cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-            //        cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
-            //        cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
-            //        SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-            //        idparam.Direction = ParameterDirection.Output;
-
-            //        Int32 nRst = await cmd.ExecuteNonQueryAsync();
-            //        nNewID = (Int32)idparam.Value;
-            //    }
-            //}
-            //catch (Exception exp)
-            //{
-            //    System.Diagnostics.Debug.WriteLine(exp.Message);
-            //    bError = true;
-            //    strErrMsg = exp.Message;
-            //}
-            //finally
-            //{
-            //    conn.Close();
-            //    conn.Dispose();
-            //}
-
-            //if (bDuplicatedEntry)
-            //{
-            //    return BadRequest("Object with name already exists: " + nDuplicatedID.ToString());
-            //}
-
-            //if (bError)
-            //{
-            //    return StatusCode(500, strErrMsg);
-            //}
-
-            //vm.ID = nNewID;
             return new ObjectResult(vm);
         }
 
@@ -439,115 +394,69 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
-            //if (vm == null)
-            //{
-            //    return BadRequest("No data is inputted");
-            //}
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            Int32 usageAmount = 0;
 
-            //if (vm.Name != null)
-            //    vm.Name = vm.Name.Trim();
-            //if (String.IsNullOrEmpty(vm.Name))
-            //{
-            //    return BadRequest("Name is a must!");
-            //}
+            String strErrMsg = "";
 
-            //// Update the database
-            //SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
-            //String queryString = "";
-            //Boolean bDuplicatedEntry = false;
-            //Int32 nDuplicatedID = -1;
-            //Int32 nNewID = -1;
-            //Boolean bError = false;
-            //String strErrMsg = "";
-            //var usr = User.FindFirst(c => c.Type == "sub");
-            //String usrName = String.Empty;
-            //if (usr != null)
-            //    usrName = usr.Value;
+            try
+            {
+                queryString = @"SELECT COUNT( * )
+                            FROM [dbo].[t_learn_hist] WHERE [OBJECTID] = " + id.ToString();
 
-            //try
-            //{
-            //    queryString = @"SELECT [ID]
-            //                FROM [dbo].[t_learn_obj] WHERE [Name] = N'" + vm.Name + "'";
+                await conn.OpenAsync();
 
-            //    await conn.OpenAsync();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        usageAmount = reader.GetInt32(0);
+                        break;
+                    }
+                }
 
-            //    SqlCommand cmd = new SqlCommand(queryString, conn);
-            //    SqlDataReader reader = cmd.ExecuteReader();
-            //    if (reader.HasRows)
-            //    {
-            //        bDuplicatedEntry = true;
-            //        while (reader.Read())
-            //        {
-            //            nDuplicatedID = reader.GetInt32(0);
-            //            break;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        reader.Dispose();
-            //        reader = null;
+                if (usageAmount > 0)
+                {
+                    reader.Dispose();
+                    reader = null;
 
-            //        cmd.Dispose();
-            //        cmd = null;
+                    cmd.Dispose();
+                    cmd = null;
 
-            //        // Now go ahead for the creating
-            //        queryString = @"INSERT INTO [dbo].[t_learn_obj]
-            //                           ([CATEGORY]
-            //                           ,[NAME]
-            //                           ,[CONTENT]
-            //                           ,[CREATEDBY]
-            //                           ,[CREATEDAT]
-            //                           ,[UPDATEDBY]
-            //                           ,[UPDATEDAT])
-            //                     VALUES
-            //                           (@CTGY
-            //                           ,@NAME
-            //                           ,@CONTENT
-            //                           ,@CREATEDBY
-            //                           ,@CREATEDAT
-            //                           ,@UPDATEDBY
-            //                           ,@UPDATEDAT
-            //                        ); SELECT @Identity = SCOPE_IDENTITY();";
+                    // Now go ahead for the creating
+                    queryString = @"DELETE FROM [t_learn_obj] WHERE [ID] = " + id.ToString();
 
-            //        cmd = new SqlCommand(queryString, conn);
-            //        cmd.Parameters.AddWithValue("@CTGY", vm.CategoryID);
-            //        cmd.Parameters.AddWithValue("@NAME", vm.Name);
-            //        cmd.Parameters.AddWithValue("@CONTENT", vm.Content);
-            //        cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
-            //        cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-            //        cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
-            //        cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
-            //        SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-            //        idparam.Direction = ParameterDirection.Output;
+                    cmd = new SqlCommand(queryString, conn);
+                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
 
-            //        Int32 nRst = await cmd.ExecuteNonQueryAsync();
-            //        nNewID = (Int32)idparam.Value;
-            //    }
-            //}
-            //catch (Exception exp)
-            //{
-            //    System.Diagnostics.Debug.WriteLine(exp.Message);
-            //    bError = true;
-            //    strErrMsg = exp.Message;
-            //}
-            //finally
-            //{
-            //    conn.Close();
-            //    conn.Dispose();
-            //}
+            if (usageAmount > 0)
+            {
+                return BadRequest("Object still in use: " + usageAmount.ToString());
+            }
 
-            //if (bDuplicatedEntry)
-            //{
-            //    return BadRequest("Object with name already exists: " + nDuplicatedID.ToString());
-            //}
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
 
-            //if (bError)
-            //{
-            //    return StatusCode(500, strErrMsg);
-            //}
-
-            //vm.ID = nNewID;
-            //return new ObjectResult(vm);
             return Ok();
         }
     }
