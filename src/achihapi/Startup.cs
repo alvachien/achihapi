@@ -52,13 +52,7 @@ namespace achihapi
             // Add framework services.
             services.AddMvcCore()
                 .AddJsonFormatters()
-                .AddAuthorization(
-                    options => {
-                        options.AddPolicy("LearningAdmin", policy => policy.RequireClaim("LearningAdmin", "1"));
-                        options.AddPolicy("KnowledgeAdmin", policy => policy.RequireClaim("KnowledgeAdmin", "1"));
-                        options.AddPolicy("TodoAdmin", policy => policy.RequireClaim("TodoAdmin", "1"));
-                    }
-                );
+                .AddAuthorization();
 
             DBConnectionString = Configuration.GetConnectionString("DefaultConnection");
         }

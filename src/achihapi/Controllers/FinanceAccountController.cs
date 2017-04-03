@@ -27,13 +27,8 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
                 var usrObj = User.FindFirst(c => c.Type == "sub");
+                var scopeStr = User.FindFirst(c => c.Type == "FinanceAccountScope").Value;
 
                 queryString = this.getQueryString(true, top, skip, null);
 
@@ -91,6 +86,7 @@ namespace achihapi.Controllers
 
         // GET api/financeaccount/5
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> Get(int id)
         {
             FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
@@ -102,12 +98,6 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
                 var usrObj = User.FindFirst(c => c.Type == "sub");
 
                 queryString = this.getQueryString(false, null, null, id);
@@ -152,76 +142,6 @@ namespace achihapi.Controllers
             return new ObjectResult(vmAccount);
         }
 
-        private void onDB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm)
-        {
-            Int32 idx = 0;
-            vm.ID = reader.GetInt32(idx++);
-            vm.CtgyID = reader.GetInt32(idx++);
-            if (!reader.IsDBNull(idx))
-                vm.CtgyName = reader.GetString(idx++);
-            else
-                ++idx;
-            vm.Name = reader.GetString(idx++);
-            if (!reader.IsDBNull(idx))
-                vm.Comment = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.Owner = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.CreatedBy = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.CreatedAt = reader.GetDateTime(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedBy = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedAt = reader.GetDateTime(idx++);
-            else
-                ++idx;
-
-            if(vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
-            {
-                vm.AdvancePaymentInfo = new FinanceAccountExtDPViewModel();
-                // Advance payment
-                if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.Direct = reader.GetBoolean(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.StartDate = reader.GetDateTime(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.EndDate = reader.GetDateTime(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.RptType = reader.GetByte(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.RefDocID = reader.GetInt32(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.DefrrDays = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.Comment = reader.GetString(idx++);
-                else
-                    ++idx;
-            }
-        }
-
         // POST api/financeaccount
         [HttpPost]
         [Authorize]
@@ -250,12 +170,6 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
                 var usrName = User.FindFirst(c => c.Type == "sub").Value;
 
                 queryString = @"SELECT [ID]
@@ -298,24 +212,6 @@ namespace achihapi.Controllers
 
                         Int32 nRst = await cmd.ExecuteNonQueryAsync();
                         nNewID = (Int32)idparam.Value;
-
-                        //if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
-                        //{
-                        //    queryString = SqlUtility.getFinanceAccountADPInsertString();
-
-                        //    cmd = new SqlCommand(queryString, conn);
-                        //    cmd.Transaction = tran;
-
-                        //    SqlUtility.bindFinAccountADPParameter(cmd, vm.AdvancePaymentInfo, vm.AdvancePaymentInfo.RefDocID, vm.AdvancePaymentInfo.AccountID, usrName);
-                        //    cmd.Parameters.AddWithValue("@ACCOUNTID", nNewID);
-                        //    cmd.Parameters.AddWithValue("@DIRECT", vm.AdvancePaymentInfo.Direct);
-                        //    cmd.Parameters.AddWithValue("@STARTDATE", vm.AdvancePaymentInfo.StartDate);
-                        //    cmd.Parameters.AddWithValue("@ENDDATE", vm.AdvancePaymentInfo.EndDate);
-                        //    cmd.Parameters.AddWithValue("@RPTTYPE", vm.AdvancePaymentInfo.RptType);
-                        //    cmd.Parameters.AddWithValue("@REFDOCID", vm.AdvancePaymentInfo.RefDocID);
-                        //    cmd.Parameters.AddWithValue("@DEFRRDAYS", vm.AdvancePaymentInfo.DefrrDays);
-                        //    cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.AdvancePaymentInfo.Comment) ? String.Empty : vm.AdvancePaymentInfo.Comment);
-                        //}
 
                         // Now commit it!
                         tran.Commit();
