@@ -18,20 +18,18 @@ namespace achihapi
     {
         public Startup(IHostingEnvironment env)
         {
-#if DEBUG
-            env.EnvironmentName = "Development";
-#else
-#if USINGAZURE
-            env.EnvironmentName = "Azure";
-#else
-            env.EnvironmentName = "Production";
-#endif
-#endif
-
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+#if DEBUG
+                .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
+#else
+#if USINGAZURE
+                .AddJsonFile("appsettings.Azure.json", optional: true, reloadOnChange: true)
+#else
+                .AddJsonFile("appsettings.Production.json", optional: true, reloadOnChange: true)
+#endif
+#endif
                 .AddEnvironmentVariables()                
                 ;
 

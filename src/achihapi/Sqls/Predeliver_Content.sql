@@ -25,6 +25,13 @@ INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT],[SYSFLAG]) VALUES 
 SET IDENTITY_INSERT dbo.[t_learn_ctgy] OFF;
 
 -- Content for Currency
+INSERT [dbo].[t_fin_currency] ([CURR], [NAME], [SYMBOL], [SYSFLAG], [CREATEDBY], [CREATEDAT], [UPDATEDBY], [UPDATEDAT]) VALUES (N'CNY', N'Sys.Currency.CNY', N'¥', 1, NULL, CAST(N'2016-10-21' AS Date), NULL, CAST(N'2016-10-21' AS Date))
+INSERT [dbo].[t_fin_currency] ([CURR], [NAME], [SYMBOL], [SYSFLAG], [CREATEDBY], [CREATEDAT], [UPDATEDBY], [UPDATEDAT]) VALUES (N'EUR', N'Sys.Currency.EUR', N'€', 1, NULL, CAST(N'2016-10-21' AS Date), NULL, CAST(N'2016-10-21' AS Date))
+INSERT [dbo].[t_fin_currency] ([CURR], [NAME], [SYMBOL], [SYSFLAG], [CREATEDBY], [CREATEDAT], [UPDATEDBY], [UPDATEDAT]) VALUES (N'HKD', N'Sys.Currency.HKD', N'HK$', 1, NULL, CAST(N'2016-10-21' AS Date), NULL, CAST(N'2016-10-21' AS Date))
+INSERT [dbo].[t_fin_currency] ([CURR], [NAME], [SYMBOL], [SYSFLAG], [CREATEDBY], [CREATEDAT], [UPDATEDBY], [UPDATEDAT]) VALUES (N'JPY', N'Sys.Currency.JPY', N'¥', 1, NULL, CAST(N'2016-10-21' AS Date), NULL, CAST(N'2016-10-21' AS Date))
+INSERT [dbo].[t_fin_currency] ([CURR], [NAME], [SYMBOL], [SYSFLAG], [CREATEDBY], [CREATEDAT], [UPDATEDBY], [UPDATEDAT]) VALUES (N'KRW', N'Sys.Currency.KRW', N'₩', 1, NULL, CAST(N'2016-10-21' AS Date), NULL, CAST(N'2016-10-21' AS Date))
+INSERT [dbo].[t_fin_currency] ([CURR], [NAME], [SYMBOL], [SYSFLAG], [CREATEDBY], [CREATEDAT], [UPDATEDBY], [UPDATEDAT]) VALUES (N'TWD', N'Sys.Currency.TWD', N'TW$', 1, NULL, CAST(N'2016-10-21' AS Date), NULL, CAST(N'2016-10-21' AS Date))
+INSERT [dbo].[t_fin_currency] ([CURR], [NAME], [SYMBOL], [SYSFLAG], [CREATEDBY], [CREATEDAT], [UPDATEDBY], [UPDATEDAT]) VALUES (N'USD', N'Sys.Currency.USD', N'$', 1, NULL, CAST(N'2016-10-21' AS Date), NULL, CAST(N'2016-10-21' AS Date))
 
 -- Content for FIN account category
 SET IDENTITY_INSERT dbo.[t_fin_account_ctgy] ON;
