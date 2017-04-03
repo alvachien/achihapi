@@ -246,3 +246,4 @@ ModelManifest.xml
 /src/achihapi/appsettings.json
 /src/achihapi/appsettings.*.json
 .vs/achihapi/v14/.suo
+/src/achihapi/Properties/PublishProfiles

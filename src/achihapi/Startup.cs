@@ -21,7 +21,11 @@ namespace achihapi
 #if DEBUG
             env.EnvironmentName = "Development";
 #else
+#if USINGAZURE
+            env.EnvironmentName = "Azure";
+#else
             env.EnvironmentName = "Production";
+#endif
 #endif
 
             var builder = new ConfigurationBuilder()
