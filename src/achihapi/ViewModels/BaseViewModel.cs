@@ -77,10 +77,12 @@ namespace achihapi.ViewModels
         public const String OnlyOwnerAndDispaly = "OnlyOwnerAndDisplay";
         public const String OnlyOwnerFullControl = "OnlyOwnerFullControl";
         public const String OnlyOwner = "OnlyOwner";
-        public const String Display = "Display";        
+        public const String Display = "Display";
         public const String All = "All";
 
         internal const String FinanceAccountScope = "FinanceAccountScope";
+        internal const String FinanceDocumentScope = "FinanceDocumentScope";
         internal const String LearnHistoryScope = "LearnHistoryScope";
+        internal const String LearnObjectScope = "LearnObjectScope";
     }
 }
