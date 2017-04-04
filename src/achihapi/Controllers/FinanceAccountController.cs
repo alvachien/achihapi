@@ -27,10 +27,21 @@ namespace achihapi.Controllers
 
             try
             {
-                var usrObj = User.FindFirst(c => c.Type == "sub");
-                var scopeStr = User.FindFirst(c => c.Type == "FinanceAccountScope").Value;
+                String usrName = "";
+                String strScope = String.Empty;
+                try
+                {
+                    var usrObj = HIHAPIUtility.GetUserClaim(this);
+                    usrName = usrObj.Value;
 
-                queryString = this.getQueryString(true, top, skip, null);
+                    strScope = HIHAPIUtility.GetScopeForCurrentUser(this, usrObj, HIHAPIConstants.FinanceAccountScope);
+                }
+                catch
+                {
+                    return BadRequest("Not valid user found!");
+                }
+
+                queryString = this.getQueryString(true, top, skip, null, strScope);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -98,9 +109,21 @@ namespace achihapi.Controllers
 
             try
             {
-                var usrObj = User.FindFirst(c => c.Type == "sub");
+                String usrName = "";
+                String strScope = String.Empty;
+                try
+                {
+                    var usrObj = HIHAPIUtility.GetUserClaim(this);
+                    usrName = usrObj.Value;
 
-                queryString = this.getQueryString(false, null, null, id);
+                    strScope = HIHAPIUtility.GetScopeForCurrentUser(this, usrObj, HIHAPIConstants.FinanceAccountScope);
+                }
+                catch
+                {
+                    return BadRequest("Not valid user found!");
+                }
+
+                queryString = this.getQueryString(false, null, null, id, strScope);
 
                 await conn.OpenAsync();
 
@@ -147,6 +170,20 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceAccountViewModel vm)
         {
+            String usrName = "";
+            String strScope = String.Empty;
+            try
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+
+                strScope = HIHAPIUtility.GetScopeForCurrentUser(this, usrObj, HIHAPIConstants.FinanceAccountScope);
+            }
+            catch
+            {
+                return BadRequest("Not valid user found!");
+            }
+
             if (vm == null || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
             {
                 return BadRequest("No data is inputted");
@@ -170,8 +207,6 @@ namespace achihapi.Controllers
 
             try
             {
-                var usrName = User.FindFirst(c => c.Type == "sub").Value;
-
                 queryString = @"SELECT [ID]
                   FROM [dbo].[t_fin_account] WHERE [Name] = N'" + vm.Name + "'";
 
@@ -253,7 +288,21 @@ namespace achihapi.Controllers
         [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody]FinanceAccountViewModel vm)
-        {            
+        {
+            String usrName = "";
+            String strScope = String.Empty;
+            try
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+
+                strScope = HIHAPIUtility.GetScopeForCurrentUser(this, usrObj, HIHAPIConstants.FinanceAccountScope);
+            }
+            catch
+            {
+                return BadRequest("Not valid user found!");
+            }
+
             if (vm == null)
             {
                 return BadRequest("No data is inputted");
@@ -274,7 +323,6 @@ namespace achihapi.Controllers
 
             try
             {
-                var usrName = User.FindFirst(c => c.Type == "sub").Value;
                 queryString = @"UPDATE [dbo].[t_fin_account]
                        SET [CTGYID] = @CTGYID
                           ,[NAME] = @NAME
@@ -308,24 +356,6 @@ namespace achihapi.Controllers
                 cmd.Parameters.AddWithValue("@ID", vm.ID);
                 await cmd.ExecuteNonQueryAsync();
 
-                // ToDo: Ext. info
-                if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
-                {
-                    // UPDATE[dbo].[t_fin_account_ext_dp]
-                    //  SET[ACCOUNTID] = < ACCOUNTID, int,>
-                    //     ,[DIRECT] = <DIRECT, tinyint,>
-                    //     ,[STARTDATE] = <STARTDATE, date,>
-                    //     ,[ENDDATE] = <ENDDATE, date,>
-                    //     ,[RPTTYPE] = <RPTTYPE, tinyint,>
-                    //     ,[REFDOCID] = <REFDOCID, int,>
-                    //     ,[DEFRRDAYS] = <DEFRRDAYS, nvarchar(100),>
-                    //     ,[COMMENT] = <COMMENT, nvarchar(45),>
-                    //WHERE<Search Conditions,,>
-                    //if (vm.CtgyID == )
-                    //{
-                    //}
-                }
-
                 // Now commit it!
                 tran.Commit();
             }
@@ -352,11 +382,19 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
-            // DELETE FROM [dbo].[t_fin_account]
-            // WHERE [ID] = @ID
+            String usrName = "";
+            String strScope = String.Empty;
+            try
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
 
-            // DELETE FROM [dbo].[t_fin_account_ext_dp]
-            // WHERE [ACCOUNTID] = @ACCOUNTID
+                strScope = HIHAPIUtility.GetScopeForCurrentUser(this, usrObj, HIHAPIConstants.FinanceAccountScope);
+            }
+            catch
+            {
+                return BadRequest("Not valid user found!");
+            }
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -365,7 +403,6 @@ namespace achihapi.Controllers
 
             try
             {
-                var usrName = User.FindFirst(c => c.Type == "sub").Value;
                 queryString = @"DELETE FROM [dbo].[t_fin_account] 
                      WHERE [ID] = @ID";
 
@@ -405,15 +442,21 @@ namespace achihapi.Controllers
             return Ok();
         }
 
-        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, String strOwner)
         {
+            
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account];";
+                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account] ";
+                if (!String.IsNullOrEmpty(strOwner))
+                {
+                    strSQL += " WHERE [OWNER] = N'" + strOwner + "'";
+                }
+                strSQL += " ;";
             }
 
-            strSQL += SqlUtility.getFinanceAccountQueryString();
+            strSQL += SqlUtility.getFinanceAccountQueryString(strOwner);
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
@@ -422,7 +465,14 @@ namespace achihapi.Controllers
             }
             else if (!bListMode && nSearchID.HasValue)
             {
-                strSQL += @" WHERE [t_fin_account].[ID] = " + nSearchID.Value.ToString();
+                if (!String.IsNullOrEmpty(strOwner))
+                {
+                    strSQL += @" AND [t_fin_account].[ID] = " + nSearchID.Value.ToString();
+                }
+                else
+                {
+                    strSQL += @" WHERE [t_fin_account].[ID] = " + nSearchID.Value.ToString();
+                }
             }
 
             return strSQL;

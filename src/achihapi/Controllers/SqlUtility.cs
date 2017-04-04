@@ -11,9 +11,9 @@ namespace achihapi.Controllers
     internal class SqlUtility
     {
         #region Finance Account
-        internal static string getFinanceAccountQueryString()
+        internal static string getFinanceAccountQueryString(String strOwner = "")
         {
-            return @"SELECT [t_fin_account].[ID]
+            String strSQL = @"SELECT [t_fin_account].[ID]
                       ,[t_fin_account].[CTGYID]
                       ,[t_fin_account_ctgy].[NAME] as [CTGYNAME]
                       ,[t_fin_account].[NAME]
@@ -35,6 +35,12 @@ namespace achihapi.Controllers
                        ON [t_fin_account].[CTGYID] = [t_fin_account_ctgy].[ID]
                   LEFT OUTER JOIN [dbo].[t_fin_account_ext_dp]
                        ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID] ";
+            if (String.IsNullOrEmpty(strOwner))
+            {
+                strSQL += " WHERE [t_fin_account].[OWNER] = N'" + strOwner + "'";
+            }
+
+            return strSQL;
         }
 
         internal static string getFinanceAccountInsertString()
