@@ -49,6 +49,8 @@
       "wwwroot",
       "Views",
       "appsettings.json",
+      "appsettings.Azure.json",
+      "appsettings.Production.json",
       "web.config"
     ]
   },
