@@ -28,20 +28,22 @@ namespace achihapi.Controllers
             try
             {
                 String usrName = "";
-                String strScope = String.Empty;
+                String scopeFilter = String.Empty;
                 try
                 {
                     var usrObj = HIHAPIUtility.GetUserClaim(this);
                     usrName = usrObj.Value;
+                    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-                    strScope = HIHAPIUtility.GetScopeForCurrentUser(this, usrObj, HIHAPIConstants.FinanceAccountScope);
+
+                    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
                 }
                 catch
                 {
-                    return BadRequest("Not valid user found!");
+                    return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
                 }
 
-                queryString = this.getQueryString(true, top, skip, null, strScope);
+                queryString = this.getQueryString(true, top, skip, null, scopeFilter);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -110,20 +112,22 @@ namespace achihapi.Controllers
             try
             {
                 String usrName = "";
-                String strScope = String.Empty;
+                String scopeFilter = String.Empty;
                 try
                 {
                     var usrObj = HIHAPIUtility.GetUserClaim(this);
                     usrName = usrObj.Value;
+                    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-                    strScope = HIHAPIUtility.GetScopeForCurrentUser(this, usrObj, HIHAPIConstants.FinanceAccountScope);
+
+                    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
                 }
                 catch
                 {
-                    return BadRequest("Not valid user found!");
+                    return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
                 }
 
-                queryString = this.getQueryString(false, null, null, id, strScope);
+                queryString = this.getQueryString(false, null, null, id, scopeFilter);
 
                 await conn.OpenAsync();
 
@@ -170,23 +174,33 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceAccountViewModel vm)
         {
+            if (vm == null || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
+            {
+                return BadRequest("No data is inputted or inputted data for Advance payment");
+            }
+
             String usrName = "";
-            String strScope = String.Empty;
             try
             {
                 var usrObj = HIHAPIUtility.GetUserClaim(this);
                 usrName = usrObj.Value;
+                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-                strScope = HIHAPIUtility.GetScopeForCurrentUser(this, usrObj, HIHAPIConstants.FinanceAccountScope);
+                if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                {
+                    return StatusCode(401, "Current user has no authority to create account!");
+                }
+                else if(String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                {
+                    if (String.CompareOrdinal(vm.Owner, usrName) != 0)
+                    {
+                        return StatusCode(401, "Current user can only create account with owner.");
+                    }
+                }
             }
             catch
             {
-                return BadRequest("Not valid user found!");
-            }
-
-            if (vm == null || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
-            {
-                return BadRequest("No data is inputted");
+                return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
             }
 
             if (vm.Name != null)
@@ -195,6 +209,7 @@ namespace achihapi.Controllers
             {
                 return BadRequest("Name is a must!");
             }
+            
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -289,23 +304,32 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody]FinanceAccountViewModel vm)
         {
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted");
+            }
             String usrName = "";
-            String strScope = String.Empty;
             try
             {
                 var usrObj = HIHAPIUtility.GetUserClaim(this);
                 usrName = usrObj.Value;
+                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-                strScope = HIHAPIUtility.GetScopeForCurrentUser(this, usrObj, HIHAPIConstants.FinanceAccountScope);
+                if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                {
+                    return StatusCode(401, "Current user has no authority to change account!");
+                }
+                else if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                {
+                    if (String.CompareOrdinal(vm.Owner, usrName) != 0)
+                    {
+                        return StatusCode(401, "Current user can only modify account with owner.");
+                    }
+                }
             }
             catch
             {
-                return BadRequest("Not valid user found!");
-            }
-
-            if (vm == null)
-            {
-                return BadRequest("No data is inputted");
+                return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
             }
 
             if (vm.Name != null)
@@ -383,17 +407,22 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             String usrName = "";
-            String strScope = String.Empty;
+            String scopeValue = "";
             try
             {
                 var usrObj = HIHAPIUtility.GetUserClaim(this);
                 usrName = usrObj.Value;
+                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
+                scopeValue = scopeObj.Value;
 
-                strScope = HIHAPIUtility.GetScopeForCurrentUser(this, usrObj, HIHAPIConstants.FinanceAccountScope);
+                if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                {
+                    return StatusCode(401, "Current user has no authority to create account!");
+                }
             }
             catch
             {
-                return BadRequest("Not valid user found!");
+                return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
             }
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -403,6 +432,35 @@ namespace achihapi.Controllers
 
             try
             {
+                // Check owner and the existence
+                queryString = @"SELECT [OWNER] FROM [dbo].[t_fin_account] WHERE [ID] = " + id.ToString();
+                await conn.OpenAsync();
+                SqlCommand cmdread = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmdread.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        String strOwner = reader.GetString(0);
+                        if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                        {
+                            if (String.CompareOrdinal(strOwner, usrName) != 0)
+                            {
+                                return StatusCode(401, "Current user can only delete the account with owner");
+                            }
+                        }
+
+                        break;
+                    }
+                }
+                else
+                {
+                    return StatusCode(500, "Account not exist!");
+                }
+                reader.Dispose();
+                cmdread.Dispose();
+
+                // Deletion
                 queryString = @"DELETE FROM [dbo].[t_fin_account] 
                      WHERE [ID] = @ID";
 

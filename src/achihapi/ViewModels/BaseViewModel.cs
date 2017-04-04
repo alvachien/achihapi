@@ -44,20 +44,28 @@ namespace achihapi.ViewModels
             return usrObj;
         }
 
-        internal static String GetScopeForCurrentUser(Microsoft.AspNetCore.Mvc.ControllerBase ctrl, System.Security.Claims.Claim usrObj, String strScope)
+        internal static System.Security.Claims.Claim GetScopeClaim(Microsoft.AspNetCore.Mvc.ControllerBase ctrl, String strScope)
         {
-            var scopeStr = ctrl.User.FindFirst(c => c.Type == strScope).Value;
+            var scopeObj = ctrl.User.FindFirst(c => c.Type == strScope);
+            if (scopeObj == null)
+                throw new Exception();
+
+            return scopeObj;
+        }
+
+        internal static String GetScopeSQLFilter(String scopeStr, String usrStr)
+        {
             if (String.CompareOrdinal(scopeStr, HIHAPIConstants.All) == 0)
             {
                 scopeStr = String.Empty;
             }
             else if (String.CompareOrdinal(scopeStr, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
             {
-                scopeStr = usrObj.Value;
+                scopeStr = usrStr;
             }
             else if (String.CompareOrdinal(scopeStr, HIHAPIConstants.OnlyOwnerFullControl) == 0)
             {
-                scopeStr = usrObj.Value;
+                scopeStr = usrStr;
             }
 
             return scopeStr;
