@@ -10,6 +10,31 @@ namespace achihapi.Controllers
 {
     internal class SqlUtility
     {
+        #region Learn History
+        internal static string getLearnHistoryQueryString(String strUser = "")
+        {
+            String strSQL = @"SELECT [t_learn_hist].[USERID]
+                      ,[t_userdetail].[DISPLAYAS] as [USERDISPLAYAS]
+                      ,[t_learn_hist].[OBJECTID]
+                      ,[t_learn_obj].[NAME] as [OBJECTNAME]
+                      ,[t_learn_hist].[LEARNDATE]
+                      ,[t_learn_hist].[COMMENT]
+                      ,[t_learn_hist].[CREATEDBY]
+                      ,[t_learn_hist].[CREATEDAT]
+                      ,[t_learn_hist].[UPDATEDBY]
+                      ,[t_learn_hist].[UPDATEDAT] 
+                        FROM [dbo].[t_learn_hist]
+                            INNER JOIN [dbo].[t_userdetail] ON [t_learn_hist].[USERID] = [t_userdetail].[USERID]
+                            INNER JOIN [dbo].[t_learn_obj] ON [t_learn_hist].[OBJECTID] = [t_learn_obj].[ID] ";
+            if (String.IsNullOrEmpty(strUser))
+            {
+                strSQL += " WHERE [t_learn_hist].[USERID] = N'" + strUser + "'";
+            }
+
+            return strSQL;
+        }
+        #endregion
+
         #region Finance Account
         internal static string getFinanceAccountQueryString(String strOwner = "")
         {

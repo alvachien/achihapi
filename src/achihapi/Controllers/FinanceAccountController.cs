@@ -532,6 +532,9 @@ namespace achihapi.Controllers
                     strSQL += @" WHERE [t_fin_account].[ID] = " + nSearchID.Value.ToString();
                 }
             }
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine("FinanceAccountController, SQL generated: " + strSQL);
+#endif
 
             return strSQL;
         }

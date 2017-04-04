@@ -70,7 +70,6 @@ namespace achihapi.ViewModels
 
             return scopeStr;
         }
-
     }
 
     internal class HIHAPIConstants
@@ -82,5 +81,6 @@ namespace achihapi.ViewModels
         public const String All = "All";
 
         internal const String FinanceAccountScope = "FinanceAccountScope";
+        internal const String LearnHistoryScope = "LearnHistoryScope";
     }
 }

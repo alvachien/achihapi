@@ -14,6 +14,7 @@ namespace achihapi.Controllers
     {
         // GET: api/learnhistory
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<LearnHistoryUIViewModel> listVm = new BaseListViewModel<LearnHistoryUIViewModel>();
@@ -24,7 +25,22 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getSQLString(true, top, skip);
+                String usrName = "";
+                String scopeFilter = String.Empty;
+                try
+                {
+                    var usrObj = HIHAPIUtility.GetUserClaim(this);
+                    usrName = usrObj.Value;
+                    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
+
+                    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                }
+                catch
+                {
+                    return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
+                }
+
+                queryString = this.getSQLString(true, top, skip, scopeFilter);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -74,28 +90,19 @@ namespace achihapi.Controllers
             return new ObjectResult(listVm);
         }
 
-        private string getSQLString(Boolean bListMode, Int32? nTop, Int32? nSkip)
+        private string getSQLString(Boolean bListMode, Int32? nTop, Int32? nSkip, String userFilter)
         {
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_hist];";
+                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_hist]";
+                if (String.IsNullOrEmpty(userFilter))
+                    strSQL += ";";
+                else
+                    strSQL += " WHERE [USERID] = N'" + userFilter + "';";
             }
 
-            strSQL += @"SELECT [t_learn_hist].[USERID]
-                      ,[t_userdetail].[DISPLAYAS] as [USERDISPLAYAS]
-                      ,[t_learn_hist].[OBJECTID]
-                      ,[t_learn_obj].[NAME] as [OBJECTNAME]
-                      ,[t_learn_hist].[LEARNDATE]
-                      ,[t_learn_hist].[COMMENT]
-                      ,[t_learn_hist].[CREATEDBY]
-                      ,[t_learn_hist].[CREATEDAT]
-                      ,[t_learn_hist].[UPDATEDBY]
-                      ,[t_learn_hist].[UPDATEDAT] 
-                        FROM [dbo].[t_learn_hist]
-                            INNER JOIN [dbo].[t_userdetail] ON [t_learn_hist].[USERID] = [t_userdetail].[USERID]
-                            INNER JOIN [dbo].[t_learn_obj] ON [t_learn_hist].[OBJECTID] = [t_learn_obj].[ID]
-                        ";
+            strSQL += SqlUtility.getLearnHistoryQueryString(userFilter);
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
                 strSQL += @" ORDER BY (SELECT NULL)
@@ -105,6 +112,9 @@ namespace achihapi.Controllers
             {
                 strSQL += @" WHERE [t_learn_hist].[USERID] = @USERID AND [t_learn_hist].[OBJECTID] = @OBJECTID AND [t_learn_hist].[LEARNDATE] = @LEARNDATE ";
             }
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine("LearnHistoryController, SQL generated: " + strSQL);
+#endif
 
             return strSQL;
         }
@@ -141,6 +151,7 @@ namespace achihapi.Controllers
 
         // GET api/learnhistory/5
         [HttpGet("{sid}")]
+        [Authorize]
         public async Task<IActionResult> Get(String sid)
         {
             if (String.IsNullOrEmpty(sid))
@@ -157,18 +168,27 @@ namespace achihapi.Controllers
 
             try
             {
-                // Split the sid
-                String[] arIDs = sid.Split('_');
-                if (arIDs.Length != 3)
+                String usrName = "";
+                String scopeFilter = String.Empty;
+                try
                 {
-                    throw new Exception(sid + "is not recognized!");
+                    var usrObj = HIHAPIUtility.GetUserClaim(this);
+                    usrName = usrObj.Value;
+                    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
 
+                    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                }
+                catch
+                {
+                    return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
                 }
 
-                String usrID = arIDs[0];
-                Int32 objID = Int32.Parse(arIDs[1]);
-                DateTime dtDate = DateTime.Parse(arIDs[2]);
-                queryString = this.getSQLString(false, null, null);
+                vm.ParseGeneratedKey(sid);
+
+                String usrID = vm.UserID;
+                Int32 objID = vm.ObjectID;
+                DateTime dtDate = vm.LearnDate;
+                queryString = this.getSQLString(false, null, null, String.Empty);
 
                 await conn.OpenAsync();
 
@@ -221,13 +241,38 @@ namespace achihapi.Controllers
                 return BadRequest("No data is inputted");
             }
 
+            String usrName = "";
+            String scopeFilter = String.Empty;
+            try
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
+                var scopeValue = scopeObj.Value;
+
+                if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                {
+                    return StatusCode(401, "Current user has no authority to create learn history!");
+                }
+                else if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                {
+                    if (String.CompareOrdinal(usrName, vm.UserID) != 0)
+                    {
+                        return StatusCode(401, "Current user cannot create the history where he/she is not responsible for.");
+                    }
+                }
+            }
+            catch
+            {
+                return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
+            }
+
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
             var usr = User.FindFirst(c => c.Type == "sub");
-            String usrName = String.Empty;
             if (usr != null)
                 usrName = usr.Value;
 
@@ -341,15 +386,36 @@ namespace achihapi.Controllers
                 return BadRequest("No data is inputted");
             }
 
+            String usrName = "";
+            String scopeFilter = String.Empty;
+            try
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
+                var scopeValue = scopeObj.Value;
+                if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                {
+                    return StatusCode(401, "Current user has no authority to change learn history!");
+                }
+                else if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                {
+                    if (String.CompareOrdinal(usrName, vm.UserID) != 0)
+                    {
+                        return StatusCode(401, "Current user cannot change the history where he/she is not responsible for.");
+                    }
+                }
+            }
+            catch
+            {
+                return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
+            }
+
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
-            var usr = User.FindFirst(c => c.Type == "sub");
-            String usrName = String.Empty;
-            if (usr != null)
-                usrName = usr.Value;
 
             try
             {
@@ -431,10 +497,36 @@ namespace achihapi.Controllers
             {
                 return BadRequest("No data is inputted");
             }
+
             LearnHistoryViewModel vm = new LearnHistoryViewModel();
             if (!vm.ParseGeneratedKey(sid))
             {
                 return BadRequest("Key is not recognized: " + sid);
+            }
+
+            String usrName = "";
+            String scopeFilter = String.Empty;
+            try
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
+                var scopeValue = scopeObj.Value;
+                if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                {
+                    return StatusCode(401, "Current user has no authority to delete history!");
+                }
+                else if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                {
+                    if (String.CompareOrdinal(usrName, vm.UserID) != 0)
+                    {
+                        return StatusCode(401, "Current user cannot delete the history where he/she is not responsible for.");
+                    }
+                }
+            }
+            catch
+            {
+                return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
             }
 
             // Update the database
@@ -442,10 +534,6 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
-            var usr = User.FindFirst(c => c.Type == "sub");
-            String usrName = String.Empty;
-            if (usr != null)
-                usrName = usr.Value;
 
             try
             {
