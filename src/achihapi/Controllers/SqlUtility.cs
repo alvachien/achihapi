@@ -60,7 +60,7 @@ namespace achihapi.Controllers
                        ON [t_fin_account].[CTGYID] = [t_fin_account_ctgy].[ID]
                   LEFT OUTER JOIN [dbo].[t_fin_account_ext_dp]
                        ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID] ";
-            if (String.IsNullOrEmpty(strOwner))
+            if (!String.IsNullOrEmpty(strOwner))
             {
                 strSQL += " WHERE [t_fin_account].[OWNER] = N'" + strOwner + "'";
             }
@@ -113,70 +113,79 @@ namespace achihapi.Controllers
         internal static void FinAccount_DB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm)
         {
             Int32 idx = 0;
-            vm.ID = reader.GetInt32(idx++);
-            vm.CtgyID = reader.GetInt32(idx++);
-            if (!reader.IsDBNull(idx))
-                vm.CtgyName = reader.GetString(idx++);
-            else
-                ++idx;
-            vm.Name = reader.GetString(idx++);
-            if (!reader.IsDBNull(idx))
-                vm.Comment = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.Owner = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.CreatedBy = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.CreatedAt = reader.GetDateTime(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedBy = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedAt = reader.GetDateTime(idx++);
-            else
-                ++idx;
 
-            if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
+            try
             {
-                vm.AdvancePaymentInfo = new FinanceAccountExtDPViewModel();
-                // Advance payment
+                vm.ID = reader.GetInt32(idx++);
+                vm.CtgyID = reader.GetInt32(idx++);
                 if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.Direct = reader.GetBoolean(idx++);
+                    vm.CtgyName = reader.GetString(idx++);
+                else
+                    ++idx;
+                vm.Name = reader.GetString(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.Comment = reader.GetString(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.StartDate = reader.GetDateTime(idx++);
+                    vm.Owner = reader.GetString(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.EndDate = reader.GetDateTime(idx++);
+                    vm.CreatedBy = reader.GetString(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.RptType = reader.GetByte(idx++);
+                    vm.CreatedAt = reader.GetDateTime(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.RefDocID = reader.GetInt32(idx++);
+                    vm.UpdatedBy = reader.GetString(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.DefrrDays = reader.GetString(idx++);
+                    vm.UpdatedAt = reader.GetDateTime(idx++);
                 else
                     ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.AdvancePaymentInfo.Comment = reader.GetString(idx++);
-                else
-                    ++idx;
+
+                if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
+                {
+                    vm.AdvancePaymentInfo = new FinanceAccountExtDPViewModel();
+                    // Advance payment
+                    if (!reader.IsDBNull(idx))
+                        vm.AdvancePaymentInfo.Direct = reader.GetBoolean(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.AdvancePaymentInfo.StartDate = reader.GetDateTime(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.AdvancePaymentInfo.EndDate = reader.GetDateTime(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.AdvancePaymentInfo.RptType = reader.GetByte(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.AdvancePaymentInfo.RefDocID = reader.GetInt32(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.AdvancePaymentInfo.DefrrDays = reader.GetString(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.AdvancePaymentInfo.Comment = reader.GetString(idx++);
+                    else
+                        ++idx;
+                }
+            }
+            catch(Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Error occurred: ID {0}, index {1}, {2}", vm.ID, idx, exp.Message));
+                throw exp;
             }
         }
         #endregion
@@ -244,55 +253,63 @@ namespace achihapi.Controllers
         internal static void FinDocList_DB2VM(SqlDataReader reader, FinanceDocumentUIViewModel vm)
         {
             Int32 idx = 0;
-            vm.ID = reader.GetInt32(idx++);
-            vm.DocType = reader.GetInt16(idx++);
-            vm.DocTypeName = reader.GetString(idx++);
-            vm.TranDate = reader.GetDateTime(idx++);
-            vm.TranCurr = reader.GetString(idx++);
-            if (!reader.IsDBNull(idx))
-                vm.Desp = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.ExgRate = reader.GetByte(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.ExgRate_Plan = reader.GetBoolean(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.TranCurr2 = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.ExgRate2 = reader.GetByte(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.ExgRate_Plan2 = reader.GetBoolean(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.CreatedBy = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.CreatedAt = reader.GetDateTime(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedBy = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedAt = reader.GetDateTime(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.TranAmount = reader.GetDecimal(idx++);
-            else
-                ++idx;
+            try
+            {
+                vm.ID = reader.GetInt32(idx++);
+                vm.DocType = reader.GetInt16(idx++);
+                vm.DocTypeName = reader.GetString(idx++);
+                vm.TranDate = reader.GetDateTime(idx++);
+                vm.TranCurr = reader.GetString(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.Desp = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.ExgRate = reader.GetByte(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.ExgRate_Plan = reader.GetByte(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.TranCurr2 = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.ExgRate2 = reader.GetByte(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.ExgRate_Plan2 = reader.GetByte(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.TranAmount = reader.GetDecimal(idx++);
+                else
+                    ++idx;
+            }
+            catch(Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Error occurred: ID {0}, index {1}, {2}", vm.ID, idx, exp.Message));
+                throw exp;
+            }
         }
         #endregion
 
@@ -458,10 +475,7 @@ namespace achihapi.Controllers
                 cmd.Parameters.AddWithValue("@EXGRATE", vm.ExgRate);
             else
                 cmd.Parameters.AddWithValue("@EXGRATE", DBNull.Value);
-            if (vm.ExgRate_Plan)
-                cmd.Parameters.AddWithValue("@EXGRATE_PLAN", vm.ExgRate_Plan);
-            else
-                cmd.Parameters.AddWithValue("@EXGRATE_PLAN", DBNull.Value);
+            cmd.Parameters.AddWithValue("@EXGRATE_PLAN", vm.ExgRate_Plan);
             if (String.IsNullOrEmpty(vm.TranCurr2))
                 cmd.Parameters.AddWithValue("@TRANCURR2", DBNull.Value);
             else
@@ -479,50 +493,59 @@ namespace achihapi.Controllers
         internal static void FinDocHeader_DB2VM(SqlDataReader reader, FinanceDocumentUIViewModel vm)
         {
             Int32 idx = 0;
-            vm.ID = reader.GetInt32(idx++);
-            vm.DocType = reader.GetInt16(idx++);
-            vm.TranDate = reader.GetDateTime(idx++);
-            vm.TranCurr = reader.GetString(idx++);
-            if (!reader.IsDBNull(idx))
-                vm.Desp = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.ExgRate = reader.GetByte(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.ExgRate_Plan = reader.GetBoolean(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.TranCurr2 = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.ExgRate2 = reader.GetByte(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.ExgRate_Plan2 = reader.GetBoolean(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.CreatedBy = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.CreatedAt = reader.GetDateTime(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedBy = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedAt = reader.GetDateTime(idx++);
-            else
-                ++idx;
+
+            try
+            {
+                vm.ID = reader.GetInt32(idx++);
+                vm.DocType = reader.GetInt16(idx++);
+                vm.TranDate = reader.GetDateTime(idx++);
+                vm.TranCurr = reader.GetString(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.Desp = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.ExgRate = reader.GetByte(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.ExgRate_Plan = reader.GetByte(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.TranCurr2 = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.ExgRate2 = reader.GetByte(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.ExgRate_Plan2 = reader.GetByte(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+            }
+            catch(Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Error occurred: ID {0}, index {1}, {2}", vm.ID, idx, exp.Message));
+                throw exp;
+            }
         }
         #endregion
 
@@ -752,7 +775,7 @@ namespace achihapi.Controllers
                     else
                         ++idx;
                     if (!reader.IsDBNull(idx))
-                        vm.ExgRate_Plan = reader.GetBoolean(idx++);
+                        vm.ExgRate_Plan = reader.GetByte(idx++);
                     else
                         ++idx;
                     if (!reader.IsDBNull(idx))

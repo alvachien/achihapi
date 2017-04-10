@@ -19,11 +19,11 @@ namespace achihapi.ViewModels
         [StringLength(45)]
         public String Desp { get; set; }
         public Byte ExgRate { get; set; }
-        public Boolean ExgRate_Plan { get; set; }
+        public Byte ExgRate_Plan { get; set; }
         [StringLength(5)]
         public String TranCurr2 { get; set; }
         public Byte ExgRate2 { get; set; }
-        public Boolean ExgRate_Plan2 { get; set; }
+        public Byte ExgRate_Plan2 { get; set; }
         public Decimal TranAmount { get; set; }
     }
 
