@@ -26,7 +26,7 @@ namespace achihapi.Controllers
                         FROM [dbo].[t_learn_hist]
                             INNER JOIN [dbo].[t_userdetail] ON [t_learn_hist].[USERID] = [t_userdetail].[USERID]
                             INNER JOIN [dbo].[t_learn_obj] ON [t_learn_hist].[OBJECTID] = [t_learn_obj].[ID] ";
-            if (String.IsNullOrEmpty(strUser))
+            if (!String.IsNullOrEmpty(strUser))
             {
                 strSQL += " WHERE [t_learn_hist].[USERID] = N'" + strUser + "'";
             }
