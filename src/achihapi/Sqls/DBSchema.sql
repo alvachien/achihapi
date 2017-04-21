@@ -776,7 +776,10 @@ FROM            dbo.t_fin_order LEFT OUTER JOIN
 
 GO
 
-/****** Object:  View [dbo].[v_fin_document_item1]    Script Date: 2017-02-19 10:40:00 PM ******/
+/****** Object:  View [dbo].[v_fin_document_item1]    Script Date: 2017-04-21 10:40:00 PM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_document_item1]
+GO
+
 SET ANSI_NULLS ON
 GO
 
@@ -792,6 +795,7 @@ select
 		[t_fin_account].[NAME] AS [ACCOUNTNAME],
         [t_fin_document_item].[TRANTYPE] AS [TRANTYPE],
 		[t_fin_tran_type].[NAME] AS [TRANTYPENAME],
+		[t_fin_tran_type].[EXPENSE] AS [TRANTYPE_EXP],
 		[t_fin_document_item].[USECURR2] AS [USECURR2],
         (case when ([t_fin_document_item].[USECURR2] is null or [t_fin_document_item].[USECURR2] = '') then ([t_fin_document].[TRANCURR])
         else ([t_fin_document].[TRANCURR2])
@@ -841,6 +845,9 @@ select
 GO
 
 /****** Object:  View [dbo].[v_fin_document]    Script Date: 2017-02-20 12:14:08 AM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_document]
+GO
+
 SET ANSI_NULLS ON
 GO
 
@@ -898,5 +905,119 @@ as
         [t_fin_document]
 		left outer  join [t_fin_doc_type] on [t_fin_document].[DOCTYPE] = [t_fin_doc_type].[ID]
     where [t_fin_document].[DOCTYPE] = 3 OR [t_fin_document].[DOCTYPE] = 2;
+
+GO
+
+/****** Object:  View [dbo].[v_fin_grp_acnt]    Script Date: 2017-04-21 6:57:20 PM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_grp_acnt]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create view [dbo].[v_fin_grp_acnt]
+as
+select 
+        [accountid] AS [accountid],
+		round(sum([tranamount_lc]), 2) AS [balance_lc]
+    from
+        [v_fin_document_item1]
+		group by [accountid];
+GO
+
+/****** Object:  View [dbo].[v_fin_grp_acnt2]    Script Date: 2017-04-21 6:58:01 PM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_grp_acnt2]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create view [dbo].[v_fin_grp_acnt2]
+as
+select 
+        [v_fin_grp_acnt].[accountid] AS [accountid],
+		[t_fin_account_ctgy].ID AS [categoryid],
+		[t_fin_account_ctgy].ASSETFLAG AS [categoryassetflag],
+        "debitbalance" = 
+		case [t_fin_account_ctgy].ASSETFLAG
+            when 1 then [v_fin_grp_acnt].[balance_lc]
+            else 0
+        end,
+        "creditbalance" = 
+		case [t_fin_account_ctgy].ASSETFLAG
+            when  0 then -(1) * [v_fin_grp_acnt].[balance_lc]
+            else 0
+        end,
+		[v_fin_grp_acnt].[balance_lc] AS [balance_lc]
+    from
+        [v_fin_grp_acnt]
+		join [t_fin_account] ON [v_fin_grp_acnt].[accountid] = [t_fin_account].ID
+        join [t_fin_account_ctgy] ON [t_fin_account].CTGYID = t_fin_account_ctgy.ID
+
+GO
+
+/****** Object:  View [dbo].[v_fin_grp_acnt_tranexp]    Script Date: 2017-04-21 7:04:01 PM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_grp_acnt_tranexp]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create view [dbo].[v_fin_grp_acnt_tranexp]
+as
+select 
+        [accountid] AS [accountid],
+		[TRANTYPE_EXP],
+		round(sum([tranamount_lc]), 2) AS [balance_lc]
+    from
+        [v_fin_document_item1]
+		group by [accountid], [TRANTYPE_EXP];
+GO
+
+/****** Object:  View [dbo].[v_fin_report_bs]    Script Date: 2017-04-21 7:45:14 PM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_report_bs]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create view [dbo].[v_fin_report_bs]
+AS 
+SELECT tab_a.[accountid],
+        tab_a.[balance_lc] AS [debit_balance],
+        tab_b.[balance_lc] AS [credit_balance],
+        (tab_a.[balance_lc] - tab_b.[balance_lc]) AS [balance]
+ FROM (
+	SELECT [t_fin_account].[ID] AS [ACCOUNTID],
+	(case
+            when ([v_fin_grp_acnt_tranexp].[balance_lc] is not null) then [v_fin_grp_acnt_tranexp].[balance_lc]
+            else 0.0
+        end) AS [balance_lc]
+  FROM [dbo].[t_fin_account]
+	LEFT OUTER JOIN [dbo].[v_fin_grp_acnt_tranexp] ON [t_fin_account].[ID] = [v_fin_grp_acnt_tranexp].[accountid]
+		AND [v_fin_grp_acnt_tranexp].[trantype_exp] = 0 ) tab_a
+
+	JOIN 
+	( SELECT [t_fin_account].[ID] AS [ACCOUNTID],
+	(case
+            when ([v_fin_grp_acnt_tranexp].[balance_lc] is not null) then [v_fin_grp_acnt_tranexp].[balance_lc] * -1
+            else 0.0
+        end) AS [balance_lc]
+	FROM [dbo].[t_fin_account]
+	LEFT OUTER JOIN [dbo].[v_fin_grp_acnt_tranexp] ON [t_fin_account].[ID] = [v_fin_grp_acnt_tranexp].[accountid]
+		AND [v_fin_grp_acnt_tranexp].[trantype_exp] = 1 ) tab_b
+		on tab_a.ACCOUNTID = tab_b.ACCOUNTID
 
 GO
