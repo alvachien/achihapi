@@ -33,7 +33,7 @@ namespace achihapi.Controllers
 #endif
                 var usrObj = User.FindFirst(c => c.Type == "sub");
 
-                queryString = @"SELECT TOP (100) [SETID]
+                queryString = @"SELECT [SETID]
                         ,[SETVALUE]
                         ,[COMMENT]
                         ,[CREATEDBY]

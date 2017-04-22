@@ -983,7 +983,7 @@ select
 		group by [accountid], [TRANTYPE_EXP];
 GO
 
-/****** Object:  View [dbo].[v_fin_report_bs]    Script Date: 2017-04-21 7:45:14 PM ******/
+/****** Object:  View [dbo].[v_fin_report_bs]    Script Date: 2017-04-21 9:04:14 PM ******/
 DROP VIEW IF EXISTS [dbo].[v_fin_report_bs]
 GO
 
@@ -993,31 +993,44 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-create view [dbo].[v_fin_report_bs]
+CREATE VIEW [dbo].[v_fin_report_bs]
 AS 
 SELECT tab_a.[accountid],
+	   tab_a.[ACCOUNTNAME],
+	   tab_a.[ACCOUNTCTGYID],
+	   tab_a.[ACCOUNTCTGYNAME],
         tab_a.[balance_lc] AS [debit_balance],
         tab_b.[balance_lc] AS [credit_balance],
         (tab_a.[balance_lc] - tab_b.[balance_lc]) AS [balance]
- FROM (
-	SELECT [t_fin_account].[ID] AS [ACCOUNTID],
-	(case
+ FROM 
+	(SELECT [t_fin_account].[ID] AS [ACCOUNTID],
+		[t_fin_account].[NAME] AS [ACCOUNTNAME],
+		[t_fin_account_ctgy].[ID] AS [ACCOUNTCTGYID],
+		[t_fin_account_ctgy].[NAME] AS [ACCOUNTCTGYNAME],
+		(case
             when ([v_fin_grp_acnt_tranexp].[balance_lc] is not null) then [v_fin_grp_acnt_tranexp].[balance_lc]
             else 0.0
         end) AS [balance_lc]
-  FROM [dbo].[t_fin_account]
+	FROM [dbo].[t_fin_account]
+	JOIN [dbo].[t_fin_account_ctgy] ON [t_fin_account].CTGYID = [t_fin_account_ctgy].[ID]
 	LEFT OUTER JOIN [dbo].[v_fin_grp_acnt_tranexp] ON [t_fin_account].[ID] = [v_fin_grp_acnt_tranexp].[accountid]
 		AND [v_fin_grp_acnt_tranexp].[trantype_exp] = 0 ) tab_a
 
 	JOIN 
+
 	( SELECT [t_fin_account].[ID] AS [ACCOUNTID],
-	(case
+		[t_fin_account].[NAME] AS [ACCOUNTNAME],
+		[t_fin_account_ctgy].[ID] AS [ACCOUNTCTGYID],
+		[t_fin_account_ctgy].[NAME] AS [ACCOUNTCTGYNAME],
+		(case
             when ([v_fin_grp_acnt_tranexp].[balance_lc] is not null) then [v_fin_grp_acnt_tranexp].[balance_lc] * -1
             else 0.0
         end) AS [balance_lc]
 	FROM [dbo].[t_fin_account]
+	JOIN [dbo].[t_fin_account_ctgy] ON [t_fin_account].CTGYID = [t_fin_account_ctgy].[ID]
 	LEFT OUTER JOIN [dbo].[v_fin_grp_acnt_tranexp] ON [t_fin_account].[ID] = [v_fin_grp_acnt_tranexp].[accountid]
 		AND [v_fin_grp_acnt_tranexp].[trantype_exp] = 1 ) tab_b
-		on tab_a.ACCOUNTID = tab_b.ACCOUNTID
+
+	ON tab_a.[ACCOUNTID] = tab_b.[ACCOUNTID]
 
 GO
