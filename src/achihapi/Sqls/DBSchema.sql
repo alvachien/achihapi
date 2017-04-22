@@ -753,12 +753,16 @@ GO
 ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
 GO
 
-/* Appended at 2017.2.2 */
+/*
+ * Views
+ *
+ *
+ */
+
 /****** Object:  View [dbo].[v_fin_order_srule]    Script Date: 2017-02-02 4:53:55 PM ******/
 DROP VIEW IF EXISTS [dbo].[v_fin_order_srule]
 GO
 
-/****** Object:  View [dbo].[v_fin_order_srule]    Script Date: 2017-02-02 4:53:55 PM ******/
 SET ANSI_NULLS ON
 GO
 
@@ -776,8 +780,8 @@ FROM            dbo.t_fin_order LEFT OUTER JOIN
 
 GO
 
-/****** Object:  View [dbo].[v_fin_document_item1]    Script Date: 2017-04-21 10:40:00 PM ******/
-DROP VIEW IF EXISTS [dbo].[v_fin_document_item1]
+/****** Object:  View [dbo].[v_fin_document_item]    Script Date: 2017-04-22 10:49:07 AM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_document_item]
 GO
 
 SET ANSI_NULLS ON
@@ -786,13 +790,13 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE VIEW [dbo].[v_fin_document_item1]
+
+CREATE VIEW [dbo].[v_fin_document_item]
 AS 
 select 
         [t_fin_document_item].[DOCID] AS [DOCID],
         [t_fin_document_item].[ITEMID] AS [ITEMID],
         [t_fin_document_item].[ACCOUNTID] AS [ACCOUNTID],
-		[t_fin_account].[NAME] AS [ACCOUNTNAME],
         [t_fin_document_item].[TRANTYPE] AS [TRANTYPE],
 		[t_fin_tran_type].[NAME] AS [TRANTYPENAME],
 		[t_fin_tran_type].[EXPENSE] AS [TRANTYPE_EXP],
@@ -831,18 +835,52 @@ select
                 end)
         end) AS [TRANAMOUNT_LC],
         [t_fin_document_item].[CONTROLCENTERID] AS [CONTROLCENTERID],
-		[t_fin_controlcenter].[NAME] AS [CONTROLCENTERNAME],
         [t_fin_document_item].[ORDERID] AS [ORDERID],
-		[t_fin_order].[NAME] AS [ORDERNAME],
         [t_fin_document_item].[DESP] AS [DESP]
     from
         [t_fin_document_item]
 		join [t_fin_tran_type] on [t_fin_document_item].[TRANTYPE] = [t_fin_tran_type].[ID]
         left outer join [t_fin_document] on [t_fin_document_item].[DOCID] = [t_fin_document].[ID]
-		left outer join [t_fin_account] on [t_fin_document_item].[ACCOUNTID] = [t_fin_account].[ID]
-		left outer join [t_fin_controlcenter] on [t_fin_document_item].[CONTROLCENTERID] = [t_fin_controlcenter].[ID]
-		left outer join [t_fin_order] on [t_fin_document_item].[ORDERID] = [t_fin_order].[ID];
+
 GO
+
+/****** Object:  View [dbo].[v_fin_document_item1]    Script Date: 2017-04-21 10:40:00 PM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_document_item1]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_fin_document_item1]
+AS 
+select 
+        [v_fin_document_item].[DOCID],
+        [v_fin_document_item].[ITEMID],
+        [v_fin_document_item].[ACCOUNTID],
+		[t_fin_account].[NAME] AS [ACCOUNTNAME],
+        [v_fin_document_item].[TRANTYPE],
+		[v_fin_document_item].[TRANTYPENAME],
+		[v_fin_document_item].[TRANTYPE_EXP],
+		[v_fin_document_item].[USECURR2],
+        [v_fin_document_item].[TRANCURR],
+        [v_fin_document_item].[TRANAMOUNT_ORG],
+        [v_fin_document_item].[TRANAMOUNT],
+        [v_fin_document_item].[TRANAMOUNT_LC],
+        [v_fin_document_item].[CONTROLCENTERID],
+		[t_fin_controlcenter].[NAME] AS [CONTROLCENTERNAME],
+        [v_fin_document_item].[ORDERID],
+		[t_fin_order].[NAME] AS [ORDERNAME],
+        [v_fin_document_item].[DESP]
+    from
+        [v_fin_document_item]
+		left outer join [t_fin_account] on [v_fin_document_item].[ACCOUNTID] = [t_fin_account].[ID]
+		left outer join [t_fin_controlcenter] on [v_fin_document_item].[CONTROLCENTERID] = [t_fin_controlcenter].[ID]
+		left outer join [t_fin_order] on [v_fin_document_item].[ORDERID] = [t_fin_order].[ID];
+GO
+
 
 /****** Object:  View [dbo].[v_fin_document]    Script Date: 2017-02-20 12:14:08 AM ******/
 DROP VIEW IF EXISTS [dbo].[v_fin_document]
@@ -908,7 +946,7 @@ as
 
 GO
 
-/****** Object:  View [dbo].[v_fin_grp_acnt]    Script Date: 2017-04-21 6:57:20 PM ******/
+/****** Object:  View [dbo].[v_fin_grp_acnt]    Script Date: 2017-04-22 11:27:20 PM ******/
 DROP VIEW IF EXISTS [dbo].[v_fin_grp_acnt]
 GO
 
@@ -924,7 +962,7 @@ select
         [accountid] AS [accountid],
 		round(sum([tranamount_lc]), 2) AS [balance_lc]
     from
-        [v_fin_document_item1]
+        [v_fin_document_item]
 		group by [accountid];
 GO
 
@@ -962,7 +1000,7 @@ select
 
 GO
 
-/****** Object:  View [dbo].[v_fin_grp_acnt_tranexp]    Script Date: 2017-04-21 7:04:01 PM ******/
+/****** Object:  View [dbo].[v_fin_grp_acnt_tranexp]    Script Date: 2017-04-22 11:28:01 PM ******/
 DROP VIEW IF EXISTS [dbo].[v_fin_grp_acnt_tranexp]
 GO
 
@@ -979,7 +1017,7 @@ select
 		[TRANTYPE_EXP],
 		round(sum([tranamount_lc]), 2) AS [balance_lc]
     from
-        [v_fin_document_item1]
+        [v_fin_document_item]
 		group by [accountid], [TRANTYPE_EXP];
 GO
 
@@ -1032,5 +1070,186 @@ SELECT tab_a.[accountid],
 		AND [v_fin_grp_acnt_tranexp].[trantype_exp] = 1 ) tab_b
 
 	ON tab_a.[ACCOUNTID] = tab_b.[ACCOUNTID]
+
+GO
+
+/****** Object:  View [dbo].[v_fin_grp_cc]    Script Date: 2017-04-22 8:05:20 PM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_grp_cc]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_fin_grp_cc]
+AS
+SELECT
+        [controlcenterid],
+		round(sum([tranamount_lc]), 2) AS [balance_lc]
+FROM
+        [v_fin_document_item]
+		WHERE [controlcenterid] IS NOT NULL
+		GROUP BY [controlcenterid];
+
+GO
+
+/****** Object:  View [dbo].[v_fin_grp_cc_tranexp]    Script Date: 2017-04-22 8:06:29 PM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_grp_cc_tranexp]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_fin_grp_cc_tranexp]
+AS
+SELECT
+        [controlcenterid],
+		[TRANTYPE_EXP],
+		round(sum([tranamount_lc]), 2) AS [balance_lc]
+FROM
+        [v_fin_document_item]
+		WHERE [controlcenterid] IS NOT NULL
+		GROUP BY [controlcenterid], [TRANTYPE_EXP];
+
+GO
+
+/****** Object:  View [dbo].[v_fin_report_cc]    Script Date: 2017-04-22 8:11:26 PM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_report_cc]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+create view [dbo].[v_fin_report_cc]
+AS 
+SELECT tab_a.[CONTROLCENTERID],
+	   tab_a.[CONTROLCENTERNAME],
+       tab_a.[balance_lc] AS [debit_balance],
+       tab_b.[balance_lc] AS [credit_balance],
+        (tab_a.[balance_lc] - tab_b.[balance_lc]) AS [balance]
+ FROM 
+	(SELECT [t_fin_controlcenter].[ID] AS [CONTROLCENTERID],
+		[t_fin_controlcenter].[NAME] AS [CONTROLCENTERNAME],
+		(case
+            when ([v_fin_grp_cc_tranexp].[balance_lc] is not null) then [v_fin_grp_cc_tranexp].[balance_lc]
+            else 0.0
+        end) AS [balance_lc]
+	FROM [dbo].[t_fin_controlcenter]
+	LEFT OUTER JOIN [dbo].[v_fin_grp_cc_tranexp] ON [t_fin_controlcenter].[ID] = [v_fin_grp_cc_tranexp].controlcenterid
+		AND [v_fin_grp_cc_tranexp].[trantype_exp] = 0 ) tab_a
+
+	JOIN 
+
+	( SELECT [t_fin_controlcenter].[ID] AS [CONTROLCENTERID],
+		[t_fin_controlcenter].[NAME] AS [CONTROLCENTERNAME],
+		(case
+            when ([v_fin_grp_cc_tranexp].[balance_lc] is not null) then [v_fin_grp_cc_tranexp].[balance_lc] * -1
+            else 0.0
+        end) AS [balance_lc]
+	FROM [dbo].[t_fin_controlcenter]
+	LEFT OUTER JOIN [dbo].[v_fin_grp_cc_tranexp] ON [t_fin_controlcenter].[ID] = [v_fin_grp_cc_tranexp].controlcenterid
+		AND [v_fin_grp_cc_tranexp].[trantype_exp] = 1 ) tab_b
+
+	ON tab_a.[CONTROLCENTERID] = tab_b.[CONTROLCENTERID]
+
+GO
+
+/****** Object:  View [dbo].[v_fin_grp_ord]    Script Date: 2017-04-22 8:46:17 PM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_grp_ord]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_fin_grp_ord]
+AS
+SELECT
+        [orderid],
+		round(sum([tranamount_lc]), 2) AS [balance_lc]
+FROM
+        [v_fin_document_item]
+		WHERE [orderid] IS NOT NULL
+		GROUP BY [orderid];
+
+GO
+
+/****** Object:  View [dbo].[v_fin_grp_order_tranexp]    Script Date: 2017-04-22 8:47:02 PM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_grp_order_tranexp]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+CREATE VIEW [dbo].[v_fin_grp_order_tranexp]
+AS
+SELECT
+        [ORDERID],
+		[TRANTYPE_EXP],
+		round(sum([tranamount_lc]), 2) AS [balance_lc]
+FROM
+        [v_fin_document_item]
+		WHERE [ORDERID] IS NOT NULL
+		GROUP BY [ORDERID], [TRANTYPE_EXP];
+
+GO
+
+/****** Object:  View [dbo].[v_fin_report_order]    Script Date: 2017-04-22 8:47:43 PM ******/
+DROP VIEW IF EXISTS [dbo].[v_fin_report_order]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+create view [dbo].[v_fin_report_order]
+AS 
+SELECT tab_a.[ORDERID],
+	   tab_a.[ORDERNAME],
+       tab_a.[balance_lc] AS [debit_balance],
+       tab_b.[balance_lc] AS [credit_balance],
+        (tab_a.[balance_lc] - tab_b.[balance_lc]) AS [balance]
+ FROM 
+	(SELECT [t_fin_order].[ID] AS [ORDERID],
+		[t_fin_order].[NAME] AS [ORDERNAME],
+		(case
+            when ([v_fin_grp_order_tranexp].[balance_lc] is not null) then [v_fin_grp_order_tranexp].[balance_lc]
+            else 0.0
+        end) AS [balance_lc]
+	FROM [dbo].[t_fin_order]
+	LEFT OUTER JOIN [dbo].[v_fin_grp_order_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_order_tranexp].orderid
+		AND [v_fin_grp_order_tranexp].[trantype_exp] = 0 ) tab_a
+
+	JOIN 
+
+	( SELECT [t_fin_order].[ID] AS [ORDERID],
+		[t_fin_order].[NAME] AS [ORDERNAME],
+		(case
+            when ([v_fin_grp_order_tranexp].[balance_lc] is not null) then [v_fin_grp_order_tranexp].[balance_lc] * -1
+            else 0.0
+        end) AS [balance_lc]
+	FROM [dbo].[t_fin_order]
+	LEFT OUTER JOIN [dbo].[v_fin_grp_order_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_order_tranexp].orderid
+		AND [v_fin_grp_order_tranexp].[trantype_exp] = 1 ) tab_b
+
+	ON tab_a.[ORDERID] = tab_b.[ORDERID]
 
 GO
