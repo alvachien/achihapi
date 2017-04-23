@@ -33,7 +33,7 @@ namespace achihapi.Controllers
                               ,[debit_balance]
                               ,[credit_balance]
                               ,[balance]
-                          FROM [achihdb].[dbo].[v_fin_report_cc]";
+                          FROM [dbo].[v_fin_report_cc]";
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
