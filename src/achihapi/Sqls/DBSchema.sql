@@ -790,57 +790,58 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-
-CREATE VIEW [dbo].[v_fin_document_item]
+CREATE VIEW [DBO].[V_FIN_DOCUMENT_ITEM]
 AS 
-select 
-        [t_fin_document_item].[DOCID] AS [DOCID],
-        [t_fin_document_item].[ITEMID] AS [ITEMID],
-        [t_fin_document_item].[ACCOUNTID] AS [ACCOUNTID],
-        [t_fin_document_item].[TRANTYPE] AS [TRANTYPE],
-		[t_fin_tran_type].[NAME] AS [TRANTYPENAME],
-		[t_fin_tran_type].[EXPENSE] AS [TRANTYPE_EXP],
-		[t_fin_document_item].[USECURR2] AS [USECURR2],
-        (case when ([t_fin_document_item].[USECURR2] is null or [t_fin_document_item].[USECURR2] = '') then ([t_fin_document].[TRANCURR])
-        else ([t_fin_document].[TRANCURR2])
-        end) AS [TRANCURR],
-        [t_fin_document_item].[TRANAMOUNT] as [TRANAMOUNT_ORG],
-        (case
-            when ([t_fin_tran_type].[EXPENSE] = 1) then ([t_fin_document_item].[TRANAMOUNT] * -(1))
-            when ([t_fin_tran_type].[EXPENSE] = 0) then [t_fin_document_item].[TRANAMOUNT]
-        end) AS [TRANAMOUNT],
-        (case when ([t_fin_document_item].[USECURR2] is null or [t_fin_document_item].[USECURR2] = '') 
-			then (
-                case when ([t_fin_document].[EXGRATE] IS NOT NULL) then (
-					case
-						when ([t_fin_tran_type].[EXPENSE] = 1) then ([t_fin_document_item].[TRANAMOUNT] / [t_fin_document].[EXGRATE]  * -(1))
-						when ([t_fin_tran_type].[EXPENSE] = 0) then [t_fin_document_item].[TRANAMOUNT] / [t_fin_document].[EXGRATE]
-					end)
-                else (
-                case
-					when ([t_fin_tran_type].[EXPENSE] = 1) then ([t_fin_document_item].[TRANAMOUNT] * -(1))
-					when ([t_fin_tran_type].[EXPENSE] = 0) then [t_fin_document_item].[TRANAMOUNT]
-				end)
-                end)
-        else ( case when ([t_fin_document].[EXGRATE2] IS NOT NULL) then (
-					case
-						when ([t_fin_tran_type].[EXPENSE] = 1) then ([t_fin_document_item].[TRANAMOUNT] / [t_fin_document].[EXGRATE2]  * -(1))
-						when ([t_fin_tran_type].[EXPENSE] = 0) then [t_fin_document_item].[TRANAMOUNT] / [t_fin_document].[EXGRATE2]
-					end)
-                else (
-					case
-						when ([t_fin_tran_type].[EXPENSE] = 1) then ([t_fin_document_item].[TRANAMOUNT] * -(1))
-						when ([t_fin_tran_type].[EXPENSE] = 0) then [t_fin_document_item].[TRANAMOUNT]
-					end)
-                end)
-        end) AS [TRANAMOUNT_LC],
-        [t_fin_document_item].[CONTROLCENTERID] AS [CONTROLCENTERID],
-        [t_fin_document_item].[ORDERID] AS [ORDERID],
-        [t_fin_document_item].[DESP] AS [DESP]
-    from
-        [t_fin_document_item]
-		join [t_fin_tran_type] on [t_fin_document_item].[TRANTYPE] = [t_fin_tran_type].[ID]
-        left outer join [t_fin_document] on [t_fin_document_item].[DOCID] = [t_fin_document].[ID]
+SELECT 
+        [T_FIN_DOCUMENT_ITEM].[DOCID],
+        [T_FIN_DOCUMENT_ITEM].[ITEMID],
+		[T_FIN_DOCUMENT].[TRANDATE],
+		[T_FIN_DOCUMENT].[DESP] AS [DOCDESP],
+        [T_FIN_DOCUMENT_ITEM].[ACCOUNTID],
+        [T_FIN_DOCUMENT_ITEM].[TRANTYPE],
+		[T_FIN_TRAN_TYPE].[NAME] AS [TRANTYPENAME],
+		[T_FIN_TRAN_TYPE].[EXPENSE] AS [TRANTYPE_EXP],
+		[T_FIN_DOCUMENT_ITEM].[USECURR2],
+        (CASE WHEN ([T_FIN_DOCUMENT_ITEM].[USECURR2] IS NULL OR [T_FIN_DOCUMENT_ITEM].[USECURR2] = '') THEN ([T_FIN_DOCUMENT].[TRANCURR])
+        ELSE ([T_FIN_DOCUMENT].[TRANCURR2])
+        END) AS [TRANCURR],
+        [T_FIN_DOCUMENT_ITEM].[TRANAMOUNT] AS [TRANAMOUNT_ORG],
+        (CASE
+            WHEN ([T_FIN_TRAN_TYPE].[EXPENSE] = 1) THEN ([T_FIN_DOCUMENT_ITEM].[TRANAMOUNT] * -1)
+            WHEN ([T_FIN_TRAN_TYPE].[EXPENSE] = 0) THEN [T_FIN_DOCUMENT_ITEM].[TRANAMOUNT]
+        END) AS [TRANAMOUNT],
+        (CASE WHEN ([T_FIN_DOCUMENT_ITEM].[USECURR2] IS NULL OR [T_FIN_DOCUMENT_ITEM].[USECURR2] = '') 
+			THEN (
+                CASE WHEN ([T_FIN_DOCUMENT].[EXGRATE] IS NOT NULL) THEN (
+					CASE
+						WHEN ([T_FIN_TRAN_TYPE].[EXPENSE] = 1) THEN ([T_FIN_DOCUMENT_ITEM].[TRANAMOUNT] / [T_FIN_DOCUMENT].[EXGRATE]  * -1)
+						WHEN ([T_FIN_TRAN_TYPE].[EXPENSE] = 0) THEN [T_FIN_DOCUMENT_ITEM].[TRANAMOUNT] / [T_FIN_DOCUMENT].[EXGRATE]
+					END)
+                ELSE (
+                CASE
+					WHEN ([T_FIN_TRAN_TYPE].[EXPENSE] = 1) THEN ([T_FIN_DOCUMENT_ITEM].[TRANAMOUNT] * -1)
+					WHEN ([T_FIN_TRAN_TYPE].[EXPENSE] = 0) THEN [T_FIN_DOCUMENT_ITEM].[TRANAMOUNT]
+				END)
+                END)
+        ELSE ( CASE WHEN ([T_FIN_DOCUMENT].[EXGRATE2] IS NOT NULL) THEN (
+					CASE
+						WHEN ([T_FIN_TRAN_TYPE].[EXPENSE] = 1) THEN ([T_FIN_DOCUMENT_ITEM].[TRANAMOUNT] / [T_FIN_DOCUMENT].[EXGRATE2] * -1)
+						WHEN ([T_FIN_TRAN_TYPE].[EXPENSE] = 0) THEN [T_FIN_DOCUMENT_ITEM].[TRANAMOUNT] / [T_FIN_DOCUMENT].[EXGRATE2]
+					END)
+                ELSE (
+					CASE
+						WHEN ([T_FIN_TRAN_TYPE].[EXPENSE] = 1) THEN ([T_FIN_DOCUMENT_ITEM].[TRANAMOUNT] * -1)
+						WHEN ([T_FIN_TRAN_TYPE].[EXPENSE] = 0) THEN [T_FIN_DOCUMENT_ITEM].[TRANAMOUNT]
+					END)
+                END)
+        END) AS [TRANAMOUNT_LC],
+        [T_FIN_DOCUMENT_ITEM].[CONTROLCENTERID],
+        [T_FIN_DOCUMENT_ITEM].[ORDERID],
+        [T_FIN_DOCUMENT_ITEM].[DESP]
+    FROM
+        [T_FIN_DOCUMENT_ITEM]
+		JOIN [T_FIN_TRAN_TYPE] ON [T_FIN_DOCUMENT_ITEM].[TRANTYPE] = [T_FIN_TRAN_TYPE].[ID]
+        LEFT OUTER JOIN [T_FIN_DOCUMENT] ON [T_FIN_DOCUMENT_ITEM].[DOCID] = [T_FIN_DOCUMENT].[ID]
 
 GO
 
@@ -854,33 +855,34 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE VIEW [dbo].[v_fin_document_item1]
+CREATE VIEW [DBO].[V_FIN_DOCUMENT_ITEM1]
 AS 
-select 
-        [v_fin_document_item].[DOCID],
-        [v_fin_document_item].[ITEMID],
-        [v_fin_document_item].[ACCOUNTID],
-		[t_fin_account].[NAME] AS [ACCOUNTNAME],
-        [v_fin_document_item].[TRANTYPE],
-		[v_fin_document_item].[TRANTYPENAME],
-		[v_fin_document_item].[TRANTYPE_EXP],
-		[v_fin_document_item].[USECURR2],
-        [v_fin_document_item].[TRANCURR],
-        [v_fin_document_item].[TRANAMOUNT_ORG],
-        [v_fin_document_item].[TRANAMOUNT],
-        [v_fin_document_item].[TRANAMOUNT_LC],
-        [v_fin_document_item].[CONTROLCENTERID],
-		[t_fin_controlcenter].[NAME] AS [CONTROLCENTERNAME],
-        [v_fin_document_item].[ORDERID],
-		[t_fin_order].[NAME] AS [ORDERNAME],
-        [v_fin_document_item].[DESP]
-    from
-        [v_fin_document_item]
-		left outer join [t_fin_account] on [v_fin_document_item].[ACCOUNTID] = [t_fin_account].[ID]
-		left outer join [t_fin_controlcenter] on [v_fin_document_item].[CONTROLCENTERID] = [t_fin_controlcenter].[ID]
-		left outer join [t_fin_order] on [v_fin_document_item].[ORDERID] = [t_fin_order].[ID];
+SELECT 
+        [V_FIN_DOCUMENT_ITEM].[DOCID],
+        [V_FIN_DOCUMENT_ITEM].[ITEMID],
+		[V_FIN_DOCUMENT_ITEM].[TRANDATE],
+		[V_FIN_DOCUMENT_ITEM].[DOCDESP],
+        [V_FIN_DOCUMENT_ITEM].[ACCOUNTID],
+		[T_FIN_ACCOUNT].[NAME] AS [ACCOUNTNAME],
+        [V_FIN_DOCUMENT_ITEM].[TRANTYPE],
+		[V_FIN_DOCUMENT_ITEM].[TRANTYPENAME],
+		[V_FIN_DOCUMENT_ITEM].[TRANTYPE_EXP],
+		[V_FIN_DOCUMENT_ITEM].[USECURR2],
+        [V_FIN_DOCUMENT_ITEM].[TRANCURR],
+        [V_FIN_DOCUMENT_ITEM].[TRANAMOUNT_ORG],
+        [V_FIN_DOCUMENT_ITEM].[TRANAMOUNT],
+        [V_FIN_DOCUMENT_ITEM].[TRANAMOUNT_LC],
+        [V_FIN_DOCUMENT_ITEM].[CONTROLCENTERID],
+		[T_FIN_CONTROLCENTER].[NAME] AS [CONTROLCENTERNAME],
+        [V_FIN_DOCUMENT_ITEM].[ORDERID],
+		[T_FIN_ORDER].[NAME] AS [ORDERNAME],
+        [V_FIN_DOCUMENT_ITEM].[DESP]
+    FROM
+        [V_FIN_DOCUMENT_ITEM]
+		LEFT OUTER JOIN [T_FIN_ACCOUNT] ON [V_FIN_DOCUMENT_ITEM].[ACCOUNTID] = [T_FIN_ACCOUNT].[ID]
+		LEFT OUTER JOIN [T_FIN_CONTROLCENTER] ON [V_FIN_DOCUMENT_ITEM].[CONTROLCENTERID] = [T_FIN_CONTROLCENTER].[ID]
+		LEFT OUTER JOIN [T_FIN_ORDER] ON [V_FIN_DOCUMENT_ITEM].[ORDERID] = [T_FIN_ORDER].[ID];
 GO
-
 
 /****** Object:  View [dbo].[v_fin_document]    Script Date: 2017-02-20 12:14:08 AM ******/
 DROP VIEW IF EXISTS [dbo].[v_fin_document]

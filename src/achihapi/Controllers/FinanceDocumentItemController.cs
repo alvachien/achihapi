@@ -17,46 +17,44 @@ namespace achihapi.Controllers
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery]Int32? acntid = null, Int32? ccid = null, Int32? ordid = null)
         {
-            BaseListViewModel<FinanceDocumentUIViewModel> listVMs = new BaseListViewModel<FinanceDocumentUIViewModel>();
+            List<FinanceDocumentItemWithBalanceUIViewModel> listVMs = new List<FinanceDocumentItemWithBalanceUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
 
+            if (!acntid.HasValue
+                && !ccid.HasValue
+                && !ordid.HasValue)
+            {
+                return BadRequest("No inputs!");
+            }
+
             try
             {
-                //queryString = SqlUtility.getFinanceDocListQueryString(top, skip);
+                if (acntid.HasValue)
+                    queryString = SqlUtility.getFinDocItemAccountView(acntid.Value);
+                else if (ccid.HasValue)
+                    queryString = SqlUtility.getFinDocItemControlCenterView(ccid.Value);
+                else if (ordid.HasValue)
+                    queryString = SqlUtility.getFinDocItemOrderView(ordid.Value);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                Int32 nRstBatch = 0;
                 while (reader.HasRows)
                 {
-                    if (nRstBatch == 0)
+                    if (reader.HasRows)
                     {
                         while (reader.Read())
                         {
-                            listVMs.TotalCount = reader.GetInt32(0);
-                            break;
+                            FinanceDocumentItemWithBalanceUIViewModel avm = new FinanceDocumentItemWithBalanceUIViewModel();
+                            SqlUtility.FinDocItemWithBalanceList_DB2VM(reader, avm);
+
+                            listVMs.Add(avm);
                         }
                     }
-                    else
-                    {
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                FinanceDocumentUIViewModel avm = new FinanceDocumentUIViewModel();
-                                SqlUtility.FinDocList_DB2VM(reader, avm);
-
-                                listVMs.Add(avm);
-                            }
-                        }
-                    }
-                    ++nRstBatch;
-
                     reader.NextResult();
                 }
             }

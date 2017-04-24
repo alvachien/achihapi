@@ -748,6 +748,198 @@ namespace achihapi.Controllers
         }
         #endregion
 
+        #region Finance Document item - Account View
+        internal static String getFinDocItemAccountView(Int32 nAcntID)
+        {
+            return @"WITH A2 AS (
+                    SELECT
+	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
+	                      ,[DOCID]
+                          ,[ITEMID]
+                          ,[TRANDATE]
+                          ,[DOCDESP]
+                          ,[ACCOUNTID]
+                          ,[ACCOUNTNAME]
+                          ,[TRANTYPE]
+                          ,[TRANTYPENAME]
+                          ,[TRANTYPE_EXP]
+                          ,[USECURR2]
+                          ,[TRANCURR]
+                          ,[TRANAMOUNT_ORG]
+                          ,[TRANAMOUNT]
+                          ,[TRANAMOUNT_LC]
+                          ,[CONTROLCENTERID]
+                          ,[CONTROLCENTERNAME]
+                          ,[ORDERID]
+                          ,[ORDERNAME]
+                          ,[DESP]
+                      FROM [dbo].[v_fin_document_item1]
+                      WHERE [ACCOUNTID] = " + nAcntID.ToString() +
+                    @")
+                    SELECT [DOCID]
+                          ,[ITEMID]
+                          ,[TRANDATE]
+                          ,[DOCDESP]
+                          ,[ACCOUNTID]
+                          ,[ACCOUNTNAME]
+                          ,[TRANTYPE]
+                          ,[TRANTYPENAME]
+                          ,[TRANTYPE_EXP]
+                          ,[USECURR2]
+                          ,[TRANCURR]
+                          ,[TRANAMOUNT_ORG]
+                          ,[TRANAMOUNT]
+                          ,[TRANAMOUNT_LC]
+                          ,[CONTROLCENTERID]
+                          ,[CONTROLCENTERNAME]
+                          ,[ORDERID]
+                          ,[ORDERNAME]
+                          ,[DESP]
+                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1";
+        }
+
+        internal static void FinDocItemWithBalanceList_DB2VM(SqlDataReader reader, FinanceDocumentItemWithBalanceUIViewModel avm)
+        {
+            avm.DocID = reader.GetInt32(0);
+            avm.ItemID = reader.GetInt32(1);
+            avm.TranDate = reader.GetDateTime(2);
+            if (!reader.IsDBNull(3))
+                avm.DocDesp = reader.GetString(3);
+            avm.AccountID = reader.GetInt32(4);
+            if (!reader.IsDBNull(5))
+                avm.AccountName = reader.GetString(5);
+            if (!reader.IsDBNull(6))
+                avm.TranType = reader.GetInt32(6);
+            if (!reader.IsDBNull(7))
+                avm.TranTypeName = reader.GetString(7);
+            if (!reader.IsDBNull(8))
+                avm.TranType_Exp = reader.GetBoolean(8);
+            if (!reader.IsDBNull(9))
+                avm.UseCurr2 = reader.GetBoolean(9);
+            if (!reader.IsDBNull(10))
+                avm.TranCurr = reader.GetString(10);
+            if (!reader.IsDBNull(11))
+                avm.TranAmount_Org = reader.GetDecimal(11);
+            if (!reader.IsDBNull(12))
+                avm.TranAmount = reader.GetDecimal(12);
+            if (!reader.IsDBNull(13))
+                avm.TranAmount_LC = reader.GetDecimal(13);
+            if (!reader.IsDBNull(14))
+                avm.ControlCenterID = reader.GetInt32(14);
+            if (!reader.IsDBNull(15))
+                avm.ControlCenterName = reader.GetString(15);
+            if (!reader.IsDBNull(16))
+                avm.OrderID = reader.GetInt32(16);
+            if (!reader.IsDBNull(17))
+                avm.OrderName = reader.GetString(17);
+            if (!reader.IsDBNull(18))
+                avm.Desp = reader.GetString(18);
+            avm.Balance = reader.GetDecimal(19);
+        }
+        #endregion
+
+        #region Finance Document item - Control center View
+        internal static String getFinDocItemControlCenterView(Int32 nCCID)
+        {
+            return @"WITH A2 AS (
+                    SELECT
+	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
+	                      ,[DOCID]
+                          ,[ITEMID]
+                          ,[TRANDATE]
+                          ,[DOCDESP]
+                          ,[ACCOUNTID]
+                          ,[ACCOUNTNAME]
+                          ,[TRANTYPE]
+                          ,[TRANTYPENAME]
+                          ,[TRANTYPE_EXP]
+                          ,[USECURR2]
+                          ,[TRANCURR]
+                          ,[TRANAMOUNT_ORG]
+                          ,[TRANAMOUNT]
+                          ,[TRANAMOUNT_LC]
+                          ,[CONTROLCENTERID]
+                          ,[CONTROLCENTERNAME]
+                          ,[ORDERID]
+                          ,[ORDERNAME]
+                          ,[DESP]
+                      FROM [dbo].[v_fin_document_item1]
+                      WHERE [CONTROLCENTERID] = " + nCCID.ToString() +
+                    @")
+                    SELECT [DOCID]
+                          ,[ITEMID]
+                          ,[TRANDATE]
+                          ,[DOCDESP]
+                          ,[ACCOUNTID]
+                          ,[ACCOUNTNAME]
+                          ,[TRANTYPE]
+                          ,[TRANTYPENAME]
+                          ,[TRANTYPE_EXP]
+                          ,[USECURR2]
+                          ,[TRANCURR]
+                          ,[TRANAMOUNT_ORG]
+                          ,[TRANAMOUNT]
+                          ,[TRANAMOUNT_LC]
+                          ,[CONTROLCENTERID]
+                          ,[CONTROLCENTERNAME]
+                          ,[ORDERID]
+                          ,[ORDERNAME]
+                          ,[DESP]
+                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1";
+        }
+        #endregion
+
+        #region Finance Document item - Control center View
+        internal static String getFinDocItemOrderView(Int32 nOrderID)
+        {
+            return @"WITH A2 AS (
+                    SELECT
+	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
+	                      ,[DOCID]
+                          ,[ITEMID]
+                          ,[TRANDATE]
+                          ,[DOCDESP]
+                          ,[ACCOUNTID]
+                          ,[ACCOUNTNAME]
+                          ,[TRANTYPE]
+                          ,[TRANTYPENAME]
+                          ,[TRANTYPE_EXP]
+                          ,[USECURR2]
+                          ,[TRANCURR]
+                          ,[TRANAMOUNT_ORG]
+                          ,[TRANAMOUNT]
+                          ,[TRANAMOUNT_LC]
+                          ,[CONTROLCENTERID]
+                          ,[CONTROLCENTERNAME]
+                          ,[ORDERID]
+                          ,[ORDERNAME]
+                          ,[DESP]
+                      FROM [dbo].[v_fin_document_item1]
+                      WHERE [CONTROLCENTERID] = " + nOrderID.ToString() +
+                    @")
+                    SELECT [DOCID]
+                          ,[ITEMID]
+                          ,[TRANDATE]
+                          ,[DOCDESP]
+                          ,[ACCOUNTID]
+                          ,[ACCOUNTNAME]
+                          ,[TRANTYPE]
+                          ,[TRANTYPENAME]
+                          ,[TRANTYPE_EXP]
+                          ,[USECURR2]
+                          ,[TRANCURR]
+                          ,[TRANAMOUNT_ORG]
+                          ,[TRANAMOUNT]
+                          ,[TRANAMOUNT_LC]
+                          ,[CONTROLCENTERID]
+                          ,[CONTROLCENTERNAME]
+                          ,[ORDERID]
+                          ,[ORDERNAME]
+                          ,[DESP]
+                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1";
+        }
+        #endregion
+
         internal static void FinDocDB2VM(SqlDataReader reader, BaseListViewModel<FinanceDocumentUIViewModel> listVMs)
         {
             Int32 nDocID = -1;
