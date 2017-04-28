@@ -13,9 +13,23 @@ namespace achihapi.ViewModels
         [StringLength(50)]
         public String Name { get; set; }
         [Required]
-        public DateTime StartTimePoint { get; set; }
+        public String StartTimePoint
+        {
+            get { return this._startTimePoint.ToString(HIHAPIConstants.DateFormatPattern); }
+            set { this._startTimePoint = DateTime.ParseExact(value, HIHAPIConstants.DateFormatPattern, null); }
+        }
+        private DateTime _startTimePoint;
+        public DateTime StartTimePoint_DT {
+            get { return this._startTimePoint; }
+        }
         [Required]
-        public DateTime EndTimePoint { get; set; }
+        public String EndTimePoint
+        {
+            get { return this._endTimePoint.ToString(HIHAPIConstants.DateFormatPattern); }
+            set { this._endTimePoint = DateTime.ParseExact(value, HIHAPIConstants.DateFormatPattern, null); }
+        }
+        private DateTime _endTimePoint;
+        public DateTime EndTimePoint_DT { get { return this._endTimePoint; } }
         public String Content { get; set; }
         public Boolean IsPublic { get; set; }
         [StringLength(40)]
