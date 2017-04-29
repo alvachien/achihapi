@@ -61,7 +61,9 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            return new ObjectResult(listVm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(listVm, setting);
         }
 
         private void onDB2VM(SqlDataReader reader, LearnAwardViewModel vm)

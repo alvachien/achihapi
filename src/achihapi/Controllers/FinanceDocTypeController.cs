@@ -73,7 +73,9 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            return new ObjectResult(listVMs);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(listVMs, setting);
         }
 
         // GET api/financedoctype/5
@@ -129,7 +131,9 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            return new ObjectResult(vm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(vm, setting);
         }
 
         // POST api/financedoctype

@@ -75,7 +75,9 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            return new ObjectResult(listVMs);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(listVMs, setting);
         }
 
         // GET api/financedocument/5
@@ -99,7 +101,6 @@ namespace achihapi.Controllers
                 SqlDataReader reader = cmd.ExecuteReader();
 
                 Int32 nRstBatch = 0;
-                Int32 idx = 0;
                 while (reader.HasRows)
                 {
                     if (nRstBatch == 0)
@@ -246,7 +247,9 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
 
             vm.ID = nNewDocID;
-            return new ObjectResult(vm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(vm, setting);
         }
 
         // PUT api/financedocument/5

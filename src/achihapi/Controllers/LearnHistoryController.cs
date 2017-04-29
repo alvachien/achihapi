@@ -87,7 +87,9 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            return new ObjectResult(listVm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(listVm, setting);
         }
 
         private string getSQLString(Boolean bListMode, Int32? nTop, Int32? nSkip, String userFilter)
@@ -228,7 +230,9 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
 
             // Only return the meaningful object
-            return new ObjectResult(vm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(vm, setting);
         }
 
         // POST api/learnhistory, create a learn history
@@ -373,7 +377,9 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            return new ObjectResult(vm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(vm, setting);
         }
 
         // PUT api/learnhistory/5_a, change
@@ -485,7 +491,9 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            return new ObjectResult(vm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(vm, setting);
         }
 
         // DELETE api/learnhistory/5

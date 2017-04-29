@@ -68,7 +68,9 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            return new ObjectResult(listVMs);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(listVMs, setting);
         }
 
         // GET api/userdetail/id5
@@ -147,7 +149,9 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            return new ObjectResult(vm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(vm, setting);
         }
 
         // POST api/userdetail
@@ -237,7 +241,9 @@ namespace achihapi.Controllers
                 return StatusCode(500, "DB operation is not succeed.");
             }
 
-            return new ObjectResult(value);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(value, setting);
         }
 
         // PUT api/userdetail/5
@@ -322,7 +328,9 @@ namespace achihapi.Controllers
                 return StatusCode(500, "DB operation is not succeed.");
             }
 
-            return new ObjectResult(value);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(value, setting);
         }
 
         // DELETE api/userdetail/5

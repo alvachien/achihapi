@@ -10,36 +10,10 @@ namespace achihapi.ViewModels
     {
         [StringLength(40)]
         public String CreatedBy { get; set;  }
-        private DateTime _createdAt;
+        public DateTime CreatedAt { get; set; }
         [StringLength(40)]
         public String UpdatedBy { get; set; }
-        private DateTime _updatedAt;
-
-        public DateTime CreatedAt_DT { get { return this._createdAt; } }
-        public DateTime UpdatedAt_DT { get { return this._updatedAt; } }
-
-        public String CreatedAt
-        {
-            get
-            {
-                return this._createdAt.ToString(HIHAPIConstants.DateFormatPattern);
-            }
-            set
-            {
-                this._createdAt = DateTime.ParseExact(value, HIHAPIConstants.DateFormatPattern, null);
-            }
-        }
-        public String UpdatedAt
-        {
-            get
-            {
-                return this._updatedAt.ToString(HIHAPIConstants.DateFormatPattern);
-            }
-            set
-            {
-                this._updatedAt = DateTime.ParseExact(value, HIHAPIConstants.DateFormatPattern, null);
-            }
-        }
+        public DateTime UpdatedAt { get; set; }
     }
 
     public class BaseListViewModel<T> where T : BaseViewModel

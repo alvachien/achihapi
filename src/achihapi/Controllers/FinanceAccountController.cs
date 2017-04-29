@@ -93,7 +93,9 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            return new ObjectResult(listVm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(listVm, setting);
         }
 
         // GET api/financeaccount/5
@@ -165,7 +167,9 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
 
             // Only return the meaningful object
-            return new ObjectResult(vmAccount);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(vmAccount, setting);
         }
 
         // POST api/financeaccount
@@ -295,7 +299,9 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
 
             vm.ID = nNewID;
-            return new ObjectResult(vm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(vm, setting);
         }
 
         // PUT api/financeaccount/5
@@ -397,7 +403,9 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            return new ObjectResult(vm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(vm, setting);
         }
 
         // DELETE api/financeaccount/5

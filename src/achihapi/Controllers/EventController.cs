@@ -87,7 +87,9 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            return new ObjectResult(listVm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(listVm, setting);
         }
 
         private void onDB2VM(SqlDataReader reader, EventViewModel vm)
@@ -180,7 +182,9 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            return new ObjectResult(vm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(vm, setting);
         }
 
         // POST api/event
@@ -317,34 +321,36 @@ namespace achihapi.Controllers
             }
 
             vm.ID = nNewID;
-            return new ObjectResult(vm);
+            var setting = new Newtonsoft.Json.JsonSerializerSettings();
+            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            return new JsonResult(vm, setting);
         }
 
         // PUT api/event/5
         [HttpPut("{id}")]
         public void Put(int id, [FromBody]string value)
         {
-            String queryString = @"UPDATE [dbo].[t_event]
-                   SET [Name] = <Name, nvarchar(50),>
-                      ,[StartTime] = <StartTime, datetime,>
-                      ,[EndTime] = <EndTime, datetime,>
-                      ,[Content] = <Content, nvarchar(max),>
-                      ,[IsPublic] = <IsPublic, bit,>
-                      ,[Owner] = <Owner, nvarchar(40),>
-                      ,[RefID] = <RefID, int,>
-                      ,[CREATEDBY] = <CREATEDBY, nvarchar(40),>
-                      ,[CREATEDAT] = <CREATEDAT, date,>
-                      ,[UPDATEDBY] = <UPDATEDBY, nvarchar(40),>
-                      ,[UPDATEDAT] = <UPDATEDAT, date,>
-                 WHERE <Search Conditions,,>";
+            //String queryString = @"UPDATE [dbo].[t_event]
+            //       SET [Name] = <Name, nvarchar(50),>
+            //          ,[StartTime] = <StartTime, datetime,>
+            //          ,[EndTime] = <EndTime, datetime,>
+            //          ,[Content] = <Content, nvarchar(max),>
+            //          ,[IsPublic] = <IsPublic, bit,>
+            //          ,[Owner] = <Owner, nvarchar(40),>
+            //          ,[RefID] = <RefID, int,>
+            //          ,[CREATEDBY] = <CREATEDBY, nvarchar(40),>
+            //          ,[CREATEDAT] = <CREATEDAT, date,>
+            //          ,[UPDATEDBY] = <UPDATEDBY, nvarchar(40),>
+            //          ,[UPDATEDAT] = <UPDATEDAT, date,>
+            //     WHERE <Search Conditions,,>";
         }
 
         // DELETE api/event/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
-            String queryString = @"DELETE FROM [dbo].[t_event]
-                WHERE <Search Conditions,,>";
+            //String queryString = @"DELETE FROM [dbo].[t_event]
+            //    WHERE <Search Conditions,,>";
         }
     }
 }
