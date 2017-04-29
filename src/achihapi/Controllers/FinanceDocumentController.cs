@@ -77,6 +77,7 @@ namespace achihapi.Controllers
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings();
             setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
             return new JsonResult(listVMs, setting);
         }
 
@@ -249,6 +250,7 @@ namespace achihapi.Controllers
             vm.ID = nNewDocID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings();
             setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
             return new JsonResult(vm, setting);
         }
 

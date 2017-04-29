@@ -89,6 +89,7 @@ namespace achihapi.Controllers
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings();
             setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
             return new JsonResult(listVm, setting);
         }
 
@@ -232,6 +233,7 @@ namespace achihapi.Controllers
             // Only return the meaningful object
             var setting = new Newtonsoft.Json.JsonSerializerSettings();
             setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
             return new JsonResult(vm, setting);
         }
 
@@ -379,6 +381,7 @@ namespace achihapi.Controllers
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings();
             setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
             return new JsonResult(vm, setting);
         }
 
@@ -493,6 +496,7 @@ namespace achihapi.Controllers
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings();
             setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
             return new JsonResult(vm, setting);
         }
 

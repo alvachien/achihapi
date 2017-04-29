@@ -76,6 +76,7 @@ namespace achihapi.Controllers
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings();
             setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
             return new JsonResult(listVMs, setting);
         }
 
@@ -142,6 +143,7 @@ namespace achihapi.Controllers
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings();
             setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
             return new JsonResult(vm, setting);
         }
 
@@ -327,6 +329,7 @@ namespace achihapi.Controllers
             vm.ID = nNewID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings();
             setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
+            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
             return new JsonResult(vm, setting);
         }
 
@@ -466,9 +469,9 @@ namespace achihapi.Controllers
                 {
                     FinanceOrderSRuleUIViewModel srvm = new FinanceOrderSRuleUIViewModel();
 
-                    idx = 0;
                     while (reader.Read())
                     {
+                        idx = 0;
                         srvm.OrdID = reader.GetInt32(idx++);
                         srvm.RuleID = reader.GetInt32(idx++);
                         srvm.ControlCenterID = reader.GetInt32(idx++);
@@ -483,9 +486,9 @@ namespace achihapi.Controllers
                         }
                         else
                             ++idx;
-                    }
 
-                    vm.SRuleList.Add(srvm);
+                        vm.SRuleList.Add(srvm);
+                    }
                 }
                 ++nRstBatch;
 
