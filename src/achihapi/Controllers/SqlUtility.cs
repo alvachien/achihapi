@@ -245,7 +245,8 @@ namespace achihapi.Controllers
                                 ,[v_fin_document].[UPDATEDBY]
                                 ,[v_fin_document].[UPDATEDAT]
                                 ,[v_fin_document].[TRANAMOUNT]
-                            FROM [dbo].[v_fin_document]";
+                            FROM [dbo].[v_fin_document]
+                            ORDER BY [TRANDATE] DESC";
 
             return strSQL;
         }

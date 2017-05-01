@@ -144,12 +144,6 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
                 var usrName = User.FindFirst(c => c.Type == "sub").Value;
 
                 await conn.OpenAsync();
@@ -157,20 +151,21 @@ namespace achihapi.Controllers
 
                 SqlCommand cmd = null;
 
-
                 try
                 {
+                    // First, craete the doc header => nNewDocID
+                    queryString = SqlUtility.getFinDocHeaderInsertString();
                     cmd = new SqlCommand(queryString, conn);
                     cmd.Transaction = tran;
 
-                    // First, craete the doc header => nNewDocID
-                    queryString = SqlUtility.getFinDocHeaderInsertString();
                     SqlUtility.bindFinDocHeaderParameter(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
                     Int32 nRst = await cmd.ExecuteNonQueryAsync();
                     nNewDocID = (Int32)idparam.Value;
+                    cmd.Dispose();
+                    cmd = null;
 
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
@@ -181,6 +176,9 @@ namespace achihapi.Controllers
                         SqlUtility.bindFinDocItemParameter(cmd2, ivm, nNewDocID);
 
                         await cmd2.ExecuteNonQueryAsync();
+
+                        cmd2.Dispose();
+                        cmd2 = null;
                     }
 
                     // Third, go to the account creation => nNewAccountID
@@ -195,6 +193,8 @@ namespace achihapi.Controllers
 
                     nRst = await cmd.ExecuteNonQueryAsync();
                     Int32 nNewAccountID = (Int32)idparam2.Value;
+                    cmd.Dispose();
+                    cmd = null;
 
                     // Fourth, creat the ADP part
                     queryString = SqlUtility.getFinanceAccountADPInsertString();
@@ -203,6 +203,8 @@ namespace achihapi.Controllers
 
                     SqlUtility.bindFinAccountADPParameter(cmd, vm.AccountVM.AdvancePaymentInfo, nNewDocID, nNewAccountID, usrName);
                     nRst = await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
 
                     // Fifth, create template docs
                     foreach (FinanceTmpDocDPViewModel avm in vm.TmpDocs)
@@ -214,8 +216,10 @@ namespace achihapi.Controllers
 
                         SqlUtility.bindFinTmpDocADPParameter(cmd, avm, nNewAccountID, usrName);
                         await cmd.ExecuteNonQueryAsync();
-                    }
 
+                        cmd.Dispose();
+                        cmd = null;
+                    }
 
                     tran.Commit();
                 }
@@ -225,6 +229,7 @@ namespace achihapi.Controllers
                     System.Diagnostics.Debug.WriteLine(exp.Message);
 #endif
                     tran.Rollback();
+                    bError = true;
                 }
             }
             catch (Exception exp)
