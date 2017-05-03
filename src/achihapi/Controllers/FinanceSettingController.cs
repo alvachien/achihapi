@@ -87,5 +87,19 @@ namespace achihapi.Controllers
             setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
             return new JsonResult(listVm, setting);
         }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> CreateEntry([FromBody]FinanceSettingViewModel vm)
+        {
+            return NoContent();
+        }
+
+        [HttpPut]
+        [Authorize]
+        public async Task<IActionResult> UpdateEntry([FromBody]FinanceSettingViewModel vm)
+        {
+            return NoContent();
+        }
     }
 }
