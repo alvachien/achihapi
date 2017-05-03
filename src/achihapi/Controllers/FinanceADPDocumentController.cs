@@ -128,9 +128,9 @@ namespace achihapi.Controllers
             // Header check!
 
             // Check the items
-            if (vm.Items.Count <= 0)
+            if (vm.Items.Count <= 0 || vm.TmpDocs.Count <= 0)
             {
-                return BadRequest("No item has been assigned yet");
+                return BadRequest("No item or no template docs");
             }
 
             // Item check!

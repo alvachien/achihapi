@@ -28,7 +28,7 @@ namespace achihapi.ViewModels
     public class FinanceAccountExtDPViewModel
     {
         public Int32 AccountID { get; set; }
-        public Boolean Direct { get; set; }
+        public Byte Direct { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public Byte RptType { get; set; }
