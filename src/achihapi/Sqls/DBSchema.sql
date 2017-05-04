@@ -1,4 +1,9 @@
-﻿/****** Object:  Table [dbo].[t_homedef]    Script Date: 2017-05-04 5:54:18 PM ******/
+﻿/*
+ * Database Tables
+ *
+ */
+
+/****** Object:  Table [dbo].[t_homedef]    Script Date: 2017-05-04 8:22:35 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -11,22 +16,16 @@ CREATE TABLE [dbo].[t_homedef](
  CONSTRAINT [PK_t_homedef] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+ CONSTRAINT [UK_t_homedef_NAME] UNIQUE NONCLUSTERED 
+(
+	[NAME] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
 GO
 
-CREATE UNIQUE NONCLUSTERED INDEX [UK_t_homedef_name] ON [dbo].[t_homedef]
-(
-	[NAME] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-
-GO
-
-
-/****** Object:  Table [dbo].[t_homemem]    Script Date: 2017-05-04 5:54:18 PM ******/
+/****** Object:  Table [dbo].[t_homemem]    Script Date: 2017-05-04 8:43:09 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -34,8 +33,28 @@ GO
 CREATE TABLE [dbo].[t_homemem](
 	[HID] [int] NOT NULL,
 	[USER] [nvarchar](50) NOT NULL,
-	[USERID] [nvarchar](40) NULL,
+	[USERID] [nvarchar](50) NULL,
+	[PRIV_LRN_OBJ] [nvarchar](10) NULL,
+	[PRIV_LRN_HIST] [nvarchar](10) NULL,
+	[PRIV_LRN_AWD] [nvarchar](10) NULL,
+	[PRIV_LRN_PLAN] [nvarchar](10) NULL,
+	[PRIV_LRN_CTGY] [nvarchar](10) NULL,
+	[PRIV_FIN_SET] [nvarchar](10) NULL,
+	[PRIV_FIN_CUR] [nvarchar](10) NULL,
+	[PRIV_FIN_ACNT] [nvarchar](10) NULL,
+	[PRIV_FIN_DOC] [nvarchar](10) NULL,
+	[PRIV_FIN_CC] [nvarchar](10) NULL,
+	[PRIV_FIN_ORD] [nvarchar](10) NULL,
+	[PRIV_FIN_RPT] [nvarchar](10) NULL,
+	[PRIV_EVENT] [nvarchar](10) NULL,
+	[PRIV_LIB_BOOK] [nvarchar](10) NULL,
+	[PRIV_LIB_MOV] [nvarchar](10) NULL,
  CONSTRAINT [PK_t_homemem] PRIMARY KEY CLUSTERED 
+(
+	[HID] ASC,
+	[USER] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+ CONSTRAINT [UK_t_homemem_USER] UNIQUE NONCLUSTERED 
 (
 	[HID] ASC,
 	[USER] ASC
@@ -43,24 +62,63 @@ CREATE TABLE [dbo].[t_homemem](
 ) ON [PRIMARY]
 
 GO
-SET ANSI_PADDING ON
-
-GO
-
-CREATE UNIQUE NONCLUSTERED INDEX [IX_t_homemem] ON [dbo].[t_homemem]
-(
-	[HID] ASC,
-	[USER] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-GO
-
-ALTER TABLE [dbo].[t_homemem]  WITH CHECK ADD  CONSTRAINT [FK_t_homemem_t_hid] FOREIGN KEY([HID])
+ALTER TABLE [dbo].[t_homemem]  WITH CHECK ADD  CONSTRAINT [FK_t_homemem_HID] FOREIGN KEY([HID])
 REFERENCES [dbo].[t_homedef] ([ID])
 ON UPDATE CASCADE
 ON DELETE CASCADE
 GO
-ALTER TABLE [dbo].[t_homemem] CHECK CONSTRAINT [FK_t_homemem_t_hid]
+ALTER TABLE [dbo].[t_homemem] CHECK CONSTRAINT [FK_t_homemem_HID]
 GO
+
+/****** Object:  Table [dbo].[t_learn_ctgy]    Script Date: 2017-05-04 9:30:13 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_learn_ctgy](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NULL,
+	[PARID] [int] NULL,
+	[NAME] [nvarchar](45) NOT NULL,
+	[COMMENT] [nvarchar](50) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_learn_ctgy] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+ALTER TABLE [dbo].[t_learn_ctgy]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_ctgy_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_learn_ctgy] CHECK CONSTRAINT [FK_t_learn_ctgy_HID]
+GO
+
+
+
+
+
+
+
+
+
+
+---------------------------------
+-- TODO...
+
+
+
+
 
 
 /****** Object:  Table [dbo].[t_fin_account]    Script Date: 2016-10-27 3:31:27 PM ******/
@@ -412,28 +470,6 @@ CREATE TABLE [dbo].[t_learn_award](
 	[UPDATEDBY] [nvarchar](40) NULL,
 	[UPDATEDAT] [date] NULL,
  CONSTRAINT [PK_t_learn_award] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
-GO
-/****** Object:  Table [dbo].[t_learn_ctgy]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_learn_ctgy](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[PARID] [int] NULL,
-	[NAME] [nvarchar](45) NOT NULL,
-	[COMMENT] [nvarchar](50) NULL,
-	[SYSFLAG] [bit] NULL,
-	[CREATEDBY] [nvarchar](40) NULL,
-	[CREATEDAT] [date] NULL,
-	[UPDATEDBY] [nvarchar](40) NULL,
-	[UPDATEDAT] [date] NULL,
- CONSTRAINT [PK_t_learn_ctgy] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
