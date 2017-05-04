@@ -1,4 +1,69 @@
-﻿/****** Object:  Table [dbo].[t_fin_account]    Script Date: 2016-10-27 3:31:27 PM ******/
+﻿/****** Object:  Table [dbo].[t_homedef]    Script Date: 2017-05-04 5:54:18 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[t_homedef](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[NAME] [nvarchar](50) NOT NULL,
+	[DETAILS] [nvarchar](50) NULL,
+	[HOST] [nvarchar](40) NULL,
+ CONSTRAINT [PK_t_homedef] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+CREATE UNIQUE NONCLUSTERED INDEX [UK_t_homedef_name] ON [dbo].[t_homedef]
+(
+	[NAME] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+
+GO
+
+
+/****** Object:  Table [dbo].[t_homemem]    Script Date: 2017-05-04 5:54:18 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[t_homemem](
+	[HID] [int] NOT NULL,
+	[USER] [nvarchar](50) NOT NULL,
+	[USERID] [nvarchar](40) NULL,
+ CONSTRAINT [PK_t_homemem] PRIMARY KEY CLUSTERED 
+(
+	[HID] ASC,
+	[USER] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING ON
+
+GO
+
+CREATE UNIQUE NONCLUSTERED INDEX [IX_t_homemem] ON [dbo].[t_homemem]
+(
+	[HID] ASC,
+	[USER] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_homemem]  WITH CHECK ADD  CONSTRAINT [FK_t_homemem_t_hid] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_homemem] CHECK CONSTRAINT [FK_t_homemem_t_hid]
+GO
+
+
+/****** Object:  Table [dbo].[t_fin_account]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -574,14 +639,13 @@ CREATE TABLE [dbo].[t_userhist](
 ) ON [PRIMARY]
 
 GO
-/****** Object:  Table [dbo].[t_event]    Script Date: 2016-11-20 6:17:00 PM ******/
+/****** Object:  Table [dbo].[t_event]    Script Date: 2017-05-04 5:54:17 PM ******/
 SET ANSI_NULLS ON
 GO
-
 SET QUOTED_IDENTIFIER ON
 GO
-
 CREATE TABLE [dbo].[t_event](
+	[HID] [int] NOT NULL,
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[Name] [nvarchar](50) NOT NULL,
 	[StartTime] [datetime] NOT NULL,
@@ -593,12 +657,31 @@ CREATE TABLE [dbo].[t_event](
 	[CREATEDBY] [nvarchar](40) NULL,
 	[CREATEDAT] [date] NULL,
 	[UPDATEDBY] [nvarchar](40) NULL,
-	[UPDATEDAT] [date] NULL
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_event] PRIMARY KEY CLUSTERED 
+(
+	[HID] ASC,
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+ CONSTRAINT [UX_t_event_name] UNIQUE NONCLUSTERED 
+(
+	[HID] ASC,
+	[Name] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 
+ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_StartTime]  DEFAULT (getdate()) FOR [StartTime]
 GO
-
-SET ANSI_PADDING ON
+ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_EndTime]  DEFAULT (getdate()) FOR [EndTime]
+GO
+ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
+GO
+ALTER TABLE [dbo].[t_event]  WITH CHECK ADD  CONSTRAINT [FK_t_event_t_hid] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_event] CHECK CONSTRAINT [FK_t_event_t_hid]
 GO
 
 /****** Object:  Index [IUX_t_tag_NAME]    Script Date: 2016-10-27 3:31:27 PM ******/
