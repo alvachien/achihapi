@@ -153,7 +153,7 @@ namespace achihapi.Controllers
                     vm.AdvancePaymentInfo = new FinanceAccountExtDPViewModel();
                     // Advance payment
                     if (!reader.IsDBNull(idx))
-                        vm.AdvancePaymentInfo.Direct = reader.GetByte(idx++);
+                        vm.AdvancePaymentInfo.Direct = reader.GetBoolean(idx++);
                     else
                         ++idx;
                     if (!reader.IsDBNull(idx))
