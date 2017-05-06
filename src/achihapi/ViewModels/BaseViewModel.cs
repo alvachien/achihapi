@@ -80,6 +80,7 @@ namespace achihapi.ViewModels
         public const String Display = "Display";
         public const String All = "All";
 
+        internal const String HomeDefScope = "HomeDefScope";
         internal const String FinanceAccountScope = "FinanceAccountScope";
         internal const String FinanceDocumentScope = "FinanceDocumentScope";
         internal const String LearnHistoryScope = "LearnHistoryScope";

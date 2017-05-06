@@ -10,6 +10,406 @@ namespace achihapi.Controllers
 {
     internal class SqlUtility
     {
+        #region Home define
+        internal static string getHomeDefQueryString(String strHost = null)
+        {
+            String strSQL = @"SELECT [ID]
+                  ,[NAME]
+                  ,[DETAILS]
+                  ,[HOST]
+                  ,[CREATEDBY]
+                  ,[CREATEDAT]
+                  ,[UPDATEDBY]
+                  ,[UPDATEDAT]
+              FROM [dbo].[t_homedef] ";
+            if (!String.IsNullOrEmpty(strHost))
+            {
+                strSQL += " WHERE [t_homedef].[HOST] = N'" + strHost + "'";
+            }
+
+            return strSQL;
+        }
+
+        internal static void HomeDef_DB2VM(SqlDataReader reader, HomeDefViewModel vm)
+        {
+            Int32 idx = 0;
+
+            try
+            {
+                vm.ID = reader.GetInt32(idx++);
+                vm.Name = reader.GetString(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.Details = reader.GetString(idx++);
+                else
+                    ++idx;
+                vm.Host = reader.GetString(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Error occurred: ID {0}, index {1}, {2}", vm.ID, idx, exp.Message));
+                throw exp;
+            }
+        }
+        
+        internal static String getHomeDefInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_homedef]
+                   ([NAME]
+                   ,[DETAILS]
+                   ,[HOST]
+                   ,[CREATEDBY]
+                   ,[CREATEDAT])
+                   VALUES
+                   (@NAME
+                   ,@DETAILS
+                   ,@HOST
+                   ,@CREATEDBY
+                   ,@CREATEDAT
+                    ); SELECT @Identity = SCOPE_IDENTITY();";
+        }
+
+        internal static String getHomeDefUpdateString()
+        {
+            return @"UPDATE [dbo].[t_homedef]
+                   SET [NAME] = @NAME
+                      ,[DETAILS] = @DETAILS
+                      ,[HOST] = @HOST
+                      ,[UPDATEDBY] = @UPDATEDBY
+                      ,[UPDATEDAT] = @UPDATEDAT
+                 WHERE [ID] = @ID";
+        }
+
+        internal static String getHomeDefDeleteString()
+        {
+            return @"DELETE FROM [dbo].[t_homedef]
+                    WHERE [ID] = @ID";
+        }
+
+        internal static void bindHomeDefInsertParameter(SqlCommand cmd, HomeDefViewModel vm, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@NAME", vm.Name);
+            if (String.IsNullOrEmpty(vm.Details))
+                cmd.Parameters.AddWithValue("@DETAILS", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@DETAILS", vm.Details);
+            cmd.Parameters.AddWithValue("@HOST", vm.Host);
+            cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
+        }
+
+        internal static void bindHomeDefUpdateParameter(SqlCommand cmd, HomeDefViewModel vm, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@NAME", vm.Name);
+            if (String.IsNullOrEmpty(vm.Details))
+                cmd.Parameters.AddWithValue("@DETAILS", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@DETAILS", vm.Details);
+            cmd.Parameters.AddWithValue("@HOST", vm.Host);
+            cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+        }
+        #endregion
+
+        #region Home member
+        internal static string getHomeMemQueryString(Int32? hid)
+        {
+            return @"SELECT [HID]
+                          ,[USER]
+                          ,[USERID]
+                          ,[PRIV_LRN_OBJ]
+                          ,[PRIV_LRN_HIST]
+                          ,[PRIV_LRN_AWD]
+                          ,[PRIV_LRN_PLAN]
+                          ,[PRIV_LRN_CTGY]
+                          ,[PRIV_FIN_SET]
+                          ,[PRIV_FIN_CUR]
+                          ,[PRIV_FIN_ACNT]
+                          ,[PRIV_FIN_DOC]
+                          ,[PRIV_FIN_CC]
+                          ,[PRIV_FIN_ORD]
+                          ,[PRIV_FIN_RPT]
+                          ,[PRIV_EVENT]
+                          ,[PRIV_LIB_BOOK]
+                          ,[PRIV_LIB_MOV]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                      FROM [dbo].[t_homemem] " + (hid.HasValue? " WHERE [HID] = " + hid.Value.ToString() : "");
+        }
+
+        internal static String getHomeMemInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_homemem]
+                       ([HID]
+                       ,[USER]
+                       ,[USERID]
+                       ,[PRIV_LRN_OBJ]
+                       ,[PRIV_LRN_HIST]
+                       ,[PRIV_LRN_AWD]
+                       ,[PRIV_LRN_PLAN]
+                       ,[PRIV_LRN_CTGY]
+                       ,[PRIV_FIN_SET]
+                       ,[PRIV_FIN_CUR]
+                       ,[PRIV_FIN_ACNT]
+                       ,[PRIV_FIN_DOC]
+                       ,[PRIV_FIN_CC]
+                       ,[PRIV_FIN_ORD]
+                       ,[PRIV_FIN_RPT]
+                       ,[PRIV_EVENT]
+                       ,[PRIV_LIB_BOOK]
+                       ,[PRIV_LIB_MOV]
+                       ,[CREATEDBY]
+                       ,[CREATEDAT]
+                       ,[UPDATEDBY]
+                       ,[UPDATEDAT])
+                 VALUES
+                       (@HID
+                       ,@USER
+                       ,@USERID
+                       ,@PRIV_LRN_OBJ
+                       ,@PRIV_LRN_HIST
+                       ,@PRIV_LRN_AWD
+                       ,@PRIV_LRN_PLAN
+                       ,@PRIV_LRN_CTGY
+                       ,@PRIV_FIN_SET
+                       ,@PRIV_FIN_CUR
+                       ,@PRIV_FIN_ACNT
+                       ,@PRIV_FIN_DOC
+                       ,@PRIV_FIN_CC
+                       ,@PRIV_FIN_ORD
+                       ,@PRIV_FIN_RPT
+                       ,@PRIV_EVENT
+                       ,@PRIV_LIB_BOOK
+                       ,@PRIV_LIB_MOV
+                       ,@CREATEDBY
+                       ,@CREATEDAT
+                       ,@UPDATEDBY
+                       ,@UPDATEDAT
+                        )";
+        }
+
+        internal static void bindHomeMemParameter(SqlCommand cmd, HomeMemViewModel vm, String usrName)
+        {
+            if (String.IsNullOrEmpty(vm.UserID))
+                cmd.Parameters.AddWithValue("@USERID", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@USERID", vm.UserID);
+
+            if (String.IsNullOrEmpty(vm.Priv_LearnObject))
+                cmd.Parameters.AddWithValue("@PRIV_LRN_OBJ", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_LRN_OBJ", vm.Priv_LearnObject);
+            if (String.IsNullOrEmpty(vm.Priv_LearnHist))
+                cmd.Parameters.AddWithValue("@PRIV_LRN_HIST", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_LRN_HIST", vm.Priv_LearnHist);
+            if (String.IsNullOrEmpty(vm.Priv_LearnAward))
+                cmd.Parameters.AddWithValue("@PRIV_LRN_AWD", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_LRN_AWD", vm.Priv_LearnAward);
+            if (String.IsNullOrEmpty(vm.Priv_LearnPlan))
+                cmd.Parameters.AddWithValue("@PRIV_LRN_PLAN", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_LRN_PLAN", vm.Priv_LearnPlan);
+            if (String.IsNullOrEmpty(vm.Priv_LearnCategory))
+                cmd.Parameters.AddWithValue("@PRIV_LRN_CTGY", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_LRN_CTGY", vm.Priv_LearnCategory);
+
+            if (String.IsNullOrEmpty(vm.Priv_FinanceSetting))
+                cmd.Parameters.AddWithValue("@PRIV_FIN_SET", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_FIN_SET", vm.Priv_FinanceSetting);
+            if (String.IsNullOrEmpty(vm.Priv_FinanceCurrency))
+                cmd.Parameters.AddWithValue("@PRIV_FIN_CUR", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_FIN_CUR", vm.Priv_FinanceCurrency);
+            if (String.IsNullOrEmpty(vm.Priv_FinanceAccount))
+                cmd.Parameters.AddWithValue("@PRIV_FIN_ACNT", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_FIN_ACNT", vm.Priv_FinanceAccount);
+            if (String.IsNullOrEmpty(vm.Priv_FinanceDocument))
+                cmd.Parameters.AddWithValue("@PRIV_FIN_DOC", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_FIN_DOC", vm.Priv_FinanceDocument);
+            if (String.IsNullOrEmpty(vm.Priv_FinanceControlCenter))
+                cmd.Parameters.AddWithValue("@PRIV_FIN_CC", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_FIN_CC", vm.Priv_FinanceControlCenter);
+            if (String.IsNullOrEmpty(vm.Priv_FinanceOrder))
+                cmd.Parameters.AddWithValue("@PRIV_FIN_ORD", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_FIN_ORD", vm.Priv_FinanceOrder);
+            if (String.IsNullOrEmpty(vm.Priv_FinanceReport))
+                cmd.Parameters.AddWithValue("@PRIV_FIN_RPT", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_FIN_RPT", vm.Priv_FinanceReport);
+            if (String.IsNullOrEmpty(vm.Priv_Event))
+                cmd.Parameters.AddWithValue("@PRIV_EVENT", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_EVENT", vm.Priv_Event);
+            if (String.IsNullOrEmpty(vm.Priv_LibBook))
+                cmd.Parameters.AddWithValue("@PRIV_LIB_BOOK", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_LIB_BOOK", vm.Priv_LibBook);
+            if (String.IsNullOrEmpty(vm.Priv_LibMovie))
+                cmd.Parameters.AddWithValue("@PRIV_LIB_MOV", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@PRIV_LIB_MOV", vm.Priv_LibMovie);
+
+            cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
+            cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
+            cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
+        }
+
+        internal static void HomeMem_DB2VM(SqlDataReader reader, HomeMemViewModel vm)
+        {
+            Int32 idx = 0;
+
+            try
+            {
+                vm.HomeID = reader.GetInt32(idx++);
+                vm.User = reader.GetString(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.UserID = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_LearnObject = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_LearnHist = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_LearnAward = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_LearnPlan = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_LearnCategory = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_FinanceSetting = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_FinanceCurrency = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_FinanceAccount = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_FinanceDocument = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_FinanceControlCenter = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_FinanceOrder = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_FinanceReport = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_Event = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_LibBook = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Priv_LibMovie = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Error occurred: HID {0}, index {1}, {2}", vm.HomeID, idx, exp.Message));
+                throw exp;
+            }
+        }
+
+        internal static String getHomeMemUpdateString()
+        {
+            return @"UPDATE [dbo].[t_homemem]
+                       SET [USERID] = @USERID
+                          ,[PRIV_LRN_OBJ] = @PRIV_LRN_OBJ
+                          ,[PRIV_LRN_HIST] = @PRIV_LRN_HIST
+                          ,[PRIV_LRN_AWD] = @PRIV_LRN_AWD
+                          ,[PRIV_LRN_PLAN] = @PRIV_LRN_PLAN
+                          ,[PRIV_LRN_CTGY] = @PRIV_LRN_CTGY
+                          ,[PRIV_FIN_SET] = @PRIV_FIN_SET
+                          ,[PRIV_FIN_CUR] = @PRIV_FIN_CUR
+                          ,[PRIV_FIN_ACNT] = @PRIV_FIN_ACNT
+                          ,[PRIV_FIN_DOC] = @PRIV_FIN_DOC
+                          ,[PRIV_FIN_CC] = @PRIV_FIN_CC
+                          ,[PRIV_FIN_ORD] = @PRIV_FIN_ORD
+                          ,[PRIV_FIN_RPT] = @PRIV_FIN_RPT
+                          ,[PRIV_EVENT] = @PRIV_EVENT
+                          ,[PRIV_LIB_BOOK] = @PRIV_LIB_BOOK
+                          ,[PRIV_LIB_MOV] = @PRIV_LIB_MOV
+                          ,[CREATEDBY] = @CREATEDBY
+                          ,[CREATEDAT] = @CREATEDAT
+                          ,[UPDATEDBY] = @UPDATEDBY
+                          ,[UPDATEDAT] = @UPDATEDAT
+                     WHERE [HID] = @HID
+                       AND [USER] = @USER";
+        }
+
+        internal static String getHomeMemDeleteString()
+        {
+            return @"DELETE FROM [dbo].[t_homemem]
+                WHERE [HID] = @HID AND [USER] = @USER";
+        }
+        #endregion
+
         #region Learn History
         internal static string getLearnHistoryQueryString(String strUser = "")
         {
@@ -941,6 +1341,7 @@ namespace achihapi.Controllers
         }
         #endregion
 
+        #region Obsoleted methods
         internal static void FinDocDB2VM(SqlDataReader reader, BaseListViewModel<FinanceDocumentUIViewModel> listVMs)
         {
             Int32 nDocID = -1;
@@ -1062,5 +1463,6 @@ namespace achihapi.Controllers
                 }
             }
         }
+        #endregion
     }
 }

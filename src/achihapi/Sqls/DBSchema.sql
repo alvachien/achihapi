@@ -3,7 +3,7 @@
  *
  */
 
-/****** Object:  Table [dbo].[t_homedef]    Script Date: 2017-05-04 8:22:35 PM ******/
+/****** Object:  Table [dbo].[t_homedef]    Script Date: 2017-05-05 11:36:16 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,6 +13,10 @@ CREATE TABLE [dbo].[t_homedef](
 	[NAME] [nvarchar](50) NOT NULL,
 	[DETAILS] [nvarchar](50) NULL,
 	[HOST] [nvarchar](40) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
  CONSTRAINT [PK_t_homedef] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
@@ -25,7 +29,7 @@ CREATE TABLE [dbo].[t_homedef](
 
 GO
 
-/****** Object:  Table [dbo].[t_homemem]    Script Date: 2017-05-04 8:43:09 PM ******/
+/****** Object:  Table [dbo].[t_homemem]    Script Date: 2017-05-05 11:36:16 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -49,6 +53,10 @@ CREATE TABLE [dbo].[t_homemem](
 	[PRIV_EVENT] [nvarchar](10) NULL,
 	[PRIV_LIB_BOOK] [nvarchar](10) NULL,
 	[PRIV_LIB_MOV] [nvarchar](10) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
  CONSTRAINT [PK_t_homemem] PRIMARY KEY CLUSTERED 
 (
 	[HID] ASC,
@@ -62,6 +70,7 @@ CREATE TABLE [dbo].[t_homemem](
 ) ON [PRIMARY]
 
 GO
+
 ALTER TABLE [dbo].[t_homemem]  WITH CHECK ADD  CONSTRAINT [FK_t_homemem_HID] FOREIGN KEY([HID])
 REFERENCES [dbo].[t_homedef] ([ID])
 ON UPDATE CASCADE
@@ -70,13 +79,11 @@ GO
 ALTER TABLE [dbo].[t_homemem] CHECK CONSTRAINT [FK_t_homemem_HID]
 GO
 
-/****** Object:  Table [dbo].[t_learn_ctgy]    Script Date: 2017-05-04 9:30:13 PM ******/
+/****** Object:  Table [dbo].[t_learn_ctgy]    Script Date: 2017-05-05 11:36:16 PM ******/
 SET ANSI_NULLS ON
 GO
-
 SET QUOTED_IDENTIFIER ON
 GO
-
 CREATE TABLE [dbo].[t_learn_ctgy](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[HID] [int] NULL,
@@ -94,13 +101,11 @@ CREATE TABLE [dbo].[t_learn_ctgy](
 ) ON [PRIMARY]
 
 GO
-
 ALTER TABLE [dbo].[t_learn_ctgy]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_ctgy_HID] FOREIGN KEY([HID])
 REFERENCES [dbo].[t_homedef] ([ID])
 ON UPDATE CASCADE
 ON DELETE CASCADE
 GO
-
 ALTER TABLE [dbo].[t_learn_ctgy] CHECK CONSTRAINT [FK_t_learn_ctgy_HID]
 GO
 
