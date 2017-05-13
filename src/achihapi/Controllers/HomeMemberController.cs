@@ -16,6 +16,7 @@ namespace achihapi.Controllers
     {
         // GET: api/homemember
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0, Int32? hid = null)
         {
             BaseListViewModel<HomeMemViewModel> listVm = new BaseListViewModel<HomeMemViewModel>();
@@ -100,6 +101,7 @@ namespace achihapi.Controllers
 
         // GET api/homemember/5
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> Get(int hid, String struser)
         {
             HomeMemViewModel vm = new HomeMemViewModel();

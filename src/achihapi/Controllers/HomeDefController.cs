@@ -16,6 +16,7 @@ namespace achihapi.Controllers
     {
         // GET: api/homedef
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<HomeDefViewModel> listVm = new BaseListViewModel<HomeDefViewModel>();
@@ -28,19 +29,19 @@ namespace achihapi.Controllers
             {
                 String scopeFilter = String.Empty;
 
-                //String usrName = "";
-                //try
-                //{
-                //    var usrObj = HIHAPIUtility.GetUserClaim(this);
-                //    usrName = usrObj.Value;
-                //    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
+                String usrName = "";
+                try
+                {
+                    var usrObj = HIHAPIUtility.GetUserClaim(this);
+                    usrName = usrObj.Value;
+                    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
 
-                //    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
-                //}
-                //catch
-                //{
-                //    return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
-                //}
+                    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                }
+                catch
+                {
+                    return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
+                }
 
                 queryString = this.getQueryString(true, top, skip, null, scopeFilter);
 
@@ -101,6 +102,7 @@ namespace achihapi.Controllers
 
         // GET api/homedef/5
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> Get(int id)
         {
             HomeDefViewModel vm = new HomeDefViewModel();
