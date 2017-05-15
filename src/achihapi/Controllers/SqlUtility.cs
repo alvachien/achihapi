@@ -11,20 +11,21 @@ namespace achihapi.Controllers
     internal class SqlUtility
     {
         #region Home define
-        internal static string getHomeDefQueryString(String strHost = null)
+        internal static string getHomeDefQueryString(String strUserID = null)
         {
             String strSQL = @"SELECT [ID]
-                  ,[NAME]
-                  ,[DETAILS]
-                  ,[HOST]
-                  ,[CREATEDBY]
-                  ,[CREATEDAT]
-                  ,[UPDATEDBY]
-                  ,[UPDATEDAT]
-              FROM [dbo].[t_homedef] ";
-            if (!String.IsNullOrEmpty(strHost))
+                          ,[NAME]
+                          ,[HOST]
+                          ,[DETAILS]
+                          ,[USERID]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                      FROM [dbo].[v_homemember] ";
+            if (!String.IsNullOrEmpty(strUserID))
             {
-                strSQL += " WHERE [t_homedef].[HOST] = N'" + strHost + "'";
+                strSQL += " WHERE [v_homemember].[USERID] = N'" + strUserID + "'";
             }
 
             return strSQL;

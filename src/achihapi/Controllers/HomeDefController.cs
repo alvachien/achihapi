@@ -399,21 +399,21 @@ namespace achihapi.Controllers
         }
 
         #region Implementation methods
-        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, String strHost)
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, String strUserID)
         {
 
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_homedef] ";
-                if (!String.IsNullOrEmpty(strHost))
+                strSQL += @"SELECT count(*) FROM [dbo].[v_homemember] ";
+                if (!String.IsNullOrEmpty(strUserID))
                 {
-                    strSQL += " WHERE [HOST] = N'" + strHost + "'";
+                    strSQL += " WHERE [USERID] = N'" + strUserID + "'";
                 }
                 strSQL += " ;";
             }
 
-            strSQL += SqlUtility.getHomeDefQueryString(strHost);
+            strSQL += SqlUtility.getHomeDefQueryString(strUserID);
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
@@ -422,7 +422,7 @@ namespace achihapi.Controllers
             }
             else if (!bListMode && nSearchID.HasValue)
             {
-                if (!String.IsNullOrEmpty(strHost))
+                if (!String.IsNullOrEmpty(strUserID))
                 {
                     strSQL += @" AND [t_homedef].[ID] = " + nSearchID.Value.ToString();
                 }
