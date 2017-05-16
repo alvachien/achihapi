@@ -44,6 +44,8 @@ namespace achihapi.Controllers
                 else
                     ++idx;
                 vm.Host = reader.GetString(idx++);
+                // User ID - skipping
+                idx++;
                 if (!reader.IsDBNull(idx))
                     vm.CreatedBy = reader.GetString(idx++);
                 else

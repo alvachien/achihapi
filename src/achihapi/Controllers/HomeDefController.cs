@@ -115,20 +115,20 @@ namespace achihapi.Controllers
             try
             {
                 String scopeFilter = String.Empty;
-                //String usrName = "";
-                //try
-                //{
-                //    var usrObj = HIHAPIUtility.GetUserClaim(this);
-                //    usrName = usrObj.Value;
-                //    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
+                String usrName = "";
+                try
+                {
+                    var usrObj = HIHAPIUtility.GetUserClaim(this);
+                    usrName = usrObj.Value;
+                    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
 
 
-                //    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
-                //}
-                //catch
-                //{
-                //    return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
-                //}
+                    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                }
+                catch
+                {
+                    return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
+                }
 
                 queryString = this.getQueryString(false, null, null, id, scopeFilter);
 
@@ -424,11 +424,11 @@ namespace achihapi.Controllers
             {
                 if (!String.IsNullOrEmpty(strUserID))
                 {
-                    strSQL += @" AND [t_homedef].[ID] = " + nSearchID.Value.ToString();
+                    strSQL += @" AND [v_homemember].[ID] = " + nSearchID.Value.ToString();
                 }
                 else
                 {
-                    strSQL += @" WHERE [t_homedef].[ID] = " + nSearchID.Value.ToString();
+                    strSQL += @" WHERE [v_homemember].[ID] = " + nSearchID.Value.ToString();
                 }
             }
 #if DEBUG
