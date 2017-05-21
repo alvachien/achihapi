@@ -37,6 +37,8 @@ namespace achihapi.Controllers
                     var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
 
                     scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                    if (String.IsNullOrEmpty(scopeFilter))
+                        scopeFilter = usrName;
                 }
                 catch
                 {
@@ -180,11 +182,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]HomeDefViewModel vm)
         {
-            String usrName = "";
+            String usrId = "";
             try
             {
                 var usrObj = HIHAPIUtility.GetUserClaim(this);
-                usrName = usrObj.Value;
+                usrId = usrObj.Value;
                 var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
 
                 if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
@@ -193,7 +195,7 @@ namespace achihapi.Controllers
                 }
                 else if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
                 {
-                    if (String.CompareOrdinal(vm.Host, usrName) != 0)
+                    if (String.CompareOrdinal(vm.Host, usrId) != 0)
                     {
                         return StatusCode(401, "Current user can only create home with owner.");
                     }
@@ -212,7 +214,9 @@ namespace achihapi.Controllers
             }
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlTransaction tran = null;
+
             String queryString = "";
             Int32 nNewID = -1;
             Boolean bError = false;
@@ -220,26 +224,71 @@ namespace achihapi.Controllers
 
             try
             {
+                conn = new SqlConnection(Startup.DBConnectionString);
+                conn.Open();
+                tran = conn.BeginTransaction();
                 queryString = SqlUtility.getHomeDefInsertString();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Transaction = tran;
 
-                SqlUtility.bindHomeDefInsertParameter(cmd, vm, usrName);
+                // Home def.
+                SqlUtility.bindHomeDefInsertParameter(cmd, vm, usrId);
                 SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                 idparam.Direction = ParameterDirection.Output;
 
                 Int32 nRst = await cmd.ExecuteNonQueryAsync();
                 nNewID = (Int32)idparam.Value;
+
+                // Home members
+                cmd.Dispose();
+                cmd = null;
+                queryString = SqlUtility.getHomeMemInsertString();
+                cmd = new SqlCommand(queryString, conn);
+                cmd.Transaction = tran;
+                HomeMemViewModel vmMem = new HomeMemViewModel();
+                vmMem.HomeID = nNewID;
+                vmMem.Priv_Event = HIHAPIConstants.All;
+                vmMem.Priv_FinanceAccount = HIHAPIConstants.All;
+                vmMem.Priv_FinanceControlCenter = HIHAPIConstants.All;
+                vmMem.Priv_FinanceCurrency = HIHAPIConstants.All;
+                vmMem.Priv_FinanceDocument = HIHAPIConstants.All;
+                vmMem.Priv_FinanceOrder = HIHAPIConstants.All;
+                vmMem.Priv_FinanceReport = HIHAPIConstants.All;
+                vmMem.Priv_FinanceSetting = HIHAPIConstants.All;
+                vmMem.Priv_LearnAward = HIHAPIConstants.All;
+                vmMem.Priv_LearnCategory = HIHAPIConstants.All;
+                vmMem.Priv_LearnHist = HIHAPIConstants.All;
+                vmMem.Priv_LearnObject = HIHAPIConstants.All;
+                vmMem.Priv_LearnPlan = HIHAPIConstants.All;
+                vmMem.Priv_LibBook = HIHAPIConstants.All;
+                vmMem.Priv_LibMovie = HIHAPIConstants.All;
+                vmMem.CreatedBy = usrId;
+                vmMem.CreatedAt = DateTime.Now;
+                vmMem.UserID = usrId;
+                vmMem.User = vm.UserNameInCreation;
+                SqlUtility.bindHomeMemInsertParameter(cmd, vmMem, usrId);
+                await cmd.ExecuteNonQueryAsync();
+
+                tran.Commit();
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 bError = true;
                 strErrMsg = exp.Message;
+
+                if (tran != null)
+                {
+                    tran.Rollback();
+                }
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
 
             if (bError)

@@ -16,5 +16,10 @@ namespace achihapi.ViewModels
         public String Details { get; set; }
         [MaxLength(40)]
         public String Host { get; set; }
+        [MaxLength(50)]
+        public String UserNameInCreation { get; set; }
+
+        // Members
+        public List<HomeMemViewModel> Members = new List<HomeMemViewModel>();
     }
 }

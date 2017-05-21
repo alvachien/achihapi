@@ -39,11 +39,11 @@ namespace achihapi.Controllers
             {
                 vm.ID = reader.GetInt32(idx++);
                 vm.Name = reader.GetString(idx++);
+                vm.Host = reader.GetString(idx++);
                 if (!reader.IsDBNull(idx))
                     vm.Details = reader.GetString(idx++);
                 else
                     ++idx;
-                vm.Host = reader.GetString(idx++);
                 // User ID - skipping
                 idx++;
                 if (!reader.IsDBNull(idx))
@@ -179,9 +179,7 @@ namespace achihapi.Controllers
                        ,[PRIV_LIB_BOOK]
                        ,[PRIV_LIB_MOV]
                        ,[CREATEDBY]
-                       ,[CREATEDAT]
-                       ,[UPDATEDBY]
-                       ,[UPDATEDAT])
+                       ,[CREATEDAT])
                  VALUES
                        (@HID
                        ,@USER
@@ -203,18 +201,17 @@ namespace achihapi.Controllers
                        ,@PRIV_LIB_MOV
                        ,@CREATEDBY
                        ,@CREATEDAT
-                       ,@UPDATEDBY
-                       ,@UPDATEDAT
                         )";
         }
 
-        internal static void bindHomeMemParameter(SqlCommand cmd, HomeMemViewModel vm, String usrName)
+        internal static void bindHomeMemInsertParameter(SqlCommand cmd, HomeMemViewModel vm, String usrName)
         {
+            cmd.Parameters.AddWithValue("@HID", vm.HomeID);
+            cmd.Parameters.AddWithValue("@USER", vm.User);
             if (String.IsNullOrEmpty(vm.UserID))
                 cmd.Parameters.AddWithValue("@USERID", DBNull.Value);
             else
                 cmd.Parameters.AddWithValue("@USERID", vm.UserID);
-
             if (String.IsNullOrEmpty(vm.Priv_LearnObject))
                 cmd.Parameters.AddWithValue("@PRIV_LRN_OBJ", DBNull.Value);
             else
@@ -279,8 +276,8 @@ namespace achihapi.Controllers
 
             cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
             cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
-            cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
-            cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
+            //cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
+            //cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
         }
 
         internal static void HomeMem_DB2VM(SqlDataReader reader, HomeMemViewModel vm)
@@ -398,8 +395,6 @@ namespace achihapi.Controllers
                           ,[PRIV_EVENT] = @PRIV_EVENT
                           ,[PRIV_LIB_BOOK] = @PRIV_LIB_BOOK
                           ,[PRIV_LIB_MOV] = @PRIV_LIB_MOV
-                          ,[CREATEDBY] = @CREATEDBY
-                          ,[CREATEDAT] = @CREATEDAT
                           ,[UPDATEDBY] = @UPDATEDBY
                           ,[UPDATEDAT] = @UPDATEDAT
                      WHERE [HID] = @HID
