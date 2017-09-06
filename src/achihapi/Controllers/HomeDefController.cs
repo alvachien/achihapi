@@ -14,6 +14,29 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class HomeDefController : Controller
     {
+        /**
+         * Create
+         *      When a user create a Home defintion, it will be the host automatically.
+         *          Insert an entry in t_homedef, Insert an entry in t_homemem;
+         *          
+         * Assign an user
+         *      The host can add an user into home definition; Todo: add t_homemessage?
+         *          Insert an entry in t_homemem;
+         * 
+         * Remove an user
+         *      The host can remove an user from the home definition;
+         *          Delete an entry from t_homemem;
+         * 
+         * Handover the host
+         *      The host can name another user in the home to be the host;
+         *          Change the t_homedef directly;
+         * 
+         * Login integration
+         *      1) When an user is login but no home assigned, prompt the user to create the home definition;
+         *      2) When an user is login, fetch all home definitions relevant (via t_homemember), and let the user choose one;
+         * 
+         */
+         
         // GET: api/homedef
         [HttpGet]
         [Authorize]
@@ -43,6 +66,11 @@ namespace achihapi.Controllers
                 catch
                 {
                     return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
+                }
+
+                if (String.IsNullOrEmpty(scopeFilter))
+                {
+                    return BadRequest();
                 }
 
                 queryString = this.getQueryString(true, top, skip, null, scopeFilter);
@@ -123,7 +151,6 @@ namespace achihapi.Controllers
                     var usrObj = HIHAPIUtility.GetUserClaim(this);
                     usrName = usrObj.Value;
                     var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
-
 
                     scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
                 }

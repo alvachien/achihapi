@@ -17,7 +17,7 @@ namespace achihapi.Controllers
                           ,[NAME]
                           ,[HOST]
                           ,[DETAILS]
-                          ,[USERID]
+                          ,[USER]
                           ,[CREATEDBY]
                           ,[CREATEDAT]
                           ,[UPDATEDBY]
@@ -25,7 +25,7 @@ namespace achihapi.Controllers
                       FROM [dbo].[v_homemember] ";
             if (!String.IsNullOrEmpty(strUserID))
             {
-                strSQL += " WHERE [v_homemember].[USERID] = N'" + strUserID + "'";
+                strSQL += " WHERE [v_homemember].[USER] = N'" + strUserID + "'";
             }
 
             return strSQL;

@@ -98,6 +98,11 @@ GO
 ALTER TABLE [dbo].[t_learn_ctgy] CHECK CONSTRAINT [FK_t_learn_ctgy_HID]
 GO
 
+ALTER TABLE [dbo].[t_learn_ctgy] ADD  CONSTRAINT [DF_t_learn_ctgy_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_learn_ctgy] ADD  CONSTRAINT [DF_t_learn_ctgy_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
 
 /****** Object:  Table [dbo].[t_fin_account_ctgy]    Script Date: 2016-10-27 3:31:27 PM ******/
 -- Changes: [HID] added
@@ -111,7 +116,6 @@ CREATE TABLE [dbo].[t_fin_account_ctgy](
 	[NAME] [nvarchar](30) NOT NULL,
 	[ASSETFLAG] [bit] NOT NULL,
 	[COMMENT] [nvarchar](45) NULL,
-	[SYSFLAG] [bit] NULL,
 	[CREATEDBY] [nvarchar](40) NULL,
 	[CREATEDAT] [date] NULL,
 	[UPDATEDBY] [nvarchar](40) NULL,
@@ -123,6 +127,20 @@ CREATE TABLE [dbo].[t_fin_account_ctgy](
 ) ON [PRIMARY]
 
 GO
+ALTER TABLE [dbo].[t_fin_account_ctgy]  WITH CHECK ADD  CONSTRAINT [FK_t_account_ctgy_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_account_ctgy] CHECK CONSTRAINT [FK_t_account_ctgy_HID]
+GO
+
+ALTER TABLE [dbo].[t_fin_account_ctgy] ADD  CONSTRAINT [DF_t_fin_account_ctgy_ASSETFLAG]  DEFAULT ((1)) FOR [ASSETFLAG]
+GO
+ALTER TABLE [dbo].[t_fin_account_ctgy] ADD  CONSTRAINT [DF_t_fin_account_ctgy_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_fin_account_ctgy] ADD  CONSTRAINT [DF_t_fin_account_ctgy_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
 
 /****** Object:  Table [dbo].[t_fin_account]    Script Date: 2016-10-27 3:31:27 PM ******/
 -- Change: [HID] changed
@@ -132,6 +150,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[t_fin_account](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
 	[CTGYID] [int] NOT NULL,
 	[NAME] [nvarchar](30) NOT NULL,
 	[COMMENT] [nvarchar](45) NULL,
@@ -147,6 +166,28 @@ CREATE TABLE [dbo].[t_fin_account](
 ) ON [PRIMARY]
 
 GO
+
+ALTER TABLE [dbo].[t_fin_account]  WITH CHECK ADD  CONSTRAINT [FK_t_account_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_account] CHECK CONSTRAINT [FK_t_account_HID]
+GO
+
+--ALTER TABLE [dbo].[t_fin_account]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_account_ctgy] FOREIGN KEY([CTGYID])
+--REFERENCES [dbo].[t_fin_account_ctgy] ([ID])
+--ON UPDATE CASCADE
+--ON DELETE CASCADE
+--GO
+--ALTER TABLE [dbo].[t_fin_account] CHECK CONSTRAINT [FK_t_fin_account_ctgy]
+--GO
+
+ALTER TABLE [dbo].[t_fin_account] ADD  CONSTRAINT [DF_t_fin_account_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_fin_account] ADD  CONSTRAINT [DF_t_fin_account_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
 /****** Object:  Table [dbo].[t_fin_account_ext_dp]    Script Date: 2017-03-15 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -169,18 +210,13 @@ CREATE TABLE [dbo].[t_fin_account_ext_dp](
 
 GO
 
-
-
-
-
-
----------------------------------
--- TODO...
-
-
-
-
-
+ALTER TABLE [dbo].[t_fin_account_ext_dp]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_account_ext_dp_id] FOREIGN KEY([ACCOUNTID])
+REFERENCES [dbo].[t_fin_account] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_account_ext_dp] CHECK CONSTRAINT [FK_t_fin_account_ext_dp_id]
+GO
 
 
 /****** Object:  Table [dbo].[t_fin_controlcenter]    Script Date: 2016-10-27 3:31:27 PM ******/
@@ -190,6 +226,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[t_fin_controlcenter](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
 	[NAME] [nvarchar](30) NOT NULL,
 	[PARID] [int] NULL,
 	[COMMENT] [nvarchar](45) NULL,
@@ -205,6 +242,21 @@ CREATE TABLE [dbo].[t_fin_controlcenter](
 ) ON [PRIMARY]
 
 GO
+
+ALTER TABLE [dbo].[t_fin_controlcenter]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_cc_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_controlcenter] CHECK CONSTRAINT [FK_t_fin_cc_HID]
+GO
+
+ALTER TABLE [dbo].[t_fin_controlcenter] ADD  CONSTRAINT [DF_t_fin_controlcenter_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_fin_controlcenter] ADD  CONSTRAINT [DF_t_fin_controlcenter_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+
 /****** Object:  Table [dbo].[t_fin_currency]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -214,7 +266,6 @@ CREATE TABLE [dbo].[t_fin_currency](
 	[CURR] [nvarchar](5) NOT NULL,
 	[NAME] [nvarchar](45) NOT NULL,
 	[SYMBOL] [nvarchar](30) NULL,
-	[SYSFLAG] [bit] NULL,
 	[CREATEDBY] [nvarchar](40) NULL,
 	[CREATEDAT] [date] NULL,
 	[UPDATEDBY] [nvarchar](40) NULL,
@@ -226,6 +277,13 @@ CREATE TABLE [dbo].[t_fin_currency](
 ) ON [PRIMARY]
 
 GO
+
+ALTER TABLE [dbo].[t_fin_currency] ADD  CONSTRAINT [DF_t_fin_currency_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_fin_currency] ADD  CONSTRAINT [DF_t_fin_currency_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+
 /****** Object:  Table [dbo].[t_fin_doc_type]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -233,9 +291,9 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[t_fin_doc_type](
 	[ID] [smallint] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NULL,
 	[NAME] [nvarchar](30) NOT NULL,
 	[COMMENT] [nvarchar](45) NULL,
-	[SYSFLAG] [bit] NULL,
 	[CREATEDBY] [nvarchar](40) NULL,
 	[CREATEDAT] [date] NULL,
 	[UPDATEDBY] [nvarchar](40) NULL,
@@ -248,6 +306,19 @@ CREATE TABLE [dbo].[t_fin_doc_type](
 
 GO
 
+ALTER TABLE [dbo].[t_fin_doc_type]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_doctype_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_doc_type] CHECK CONSTRAINT [FK_t_fin_doctype_HID]
+GO
+
+ALTER TABLE [dbo].[t_fin_doc_type] ADD  CONSTRAINT [DF_t_fin_doc_type_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_fin_doc_type] ADD  CONSTRAINT [DF_t_fin_doc_type_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
 /****** Object:  Table [dbo].[t_fin_document]    Script Date: 2017-02-20 12:11:41 AM ******/
 SET ANSI_NULLS ON
 GO
@@ -257,6 +328,7 @@ GO
 
 CREATE TABLE [dbo].[t_fin_document](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
 	[DOCTYPE] [smallint] NOT NULL,
 	[TRANDATE] [date] NOT NULL,
 	[TRANCURR] [nvarchar](5) NOT NULL,
@@ -277,6 +349,18 @@ CREATE TABLE [dbo].[t_fin_document](
 ) ON [PRIMARY]
 
 GO
+
+ALTER TABLE [dbo].[t_fin_document]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_document_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_document] CHECK CONSTRAINT [FK_t_fin_document_HID]
+GO
+
+ALTER TABLE [dbo].[t_fin_document] ADD  CONSTRAINT [DF_t_fin_document_TRANDATE]  DEFAULT (getdate()) FOR [TRANDATE]
+GO
+
 
 /****** Object:  Table [dbo].[t_fin_document_item]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
@@ -301,12 +385,22 @@ CREATE TABLE [dbo].[t_fin_document_item](
 ) ON [PRIMARY]
 
 GO
+
+ALTER TABLE [dbo].[t_fin_document_item]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_document_header] FOREIGN KEY([DOCID])
+REFERENCES [dbo].[t_fin_document] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_document_item] CHECK CONSTRAINT [FK_t_fin_document_header]
+GO
+
 /****** Object:  Table [dbo].[t_fin_exrate]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[t_fin_exrate](
+	[HID] [int] NOT NULL,
 	[TRANDATE] [date] NOT NULL,
 	[CURR] [nvarchar](5) NOT NULL,
 	[RATE] [decimal](17, 4) NOT NULL,
@@ -317,12 +411,27 @@ CREATE TABLE [dbo].[t_fin_exrate](
 	[UPDATEDAT] [date] NULL,
  CONSTRAINT [PK_t_fin_exrate] PRIMARY KEY CLUSTERED 
 (
+	[HID] ASC,
 	[TRANDATE] ASC,
 	[CURR] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
 GO
+
+ALTER TABLE [dbo].[t_fin_exrate]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_exrate_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_exrate] CHECK CONSTRAINT [FK_t_fin_exrate_HID]
+GO
+
+ALTER TABLE [dbo].[t_fin_exrate] ADD  CONSTRAINT [DF_t_fin_exrate_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_fin_exrate] ADD  CONSTRAINT [DF_t_fin_exrate_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
 /****** Object:  Table [dbo].[t_fin_order]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -330,6 +439,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[t_fin_order](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
 	[NAME] [nvarchar](30) NOT NULL,
 	[VALID_FROM] [date] NOT NULL,
 	[VALID_TO] [date] NOT NULL,
@@ -345,6 +455,20 @@ CREATE TABLE [dbo].[t_fin_order](
 ) ON [PRIMARY]
 
 GO
+
+ALTER TABLE [dbo].[t_fin_order]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_order_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_order] CHECK CONSTRAINT [FK_t_fin_order_HID]
+GO
+
+ALTER TABLE [dbo].[t_fin_order] ADD  CONSTRAINT [DF_t_fin_order_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_fin_order] ADD  CONSTRAINT [DF_t_fin_order_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
 /****** Object:  Table [dbo].[t_fin_order_srule]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -364,12 +488,22 @@ CREATE TABLE [dbo].[t_fin_order_srule](
 ) ON [PRIMARY]
 
 GO
+
+ALTER TABLE [dbo].[t_fin_order_srule]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_order_srule_order] FOREIGN KEY([ORDID])
+REFERENCES [dbo].[t_fin_order] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_order_srule] CHECK CONSTRAINT [FK_t_fin_order_srule_order]
+GO
+
 /****** Object:  Table [dbo].[t_fin_setting]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[t_fin_setting](
+	[HID] [int] NOT NULL,
 	[SETID] [nvarchar](20) NOT NULL,
 	[SETVALUE] [nvarchar](80) NOT NULL,
 	[COMMENT] [nvarchar](45) NULL,
@@ -379,11 +513,27 @@ CREATE TABLE [dbo].[t_fin_setting](
 	[UPDATEDAT] [date] NULL,
  CONSTRAINT [PK_t_fin_setting] PRIMARY KEY CLUSTERED 
 (
+	[HID] ASC,
 	[SETID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
 GO
+
+ALTER TABLE [dbo].[t_fin_setting]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_setting_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_setting] CHECK CONSTRAINT [FK_t_fin_setting_HID]
+GO
+
+ALTER TABLE [dbo].[t_fin_setting] ADD  CONSTRAINT [DF_t_fin_setting_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_fin_setting] ADD  CONSTRAINT [DF_t_fin_setting_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+
 /****** Object:  Table [dbo].[t_fin_tmpdoc_dp]    Script Date: 2017-03-10 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -391,6 +541,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[t_fin_tmpdoc_dp](
 	[DOCID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
 	[REFDOCID] [int] NULL,
 	[ACCOUNTID] [int] NOT NULL,
 	[TRANDATE] [date] NOT NULL,
@@ -410,6 +561,20 @@ CREATE TABLE [dbo].[t_fin_tmpdoc_dp](
 ) ON [PRIMARY]
 
 GO
+
+ALTER TABLE [dbo].[t_fin_tmpdoc_dp]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_tmpdocdp_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_tmpdoc_dp] CHECK CONSTRAINT [FK_t_fin_tmpdocdp_HID]
+GO
+
+ALTER TABLE [dbo].[t_fin_tmpdoc_dp] ADD  CONSTRAINT [DF_t_fin_tmpdoc_dp_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_fin_tmpdoc_dp] ADD  CONSTRAINT [DF_t_fin_tmpdoc_dp_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
 /****** Object:  Table [dbo].[t_fin_tran_type]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -417,11 +582,11 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[t_fin_tran_type](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NULL,
 	[NAME] [nvarchar](30) NOT NULL,
 	[EXPENSE] [bit] NOT NULL,
 	[PARID] [int] NULL,
 	[COMMENT] [nvarchar](45) NULL,
-	[SYSFLAG] [bit] NULL,
 	[CREATEDBY] [nvarchar](40) NULL,
 	[CREATEDAT] [date] NULL,
 	[UPDATEDBY] [nvarchar](40) NULL,
@@ -433,6 +598,20 @@ CREATE TABLE [dbo].[t_fin_tran_type](
 ) ON [PRIMARY]
 
 GO
+
+ALTER TABLE [dbo].[t_fin_tran_type]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_trantype_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_fin_tran_type] CHECK CONSTRAINT [FK_t_fin_trantype_HID]
+GO
+
+ALTER TABLE [dbo].[t_fin_tran_type] ADD  CONSTRAINT [DF_t_fin_tran_type_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_fin_tran_type] ADD  CONSTRAINT [DF_t_fin_tran_type_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
 /****** Object:  Table [dbo].[t_language]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -451,6 +630,92 @@ CREATE TABLE [dbo].[t_language](
 ) ON [PRIMARY]
 
 GO
+
+ALTER TABLE [dbo].[t_language] ADD  CONSTRAINT [DF_t_language_APPFLAG]  DEFAULT ((0)) FOR [APPFLAG]
+GO
+
+/****** Object:  Table [dbo].[t_learn_obj]    Script Date: 2016-10-27 3:31:27 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[t_learn_obj](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[CATEGORY] [int] NULL,
+	[NAME] [nvarchar](45) NULL,
+	[CONTENT] [nvarchar](max) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_learn_obj] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+ALTER TABLE [dbo].[t_learn_obj]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_obj_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_learn_obj] CHECK CONSTRAINT [FK_t_learn_obj_HID]
+GO
+
+ALTER TABLE [dbo].[t_learn_obj] ADD  CONSTRAINT [DF_t_learn_obj_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_learn_obj] ADD  CONSTRAINT [DF_t_learn_obj_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+/****** Object:  Table [dbo].[t_learn_hist]    Script Date: 2016-10-27 3:31:27 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[t_learn_hist](
+	[HID] [int] NOT NULL,
+	[USERID] [nvarchar](40) NOT NULL,
+	[OBJECTID] [int] NOT NULL,
+	[LEARNDATE] [date] NOT NULL,
+	[COMMENT] [nvarchar](45) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_learn_hist] PRIMARY KEY CLUSTERED 
+(
+	[HID] ASC,
+	[USERID] ASC,
+	[OBJECTID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+ALTER TABLE [dbo].[t_learn_hist]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_hist_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_learn_hist] CHECK CONSTRAINT [FK_t_learn_hist_HID]
+GO
+
+ALTER TABLE [dbo].[t_learn_hist] ADD  CONSTRAINT [DF_t_learn_hist_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+ALTER TABLE [dbo].[t_learn_hist] ADD  CONSTRAINT [DF_t_learn_hist_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+---------------------------------
+-- TODO...
+
+
+
+
+
+
+
+
 /****** Object:  Table [dbo].[t_learn_award]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -473,49 +738,7 @@ CREATE TABLE [dbo].[t_learn_award](
 ) ON [PRIMARY]
 
 GO
-/****** Object:  Table [dbo].[t_learn_hist]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_learn_hist](
-	[USERID] [nvarchar](40) NOT NULL,
-	[OBJECTID] [int] NOT NULL,
-	[LEARNDATE] [date] NOT NULL,
-	[COMMENT] [nvarchar](45) NULL,
-	[CREATEDBY] [nvarchar](40) NULL,
-	[CREATEDAT] [date] NULL,
-	[UPDATEDBY] [nvarchar](40) NULL,
-	[UPDATEDAT] [date] NULL,
- CONSTRAINT [PK_t_learn_hist] PRIMARY KEY CLUSTERED 
-(
-	[USERID] ASC,
-	[OBJECTID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
 
-GO
-/****** Object:  Table [dbo].[t_learn_obj]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_learn_obj](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[CATEGORY] [int] NULL,
-	[NAME] [nvarchar](45) NULL,
-	[CONTENT] [nvarchar](max) NULL,
-	[CREATEDBY] [nvarchar](40) NULL,
-	[CREATEDAT] [date] NULL,
-	[UPDATEDBY] [nvarchar](40) NULL,
-	[UPDATEDAT] [date] NULL,
- CONSTRAINT [PK_t_learn_obj] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-
-GO
 /****** Object:  Table [dbo].[t_learn_plan]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -641,37 +864,7 @@ CREATE TABLE [dbo].[t_tag_link](
 ) ON [PRIMARY]
 
 GO
-/****** Object:  Table [dbo].[t_userdetail]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_userdetail](
-	[USERID] [nvarchar](40) NOT NULL,
-	[DISPLAYAS] [nvarchar](50) NOT NULL,
-	[EMAIL] [nvarchar](100) NULL,
-	[OTHERS] [nvarchar](100) NULL,
- CONSTRAINT [PK_t_userdetail] PRIMARY KEY CLUSTERED 
-(
-	[USERID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
 
-GO
-/****** Object:  Table [dbo].[t_userhist]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_userhist](
-	[USERID] [nvarchar](40) NOT NULL,
-	[SEQNO] [int] NOT NULL,
-	[HISTTYP] [tinyint] NOT NULL,
-	[TIMEPOINT] [datetime] NOT NULL,
-	[OTHERS] [nvarchar](50) NULL
-) ON [PRIMARY]
-
-GO
 /****** Object:  Table [dbo].[t_event]    Script Date: 2017-05-04 5:54:17 PM ******/
 SET ANSI_NULLS ON
 GO
@@ -723,77 +916,9 @@ CREATE UNIQUE NONCLUSTERED INDEX [IUX_t_tag_NAME] ON [dbo].[t_tag]
 	[NAME] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 GO
-ALTER TABLE [dbo].[t_fin_account] ADD  CONSTRAINT [DF_t_fin_account_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_account] ADD  CONSTRAINT [DF_t_fin_account_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_account_ctgy] ADD  CONSTRAINT [DF_t_fin_account_ctgy_ASSETFLAG]  DEFAULT ((1)) FOR [ASSETFLAG]
-GO
-ALTER TABLE [dbo].[t_fin_account_ctgy] ADD  CONSTRAINT [DF_t_fin_account_ctgy_SYSFLAG]  DEFAULT ((0)) FOR [SYSFLAG]
-GO
-ALTER TABLE [dbo].[t_fin_account_ctgy] ADD  CONSTRAINT [DF_t_fin_account_ctgy_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_account_ctgy] ADD  CONSTRAINT [DF_t_fin_account_ctgy_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_controlcenter] ADD  CONSTRAINT [DF_t_fin_controlcenter_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_controlcenter] ADD  CONSTRAINT [DF_t_fin_controlcenter_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_currency] ADD  CONSTRAINT [DF_t_fin_currency_SYSFLAG]  DEFAULT ((0)) FOR [SYSFLAG]
-GO
-ALTER TABLE [dbo].[t_fin_currency] ADD  CONSTRAINT [DF_t_fin_currency_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_currency] ADD  CONSTRAINT [DF_t_fin_currency_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_doc_type] ADD  CONSTRAINT [DF_t_fin_doc_type_SYSFLAG]  DEFAULT ((0)) FOR [SYSFLAG]
-GO
-ALTER TABLE [dbo].[t_fin_doc_type] ADD  CONSTRAINT [DF_t_fin_doc_type_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_doc_type] ADD  CONSTRAINT [DF_t_fin_doc_type_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_document] ADD  CONSTRAINT [DF_t_fin_document_TRANDATE]  DEFAULT (getdate()) FOR [TRANDATE]
-GO
-ALTER TABLE [dbo].[t_fin_exrate] ADD  CONSTRAINT [DF_t_fin_exrate_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_exrate] ADD  CONSTRAINT [DF_t_fin_exrate_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_order] ADD  CONSTRAINT [DF_t_fin_order_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_order] ADD  CONSTRAINT [DF_t_fin_order_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_setting] ADD  CONSTRAINT [DF_t_fin_setting_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_setting] ADD  CONSTRAINT [DF_t_fin_setting_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_tmpdoc_dp] ADD  CONSTRAINT [DF_t_fin_tmpdoc_dp_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_tmpdoc_dp] ADD  CONSTRAINT [DF_t_fin_tmpdoc_dp_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_tran_type] ADD  CONSTRAINT [DF_t_fin_tran_type_SYSFLAG]  DEFAULT ((0)) FOR [SYSFLAG]
-GO
-ALTER TABLE [dbo].[t_fin_tran_type] ADD  CONSTRAINT [DF_t_fin_tran_type_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_tran_type] ADD  CONSTRAINT [DF_t_fin_tran_type_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_language] ADD  CONSTRAINT [DF_t_language_APPFLAG]  DEFAULT ((0)) FOR [APPFLAG]
-GO
 ALTER TABLE [dbo].[t_learn_award] ADD  CONSTRAINT [DF_t_learn_award_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
 GO
 ALTER TABLE [dbo].[t_learn_award] ADD  CONSTRAINT [DF_t_learn_award_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_learn_ctgy] ADD  CONSTRAINT [DF_t_learn_ctgy_SYSFLAG]  DEFAULT ((0)) FOR [SYSFLAG]
-GO
-ALTER TABLE [dbo].[t_learn_ctgy] ADD  CONSTRAINT [DF_t_learn_ctgy_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_learn_ctgy] ADD  CONSTRAINT [DF_t_learn_ctgy_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_learn_hist] ADD  CONSTRAINT [DF_t_learn_hist_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_learn_hist] ADD  CONSTRAINT [DF_t_learn_hist_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_learn_obj] ADD  CONSTRAINT [DF_t_learn_obj_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_learn_obj] ADD  CONSTRAINT [DF_t_learn_obj_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
 GO
 ALTER TABLE [dbo].[t_learn_plan] ADD  CONSTRAINT [DF_t_learn_plan_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
 GO
@@ -804,34 +929,6 @@ GO
 ALTER TABLE [dbo].[t_learn_plandtl] ADD  CONSTRAINT [DF_t_learn_plandtl_RECURTYPE]  DEFAULT ((0)) FOR [RECURTYPE]
 GO
 ALTER TABLE [dbo].[t_learn_planpat] ADD  CONSTRAINT [DF_t_learn_planpat_STARTDATE]  DEFAULT (getdate()) FOR [STARTDATE]
-GO
-ALTER TABLE [dbo].[t_fin_account]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_account_ctgy] FOREIGN KEY([CTGYID])
-REFERENCES [dbo].[t_fin_account_ctgy] ([ID])
-ON UPDATE CASCADE
-ON DELETE CASCADE
-GO
-ALTER TABLE [dbo].[t_fin_account] CHECK CONSTRAINT [FK_t_fin_account_ctgy]
-GO
-ALTER TABLE [dbo].[t_fin_account_ext_dp]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_account_ext_dp_id] FOREIGN KEY([ACCOUNTID])
-REFERENCES [dbo].[t_fin_account] ([ID])
-ON UPDATE CASCADE
-ON DELETE CASCADE
-GO
-ALTER TABLE [dbo].[t_fin_account_ext_dp] CHECK CONSTRAINT [FK_t_fin_account_ext_dp_id]
-GO
-ALTER TABLE [dbo].[t_fin_document_item]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_document_item_document] FOREIGN KEY([DOCID])
-REFERENCES [dbo].[t_fin_document] ([ID])
-ON UPDATE CASCADE
-ON DELETE CASCADE
-GO
-ALTER TABLE [dbo].[t_fin_document_item] CHECK CONSTRAINT [FK_t_fin_document_item_document]
-GO
-ALTER TABLE [dbo].[t_fin_order_srule]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_order_srule_order] FOREIGN KEY([ORDID])
-REFERENCES [dbo].[t_fin_order] ([ID])
-ON UPDATE CASCADE
-ON DELETE CASCADE
-GO
-ALTER TABLE [dbo].[t_fin_order_srule] CHECK CONSTRAINT [FK_t_fin_order_srule_order]
 GO
 ALTER TABLE [dbo].[t_learn_plandtl]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_plandtl_plan] FOREIGN KEY([ID])
 REFERENCES [dbo].[t_learn_plan] ([ID])
