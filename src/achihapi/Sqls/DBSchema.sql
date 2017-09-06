@@ -4,6 +4,7 @@
  */
 
 /****** Object:  Table [dbo].[t_homedef]    Script Date: 2017-05-05 11:36:16 PM ******/
+-- New table
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -12,10 +13,10 @@ CREATE TABLE [dbo].[t_homedef](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[NAME] [nvarchar](50) NOT NULL,
 	[DETAILS] [nvarchar](50) NULL,
-	[HOST] [nvarchar](40) NULL,
-	[CREATEDBY] [nvarchar](40) NULL,
+	[HOST] [nvarchar](50) NOT NULL,
+	[CREATEDBY] [nvarchar](50) NOT NULL,
 	[CREATEDAT] [date] NULL,
-	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDBY] [nvarchar](50) NULL,
 	[UPDATEDAT] [date] NULL,
  CONSTRAINT [PK_t_homedef] PRIMARY KEY CLUSTERED 
 (
@@ -30,6 +31,7 @@ CREATE TABLE [dbo].[t_homedef](
 GO
 
 /****** Object:  Table [dbo].[t_homemem]    Script Date: 2017-05-05 11:36:16 PM ******/
+-- New table
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -37,25 +39,11 @@ GO
 CREATE TABLE [dbo].[t_homemem](
 	[HID] [int] NOT NULL,
 	[USER] [nvarchar](50) NOT NULL,
-	[USERID] [nvarchar](50) NULL,
-	[PRIV_LRN_OBJ] [nvarchar](10) NULL,
-	[PRIV_LRN_HIST] [nvarchar](10) NULL,
-	[PRIV_LRN_AWD] [nvarchar](10) NULL,
-	[PRIV_LRN_PLAN] [nvarchar](10) NULL,
-	[PRIV_LRN_CTGY] [nvarchar](10) NULL,
-	[PRIV_FIN_SET] [nvarchar](10) NULL,
-	[PRIV_FIN_CUR] [nvarchar](10) NULL,
-	[PRIV_FIN_ACNT] [nvarchar](10) NULL,
-	[PRIV_FIN_DOC] [nvarchar](10) NULL,
-	[PRIV_FIN_CC] [nvarchar](10) NULL,
-	[PRIV_FIN_ORD] [nvarchar](10) NULL,
-	[PRIV_FIN_RPT] [nvarchar](10) NULL,
-	[PRIV_EVENT] [nvarchar](10) NULL,
-	[PRIV_LIB_BOOK] [nvarchar](10) NULL,
-	[PRIV_LIB_MOV] [nvarchar](10) NULL,
-	[CREATEDBY] [nvarchar](40) NULL,
+	[DISPLAYAS] [nvarchar](50) NULL,
+	[RELT] [smallint] NOT NULL,
+	[CREATEDBY] [nvarchar](50) NOT NULL,
 	[CREATEDAT] [date] NULL,
-	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDBY] [nvarchar](50) NULL,
 	[UPDATEDAT] [date] NULL,
  CONSTRAINT [PK_t_homemem] PRIMARY KEY CLUSTERED 
 (
@@ -79,24 +67,8 @@ GO
 ALTER TABLE [dbo].[t_homemem] CHECK CONSTRAINT [FK_t_homemem_HID]
 GO
 
-/****** Object:  View [dbo].[v_homemember]    Script Date: 2017-05-15 10:47:38 PM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
-CREATE VIEW [dbo].[v_homemember]
-AS
-	SELECT t_homedef.[ID], t_homedef.[NAME], t_homedef.[HOST], t_homedef.[DETAILS], t_homemem.[USERID],
-		t_homedef.[CREATEDBY], t_homedef.[CREATEDAT], t_homedef.[UPDATEDBY], t_homedef.[UPDATEDAT]
-	 FROM dbo.t_homedef
-		LEFT OUTER JOIN dbo.t_homemem ON t_homedef.[ID] = t_homemem.[HID]
-
-GO
-
-
 /****** Object:  Table [dbo].[t_learn_ctgy]    Script Date: 2017-05-05 11:36:16 PM ******/
+-- Change: [HID] Added
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -127,51 +99,15 @@ ALTER TABLE [dbo].[t_learn_ctgy] CHECK CONSTRAINT [FK_t_learn_ctgy_HID]
 GO
 
 
-
-
-
-
-
-
-
-
----------------------------------
--- TODO...
-
-
-
-
-
-
-/****** Object:  Table [dbo].[t_fin_account]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_fin_account](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[CTGYID] [int] NOT NULL,
-	[NAME] [nvarchar](30) NOT NULL,
-	[COMMENT] [nvarchar](45) NULL,
-	[OWNER] [nvarchar](40) NULL,
-	[CREATEDBY] [nvarchar](40) NULL,
-	[CREATEDAT] [date] NULL,
-	[UPDATEDBY] [nvarchar](40) NULL,
-	[UPDATEDAT] [date] NULL,
- CONSTRAINT [PK_t_fin_account] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
-GO
 /****** Object:  Table [dbo].[t_fin_account_ctgy]    Script Date: 2016-10-27 3:31:27 PM ******/
+-- Changes: [HID] added
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[t_fin_account_ctgy](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NULL,
 	[NAME] [nvarchar](30) NOT NULL,
 	[ASSETFLAG] [bit] NOT NULL,
 	[COMMENT] [nvarchar](45) NULL,
@@ -181,6 +117,30 @@ CREATE TABLE [dbo].[t_fin_account_ctgy](
 	[UPDATEDBY] [nvarchar](40) NULL,
 	[UPDATEDAT] [date] NULL,
  CONSTRAINT [PK_t_fin_account_ctgy] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+/****** Object:  Table [dbo].[t_fin_account]    Script Date: 2016-10-27 3:31:27 PM ******/
+-- Change: [HID] changed
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[t_fin_account](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[CTGYID] [int] NOT NULL,
+	[NAME] [nvarchar](30) NOT NULL,
+	[COMMENT] [nvarchar](45) NULL,
+	[OWNER] [nvarchar](50) NULL,
+	[CREATEDBY] [nvarchar](50) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](50) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_fin_account] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
@@ -208,6 +168,21 @@ CREATE TABLE [dbo].[t_fin_account_ext_dp](
 ) ON [PRIMARY]
 
 GO
+
+
+
+
+
+
+---------------------------------
+-- TODO...
+
+
+
+
+
+
+
 /****** Object:  Table [dbo].[t_fin_controlcenter]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
 GO

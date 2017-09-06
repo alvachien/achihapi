@@ -1,16 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{49D18AB5-4545-439D-BF58-14D9B0838001}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CDAD4D96-52CE-432F-B822-705F98AC2FE2}"
-	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
-	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "achihapi", "src\achihapi\achihapi.xproj", "{0C9235EC-77A4-44FF-88AA-0AFC1598585E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "achihapi", "src\achihapi\achihapi.csproj", "{0C9235EC-77A4-44FF-88AA-0AFC1598585E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,5 +25,8 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0C9235EC-77A4-44FF-88AA-0AFC1598585E} = {49D18AB5-4545-439D-BF58-14D9B0838001}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {949A0B60-9473-4A21-9FFA-63E175EC95BE}
 	EndGlobalSection
 EndGlobal
