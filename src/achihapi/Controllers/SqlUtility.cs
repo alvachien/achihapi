@@ -236,6 +236,45 @@ namespace achihapi.Controllers
         }
         #endregion
 
+        #region Home message
+        internal static string getHomeMsgQueryString(String urName, Int32 hid)
+        {
+            return @"SELECT [ID]
+                      ,[HID]
+                      ,[USERTO]
+                      ,[SENDDATE]
+                      ,[USERFROM]
+                      ,[TITLE]
+                      ,[CONTENT]
+                      ,[READFLAG]
+                  FROM [dbo].[t_homemsg] WHERE [HID] = " + hid.ToString()  + " AND [USERTO] = N'" + urName + "'";
+        }
+
+        internal static void HomeMsg_DB2VM(SqlDataReader reader, HomeMsgViewModel vm)
+        {
+            Int32 idx = 0;
+            try
+            {
+                vm.ID = reader.GetInt32(idx++);
+                vm.HID = reader.GetInt32(idx++);
+                vm.UserTo = reader.GetString(idx++);
+                vm.SendDate = reader.GetDateTime(idx++);
+                vm.UserFrom = reader.GetString(idx++);
+                vm.Title = reader.GetString(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.Content = reader.GetString(idx++);
+                else
+                    ++idx;
+                vm.ReadFlag = reader.GetBoolean(idx);
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Error occurred: HID {0}, index {1}, {2}", vm.HID, idx, exp.Message));
+                throw exp;
+            }
+        }
+        #endregion
+
         #region Learn History
         internal static string getLearnHistoryQueryString(String strUser = "")
         {
