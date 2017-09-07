@@ -67,6 +67,44 @@ GO
 ALTER TABLE [dbo].[t_homemem] CHECK CONSTRAINT [FK_t_homemem_HID]
 GO
 
+/****** Object:  Table [dbo].[t_homemsg]    Script Date: 2017-09-07 12:33:22 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_homemsg](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[USERTO] [nvarchar](50) NOT NULL,
+	[SENDDATE] [date] NOT NULL,
+	[USERFROM] [nvarchar](50) NOT NULL,
+	[TITLE] [nvarchar](20) NOT NULL,
+	[CONTENT] [nvarchar](50) NULL,
+	[READFLAG] [bit] NOT NULL,
+ CONSTRAINT [PK_t_homemsg] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_homemsg] ADD  CONSTRAINT [DF_t_homemsg_SENDDATE]  DEFAULT (getdate()) FOR [SENDDATE]
+GO
+
+ALTER TABLE [dbo].[t_homemsg] ADD  CONSTRAINT [DF_t_homemsg_READFLAG]  DEFAULT ((0)) FOR [READFLAG]
+GO
+
+ALTER TABLE [dbo].[t_homemsg]  WITH CHECK ADD  CONSTRAINT [FK_t_homemsg_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_homemsg] CHECK CONSTRAINT [FK_t_homemsg_HID]
+GO
+
 /****** Object:  Table [dbo].[t_learn_ctgy]    Script Date: 2017-05-05 11:36:16 PM ******/
 -- Change: [HID] Added
 SET ANSI_NULLS ON

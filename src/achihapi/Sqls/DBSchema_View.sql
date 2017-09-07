@@ -1,11 +1,13 @@
-﻿
+﻿/**
+  * Database views
+  */
+
 /****** Object:  View [dbo].[v_homemember]    Script Date: 2017-09-06 11:25:02 PM ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
-
 
 CREATE VIEW [dbo].[v_homemember]
 AS

@@ -44,7 +44,7 @@ namespace achihapi.Controllers
                     vm.Details = reader.GetString(idx++);
                 else
                     ++idx;
-                // User ID - skipping
+                // User - skipping
                 idx++;
                 if (!reader.IsDBNull(idx))
                     vm.CreatedBy = reader.GetString(idx++);
@@ -133,28 +133,14 @@ namespace achihapi.Controllers
         internal static string getHomeMemQueryString(Int32? hid)
         {
             return @"SELECT [HID]
-                          ,[USER]
-                          ,[USERID]
-                          ,[PRIV_LRN_OBJ]
-                          ,[PRIV_LRN_HIST]
-                          ,[PRIV_LRN_AWD]
-                          ,[PRIV_LRN_PLAN]
-                          ,[PRIV_LRN_CTGY]
-                          ,[PRIV_FIN_SET]
-                          ,[PRIV_FIN_CUR]
-                          ,[PRIV_FIN_ACNT]
-                          ,[PRIV_FIN_DOC]
-                          ,[PRIV_FIN_CC]
-                          ,[PRIV_FIN_ORD]
-                          ,[PRIV_FIN_RPT]
-                          ,[PRIV_EVENT]
-                          ,[PRIV_LIB_BOOK]
-                          ,[PRIV_LIB_MOV]
-                          ,[CREATEDBY]
-                          ,[CREATEDAT]
-                          ,[UPDATEDBY]
-                          ,[UPDATEDAT]
-                      FROM [dbo].[t_homemem] " + (hid.HasValue? " WHERE [HID] = " + hid.Value.ToString() : "");
+                      ,[USER]
+                      ,[DISPLAYAS]
+                      ,[RELT]
+                      ,[CREATEDBY]
+                      ,[CREATEDAT]
+                      ,[UPDATEDBY]
+                      ,[UPDATEDAT]
+                  FROM [dbo].[t_homemem] " + (hid.HasValue? " WHERE [HID] = " + hid.Value.ToString() : "");
         }
 
         internal static String getHomeMemInsertString()
@@ -162,118 +148,29 @@ namespace achihapi.Controllers
             return @"INSERT INTO [dbo].[t_homemem]
                        ([HID]
                        ,[USER]
-                       ,[USERID]
-                       ,[PRIV_LRN_OBJ]
-                       ,[PRIV_LRN_HIST]
-                       ,[PRIV_LRN_AWD]
-                       ,[PRIV_LRN_PLAN]
-                       ,[PRIV_LRN_CTGY]
-                       ,[PRIV_FIN_SET]
-                       ,[PRIV_FIN_CUR]
-                       ,[PRIV_FIN_ACNT]
-                       ,[PRIV_FIN_DOC]
-                       ,[PRIV_FIN_CC]
-                       ,[PRIV_FIN_ORD]
-                       ,[PRIV_FIN_RPT]
-                       ,[PRIV_EVENT]
-                       ,[PRIV_LIB_BOOK]
-                       ,[PRIV_LIB_MOV]
+                       ,[DISPLAYAS]
+                       ,[RELT]
                        ,[CREATEDBY]
-                       ,[CREATEDAT])
+                       ,[CREATEDAT]
+                       ,[UPDATEDBY]
+                       ,[UPDATEDAT])
                  VALUES
                        (@HID
                        ,@USER
-                       ,@USERID
-                       ,@PRIV_LRN_OBJ
-                       ,@PRIV_LRN_HIST
-                       ,@PRIV_LRN_AWD
-                       ,@PRIV_LRN_PLAN
-                       ,@PRIV_LRN_CTGY
-                       ,@PRIV_FIN_SET
-                       ,@PRIV_FIN_CUR
-                       ,@PRIV_FIN_ACNT
-                       ,@PRIV_FIN_DOC
-                       ,@PRIV_FIN_CC
-                       ,@PRIV_FIN_ORD
-                       ,@PRIV_FIN_RPT
-                       ,@PRIV_EVENT
-                       ,@PRIV_LIB_BOOK
-                       ,@PRIV_LIB_MOV
+                       ,@DISPLAYAS
+                       ,@RELT
                        ,@CREATEDBY
                        ,@CREATEDAT
-                        )";
+                       ,@UPDATEDBY
+                       ,@UPDATEDAT)";
         }
 
         internal static void bindHomeMemInsertParameter(SqlCommand cmd, HomeMemViewModel vm, String usrName)
         {
             cmd.Parameters.AddWithValue("@HID", vm.HomeID);
             cmd.Parameters.AddWithValue("@USER", vm.User);
-            if (String.IsNullOrEmpty(vm.UserID))
-                cmd.Parameters.AddWithValue("@USERID", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@USERID", vm.UserID);
-            if (String.IsNullOrEmpty(vm.Priv_LearnObject))
-                cmd.Parameters.AddWithValue("@PRIV_LRN_OBJ", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_LRN_OBJ", vm.Priv_LearnObject);
-            if (String.IsNullOrEmpty(vm.Priv_LearnHist))
-                cmd.Parameters.AddWithValue("@PRIV_LRN_HIST", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_LRN_HIST", vm.Priv_LearnHist);
-            if (String.IsNullOrEmpty(vm.Priv_LearnAward))
-                cmd.Parameters.AddWithValue("@PRIV_LRN_AWD", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_LRN_AWD", vm.Priv_LearnAward);
-            if (String.IsNullOrEmpty(vm.Priv_LearnPlan))
-                cmd.Parameters.AddWithValue("@PRIV_LRN_PLAN", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_LRN_PLAN", vm.Priv_LearnPlan);
-            if (String.IsNullOrEmpty(vm.Priv_LearnCategory))
-                cmd.Parameters.AddWithValue("@PRIV_LRN_CTGY", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_LRN_CTGY", vm.Priv_LearnCategory);
-
-            if (String.IsNullOrEmpty(vm.Priv_FinanceSetting))
-                cmd.Parameters.AddWithValue("@PRIV_FIN_SET", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_FIN_SET", vm.Priv_FinanceSetting);
-            if (String.IsNullOrEmpty(vm.Priv_FinanceCurrency))
-                cmd.Parameters.AddWithValue("@PRIV_FIN_CUR", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_FIN_CUR", vm.Priv_FinanceCurrency);
-            if (String.IsNullOrEmpty(vm.Priv_FinanceAccount))
-                cmd.Parameters.AddWithValue("@PRIV_FIN_ACNT", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_FIN_ACNT", vm.Priv_FinanceAccount);
-            if (String.IsNullOrEmpty(vm.Priv_FinanceDocument))
-                cmd.Parameters.AddWithValue("@PRIV_FIN_DOC", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_FIN_DOC", vm.Priv_FinanceDocument);
-            if (String.IsNullOrEmpty(vm.Priv_FinanceControlCenter))
-                cmd.Parameters.AddWithValue("@PRIV_FIN_CC", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_FIN_CC", vm.Priv_FinanceControlCenter);
-            if (String.IsNullOrEmpty(vm.Priv_FinanceOrder))
-                cmd.Parameters.AddWithValue("@PRIV_FIN_ORD", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_FIN_ORD", vm.Priv_FinanceOrder);
-            if (String.IsNullOrEmpty(vm.Priv_FinanceReport))
-                cmd.Parameters.AddWithValue("@PRIV_FIN_RPT", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_FIN_RPT", vm.Priv_FinanceReport);
-            if (String.IsNullOrEmpty(vm.Priv_Event))
-                cmd.Parameters.AddWithValue("@PRIV_EVENT", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_EVENT", vm.Priv_Event);
-            if (String.IsNullOrEmpty(vm.Priv_LibBook))
-                cmd.Parameters.AddWithValue("@PRIV_LIB_BOOK", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_LIB_BOOK", vm.Priv_LibBook);
-            if (String.IsNullOrEmpty(vm.Priv_LibMovie))
-                cmd.Parameters.AddWithValue("@PRIV_LIB_MOV", DBNull.Value);
-            else
-                cmd.Parameters.AddWithValue("@PRIV_LIB_MOV", vm.Priv_LibMovie);
-
+            cmd.Parameters.AddWithValue("@DISPLAYAS", vm.DisplayAs);
+            cmd.Parameters.AddWithValue("@RELT", vm.Relation);
             cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
             cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
             //cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
@@ -289,69 +186,10 @@ namespace achihapi.Controllers
                 vm.HomeID = reader.GetInt32(idx++);
                 vm.User = reader.GetString(idx++);
                 if (!reader.IsDBNull(idx))
-                    vm.UserID = reader.GetString(idx++);
+                    vm.DisplayAs = reader.GetString(idx++);
                 else
                     ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_LearnObject = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_LearnHist = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_LearnAward = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_LearnPlan = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_LearnCategory = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_FinanceSetting = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_FinanceCurrency = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_FinanceAccount = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_FinanceDocument = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_FinanceControlCenter = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_FinanceOrder = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_FinanceReport = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_Event = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_LibBook = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Priv_LibMovie = reader.GetString(idx++);
-                else
-                    ++idx;
+                vm.Relation = reader.GetInt16(idx++);
                 if (!reader.IsDBNull(idx))
                     vm.CreatedBy = reader.GetString(idx++);
                 else
@@ -379,22 +217,12 @@ namespace achihapi.Controllers
         internal static String getHomeMemUpdateString()
         {
             return @"UPDATE [dbo].[t_homemem]
-                       SET [USERID] = @USERID
-                          ,[PRIV_LRN_OBJ] = @PRIV_LRN_OBJ
-                          ,[PRIV_LRN_HIST] = @PRIV_LRN_HIST
-                          ,[PRIV_LRN_AWD] = @PRIV_LRN_AWD
-                          ,[PRIV_LRN_PLAN] = @PRIV_LRN_PLAN
-                          ,[PRIV_LRN_CTGY] = @PRIV_LRN_CTGY
-                          ,[PRIV_FIN_SET] = @PRIV_FIN_SET
-                          ,[PRIV_FIN_CUR] = @PRIV_FIN_CUR
-                          ,[PRIV_FIN_ACNT] = @PRIV_FIN_ACNT
-                          ,[PRIV_FIN_DOC] = @PRIV_FIN_DOC
-                          ,[PRIV_FIN_CC] = @PRIV_FIN_CC
-                          ,[PRIV_FIN_ORD] = @PRIV_FIN_ORD
-                          ,[PRIV_FIN_RPT] = @PRIV_FIN_RPT
-                          ,[PRIV_EVENT] = @PRIV_EVENT
-                          ,[PRIV_LIB_BOOK] = @PRIV_LIB_BOOK
-                          ,[PRIV_LIB_MOV] = @PRIV_LIB_MOV
+                       SET [HID] = @HID
+                          ,[USER] = @USER
+                          ,[DISPLAYAS] = @DISPLAYAS
+                          ,[RELT] = @RELT
+                          ,[CREATEDBY] = @CREATEDBY
+                          ,[CREATEDAT] = @CREATEDAT
                           ,[UPDATEDBY] = @UPDATEDBY
                           ,[UPDATEDAT] = @UPDATEDAT
                      WHERE [HID] = @HID

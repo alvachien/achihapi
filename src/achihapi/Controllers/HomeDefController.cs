@@ -274,25 +274,9 @@ namespace achihapi.Controllers
                 cmd.Transaction = tran;
                 HomeMemViewModel vmMem = new HomeMemViewModel();
                 vmMem.HomeID = nNewID;
-                vmMem.Priv_Event = HIHAPIConstants.All;
-                vmMem.Priv_FinanceAccount = HIHAPIConstants.All;
-                vmMem.Priv_FinanceControlCenter = HIHAPIConstants.All;
-                vmMem.Priv_FinanceCurrency = HIHAPIConstants.All;
-                vmMem.Priv_FinanceDocument = HIHAPIConstants.All;
-                vmMem.Priv_FinanceOrder = HIHAPIConstants.All;
-                vmMem.Priv_FinanceReport = HIHAPIConstants.All;
-                vmMem.Priv_FinanceSetting = HIHAPIConstants.All;
-                vmMem.Priv_LearnAward = HIHAPIConstants.All;
-                vmMem.Priv_LearnCategory = HIHAPIConstants.All;
-                vmMem.Priv_LearnHist = HIHAPIConstants.All;
-                vmMem.Priv_LearnObject = HIHAPIConstants.All;
-                vmMem.Priv_LearnPlan = HIHAPIConstants.All;
-                vmMem.Priv_LibBook = HIHAPIConstants.All;
-                vmMem.Priv_LibMovie = HIHAPIConstants.All;
                 vmMem.CreatedBy = usrId;
                 vmMem.CreatedAt = DateTime.Now;
-                vmMem.UserID = usrId;
-                vmMem.User = vm.UserNameInCreation;
+                vmMem.User = usrId;
                 SqlUtility.bindHomeMemInsertParameter(cmd, vmMem, usrId);
                 await cmd.ExecuteNonQueryAsync();
 
