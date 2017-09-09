@@ -151,18 +151,14 @@ namespace achihapi.Controllers
                        ,[DISPLAYAS]
                        ,[RELT]
                        ,[CREATEDBY]
-                       ,[CREATEDAT]
-                       ,[UPDATEDBY]
-                       ,[UPDATEDAT])
+                       ,[CREATEDAT])
                  VALUES
                        (@HID
                        ,@USER
                        ,@DISPLAYAS
                        ,@RELT
                        ,@CREATEDBY
-                       ,@CREATEDAT
-                       ,@UPDATEDBY
-                       ,@UPDATEDAT)";
+                       ,@CREATEDAT)";
         }
 
         internal static void bindHomeMemInsertParameter(SqlCommand cmd, HomeMemViewModel vm, String usrName)

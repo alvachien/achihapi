@@ -17,6 +17,9 @@ namespace achihapi.ViewModels
         [MaxLength(50)]
         public String Host { get; set; }
 
+        // For creation - which need create a home member automatically
+        public String CreatorDisplayAs { get; set; }
+
         // Members
         public List<HomeMemViewModel> Members = new List<HomeMemViewModel>();
     }

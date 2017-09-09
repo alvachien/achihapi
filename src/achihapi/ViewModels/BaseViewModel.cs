@@ -88,4 +88,12 @@ namespace achihapi.ViewModels
 
         internal const String DateFormatPattern = "yyyy-MM-dd";
     }
+
+    internal enum HIHHomeMemberRelationship
+    {
+        Self = 0,
+        Couple = 1,
+        Child = 2,
+        Parent = 3
+    }
 }
