@@ -278,6 +278,106 @@ namespace achihapi.Controllers
         }
         #endregion
 
+        #region Learn Category
+        internal static string getLearnCategoryQueryString()
+        {
+            string strSQL = @"SELECT [ID]
+                              ,[HID]
+                              ,[PARID]
+                              ,[NAME]
+                              ,[COMMENT]
+                              ,[CREATEDBY]
+                              ,[CREATEDAT]
+                              ,[UPDATEDBY]
+                              ,[UPDATEDAT]
+                          FROM [dbo].[t_learn_ctgy]";
+            return strSQL;
+        }
+
+        internal static string getLearnCategoryInsertString()
+        {
+            string strSQL = @"INSERT INTO [dbo].[t_learn_ctgy]
+                               ([HID]
+                               ,[PARID]
+                               ,[NAME]
+                               ,[COMMENT]
+                               ,[CREATEDBY]
+                               ,[CREATEDAT])
+                         VALUES (@HID
+                               ,@PARID
+                               ,@NAME
+                               ,@COMMENT
+                               ,@CREATEDBY
+                               ,@CREATEDAT);
+                        SELECT @Identity = SCOPE_IDENTITY();";
+            return strSQL;
+        }
+
+        internal static void LearnCategory_DB2VM(SqlDataReader reader, LearnCategoryViewModel vm)
+        {
+            Int32 idx = 0;
+
+            try
+            {
+                vm.ID = reader.GetInt32(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.HID = reader.GetInt32(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.ParID = reader.GetInt32(idx++);
+                else
+                    ++idx;
+                vm.Name = reader.GetString(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.Comment = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Error occurred: ID {0}, index {1}, {2}", vm.ID, idx, exp.Message));
+                throw exp;
+            }
+        }
+
+        internal static void bindLearnCategoryInsertParameter(SqlCommand cmd, LearnCategoryViewModel vm, String usrName)
+        {
+            if (vm.HID != null)
+                cmd.Parameters.AddWithValue("@HID", vm.HID.Value);
+            else
+                cmd.Parameters.AddWithValue("@HID", DBNull.Value);
+
+            if (vm.ParID != null)
+                cmd.Parameters.AddWithValue("@PARID", vm.ParID.Value);
+            else
+                cmd.Parameters.AddWithValue("@PARID", DBNull.Value);
+            cmd.Parameters.AddWithValue("@NAME", vm.Name);
+            if (String.IsNullOrEmpty(vm.Comment))
+                cmd.Parameters.AddWithValue("@COMMENT", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@COMMENT", vm.Comment);
+            cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
+        }
+        #endregion
+
         #region Learn History
         internal static string getLearnHistoryQueryString(String strUser = "")
         {

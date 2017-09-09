@@ -16,7 +16,7 @@ namespace achihapi.Controllers
     {
         // GET: api/learncategory
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<LearnCategoryViewModel> listVm = new BaseListViewModel<LearnCategoryViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -26,17 +26,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT count(*) FROM [dbo].[t_learn_ctgy];
-                        SELECT [ID]
-                              ,[PARID]
-                              ,[NAME]
-                              ,[COMMENT]
-                              ,[SYSFLAG]
-                              ,[CREATEDBY]
-                              ,[CREATEDAT]
-                              ,[UPDATEDBY]
-                              ,[UPDATEDAT]
-                          FROM [dbo].[t_learn_ctgy]";
+                queryString = this.getQueryString(true, top, skip, null, hid);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -58,7 +48,7 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             LearnCategoryViewModel vm = new LearnCategoryViewModel();
-                            onDB2VM(reader, vm);
+                            SqlUtility.LearnCategory_DB2VM(reader, vm);
                             listVm.Add(vm);
                         }
                     }
@@ -92,46 +82,11 @@ namespace achihapi.Controllers
             return new JsonResult(listVm, setting);
         }
 
-        private void onDB2VM(SqlDataReader reader, LearnCategoryViewModel vm)
-        {
-            Int32 idx = 0;
-            vm.ID = reader.GetInt32(idx++);
-            if (!reader.IsDBNull(idx))
-                vm.ParID = reader.GetInt32(idx++);
-            else
-                ++idx;
-            vm.Name = reader.GetString(idx++);
-            if (!reader.IsDBNull(idx))
-                vm.Comment = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.SysFlag = reader.GetBoolean(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.CreatedBy = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.CreatedAt = reader.GetDateTime(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedBy = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedAt = reader.GetDateTime(idx++);
-            else
-                ++idx;
-        }
-
         // GET api/learncategory/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            return "value";
+            return BadRequest();
         }
 
         // POST api/learncategory
@@ -164,6 +119,9 @@ namespace achihapi.Controllers
             if (usr != null)
                 usrName = usr.Value;
 
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest();
+
             try
             {
                 queryString = @"SELECT [ID]
@@ -191,48 +149,10 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Now go ahead for the creating
-                    queryString = @"INSERT INTO [dbo].[t_learn_ctgy]
-                               ([PARID]
-                               ,[NAME]
-                               ,[COMMENT]
-                               ,[SYSFLAG]
-                               ,[CREATEDBY]
-                               ,[CREATEDAT]
-                               ,[UPDATEDBY]
-                               ,[UPDATEDAT])
-                         VALUES
-                               (@PARID
-                               ,@NAME
-                               ,@COMMENT
-                               ,@SYSFLAG
-                               ,@CREATEDBY
-                               ,@CREATEDAT
-                               ,@UPDATEDBY
-                               ,@UPDATEDAT) SELECT @Identity = SCOPE_IDENTITY();";
+                    queryString = SqlUtility.getLearnCategoryInsertString();
 
                     cmd = new SqlCommand(queryString, conn);
-                    if (vm.ParID != null)
-                    {
-                        cmd.Parameters.AddWithValue("@PARID", vm.ParID.Value);
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@PARID", DBNull.Value);
-                    }
-                    cmd.Parameters.AddWithValue("@NAME", vm.Name);
-                    if (String.IsNullOrEmpty(vm.Comment))
-                    {
-                        cmd.Parameters.AddWithValue("@COMMENT", DBNull.Value);
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@COMMENT", vm.Comment);
-                    }
-                    cmd.Parameters.AddWithValue("@SYSFLAG", vm.SysFlag);
-                    cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
-                    cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-                    cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
-                    cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
+                    SqlUtility.bindLearnCategoryInsertParameter(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -274,14 +194,47 @@ namespace achihapi.Controllers
 
         // PUT api/learncategory/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        [Authorize]
+        public async Task<IActionResult> Put(int id, [FromBody]string value)
         {
+            return BadRequest();
         }
 
         // DELETE api/learncategory/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        [Authorize]
+        public async Task<IActionResult> Delete(int id)
         {
+            return BadRequest();
         }
+
+        #region Implementation methods
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32 hid)
+        {
+
+            String strSQL = "";
+            if (bListMode)
+            {
+                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_ctgy] WHERE [HID] = " + hid.ToString() + " OR [HID] IS NULL; ";
+            }
+
+            strSQL += SqlUtility.getHomeDefQueryString() + " WHERE [HID] = " + hid.ToString() + " OR [HID] IS NULL; ";
+
+            if (bListMode && nTop.HasValue && nSkip.HasValue)
+            {
+                strSQL += @" ORDER BY (SELECT NULL)
+                        OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
+            }
+            else if (!bListMode && nSearchID.HasValue)
+            {
+                strSQL += @" AND [t_learn_ctgy].[ID] = " + nSearchID.Value.ToString();
+            }
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine("LearnCategoryController, SQL generated: " + strSQL);
+#endif
+
+            return strSQL;
+        }
+        #endregion
     }
 }
