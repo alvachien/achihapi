@@ -44,11 +44,13 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        FinanceReportBSViewModel avm = new FinanceReportBSViewModel();
-                        avm.AccountID = reader.GetInt32(0);
-                        avm.AccountName = reader.GetString(1);
-                        avm.AccountCategoryID = reader.GetInt32(2);
-                        avm.AccountCategoryName = reader.GetString(3);
+                        FinanceReportBSViewModel avm = new FinanceReportBSViewModel
+                        {
+                            AccountID = reader.GetInt32(0),
+                            AccountName = reader.GetString(1),
+                            AccountCategoryID = reader.GetInt32(2),
+                            AccountCategoryName = reader.GetString(3)
+                        };
                         if (reader.IsDBNull(4))
                             avm.DebitBalance = 0;
                         else
@@ -80,9 +82,12 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listVm, setting);
         }
     }

@@ -45,11 +45,13 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        UserHistoryViewModel vm = new UserHistoryViewModel();
-                        vm.UserID = reader.GetString(0);
-                        vm.SeqNo = reader.GetInt32(1);
-                        vm.HistType = reader.GetByte(2);
-                        vm.TimePoint = reader.GetDateTime(3);
+                        UserHistoryViewModel vm = new UserHistoryViewModel
+                        {
+                            UserID = reader.GetString(0),
+                            SeqNo = reader.GetInt32(1),
+                            HistType = reader.GetByte(2),
+                            TimePoint = reader.GetDateTime(3)
+                        };
                         if (!reader.IsDBNull(4))
                             vm.Others = reader.GetString(4);
 
@@ -83,9 +85,12 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listVMs, setting);
         }
 
@@ -174,9 +179,12 @@ namespace achihapi.Controllers
                 return StatusCode(500, "Failed in DB operation");
             }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(vm, setting);
         }
 

@@ -49,9 +49,11 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        FinanceSettingViewModel avm = new FinanceSettingViewModel();
-                        avm.SetID = reader.GetString(0);
-                        avm.SetValue = reader.GetString(1);
+                        FinanceSettingViewModel avm = new FinanceSettingViewModel
+                        {
+                            SetID = reader.GetString(0),
+                            SetValue = reader.GetString(1)
+                        };
                         if (!reader.IsDBNull(2))
                             avm.Comment = reader.GetString(2);
                         if (!reader.IsDBNull(3))
@@ -82,9 +84,12 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listVm, setting);
         }
 

@@ -37,11 +37,13 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        LanguageViewModel avm = new LanguageViewModel();
-                        avm.Lcid = reader.GetInt32(0);
-                        avm.ISOName = reader.GetString(1);
-                        avm.EnglishName = reader.GetString(2);
-                        avm.NativeName = reader.GetString(3);
+                        LanguageViewModel avm = new LanguageViewModel
+                        {
+                            Lcid = reader.GetInt32(0),
+                            ISOName = reader.GetString(1),
+                            EnglishName = reader.GetString(2),
+                            NativeName = reader.GetString(3)
+                        };
                         if (!reader.IsDBNull(4))
                             avm.AppFlag = reader.GetBoolean(4);
 
@@ -64,9 +66,12 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listVMs, setting);
         }
 

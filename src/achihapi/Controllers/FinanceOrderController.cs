@@ -74,9 +74,12 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listVMs, setting);
         }
 
@@ -141,9 +144,12 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(vm, setting);
         }
 
@@ -254,8 +260,10 @@ namespace achihapi.Controllers
 
                     try
                     {
-                        cmd = new SqlCommand(queryString, conn);
-                        cmd.Transaction = tran;
+                        cmd = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
                         cmd.Parameters.AddWithValue("@NAME", vm.Name);
                         cmd.Parameters.AddWithValue("@VALID_FROM", vm.ValidFrom);
                         cmd.Parameters.AddWithValue("@VALID_TO", vm.ValidTo);
@@ -285,8 +293,10 @@ namespace achihapi.Controllers
                                                ,@CONTROLCENTERID
                                                ,@PRECENT
                                                ,@COMMENT)";
-                            SqlCommand cmd2 = new SqlCommand(queryString, conn);
-                            cmd2.Transaction = tran;
+                            SqlCommand cmd2 = new SqlCommand(queryString, conn)
+                            {
+                                Transaction = tran
+                            };
                             cmd2.Parameters.AddWithValue("@ORDID", nNewID);
                             cmd2.Parameters.AddWithValue("@RULEID", suivm.RuleID);
                             cmd2.Parameters.AddWithValue("@CONTROLCENTERID", suivm.ControlCenterID);
@@ -327,9 +337,12 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
 
             vm.ID = nNewID;
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(vm, setting);
         }
 
@@ -554,10 +567,11 @@ namespace achihapi.Controllers
                 if (nOrderID != nCurrentID)
                 {
                     nOrderID = nCurrentID;
-                    vm = new FinanceOrderViewModel();
-
-                    vm.ID = nCurrentID;
-                    vm.Name = reader.GetString(idx++);
+                    vm = new FinanceOrderViewModel
+                    {
+                        ID = nCurrentID,
+                        Name = reader.GetString(idx++)
+                    };
                     if (!reader.IsDBNull(idx))
                         vm.ValidFrom = reader.GetDateTime(idx++);
                     else
@@ -600,9 +614,11 @@ namespace achihapi.Controllers
                 }
 
                 idx = 9;
-                FinanceOrderSRuleUIViewModel srvm = new FinanceOrderSRuleUIViewModel();
-                srvm.RuleID = reader.GetInt32(idx++);
-                srvm.ControlCenterID = reader.GetInt32(idx++);
+                FinanceOrderSRuleUIViewModel srvm = new FinanceOrderSRuleUIViewModel
+                {
+                    RuleID = reader.GetInt32(idx++),
+                    ControlCenterID = reader.GetInt32(idx++)
+                };
                 if (!reader.IsDBNull(idx))
                     srvm.ControlCenterName = reader.GetString(idx++);
                 else

@@ -16,6 +16,7 @@ namespace achihapi.Controllers
             String strSQL = @"SELECT [ID]
                           ,[NAME]
                           ,[HOST]
+                          ,[BASECURR]
                           ,[DETAILS]
                           ,[USER]
                           ,[CREATEDBY]
@@ -40,6 +41,7 @@ namespace achihapi.Controllers
                 vm.ID = reader.GetInt32(idx++);
                 vm.Name = reader.GetString(idx++);
                 vm.Host = reader.GetString(idx++);
+                vm.BaseCurrency = reader.GetString(idx++);
                 if (!reader.IsDBNull(idx))
                     vm.Details = reader.GetString(idx++);
                 else
@@ -76,12 +78,14 @@ namespace achihapi.Controllers
                    ([NAME]
                    ,[DETAILS]
                    ,[HOST]
+                   ,[BASECURR]
                    ,[CREATEDBY]
                    ,[CREATEDAT])
                    VALUES
                    (@NAME
                    ,@DETAILS
                    ,@HOST
+                   ,@BASECURR
                    ,@CREATEDBY
                    ,@CREATEDAT
                     ); SELECT @Identity = SCOPE_IDENTITY();";
@@ -93,6 +97,7 @@ namespace achihapi.Controllers
                    SET [NAME] = @NAME
                       ,[DETAILS] = @DETAILS
                       ,[HOST] = @HOST
+                      ,[BASECURR] = @BASECURR
                       ,[UPDATEDBY] = @UPDATEDBY
                       ,[UPDATEDAT] = @UPDATEDAT
                  WHERE [ID] = @ID";
@@ -112,6 +117,7 @@ namespace achihapi.Controllers
             else
                 cmd.Parameters.AddWithValue("@DETAILS", vm.Details);
             cmd.Parameters.AddWithValue("@HOST", vm.Host);
+            cmd.Parameters.AddWithValue("@BASECURR", vm.BaseCurrency);
             cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
             cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
         }
@@ -124,6 +130,7 @@ namespace achihapi.Controllers
             else
                 cmd.Parameters.AddWithValue("@DETAILS", vm.Details);
             cmd.Parameters.AddWithValue("@HOST", vm.Host);
+            cmd.Parameters.AddWithValue("@BASECURR", vm.BaseCurrency);
             cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
             cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
         }
@@ -1214,13 +1221,14 @@ namespace achihapi.Controllers
                 if (nDocID != nCurrentID)
                 {
                     nDocID = nCurrentID;
-                    vm = new FinanceDocumentUIViewModel();
-
-                    vm.ID = nCurrentID;
-                    vm.DocType = reader.GetInt16(idx++);
-                    vm.DocTypeName = reader.GetString(idx++);
-                    vm.TranDate = reader.GetDateTime(idx++);
-                    vm.TranCurr = reader.GetString(idx++);
+                    vm = new FinanceDocumentUIViewModel
+                    {
+                        ID = nCurrentID,
+                        DocType = reader.GetInt16(idx++),
+                        DocTypeName = reader.GetString(idx++),
+                        TranDate = reader.GetDateTime(idx++),
+                        TranCurr = reader.GetString(idx++)
+                    };
                     if (!reader.IsDBNull(idx))
                         vm.Desp = reader.GetString(idx++);
                     else

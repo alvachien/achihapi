@@ -1,28 +1,39 @@
 ﻿
--- Content for language
+-- Content for language, updated at 2017.9.9
+INSERT INTO [dbo].[t_language] ([LCID],[ISONAME],[ENNAME],[NAVNAME],[APPFLAG]) VALUES (4, N'zh-Hans', N'Chinese (Simplified)', N'简体中文', 1);
+INSERT INTO [dbo].[t_language] ([LCID],[ISONAME],[ENNAME],[NAVNAME],[APPFLAG]) VALUES (9, N'en', N'English', N'English', 1);
+INSERT INTO [dbo].[t_language] ([LCID],[ISONAME],[ENNAME],[NAVNAME],[APPFLAG]) VALUES (17, N'ja', N'Japanese', N'日本语', 1);
+INSERT INTO [dbo].[t_language] ([LCID],[ISONAME],[ENNAME],[NAVNAME],[APPFLAG]) VALUES (31748, N'zh-Hant', N'Chinese (Traditional)', N'繁體中文', 0);
 
--- Content for currency
+-- Content for currency, updated at 2017.9.9
+INSERT INTO [dbo].[t_fin_currency] ([CURR],[NAME],[SYMBOL]) VALUES (N'CNY', N'Sys.Currency.CNY', N'¥');
+INSERT INTO [dbo].[t_fin_currency] ([CURR],[NAME],[SYMBOL]) VALUES (N'EUR', N'Sys.Currency.EUR', N'€');
+INSERT INTO [dbo].[t_fin_currency] ([CURR],[NAME],[SYMBOL]) VALUES (N'HKD', N'Sys.Currency.HKD', N'HK$');
+INSERT INTO [dbo].[t_fin_currency] ([CURR],[NAME],[SYMBOL]) VALUES (N'JPY', N'Sys.Currency.JPY', N'¥');
+INSERT INTO [dbo].[t_fin_currency] ([CURR],[NAME],[SYMBOL]) VALUES (N'KRW', N'Sys.Currency.KRW', N'₩');
+INSERT INTO [dbo].[t_fin_currency] ([CURR],[NAME],[SYMBOL]) VALUES (N'TWD', N'Sys.Currency.TWD', N'TW$');
+INSERT INTO [dbo].[t_fin_currency] ([CURR],[NAME],[SYMBOL]) VALUES (N'USD', N'Sys.Currency.USD', N'$');
 
 -- Content for learn category
-SET IDENTITY_INSERT dbo.[t_learn_ctgy] ON;
+--SET IDENTITY_INSERT dbo.[t_learn_ctgy] ON;
 
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (1,NULL,N'Learning.Ctgy_LAL',N'Learning.Ctgy_LAL');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (2,1,N'Learning.Ctgy_Poem',N'Learning.Ctgy_TangSongPoem');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (3,1,N'Learning.Ctgy_Literacy',N'拼音认读和笔画等');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (4,1,N'Learning.Ctgy_AncientChineseProse',N'文言文等');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (5,1,N'Learning.Ctgy_Classical',N'古典名著等');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (6,NULL,N'Learning.Ctgy_Math',N'数学类');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (7,6,N'Learning.Ctgy_Arithmetic',N'加减法');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (8,6,N'Learning.Ctgy_Algebra',N'代数');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (9,6,N'Learning.Ctgy_Geometry',N'几何类');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (10,NULL,N'Learning.Ctgy_English',N'英语类');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (11,10,N'Learning.Ctgy_Vocabulary',N'英语词汇');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (12,10,N'Learning.Ctgy_Grammar',N'英语语法');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (13,NULL,N'Learning.Ctgy_Japanese',N'日语类');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (14,13,N'Learning.Ctgy_Vocabulary',N'日语词汇');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (15,13,N'Learning.Ctgy_Grammar',N'日语语法');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (1,NULL,N'Learning.Ctgy_LAL',N'Learning.Ctgy_LAL');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (2,1,N'Learning.Ctgy_Poem',N'Learning.Ctgy_TangSongPoem');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (3,1,N'Learning.Ctgy_Literacy',N'拼音认读和笔画等');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (4,1,N'Learning.Ctgy_AncientChineseProse',N'文言文等');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (5,1,N'Learning.Ctgy_Classical',N'古典名著等');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (6,NULL,N'Learning.Ctgy_Math',N'数学类');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (7,6,N'Learning.Ctgy_Arithmetic',N'加减法');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (8,6,N'Learning.Ctgy_Algebra',N'代数');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (9,6,N'Learning.Ctgy_Geometry',N'几何类');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (10,NULL,N'Learning.Ctgy_English',N'英语类');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (11,10,N'Learning.Ctgy_Vocabulary',N'英语词汇');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (12,10,N'Learning.Ctgy_Grammar',N'英语语法');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (13,NULL,N'Learning.Ctgy_Japanese',N'日语类');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (14,13,N'Learning.Ctgy_Vocabulary',N'日语词汇');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (15,13,N'Learning.Ctgy_Grammar',N'日语语法');
 
-SET IDENTITY_INSERT dbo.[t_learn_ctgy] OFF;
+--SET IDENTITY_INSERT dbo.[t_learn_ctgy] OFF;
 
 
 

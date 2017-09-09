@@ -76,9 +76,12 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listVMs, setting);
         }
 
@@ -135,33 +138,40 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(vm, setting);
         }
 
         // POST api/financecurrency
         [HttpPost]
         [Authorize]
-        public void Post([FromBody]string value)
+        public async Task<IActionResult> Post([FromBody]string value)
         {
+            return BadRequest();
         }
 
         // PUT api/financecurrency/5
         [HttpPut("{id}")]
         [Authorize]
-        public void Put(int id, [FromBody]string value)
+        public async Task<IActionResult> Put(int id, [FromBody]string value)
         {
+            return BadRequest();
         }
 
         // DELETE api/financecurrency/5
         [HttpDelete("{id}")]
         [Authorize]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            return BadRequest();
         }
 
+        #region Implement methods
         private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, String strCurr)
         {
             String strSQL = "";
@@ -173,7 +183,6 @@ namespace achihapi.Controllers
             strSQL += @"SELECT [CURR]
                               ,[NAME]
                               ,[SYMBOL]
-                              ,[SYSFLAG]
                               ,[CREATEDBY]
                               ,[CREATEDAT]
                               ,[UPDATEDBY]
@@ -186,7 +195,7 @@ namespace achihapi.Controllers
             }
             else if (!bListMode && !String.IsNullOrEmpty(strCurr))
             {
-                strSQL += " WHERE [t_fin_account_ctgy].[CURR] = N'" + strCurr + "'";
+                strSQL += " WHERE [t_fin_currency].[CURR] = N'" + strCurr + "'";
             }
 
             return strSQL;
@@ -199,10 +208,6 @@ namespace achihapi.Controllers
             vm.Name = reader.GetString(idx++);
             if (!reader.IsDBNull(idx))
                 vm.Symbol = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.SysFlag = reader.GetBoolean(idx++);
             else
                 ++idx;
             if (!reader.IsDBNull(idx))
@@ -222,5 +227,6 @@ namespace achihapi.Controllers
             else
                 ++idx;
         }
+        #endregion
     }
 }

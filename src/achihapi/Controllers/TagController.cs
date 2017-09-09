@@ -42,9 +42,11 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        TagViewModel avm = new TagViewModel();
-                        avm.ID = reader.GetInt32(0);
-                        avm.Name = reader.GetString(1);
+                        TagViewModel avm = new TagViewModel
+                        {
+                            ID = reader.GetInt32(0),
+                            Name = reader.GetString(1)
+                        };
 
                         listVMs.Add(avm);
                     }
@@ -65,9 +67,12 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listVMs, setting);
         }
 

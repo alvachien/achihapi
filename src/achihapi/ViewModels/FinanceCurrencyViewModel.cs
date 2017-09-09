@@ -16,6 +16,5 @@ namespace achihapi.ViewModels
         public String Name { get; set; }
         [StringLength(30)]
         public String Symbol { get; set; }
-        public Boolean SysFlag { get; set; }        
     }
 }

@@ -11,7 +11,7 @@ GO
 
 CREATE VIEW [dbo].[v_homemember]
 AS
-	SELECT t_homedef.[ID], t_homedef.[NAME], t_homedef.[HOST], t_homedef.[DETAILS], t_homemem.[USER],
+	SELECT t_homedef.[ID], t_homedef.[NAME], t_homedef.[HOST], t_homedef.[BASECURR], t_homedef.[DETAILS], t_homemem.[USER], t_homemem.[DISPLAYAS],
 		t_homedef.[CREATEDBY], t_homedef.[CREATEDAT], t_homedef.[UPDATEDBY], t_homedef.[UPDATEDAT]
 	 FROM dbo.t_homedef
 		LEFT OUTER JOIN dbo.t_homemem ON t_homedef.[ID] = t_homemem.[HID]

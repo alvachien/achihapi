@@ -14,6 +14,7 @@ CREATE TABLE [dbo].[t_homedef](
 	[NAME] [nvarchar](50) NOT NULL,
 	[DETAILS] [nvarchar](50) NULL,
 	[HOST] [nvarchar](50) NOT NULL,
+	[BASECURR] [nvarchar](5) NOT NULL,
 	[CREATEDBY] [nvarchar](50) NOT NULL,
 	[CREATEDAT] [date] NULL,
 	[UPDATEDBY] [nvarchar](50) NULL,

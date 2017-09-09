@@ -75,9 +75,12 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listVMs, setting);
         }
 
@@ -200,8 +203,10 @@ namespace achihapi.Controllers
 
                 try
                 {
-                    cmd = new SqlCommand(queryString, conn);
-                    cmd.Transaction = tran;
+                    cmd = new SqlCommand(queryString, conn)
+                    {
+                        Transaction = tran
+                    };
 
                     SqlUtility.bindFinDocHeaderParameter(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
@@ -215,8 +220,10 @@ namespace achihapi.Controllers
                     {
                         queryString = SqlUtility.getFinDocItemInsertString();
 
-                        SqlCommand cmd2 = new SqlCommand(queryString, conn);
-                        cmd2.Transaction = tran;
+                        SqlCommand cmd2 = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
                         SqlUtility.bindFinDocItemParameter(cmd2, ivm, nNewDocID);
 
                         await cmd2.ExecuteNonQueryAsync();
@@ -248,9 +255,12 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
 
             vm.ID = nNewDocID;
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(vm, setting);
         }
 

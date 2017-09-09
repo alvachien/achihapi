@@ -108,9 +108,12 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(vm, setting);
         }
 
@@ -155,8 +158,10 @@ namespace achihapi.Controllers
                 {
                     // First, craete the doc header => nNewDocID
                     queryString = SqlUtility.getFinDocHeaderInsertString();
-                    cmd = new SqlCommand(queryString, conn);
-                    cmd.Transaction = tran;
+                    cmd = new SqlCommand(queryString, conn)
+                    {
+                        Transaction = tran
+                    };
 
                     SqlUtility.bindFinDocHeaderParameter(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
@@ -171,8 +176,10 @@ namespace achihapi.Controllers
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
                         queryString = SqlUtility.getFinDocItemInsertString();
-                        SqlCommand cmd2 = new SqlCommand(queryString, conn);
-                        cmd2.Transaction = tran;
+                        SqlCommand cmd2 = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
                         SqlUtility.bindFinDocItemParameter(cmd2, ivm, nNewDocID);
 
                         await cmd2.ExecuteNonQueryAsync();
@@ -184,8 +191,10 @@ namespace achihapi.Controllers
                     // Third, go to the account creation => nNewAccountID
                     queryString = SqlUtility.getFinanceAccountInsertString();
 
-                    cmd = new SqlCommand(queryString, conn);
-                    cmd.Transaction = tran;
+                    cmd = new SqlCommand(queryString, conn)
+                    {
+                        Transaction = tran
+                    };
                     SqlUtility.bindFinAccountParameter(cmd, vm.AccountVM, usrName);
 
                     SqlParameter idparam2 = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
@@ -198,8 +207,10 @@ namespace achihapi.Controllers
 
                     // Fourth, creat the ADP part
                     queryString = SqlUtility.getFinanceAccountADPInsertString();
-                    cmd = new SqlCommand(queryString, conn);
-                    cmd.Transaction = tran;
+                    cmd = new SqlCommand(queryString, conn)
+                    {
+                        Transaction = tran
+                    };
 
                     SqlUtility.bindFinAccountADPParameter(cmd, vm.AccountVM.AdvancePaymentInfo, nNewDocID, nNewAccountID, usrName);
                     nRst = await cmd.ExecuteNonQueryAsync();
@@ -211,8 +222,10 @@ namespace achihapi.Controllers
                     {
                         queryString = SqlUtility.getFinanceTmpDocADPInsertString();
 
-                        cmd = new SqlCommand(queryString, conn);
-                        cmd.Transaction = tran;
+                        cmd = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
 
                         SqlUtility.bindFinTmpDocADPParameter(cmd, avm, nNewAccountID, usrName);
                         await cmd.ExecuteNonQueryAsync();
@@ -248,9 +261,12 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
 
             vm.ID = nNewDocID;
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(vm, setting);
         }
 

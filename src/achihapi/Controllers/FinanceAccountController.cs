@@ -93,9 +93,12 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listVm, setting);
         }
 
@@ -168,9 +171,12 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
 
             // Only return the meaningful object
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(vmAccount, setting);
         }
 
@@ -258,8 +264,10 @@ namespace achihapi.Controllers
 
                     try
                     {
-                        cmd = new SqlCommand(queryString, conn);
-                        cmd.Transaction = tran;
+                        cmd = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
 
                         SqlUtility.bindFinAccountParameter(cmd, vm, usrName);
                         SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
@@ -301,9 +309,12 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
 
             vm.ID = nNewID;
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(vm, setting);
         }
 
@@ -367,8 +378,10 @@ namespace achihapi.Controllers
                 await conn.OpenAsync();
 
                 SqlTransaction tran = conn.BeginTransaction();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Transaction = tran;
+                SqlCommand cmd = new SqlCommand(queryString, conn)
+                {
+                    Transaction = tran
+                };
                 cmd.Parameters.AddWithValue("@CTGYID", vm.CtgyID);
                 cmd.Parameters.AddWithValue("@NAME", vm.Name);
                 cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
@@ -406,9 +419,12 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = HIHAPIConstants.DateFormatPattern;
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(vm, setting);
         }
 
@@ -478,15 +494,19 @@ namespace achihapi.Controllers
                 await conn.OpenAsync();
 
                 SqlTransaction tran = conn.BeginTransaction();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Transaction = tran;
+                SqlCommand cmd = new SqlCommand(queryString, conn)
+                {
+                    Transaction = tran
+                };
                 cmd.Parameters.AddWithValue("@ID", id);
                 await cmd.ExecuteNonQueryAsync();
 
                 // Ext. info
                 queryString = @"DELETE FROM [dbo].[t_fin_account_ext_dp] WHERE [ACCOUNTID] = @ACCOUNTID";
-                cmd = new SqlCommand(queryString, conn);
-                cmd.Transaction = tran;
+                cmd = new SqlCommand(queryString, conn)
+                {
+                    Transaction = tran
+                };
                 cmd.Parameters.AddWithValue("@ACCOUNTID", id);
                 await cmd.ExecuteNonQueryAsync();
 
