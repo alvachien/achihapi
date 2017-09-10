@@ -14,7 +14,7 @@ namespace achihapi.Controllers
     {
         // GET: api/trantype
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceTranTypeViewModel> listVMs = new BaseListViewModel<FinanceTranTypeViewModel>();
 
@@ -25,7 +25,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(true, top, skip, null);
+                queryString = this.getQueryString(true, top, skip, null, hid);
 
                 await conn.OpenAsync();
 
@@ -92,7 +92,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(false, null, null, id);
+                queryString = this.getQueryString(false, null, null, id, null);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -143,45 +143,54 @@ namespace achihapi.Controllers
         // POST api/trantype
         [HttpPost]
         [Authorize]
-        public void Post([FromBody]string value)
+        public async Task<IActionResult> Post([FromBody]string value)
         {
+            return BadRequest();
         }
 
         // PUT api/trantype/5
         [HttpPut("{id}")]
         [Authorize]
-        public void Put(int id, [FromBody]string value)
+        public async Task<IActionResult> Put(int id, [FromBody]string value)
         {
+            return BadRequest();
         }
 
         // DELETE api/trantype/5
         [HttpDelete("{id}")]
         [Authorize]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            return BadRequest();
         }
 
-        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
+        #region Implemented methods
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32? hid)
         {
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_tran_type];";
+                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_tran_type] WHERE [HID] IS NULL ";
+                if (hid.HasValue && hid.Value != 0)
+                    strSQL += " OR [HID] = " + hid.Value.ToString() + ";";
             }
 
             strSQL += @"SELECT [ID]
-                              ,[NAME]
-                              ,[EXPENSE]
-                              ,[PARID]
-                              ,[COMMENT]
-                              ,[SYSFLAG]
-                              ,[CREATEDBY]
-                              ,[CREATEDAT]
-                              ,[UPDATEDBY]
-                              ,[UPDATEDAT]
+                          ,[HID]
+                          ,[NAME]
+                          ,[EXPENSE]
+                          ,[PARID]
+                          ,[COMMENT]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
                           FROM [dbo].[t_fin_tran_type] ";
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
+                strSQL += "WHERE [HID] IS NULL ";
+                if (hid.HasValue && hid.Value != 0)
+                    strSQL += " OR [HID] = " + hid.Value.ToString();
                 strSQL += @" ORDER BY (SELECT NULL)
                         OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
             }
@@ -197,8 +206,12 @@ namespace achihapi.Controllers
         {
             Int32 idx = 0;
             vm.ID = reader.GetInt32(idx++);
+            vm.HID = null;
+            if (!reader.IsDBNull(idx))
+                vm.HID = reader.GetInt32(idx++);
+            else
+                ++idx;
             vm.Name = reader.GetString(idx++);
-
             if (!reader.IsDBNull(idx))
                 vm.Expense = reader.GetBoolean(idx++);
             else
@@ -209,10 +222,6 @@ namespace achihapi.Controllers
                 ++idx;
             if (!reader.IsDBNull(idx))
                 vm.Comment = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.SysFlag = reader.GetBoolean(idx++);
             else
                 ++idx;
             if (!reader.IsDBNull(idx))
@@ -232,5 +241,6 @@ namespace achihapi.Controllers
             else
                 ++idx;
         }
+        #endregion
     }
 }

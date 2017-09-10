@@ -16,7 +16,7 @@ namespace achihapi.Controllers
     {
         // GET: api/learncategory
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<LearnCategoryViewModel> listVm = new BaseListViewModel<LearnCategoryViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -209,19 +209,24 @@ namespace achihapi.Controllers
         }
 
         #region Implementation methods
-        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32 hid)
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32? hid)
         {
 
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_ctgy] WHERE [HID] = " + hid.ToString() + " OR [HID] IS NULL; ";
+                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_ctgy] WHERE [HID] IS NULL ";
+                if (hid.HasValue && hid.Value != 0)
+                    strSQL += " OR [HID] = " + hid.Value.ToString() + ";";
             }
 
-            strSQL += SqlUtility.getHomeDefQueryString() + " WHERE [HID] = " + hid.ToString() + " OR [HID] IS NULL; ";
+            strSQL += SqlUtility.getLearnCategoryQueryString();
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
+                strSQL += " WHERE [HID] IS NULL ";
+                if (hid.HasValue && hid.Value != 0)
+                    strSQL += " OR [HID] = " + hid.Value.ToString();
                 strSQL += @" ORDER BY (SELECT NULL)
                         OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
             }
