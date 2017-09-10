@@ -9,6 +9,8 @@ namespace achihapi.ViewModels
     public class LearnObjectViewModel : BaseViewModel
     {
         public Int32 ID { get; set; }
+        [Required]
+        public Int32 HID { get; set; }
         public Int32 CategoryID { get; set; }
         [Required]
         [StringLength(45)]
@@ -16,6 +18,7 @@ namespace achihapi.ViewModels
         [Required]
         public String Content { get; set; }
     }
+
     public class LearnObjectUIViewModel : LearnObjectViewModel
     {
         // UI part string

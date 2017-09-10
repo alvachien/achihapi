@@ -15,7 +15,7 @@ namespace achihapi.Controllers
     {
         // GET: api/learnobject
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0, Boolean bIncContent = false)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0, Boolean bIncContent = false)
         {
             BaseListViewModel<LearnObjectUIViewModel> listVm = new BaseListViewModel<LearnObjectUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -25,7 +25,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(bIncContent, true, top, skip, null);
+                queryString = this.getQueryString(bIncContent, true, top, skip, null, hid);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -81,32 +81,32 @@ namespace achihapi.Controllers
             return new JsonResult(listVm, setting);
         }
 
-        private string getQueryString(Boolean bIncContent, Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
+        private string getQueryString(Boolean bIncContent, Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32 hid)
         {
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_obj];";
+                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_obj] WHERE [HID] = " + hid.ToString() + "; ";
             }
             
             strSQL += @"SELECT [t_learn_obj].[ID]
+                      ,[t_learn_obj].[HID]
                       ,[t_learn_obj].[CATEGORY]
                       ,[t_learn_ctgy].[NAME] as [CATEGORYNAME]
                       ,[t_learn_obj].[NAME]";
             if (bIncContent)
                 strSQL += @",[t_learn_obj].[CONTENT] ";
-
             strSQL += @",[t_learn_obj].[CREATEDBY]
                       ,[t_learn_obj].[CREATEDAT]
                       ,[t_learn_obj].[UPDATEDBY]
                       ,[t_learn_obj].[UPDATEDAT] 
                         FROM [dbo].[t_learn_obj]
                             INNER JOIN [dbo].[t_learn_ctgy]
-                        ON [t_learn_obj].[CATEGORY] = [t_learn_ctgy].[ID]";
+                        ON [t_learn_obj].[CATEGORY] = [t_learn_ctgy].[ID] ";
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
-                strSQL += @" ORDER BY (SELECT NULL)
-                        OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
+                strSQL += @" WHERE [t_learn_obj].[HID] = " + hid.ToString() 
+                       + @" ORDER BY (SELECT NULL) OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
             }
             else if (!bListMode && nSearchID.HasValue)
             {
@@ -118,18 +118,25 @@ namespace achihapi.Controllers
 
         private void onDB2VM(SqlDataReader reader, Boolean bIncContent, LearnObjectUIViewModel vm)
         {
-            vm.ID = reader.GetInt32(0);
-            vm.CategoryID = reader.GetInt32(1);
-            if (!reader.IsDBNull(2))
-                vm.CategoryName = reader.GetString(2);
+            var idx = 0;
+            vm.ID = reader.GetInt32(idx++);
+            vm.HID = reader.GetInt32(idx++);
+            vm.CategoryID = reader.GetInt32(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.CategoryName = reader.GetString(idx++);
             else
+            {
                 vm.CategoryName = String.Empty;
-            if (!reader.IsDBNull(3))
-                vm.Name = reader.GetString(3);
+                ++idx;
+            }                
+            if (!reader.IsDBNull(idx))
+                vm.Name = reader.GetString(idx++);
             else
+            {
                 vm.Name = String.Empty;
-
-            Int32 idx = 4;
+                ++idx;
+            }
+                
             if (bIncContent)
             {
                 if (!reader.IsDBNull(idx))
@@ -168,7 +175,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(true, false, null, null, id);
+                queryString = this.getQueryString(true, false, null, null, id, 0);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -274,15 +281,16 @@ namespace achihapi.Controllers
 
                     // Now go ahead for the creating
                     queryString = @"INSERT INTO [dbo].[t_learn_obj]
-                                       ([CATEGORY]
+                                       ([HID]
+                                       ,[CATEGORY]
                                        ,[NAME]
                                        ,[CONTENT]
                                        ,[CREATEDBY]
                                        ,[CREATEDAT]
                                        ,[UPDATEDBY]
                                        ,[UPDATEDAT])
-                                 VALUES
-                                       (@CTGY
+                                 VALUES (@HID
+                                       ,@CTGY
                                        ,@NAME
                                        ,@CONTENT
                                        ,@CREATEDBY
@@ -292,6 +300,7 @@ namespace achihapi.Controllers
                                     ); SELECT @Identity = SCOPE_IDENTITY();";
 
                     cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@HID", vm.HID);
                     cmd.Parameters.AddWithValue("@CTGY", vm.CategoryID);
                     cmd.Parameters.AddWithValue("@NAME", vm.Name);
                     cmd.Parameters.AddWithValue("@CONTENT", vm.Content);

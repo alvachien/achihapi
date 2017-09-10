@@ -11,11 +11,11 @@ using Microsoft.AspNetCore.Authorization;
 namespace achihapi.Controllers
 {
     [Route("api/[controller]")]
-    public class FinanceControllingCenterController : Controller
+    public class FinanceControlCenterController : Controller
     {
-        // GET: api/financecontrollingcenter
+        // GET: api/financecontrolcenter
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceControlCenterViewModel> listVMs = new BaseListViewModel<FinanceControlCenterViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -25,7 +25,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(true, top, skip, null);
+                queryString = this.getQueryString(true, top, skip, null, hid);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -97,7 +97,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(false, null, null, id);
+                queryString = this.getQueryString(false, null, null, id, null);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -145,7 +145,7 @@ namespace achihapi.Controllers
             return new JsonResult(vm, setting);
         }
 
-        // POST api/financecontrollingcenter
+        // POST api/financecontrolcenter
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceControlCenterViewModel vm)
@@ -207,7 +207,8 @@ namespace achihapi.Controllers
 
                     // Now go ahead for the creating
                     queryString = @"INSERT INTO [dbo].[t_fin_controlcenter]
-                               ([NAME]
+                               ([HID]    
+                               ,[NAME]
                                ,[PARID]
                                ,[COMMENT]
                                ,[OWNER]
@@ -215,8 +216,8 @@ namespace achihapi.Controllers
                                ,[CREATEDAT]
                                ,[UPDATEDBY]
                                ,[UPDATEDAT])
-                         VALUES
-                               (@NAME
+                         VALUES (@HID 
+                               ,@NAME
                                ,@PARID
                                ,@COMMENT
                                ,@OWNER
@@ -226,6 +227,7 @@ namespace achihapi.Controllers
                                ,@UPDATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
 
                     cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@HID", vm.HID);
                     cmd.Parameters.AddWithValue("@NAME", vm.Name);
                     if (vm.ParID.HasValue)
                         cmd.Parameters.AddWithValue("@PARID", vm.ParID.Value);
@@ -283,28 +285,30 @@ namespace achihapi.Controllers
 
         // PUT api/financecontrollingcenter/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]FinanceControlCenterViewModel vm)
+        public async Task<IActionResult> Put(int id, [FromBody]FinanceControlCenterViewModel vm)
         {
-
+            return BadRequest();
         }
 
         // DELETE api/financecontrollingcenter/5
         [HttpDelete("{id}")]
         [Authorize]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            return BadRequest();
         }
 
         #region Implemented methods
-        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32? hid)
         {
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_controlcenter];";
+                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_controlcenter] WHERE [HID] = " + hid.Value.ToString() + ";";
             }
 
             strSQL += @" SELECT [ID]
+                              ,[HID]
                               ,[NAME]
                               ,[PARID]
                               ,[COMMENT]
@@ -315,12 +319,13 @@ namespace achihapi.Controllers
                               ,[UPDATEDAT] FROM [dbo].[t_fin_controlcenter] ";
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
-                strSQL += @" ORDER BY (SELECT NULL)
-                        OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
+                strSQL += " WHERE [HID] = " + hid.Value.ToString() 
+                            + @" ORDER BY (SELECT NULL) OFFSET " 
+                            + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
             }
             else if (!bListMode && nSearchID.HasValue)
             {
-                strSQL += @" WHERE [t_fin_controlcenter].[ID] = " + nSearchID.Value.ToString();
+                strSQL += @" WHERE [ID] = " + nSearchID.Value.ToString();
             }
 #if DEBUG
             System.Diagnostics.Debug.WriteLine(strSQL);
@@ -333,6 +338,7 @@ namespace achihapi.Controllers
         {
             Int32 idx = 0;
             vm.ID = reader.GetInt32(idx++);
+            vm.HID = reader.GetInt32(idx++);
             vm.Name = reader.GetString(idx++);
             if (!reader.IsDBNull(idx))
                 vm.ParID = reader.GetInt32(idx++);

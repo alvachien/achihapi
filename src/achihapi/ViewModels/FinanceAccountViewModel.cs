@@ -9,6 +9,9 @@ namespace achihapi.ViewModels
     public class FinanceAccountViewModel : BaseViewModel
     {
         public Int32 ID { get; set; }
+        [Required]
+        public Int32 HID { get; set; }
+        [Required]
         public Int32 CtgyID { get; set; }
         [StringLength(30)]
         public String Name { get; set; }

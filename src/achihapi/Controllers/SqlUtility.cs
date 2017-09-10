@@ -404,9 +404,10 @@ namespace achihapi.Controllers
         #endregion
 
         #region Finance Account
-        internal static string getFinanceAccountQueryString(String strOwner = "")
+        internal static string getFinanceAccountQueryString(Int32 hid, String strOwner = "")
         {
             String strSQL = @"SELECT [t_fin_account].[ID]
+                      ,[t_fin_account].[HID]  
                       ,[t_fin_account].[CTGYID]
                       ,[t_fin_account_ctgy].[NAME] as [CTGYNAME]
                       ,[t_fin_account].[NAME]
@@ -427,10 +428,11 @@ namespace achihapi.Controllers
                   LEFT OUTER JOIN [dbo].[t_fin_account_ctgy]
                        ON [t_fin_account].[CTGYID] = [t_fin_account_ctgy].[ID]
                   LEFT OUTER JOIN [dbo].[t_fin_account_ext_dp]
-                       ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID] ";
+                       ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID] 
+                  WHERE [t_fin_account].[HID] = " + hid.ToString();
             if (!String.IsNullOrEmpty(strOwner))
             {
-                strSQL += " WHERE [t_fin_account].[OWNER] = N'" + strOwner + "'";
+                strSQL += " AND [t_fin_account].[OWNER] = N'" + strOwner + "'";
             }
 
             return strSQL;
@@ -439,7 +441,8 @@ namespace achihapi.Controllers
         internal static string getFinanceAccountInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_account]
-                                ([CTGYID]
+                                ([HID]    
+                                ,[CTGYID]
                                 ,[NAME]
                                 ,[COMMENT]
                                 ,[OWNER]
@@ -448,7 +451,8 @@ namespace achihapi.Controllers
                                 ,[UPDATEDBY]
                                 ,[UPDATEDAT])
                             VALUES
-                                (@CTGYID
+                                (@HID
+                                ,@CTGYID
                                 ,@NAME
                                 ,@COMMENT
                                 ,@OWNER
@@ -461,6 +465,7 @@ namespace achihapi.Controllers
 
         internal static void bindFinAccountParameter(SqlCommand cmd, FinanceAccountViewModel vm, String usrName)
         {
+            cmd.Parameters.AddWithValue("@HID", vm.HID);
             cmd.Parameters.AddWithValue("@CTGYID", vm.CtgyID);
             cmd.Parameters.AddWithValue("@NAME", vm.Name);
             cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
@@ -485,6 +490,7 @@ namespace achihapi.Controllers
             try
             {
                 vm.ID = reader.GetInt32(idx++);
+                vm.HID = reader.GetInt32(idx++);
                 vm.CtgyID = reader.GetInt32(idx++);
                 if (!reader.IsDBNull(idx))
                     vm.CtgyName = reader.GetString(idx++);

@@ -15,7 +15,7 @@ namespace achihapi.Controllers
     {
         // GET: api/financeorder
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceOrderViewModel> listVMs = new BaseListViewModel<FinanceOrderViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -25,7 +25,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getListQueryString(top, skip);
+                queryString = this.getListQueryString(hid, top, skip);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -361,10 +361,11 @@ namespace achihapi.Controllers
         }
 
         #region Implmented methods
-        private string getListQueryString(Int32 top, Int32 skip)
+        private string getListQueryString(Int32 hid, Int32 top, Int32 skip)
         {
-            String strSQL = @"SELECT count(*) FROM [dbo].[t_fin_order];";
+            String strSQL = @"SELECT count(*) FROM [dbo].[t_fin_order] WHERE [HID] = " + hid.ToString() + "; ";
             strSQL += @"SELECT [ID]
+                      ,[HID]
                       ,[NAME]
                       ,[VALID_FROM]
                       ,[VALID_TO]
@@ -373,7 +374,7 @@ namespace achihapi.Controllers
                       ,[CREATEDAT]
                       ,[UPDATEDBY]
                       ,[UPDATEDAT]
-                  FROM [dbo].[t_fin_order]";
+                  FROM [dbo].[t_fin_order] WHERE [HID] = " + hid.ToString();
 
             return strSQL;
         }
@@ -382,6 +383,7 @@ namespace achihapi.Controllers
             Int32 idx = 0;
 
             vm.ID = reader.GetInt32(idx++);
+            vm.HID = reader.GetInt32(idx++);
             vm.Name = reader.GetString(idx++);
             if (!reader.IsDBNull(idx))
                 vm.ValidFrom = reader.GetDateTime(idx++);
@@ -416,6 +418,7 @@ namespace achihapi.Controllers
         private string getItemQueryString(Int32 nID)
         {
             String strSQL = @"SELECT [ID]
+                              ,[HID]
                               ,[NAME]
                               ,[VALID_FROM]
                               ,[VALID_TO]
@@ -447,6 +450,7 @@ namespace achihapi.Controllers
                     while (reader.Read())
                     {
                         vm.ID = reader.GetInt32(idx++);
+                        vm.HID = reader.GetInt32(idx++);
                         vm.Name = reader.GetString(idx++);
                         if (!reader.IsDBNull(idx))
                             vm.ValidFrom = reader.GetDateTime(idx++);
@@ -509,18 +513,18 @@ namespace achihapi.Controllers
             }
         }
 
-        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID)
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32? hid)
         {
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_order];";
+                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_order] WHERE [HID] = " + hid.Value.ToString() + "; ";
             }
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
-                strSQL += @" WITH ZOrder_CTE (ID) AS ( SELECT [ID] FROM [dbo].[t_fin_order]  ORDER BY (SELECT NULL)
-                        OFFSET " + nSkip.Value.ToString() + @" ROWS FETCH NEXT " + nTop.Value.ToString() + @" ROWS ONLY ) ";
+                strSQL += @" WITH ZOrder_CTE (ID) AS ( SELECT [ID] FROM [dbo].[t_fin_order] WHERE [HID] = " + hid.Value.ToString() 
+                        + @" ORDER BY (SELECT NULL) OFFSET " + nSkip.Value.ToString() + @" ROWS FETCH NEXT " + nTop.Value.ToString() + @" ROWS ONLY ) ";
                 strSQL += @" SELECT [ZOrder_CTE].[ID] ";
             }
             else

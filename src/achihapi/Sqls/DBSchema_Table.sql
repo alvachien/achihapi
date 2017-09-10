@@ -537,40 +537,43 @@ ALTER TABLE [dbo].[t_fin_order_srule] CHECK CONSTRAINT [FK_t_fin_order_srule_ord
 GO
 
 /****** Object:  Table [dbo].[t_fin_setting]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_fin_setting](
-	[HID] [int] NOT NULL,
-	[SETID] [nvarchar](20) NOT NULL,
-	[SETVALUE] [nvarchar](80) NOT NULL,
-	[COMMENT] [nvarchar](45) NULL,
-	[CREATEDBY] [nvarchar](40) NULL,
-	[CREATEDAT] [date] NULL,
-	[UPDATEDBY] [nvarchar](40) NULL,
-	[UPDATEDAT] [date] NULL,
- CONSTRAINT [PK_t_fin_setting] PRIMARY KEY CLUSTERED 
-(
-	[HID] ASC,
-	[SETID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+-- Not need anymore, merge into HOMEDEF, 
+-- updated at 2017.9.10
 
-GO
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE TABLE [dbo].[t_fin_setting](
+--	[HID] [int] NOT NULL,
+--	[SETID] [nvarchar](20) NOT NULL,
+--	[SETVALUE] [nvarchar](80) NOT NULL,
+--	[COMMENT] [nvarchar](45) NULL,
+--	[CREATEDBY] [nvarchar](40) NULL,
+--	[CREATEDAT] [date] NULL,
+--	[UPDATEDBY] [nvarchar](40) NULL,
+--	[UPDATEDAT] [date] NULL,
+-- CONSTRAINT [PK_t_fin_setting] PRIMARY KEY CLUSTERED 
+--(
+--	[HID] ASC,
+--	[SETID] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+--) ON [PRIMARY]
 
-ALTER TABLE [dbo].[t_fin_setting]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_setting_HID] FOREIGN KEY([HID])
-REFERENCES [dbo].[t_homedef] ([ID])
-ON UPDATE CASCADE
-ON DELETE CASCADE
-GO
-ALTER TABLE [dbo].[t_fin_setting] CHECK CONSTRAINT [FK_t_fin_setting_HID]
-GO
+--GO
 
-ALTER TABLE [dbo].[t_fin_setting] ADD  CONSTRAINT [DF_t_fin_setting_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_setting] ADD  CONSTRAINT [DF_t_fin_setting_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
+--ALTER TABLE [dbo].[t_fin_setting]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_setting_HID] FOREIGN KEY([HID])
+--REFERENCES [dbo].[t_homedef] ([ID])
+--ON UPDATE CASCADE
+--ON DELETE CASCADE
+--GO
+--ALTER TABLE [dbo].[t_fin_setting] CHECK CONSTRAINT [FK_t_fin_setting_HID]
+--GO
+
+--ALTER TABLE [dbo].[t_fin_setting] ADD  CONSTRAINT [DF_t_fin_setting_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+--GO
+--ALTER TABLE [dbo].[t_fin_setting] ADD  CONSTRAINT [DF_t_fin_setting_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+--GO
 
 
 /****** Object:  Table [dbo].[t_fin_tmpdoc_dp]    Script Date: 2017-03-10 3:31:27 PM ******/

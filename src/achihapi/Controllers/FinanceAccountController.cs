@@ -17,7 +17,7 @@ namespace achihapi.Controllers
         // GET: api/financeaccount
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceAccountUIViewModel> listVm = new BaseListViewModel<FinanceAccountUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -42,7 +42,7 @@ namespace achihapi.Controllers
                     return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
                 }
 
-                queryString = this.getQueryString(true, top, skip, null, scopeFilter);
+                queryString = this.getQueryString(true, top, skip, null, scopeFilter, hid);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -132,7 +132,7 @@ namespace achihapi.Controllers
                     return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
                 }
 
-                queryString = this.getQueryString(false, null, null, id, scopeFilter);
+                queryString = this.getQueryString(false, null, null, id, scopeFilter, 0);
 
                 await conn.OpenAsync();
 
@@ -234,7 +234,7 @@ namespace achihapi.Controllers
             try
             {
                 queryString = @"SELECT [ID]
-                  FROM [dbo].[t_fin_account] WHERE [Name] = N'" + vm.Name + "'";
+                  FROM [dbo].[t_fin_account] WHERE [HID] = " + vm.HID.ToString() + " AND [Name] = N'" + vm.Name + "'";
 
                 await conn.OpenAsync();
 
@@ -531,21 +531,22 @@ namespace achihapi.Controllers
             return Ok();
         }
 
-        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, String strOwner)
+        #region Implemented methods
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, String strOwner, Int32 hid)
         {
             
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account] ";
+                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account] WHERE [hid] = " + hid.ToString();
                 if (!String.IsNullOrEmpty(strOwner))
                 {
-                    strSQL += " WHERE [OWNER] = N'" + strOwner + "'";
+                    strSQL += " AND [OWNER] = N'" + strOwner + "'";
                 }
-                strSQL += " ;";
+                strSQL += ";";
             }
 
-            strSQL += SqlUtility.getFinanceAccountQueryString(strOwner);
+            strSQL += SqlUtility.getFinanceAccountQueryString(hid, strOwner);
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
@@ -554,13 +555,14 @@ namespace achihapi.Controllers
             }
             else if (!bListMode && nSearchID.HasValue)
             {
+                // Todo!!!
                 if (!String.IsNullOrEmpty(strOwner))
                 {
                     strSQL += @" AND [t_fin_account].[ID] = " + nSearchID.Value.ToString();
                 }
                 else
                 {
-                    strSQL += @" WHERE [t_fin_account].[ID] = " + nSearchID.Value.ToString();
+                    strSQL += @" AND [t_fin_account].[ID] = " + nSearchID.Value.ToString();
                 }
             }
 #if DEBUG
@@ -569,5 +571,6 @@ namespace achihapi.Controllers
 
             return strSQL;
         }
+        #endregion
     }
 }

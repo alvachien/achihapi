@@ -10,6 +10,8 @@ namespace achihapi.ViewModels
     {
         public Int32 ID { get; set; }
         [Required]
+        public Int32 HID { get; set; }
+        [Required]
         [StringLength(30)]
         public String Name { get; set; }
         public Int32? ParID { get; set; }

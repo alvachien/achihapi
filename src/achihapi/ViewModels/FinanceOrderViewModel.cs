@@ -9,6 +9,7 @@ namespace achihapi.ViewModels
     public class FinanceOrderViewModel : BaseViewModel
     {
         public Int32 ID { get; set; }
+        public Int32 HID { get; set; }
         [Required]
         [StringLength(30)]
         public String Name { get; set; }

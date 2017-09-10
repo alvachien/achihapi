@@ -9,6 +9,8 @@ namespace achihapi.ViewModels
     public class LearnHistoryViewModel : BaseViewModel
     {
         [Required]
+        public Int32 HID { get; set; }
+        [Required]
         [StringLength(40)]
         public String UserID { get; set; }
         [Required]
