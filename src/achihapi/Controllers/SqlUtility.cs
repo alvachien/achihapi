@@ -404,7 +404,7 @@ namespace achihapi.Controllers
         #endregion
 
         #region Finance Account
-        internal static string getFinanceAccountQueryString(Int32 hid, String strOwner = "")
+        internal static string getFinanceAccountQueryString(Int32? hid, String strOwner = "")
         {
             String strSQL = @"SELECT [t_fin_account].[ID]
                       ,[t_fin_account].[HID]  
@@ -428,11 +428,18 @@ namespace achihapi.Controllers
                   LEFT OUTER JOIN [dbo].[t_fin_account_ctgy]
                        ON [t_fin_account].[CTGYID] = [t_fin_account_ctgy].[ID]
                   LEFT OUTER JOIN [dbo].[t_fin_account_ext_dp]
-                       ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID] 
-                  WHERE [t_fin_account].[HID] = " + hid.ToString();
-            if (!String.IsNullOrEmpty(strOwner))
+                       ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID] ";
+            if (hid.HasValue)
             {
-                strSQL += " AND [t_fin_account].[OWNER] = N'" + strOwner + "'";
+                strSQL += " WHERE [t_fin_account].[HID] = " + hid.Value.ToString();
+                if (!String.IsNullOrEmpty(strOwner))
+                {
+                    strSQL += " AND [t_fin_account].[OWNER] = N'" + strOwner + "'";
+                }
+            }
+            else if (!String.IsNullOrEmpty(strOwner))
+            {
+                strSQL += " WHERE [t_fin_account].[OWNER] = N'" + strOwner + "'";
             }
 
             return strSQL;

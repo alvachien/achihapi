@@ -132,7 +132,7 @@ namespace achihapi.Controllers
                     return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
                 }
 
-                queryString = this.getQueryString(false, null, null, id, scopeFilter, 0);
+                queryString = this.getQueryString(false, null, null, id, scopeFilter, null);
 
                 await conn.OpenAsync();
 
@@ -532,13 +532,13 @@ namespace achihapi.Controllers
         }
 
         #region Implemented methods
-        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, String strOwner, Int32 hid)
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, String strOwner, Int32? hid)
         {
             
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account] WHERE [hid] = " + hid.ToString();
+                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account] WHERE [hid] = " + hid.Value.ToString();
                 if (!String.IsNullOrEmpty(strOwner))
                 {
                     strSQL += " AND [OWNER] = N'" + strOwner + "'";
@@ -555,14 +555,13 @@ namespace achihapi.Controllers
             }
             else if (!bListMode && nSearchID.HasValue)
             {
-                // Todo!!!
                 if (!String.IsNullOrEmpty(strOwner))
                 {
                     strSQL += @" AND [t_fin_account].[ID] = " + nSearchID.Value.ToString();
                 }
                 else
                 {
-                    strSQL += @" AND [t_fin_account].[ID] = " + nSearchID.Value.ToString();
+                    strSQL += @" WHERE [t_fin_account].[ID] = " + nSearchID.Value.ToString();
                 }
             }
 #if DEBUG
