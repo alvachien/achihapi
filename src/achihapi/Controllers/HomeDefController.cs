@@ -170,6 +170,7 @@ namespace achihapi.Controllers
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
                 {
+                    // Header part
                     bExist = true;
                     while (reader.Read())
                     {
@@ -179,6 +180,15 @@ namespace achihapi.Controllers
                         // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
 
                         break;
+                    }
+
+                    reader.NextResult();
+
+                    while(reader.Read())
+                    {
+                        HomeMemViewModel vmMem = new HomeMemViewModel();
+                        SqlUtility.HomeMem_DB2VM(reader, vmMem);
+                        vm.Members.Add(vmMem);
                     }
                 }
             }
@@ -504,12 +514,15 @@ namespace achihapi.Controllers
             {
                 if (!String.IsNullOrEmpty(strUserID))
                 {
-                    strSQL += @" AND [v_homemember].[ID] = " + nSearchID.Value.ToString();
+                    strSQL += @" AND [v_homemember].[ID] = " + nSearchID.Value.ToString() + "; ";
                 }
                 else
                 {
-                    strSQL += @" WHERE [v_homemember].[ID] = " + nSearchID.Value.ToString();
+                    strSQL += @" WHERE [v_homemember].[ID] = " + nSearchID.Value.ToString() +"; ";
                 }
+
+                // Add home member part
+                strSQL += SqlUtility.getHomeMemQueryString(nSearchID);
             }
 #if DEBUG
             System.Diagnostics.Debug.WriteLine("HomeDefController, SQL generated: " + strSQL);
