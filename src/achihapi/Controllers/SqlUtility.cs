@@ -607,9 +607,9 @@ namespace achihapi.Controllers
         #endregion
 
         #region Finance document List
-        internal static string getFinanceDocListQueryString(Int32 top, Int32 skip)
+        internal static string getFinanceDocListQueryString(Int32 hid, Int32 top, Int32 skip)
         {
-            String strSQL = @"SELECT count(*) FROM [dbo].[v_fin_document];";
+            String strSQL = @"SELECT count(*) FROM [dbo].[v_fin_document] WHERE [HID] = ;";
             strSQL += @" SELECT [v_fin_document].[ID]
                                 ,[v_fin_document].[DOCTYPE]
 	                            ,[v_fin_document].[DOCTYPENAME]

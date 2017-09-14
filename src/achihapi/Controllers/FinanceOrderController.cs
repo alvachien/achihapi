@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace achihapi.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class FinanceOrderController : Controller
     {
         // GET: api/financeorder
@@ -204,12 +205,6 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
                 var usrName = User.FindFirst(c => c.Type == "sub").Value;
 
                 queryString = @"SELECT [ID]
@@ -240,7 +235,8 @@ namespace achihapi.Controllers
                     SqlTransaction tran = conn.BeginTransaction();
 
                     queryString = @"INSERT INTO [dbo].[t_fin_order]
-                               ([NAME]
+                               ([HID]            
+                               ,[NAME]
                                ,[VALID_FROM]
                                ,[VALID_TO]
                                ,[COMMENT]
@@ -249,7 +245,8 @@ namespace achihapi.Controllers
                                ,[UPDATEDBY]
                                ,[UPDATEDAT])
                          VALUES
-                               (@NAME
+                               (@HID
+                               ,@NAME
                                ,@VALID_FROM
                                ,@VALID_TO
                                ,@COMMENT
@@ -264,6 +261,7 @@ namespace achihapi.Controllers
                         {
                             Transaction = tran
                         };
+                        cmd.Parameters.AddWithValue("@HID", vm.HID);
                         cmd.Parameters.AddWithValue("@NAME", vm.Name);
                         cmd.Parameters.AddWithValue("@VALID_FROM", vm.ValidFrom);
                         cmd.Parameters.AddWithValue("@VALID_TO", vm.ValidTo);
@@ -349,15 +347,17 @@ namespace achihapi.Controllers
         // PUT api/financeorder/5
         [HttpPut("{id}")]
         [Authorize]
-        public void Put(int id, [FromBody]string value)
+        public async Task<IActionResult> Put(int id, [FromBody]string value)
         {
+            return BadRequest();
         }
 
         // DELETE api/financeorder/5
         [HttpDelete("{id}")]
         [Authorize]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            return BadRequest();
         }
 
         #region Implmented methods

@@ -15,7 +15,8 @@ namespace achihapi.Controllers
     {
         // GET: api/financedocument
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
+        [Authorize]
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceDocumentUIViewModel> listVMs = new BaseListViewModel<FinanceDocumentUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -25,7 +26,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.getFinanceDocListQueryString(top, skip);
+                queryString = SqlUtility.getFinanceDocListQueryString(hid, top, skip);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -86,6 +87,7 @@ namespace achihapi.Controllers
 
         // GET api/financedocument/5
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> Get(int id)
         {
             FinanceDocumentUIViewModel vm = new FinanceDocumentUIViewModel();
