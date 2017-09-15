@@ -8,6 +8,8 @@ namespace achihapi.ViewModels
 {
     public class FinanceTmpDocDPViewModel : BaseViewModel
     {
+        [Required]
+        public Int32 HID { get; set; }
         public Int32 DocID { get; set; }
         [Required]
         public Int32? RefDocID { get; set; }

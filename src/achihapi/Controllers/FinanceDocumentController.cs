@@ -187,12 +187,6 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
                 var usrName = User.FindFirst(c => c.Type == "sub").Value;
 
                 await conn.OpenAsync();
@@ -238,6 +232,8 @@ namespace achihapi.Controllers
 #if DEBUG
                     System.Diagnostics.Debug.WriteLine(exp.Message);
 #endif
+                    bError = true;
+                    strErrMsg = exp.Message;
                     tran.Rollback();
                 }
             }
@@ -269,17 +265,17 @@ namespace achihapi.Controllers
         // PUT api/financedocument/5
         [HttpPut("{id}")]
         [Authorize]
-        public void Put(int id, [FromBody]string value)
+        public async Task<IActionResult> Put(int id, [FromBody]string value)
         {
-            // Todo
+            return BadRequest();
         }
 
         // DELETE api/financedocument/5
         [HttpDelete("{id}")]
         [Authorize]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            // Todo
+            return BadRequest();
         }
     }
 }

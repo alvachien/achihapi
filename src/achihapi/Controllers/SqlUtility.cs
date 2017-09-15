@@ -609,25 +609,27 @@ namespace achihapi.Controllers
         #region Finance document List
         internal static string getFinanceDocListQueryString(Int32 hid, Int32 top, Int32 skip)
         {
-            String strSQL = @"SELECT count(*) FROM [dbo].[v_fin_document] WHERE [HID] = ;";
-            strSQL += @" SELECT [v_fin_document].[ID]
-                                ,[v_fin_document].[DOCTYPE]
-	                            ,[v_fin_document].[DOCTYPENAME]
-                                ,[v_fin_document].[TRANDATE]
-                                ,[v_fin_document].[TRANCURR]
-                                ,[v_fin_document].[DESP]
-                                ,[v_fin_document].[EXGRATE]
-                                ,[v_fin_document].[EXGRATE_PLAN]
-                                ,[v_fin_document].[TRANCURR2]
-                                ,[v_fin_document].[EXGRATE2]
-                                ,[v_fin_document].[EXGRATE_PLAN2]
-                                ,[v_fin_document].[CREATEDBY]
-                                ,[v_fin_document].[CREATEDAT]
-                                ,[v_fin_document].[UPDATEDBY]
-                                ,[v_fin_document].[UPDATEDAT]
-                                ,[v_fin_document].[TRANAMOUNT]
+            String strSQL = @"SELECT count(*) FROM [dbo].[v_fin_document] WHERE [HID] = " + hid.ToString() + "; ";
+            strSQL += @" SELECT [ID]
+                                ,[HID]
+                                ,[DOCTYPE]
+	                            ,[DOCTYPENAME]
+                                ,[TRANDATE]
+                                ,[TRANCURR]
+                                ,[DESP]
+                                ,[EXGRATE]
+                                ,[EXGRATE_PLAN]
+                                ,[TRANCURR2]
+                                ,[EXGRATE2]
+                                ,[EXGRATE_PLAN2]
+                                ,[CREATEDBY]
+                                ,[CREATEDAT]
+                                ,[UPDATEDBY]
+                                ,[UPDATEDAT]
+                                ,[TRANAMOUNT]
                             FROM [dbo].[v_fin_document]
-                            ORDER BY [TRANDATE] DESC";
+                            WHERE [HID] = " + hid.ToString() +
+                            " ORDER BY [TRANDATE] DESC";
 
             return strSQL;
         }
@@ -638,6 +640,7 @@ namespace achihapi.Controllers
             try
             {
                 vm.ID = reader.GetInt32(idx++);
+                vm.HID = reader.GetInt32(idx++);
                 vm.DocType = reader.GetInt16(idx++);
                 vm.DocTypeName = reader.GetString(idx++);
                 vm.TranDate = reader.GetDateTime(idx++);
@@ -699,6 +702,7 @@ namespace achihapi.Controllers
         internal static string getFinanceDocQueryString(Int32 nid)
         {
             String strSQL = @"SELECT [ID]
+                          ,[HID]
                           ,[DOCTYPE]
                           ,[TRANDATE]
                           ,[TRANCURR]
@@ -738,6 +742,7 @@ namespace achihapi.Controllers
         internal static string getFinanceDocADPQueryString(Int32 nid)
         {
             String strSQL = @"SELECT [ID]
+                          ,[HID]
                           ,[DOCTYPE]
                           ,[TRANDATE]
                           ,[TRANCURR]
@@ -820,7 +825,8 @@ namespace achihapi.Controllers
         internal static string getFinDocHeaderInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_document]
-                                           ([DOCTYPE]
+                                           ([HID]
+                                           ,[DOCTYPE]
                                            ,[TRANDATE]
                                            ,[TRANCURR]
                                            ,[DESP]
@@ -833,7 +839,8 @@ namespace achihapi.Controllers
                                            ,[UPDATEDBY]
                                            ,[UPDATEDAT])
                                      VALUES
-                                           (@DOCTYPE
+                                           (@HID
+                                           ,@DOCTYPE
                                            ,@TRANDATE
                                            ,@TRANCURR
                                            ,@DESP
@@ -849,6 +856,7 @@ namespace achihapi.Controllers
 
         internal static void bindFinDocHeaderParameter(SqlCommand cmd, FinanceDocumentViewModel vm, String usrName)
         {
+            cmd.Parameters.AddWithValue("@HID", vm.HID);
             cmd.Parameters.AddWithValue("@DOCTYPE", vm.DocType);
             cmd.Parameters.AddWithValue("@TRANDATE", vm.TranDate);
             cmd.Parameters.AddWithValue("@TRANCURR", vm.TranCurr);
@@ -879,6 +887,7 @@ namespace achihapi.Controllers
             try
             {
                 vm.ID = reader.GetInt32(idx++);
+                vm.HID = reader.GetInt32(idx++);
                 vm.DocType = reader.GetInt16(idx++);
                 vm.TranDate = reader.GetDateTime(idx++);
                 vm.TranCurr = reader.GetString(idx++);
@@ -1026,7 +1035,8 @@ namespace achihapi.Controllers
         internal static String getFinanceTmpDocADPInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_tmpdoc_dp]
-                                ([REFDOCID]
+                                ([HID]
+                                ,[REFDOCID]
                                 ,[ACCOUNTID]
                                 ,[TRANDATE]
                                 ,[TRANTYPE]
@@ -1039,7 +1049,8 @@ namespace achihapi.Controllers
                                 ,[UPDATEDBY]
                                 ,[UPDATEDAT])
                             VALUES
-                                (@REFDOCID
+                                (@HID
+                                ,@REFDOCID
                                 ,@ACCOUNTID
                                 ,@TRANDATE
                                 ,@TRANTYPE
@@ -1055,6 +1066,7 @@ namespace achihapi.Controllers
 
         internal static void bindFinTmpDocADPParameter(SqlCommand cmd, FinanceTmpDocDPViewModel avm, Int32 nNewAccountID, String usrName)
         {
+            cmd.Parameters.AddWithValue("@HID", avm.HID);
             if (avm.RefDocID.HasValue)
                 cmd.Parameters.AddWithValue("@REFDOCID", avm.RefDocID.Value);
             else
@@ -1084,6 +1096,7 @@ namespace achihapi.Controllers
         {
             Int32 idx = 0;
             vm.DocID = reader.GetInt32(idx++);
+            vm.HID = reader.GetInt32(idx++);
             if (!reader.IsDBNull(idx))
                 vm.RefDocID = reader.GetInt32(idx++);
             else

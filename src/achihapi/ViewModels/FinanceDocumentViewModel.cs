@@ -7,6 +7,7 @@ namespace achihapi.ViewModels
     public class FinanceDocumentViewModel : BaseViewModel
     {
         public Int32 ID { get; set; }
+        public Int32 HID { get; set; }
         [Required]
         public Int16 DocType { get; set; }
         [Required]
