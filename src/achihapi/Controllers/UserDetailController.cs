@@ -17,6 +17,8 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get()
         {
+            return Forbid();
+
             List<UserDetailViewModel> listVMs = new List<UserDetailViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -84,6 +86,7 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get(String id)
         {
+            return Forbid();
 #if DEBUG
             foreach (var clm in User.Claims.AsEnumerable())
             {
@@ -169,6 +172,8 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]UserDetailViewModel value)
         {
+            return Forbid();
+
             if (value == null)
             {
                 return BadRequest("No data is inputted");
@@ -265,6 +270,8 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Put([FromBody]UserDetailViewModel value)
         {
+            return Forbid();
+
             if (value == null)
             {
                 return BadRequest("No data is inputted");
@@ -356,6 +363,8 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Delete(String id)
         {
+            return Forbid();
+
 #if DEBUG
             foreach (var clm in User.Claims.AsEnumerable())
             {

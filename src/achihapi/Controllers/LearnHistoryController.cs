@@ -96,16 +96,18 @@ namespace achihapi.Controllers
             return new JsonResult(listVm, setting);
         }
 
-        private string getSQLString(Boolean bListMode, Int32? nTop, Int32? nSkip, String userFilter)
+        private string getSQLString(Boolean bListMode, Int32? nTop, Int32? nSkip, String userFilter, Int32? hid)
         {
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_hist]";
-                if (String.IsNullOrEmpty(userFilter))
-                    strSQL += ";";
-                else
-                    strSQL += " WHERE [USERID] = N'" + userFilter + "';";
+                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_hist] WHERE [hid] = " + hid.Value.ToString();
+
+                if (!String.IsNullOrEmpty(userFilter))
+                {
+                    strSQL += " AND [USERID] = N'" + userFilter + "'";
+                }
+                strSQL += ";";
             }
 
             strSQL += SqlUtility.getLearnHistoryQueryString(userFilter);

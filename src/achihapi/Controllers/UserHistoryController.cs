@@ -17,6 +17,8 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get()
         {
+            return Forbid();
+
             List<UserHistoryViewModel> listVMs = new List<UserHistoryViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -107,6 +109,8 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]UserHistoryViewModel vm)
         {
+            return Forbid();
+
             if (vm == null)
             {
                 return BadRequest("No data is inputted");
