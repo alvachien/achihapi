@@ -22,20 +22,21 @@ namespace achihapi.ViewModels
 
         public string GeneratedKey()
         {
-            return this.UserID + "_" + this.ObjectID.ToString() + "_" + String.Format("0:yyyy-MM-dd", this.LearnDate);
+            return this.HID.ToString() + "_" + this.UserID + "_" + this.ObjectID.ToString() + "_" + String.Format("0:yyyy-MM-dd", this.LearnDate);
         }
 
         public Boolean ParseGeneratedKey(String strKey)
         {
             String[] arKeys = strKey.Split('_');
-            if (arKeys.Length != 3)
+            if (arKeys.Length != 4)
                 return false;
 
             try
             {
-                this.UserID = arKeys[0];
-                this.ObjectID = Int32.Parse(arKeys[1]);
-                this.LearnDate = DateTime.Parse(arKeys[2]);
+                this.HID = Int32.Parse(arKeys[0]);
+                this.UserID = arKeys[1];
+                this.ObjectID = Int32.Parse(arKeys[2]);
+                this.LearnDate = DateTime.Parse(arKeys[3]);
             }
             catch
             {

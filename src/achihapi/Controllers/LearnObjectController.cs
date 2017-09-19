@@ -15,6 +15,7 @@ namespace achihapi.Controllers
     {
         // GET: api/learnobject
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0, Boolean bIncContent = false)
         {
             BaseListViewModel<LearnObjectUIViewModel> listVm = new BaseListViewModel<LearnObjectUIViewModel>();

@@ -15,7 +15,7 @@ namespace achihapi.Controllers
         // GET: api/learnhistory
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<LearnHistoryUIViewModel> listVm = new BaseListViewModel<LearnHistoryUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -40,7 +40,7 @@ namespace achihapi.Controllers
                     return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
                 }
 
-                queryString = this.getSQLString(true, top, skip, scopeFilter);
+                queryString = this.getSQLString(true, top, skip, scopeFilter, hid);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -107,10 +107,11 @@ namespace achihapi.Controllers
                 {
                     strSQL += " AND [USERID] = N'" + userFilter + "'";
                 }
+
                 strSQL += ";";
             }
 
-            strSQL += SqlUtility.getLearnHistoryQueryString(userFilter);
+            strSQL += SqlUtility.getLearnHistoryQueryString(hid, userFilter);
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
                 strSQL += @" ORDER BY (SELECT NULL)
@@ -118,7 +119,7 @@ namespace achihapi.Controllers
             }
             else if (!bListMode)
             {
-                strSQL += @" WHERE [t_learn_hist].[USERID] = @USERID AND [t_learn_hist].[OBJECTID] = @OBJECTID AND [t_learn_hist].[LEARNDATE] = @LEARNDATE ";
+                strSQL += @" WHERE [t_learn_hist].[HID] = @HID AND [t_learn_hist].[USERID] = @USERID AND [t_learn_hist].[OBJECTID] = @OBJECTID AND [t_learn_hist].[LEARNDATE] = @LEARNDATE ";
             }
 #if DEBUG
             System.Diagnostics.Debug.WriteLine("LearnHistoryController, SQL generated: " + strSQL);
@@ -130,6 +131,7 @@ namespace achihapi.Controllers
         private void onDB2VM(SqlDataReader reader, LearnHistoryUIViewModel vm)
         {
             Int32 idx = 0;
+            vm.HID = reader.GetInt32(idx++);
             vm.UserID = reader.GetString(idx++);
             vm.UserDisplayAs = reader.GetString(idx++);
             vm.ObjectID = reader.GetInt32(idx++);
@@ -193,17 +195,15 @@ namespace achihapi.Controllers
 
                 vm.ParseGeneratedKey(sid);
 
-                String usrID = vm.UserID;
-                Int32 objID = vm.ObjectID;
-                DateTime dtDate = vm.LearnDate;
-                queryString = this.getSQLString(false, null, null, String.Empty);
+                queryString = this.getSQLString(false, null, null, String.Empty, null);
 
                 await conn.OpenAsync();
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@USERID", usrID);
-                cmd.Parameters.AddWithValue("@OBJECTID", objID);
-                cmd.Parameters.AddWithValue("@LEARNDATE", dtDate);
+                cmd.Parameters.AddWithValue("@HID", vm.HID);
+                cmd.Parameters.AddWithValue("@USERID", vm.UserID);
+                cmd.Parameters.AddWithValue("@OBJECTID", vm.ObjectID);
+                cmd.Parameters.AddWithValue("@LEARNDATE", vm.LearnDate);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
                 {
@@ -289,14 +289,15 @@ namespace achihapi.Controllers
             var usr = User.FindFirst(c => c.Type == "sub");
             if (usr != null)
                 usrName = usr.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest();
 
             try
             {
                 await conn.OpenAsync();
 
                 // Do the check first: object id
-                String checkString = @"SELECT [ID]
-                            FROM [dbo].[t_learn_obj] WHERE [ID] = " + vm.ObjectID.ToString();
+                String checkString = @"SELECT [ID] FROM [dbo].[t_learn_obj] WHERE [ID] = " + vm.ObjectID.ToString();
                 SqlCommand chkcmd = new SqlCommand(checkString, conn);
                 SqlDataReader chkreader = chkcmd.ExecuteReader();
                 if (!chkreader.HasRows)
@@ -309,7 +310,7 @@ namespace achihapi.Controllers
                 chkcmd = null;
 
                 // Do the check: name
-                checkString = @"SELECT [USERID] FROM [dbo].[t_userdetail] WHERE [USERID] = N'" + vm.UserID + "'";
+                checkString = @"SELECT [USER] FROM [dbo].[t_homemem] WHERE [HID] = " + vm.HID.ToString() + " AND [USER] = N'" + vm.UserID + "'";
                 chkcmd = new SqlCommand(checkString, conn);
                 chkreader = chkcmd.ExecuteReader();
                 if (!chkreader.HasRows)
@@ -322,8 +323,9 @@ namespace achihapi.Controllers
                 chkcmd = null;
 
                 // Do the check: primary key check
-                checkString = @"SELECT [USERID], [OBJECTID], [LEARNDATE] FROM [dbo].[t_learn_hist] WHERE [USERID] = @USERID AND [OBJECTID] = @OBJECTID AND [LEARNDATE] = @LEARNDATE";
+                checkString = @"SELECT [HID], [USERID], [OBJECTID], [LEARNDATE] FROM [dbo].[t_learn_hist] WHERE [HID] = @hid AND [USERID] = @USERID AND [OBJECTID] = @OBJECTID AND [LEARNDATE] = @LEARNDATE";
                 chkcmd = new SqlCommand(checkString, conn);
+                chkcmd.Parameters.AddWithValue("@HID", vm.HID);
                 chkcmd.Parameters.AddWithValue("@USERID", vm.UserID);
                 chkcmd.Parameters.AddWithValue("@OBJECTID", vm.ObjectID);
                 chkcmd.Parameters.AddWithValue("@LEARNDATE", vm.LearnDate);
@@ -339,33 +341,33 @@ namespace achihapi.Controllers
 
                 // Now go ahead for the creating
                 queryString = @"INSERT INTO [dbo].[t_learn_hist]
-                           ([USERID]
+                           ([HID]
+                           ,[USERID]
                            ,[OBJECTID]
                            ,[LEARNDATE]
                            ,[COMMENT]
                            ,[CREATEDBY]
-                           ,[CREATEDAT]
-                           ,[UPDATEDBY]
-                           ,[UPDATEDAT])
+                           ,[CREATEDAT])
                      VALUES
-                           (@USERID
+                           (@HID
+                           ,@USERID
                            ,@OBJECTID
                            ,@LEARNDATE
                            ,@COMMENT
                            ,@CREATEDBY
-                           ,@CREATEDAT
-                           ,@UPDATEDBY
-                           ,@UPDATEDAT);";
+                           ,@CREATEDAT);";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Parameters.AddWithValue("@HID", vm.HID);
                 cmd.Parameters.AddWithValue("@USERID", vm.UserID);
                 cmd.Parameters.AddWithValue("@OBJECTID", vm.ObjectID);
                 cmd.Parameters.AddWithValue("@LEARNDATE", vm.LearnDate);
-                cmd.Parameters.AddWithValue("@COMMENT", vm.Comment);
+                if (!String.IsNullOrEmpty(vm.Comment))
+                    cmd.Parameters.AddWithValue("@COMMENT", vm.Comment);
+                else
+                    cmd.Parameters.AddWithValue("@COMMENT", DBNull.Value);
                 cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
                 cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-                cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
-                cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
 
                 Int32 nRst = await cmd.ExecuteNonQueryAsync();
                 //if (nRst )
@@ -442,8 +444,7 @@ namespace achihapi.Controllers
                 await conn.OpenAsync();
 
                 // Do the check first: object id
-                String checkString = @"SELECT [ID]
-                            FROM [dbo].[t_learn_obj] WHERE [ID] = " + vm.ObjectID.ToString();
+                String checkString = @"SELECT [ID] FROM [dbo].[t_learn_obj] WHERE [ID] = " + vm.ObjectID.ToString();
                 SqlCommand chkcmd = new SqlCommand(checkString, conn);
                 SqlDataReader chkreader = chkcmd.ExecuteReader();
                 if (!chkreader.HasRows)
@@ -456,7 +457,7 @@ namespace achihapi.Controllers
                 chkcmd = null;
 
                 // Do the check: name
-                checkString = @"SELECT [USERID] FROM [dbo].[t_userdetail] WHERE [USERID] = N'" + vm.UserID + "'";
+                checkString = @"SELECT [USER] FROM [dbo].[t_homemem] WHERE [HID] = " + vm.HID.ToString() + " AND [USER] = N'" + vm.UserID + "'";
                 chkcmd = new SqlCommand(checkString, conn);
                 chkreader = chkcmd.ExecuteReader();
                 if (!chkreader.HasRows)
@@ -473,7 +474,8 @@ namespace achihapi.Controllers
                            SET [COMMENT] = @COMMENT
                               ,[UPDATEDBY] = @UPDATEDBY
                               ,[UPDATEDAT] = @UPDATEDAT
-                         WHERE [USERID] = @USERID 
+                         WHERE [HID] = @HID
+                              AND [USERID] = @USERID 
                               AND [OBJECTID] = @OBJECTID
                               AND [LEARNDATE] = @LEARNDATE";
 
@@ -481,12 +483,12 @@ namespace achihapi.Controllers
                 cmd.Parameters.AddWithValue("@COMMENT", vm.Comment);
                 cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
                 cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+                cmd.Parameters.AddWithValue("@HID", vm.HID);
                 cmd.Parameters.AddWithValue("@USERID", vm.UserID);
                 cmd.Parameters.AddWithValue("@OBJECTID", vm.ObjectID);
                 cmd.Parameters.AddWithValue("@LEARNDATE", vm.LearnDate);
 
                 Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                //if (nRst )
             }
             catch (Exception exp)
             {
@@ -567,11 +569,13 @@ namespace achihapi.Controllers
 
                 // Now go ahead for the delete
                 queryString = @"DELETE FROM [dbo].[t_learn_hist]
-                           WHERE [USERID] = @USERID
+                           WHERE [HID] = @HID
+                             AND [USERID] = @USERID
                              AND [OBJECTID] = @OBJECTID
                              AND [LEARNDATE] = @LEARNDATE;";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Parameters.AddWithValue("@HID", vm.HID);
                 cmd.Parameters.AddWithValue("@USERID", vm.UserID);
                 cmd.Parameters.AddWithValue("@OBJECTID", vm.ObjectID);
                 cmd.Parameters.AddWithValue("@LEARNDATE", vm.LearnDate);

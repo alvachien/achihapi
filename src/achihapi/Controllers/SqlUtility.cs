@@ -379,10 +379,11 @@ namespace achihapi.Controllers
         #endregion
 
         #region Learn History
-        internal static string getLearnHistoryQueryString(String strUser = "")
+        internal static string getLearnHistoryQueryString(Int32? hid, String strUser = "")
         {
-            String strSQL = @"SELECT [t_learn_hist].[USERID]
-                      ,[t_userdetail].[DISPLAYAS] as [USERDISPLAYAS]
+            String strSQL = @"SELECT [t_learn_hist].[HID]
+                      ,[t_learn_hist].[USERID]
+                      ,[t_homemem].[DISPLAYAS] as [USERDISPLAYAS]
                       ,[t_learn_hist].[OBJECTID]
                       ,[t_learn_obj].[NAME] as [OBJECTNAME]
                       ,[t_learn_hist].[LEARNDATE]
@@ -392,11 +393,23 @@ namespace achihapi.Controllers
                       ,[t_learn_hist].[UPDATEDBY]
                       ,[t_learn_hist].[UPDATEDAT] 
                         FROM [dbo].[t_learn_hist]
-                            INNER JOIN [dbo].[t_userdetail] ON [t_learn_hist].[USERID] = [t_userdetail].[USERID]
+                            INNER JOIN [dbo].[t_homemem] ON [t_learn_hist].[HID] = [t_homemem].[HID]
+                                                        AND [t_learn_hist].[USERID] = [t_homemem].[USER]
                             INNER JOIN [dbo].[t_learn_obj] ON [t_learn_hist].[OBJECTID] = [t_learn_obj].[ID] ";
-            if (!String.IsNullOrEmpty(strUser))
+            if (hid.HasValue)
             {
-                strSQL += " WHERE [t_learn_hist].[USERID] = N'" + strUser + "'";
+                strSQL += " WHERE [t_learn_hist].[HID] = " + hid.Value.ToString() + " ";
+                if (!String.IsNullOrEmpty(strUser))
+                {
+                    strSQL += " AND [t_learn_hist].[USERID] = N'" + strUser + "'";
+                }
+            } 
+            else
+            {
+                if (!String.IsNullOrEmpty(strUser))
+                {
+                    strSQL += " WHERE [t_learn_hist].[USERID] = N'" + strUser + "'";
+                }
             }
 
             return strSQL;
