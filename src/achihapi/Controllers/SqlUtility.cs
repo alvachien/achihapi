@@ -422,7 +422,6 @@ namespace achihapi.Controllers
             String strSQL = @"SELECT [t_fin_account].[ID]
                       ,[t_fin_account].[HID]  
                       ,[t_fin_account].[CTGYID]
-                      ,[t_fin_account_ctgy].[NAME] as [CTGYNAME]
                       ,[t_fin_account].[NAME]
                       ,[t_fin_account].[COMMENT]
                       ,[t_fin_account].[OWNER]
@@ -438,8 +437,6 @@ namespace achihapi.Controllers
                       ,[t_fin_account_ext_dp].[DEFRRDAYS]
                       ,[t_fin_account_ext_dp].[COMMENT]
                   FROM [dbo].[t_fin_account]
-                  LEFT OUTER JOIN [dbo].[t_fin_account_ctgy]
-                       ON [t_fin_account].[CTGYID] = [t_fin_account_ctgy].[ID]
                   LEFT OUTER JOIN [dbo].[t_fin_account_ext_dp]
                        ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID] ";
             if (hid.HasValue)
@@ -512,10 +509,10 @@ namespace achihapi.Controllers
                 vm.ID = reader.GetInt32(idx++);
                 vm.HID = reader.GetInt32(idx++);
                 vm.CtgyID = reader.GetInt32(idx++);
-                if (!reader.IsDBNull(idx))
-                    vm.CtgyName = reader.GetString(idx++);
-                else
-                    ++idx;
+                //if (!reader.IsDBNull(idx))
+                //    vm.CtgyName = reader.GetString(idx++);
+                //else
+                //    ++idx;
                 vm.Name = reader.GetString(idx++);
                 if (!reader.IsDBNull(idx))
                     vm.Comment = reader.GetString(idx++);
@@ -783,9 +780,10 @@ namespace achihapi.Controllers
                             ,[ORDERID]
                             ,[ORDERNAME]
                             ,[DESP]
-                        FROM [v_fin_document_item1] WHERE [DOCID] = " + nid.ToString() + @"; SELECT [t_fin_account].[ID]
+                        FROM [v_fin_document_item1] WHERE [DOCID] = " + nid.ToString() + @"; 
+                      SELECT [t_fin_account].[ID]
+                            ,[t_fin_account].[HID]
                             ,[t_fin_account].[CTGYID]
-                            ,[t_fin_account_ctgy].[NAME] as [CTGYNAME]
                             ,[t_fin_account].[NAME]
                             ,[t_fin_account].[COMMENT]
                             ,[t_fin_account].[OWNER]
@@ -801,13 +799,13 @@ namespace achihapi.Controllers
                             ,[t_fin_account_ext_dp].[DEFRRDAYS]
                             ,[t_fin_account_ext_dp].[COMMENT]
                         FROM [dbo].[t_fin_account]
-                        LEFT OUTER JOIN [dbo].[t_fin_account_ctgy]
-                            ON [t_fin_account].[CTGYID] = [t_fin_account_ctgy].[ID]
                         LEFT OUTER JOIN [dbo].[t_fin_account_ext_dp]
                             ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID]
                         WHERE [t_fin_account].[CTGYID] = "
                         + FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment.ToString()
-                        + " AND [t_fin_account_ext_dp].[REFDOCID] = " + nid.ToString() + @"; SELECT  [dbo].[t_fin_tmpdoc_dp].[DOCID]
+                        + " AND [t_fin_account_ext_dp].[REFDOCID] = " + nid.ToString() + @"; 
+                      SELECT [dbo].[t_fin_tmpdoc_dp].[DOCID]
+                          ,[dbo].[t_fin_tmpdoc_dp].[HID]
                           ,[dbo].[t_fin_tmpdoc_dp].[REFDOCID]
                           ,[dbo].[t_fin_tmpdoc_dp].[ACCOUNTID]
                           ,[dbo].[t_fin_tmpdoc_dp].[TRANDATE]
@@ -834,7 +832,6 @@ namespace achihapi.Controllers
         #endregion
 
         #region Finance document Header
-
         internal static string getFinDocHeaderInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_document]
