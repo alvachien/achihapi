@@ -372,11 +372,11 @@ CREATE TABLE [dbo].[t_fin_document](
 	[TRANDATE] [date] NOT NULL,
 	[TRANCURR] [nvarchar](5) NOT NULL,
 	[DESP] [nvarchar](45) NOT NULL,
-	[EXGRATE] [tinyint] NULL,
-	[EXGRATE_PLAN] [tinyint] NULL,
-	[EXGRATE_PLAN2] [tinyint] NULL,
+	[EXGRATE] [decimal](17, 4) NULL, --[tinyint] NULL, Changed since 2017.09.27
+	[EXGRATE_PLAN] [bit] NULL, --[tinyint] NULL, Changed since 2017.09.27
+	[EXGRATE_PLAN2] [bit] NULL, --[tinyint] NULL, Changed since 2017.09.27
 	[TRANCURR2] [nvarchar](5) NULL,
-	[EXGRATE2] [tinyint] NULL,
+	[EXGRATE2] [decimal](17, 4) NULL, --[tinyint] NULL, Changed since 2017.09.27
 	[CREATEDBY] [nvarchar](40) NULL,
 	[CREATEDAT] [date] NULL,
 	[UPDATEDBY] [nvarchar](40) NULL,
@@ -412,7 +412,7 @@ CREATE TABLE [dbo].[t_fin_document_item](
 	[ACCOUNTID] [int] NOT NULL,
 	[TRANTYPE] [int] NOT NULL,
 	[TRANAMOUNT] [decimal](17, 2) NOT NULL,
-	[USECURR2] [tinyint] NULL,
+	[USECURR2] [bit] NULL, -- [tinyint] NULL, Changed since 2017.09.27
 	[CONTROLCENTERID] [int] NULL,
 	[ORDERID] [int] NULL,
 	[DESP] [nvarchar](45) NULL,
@@ -434,42 +434,42 @@ ALTER TABLE [dbo].[t_fin_document_item] CHECK CONSTRAINT [FK_t_fin_document_head
 GO
 
 /****** Object:  Table [dbo].[t_fin_exrate]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_fin_exrate](
-	[HID] [int] NOT NULL,
-	[TRANDATE] [date] NOT NULL,
-	[CURR] [nvarchar](5) NOT NULL,
-	[RATE] [decimal](17, 4) NOT NULL,
-	[REFDOCID] [int] NULL,
-	[CREATEDBY] [nvarchar](40) NULL,
-	[CREATEDAT] [date] NULL,
-	[UPDATEDBY] [nvarchar](40) NULL,
-	[UPDATEDAT] [date] NULL,
- CONSTRAINT [PK_t_fin_exrate] PRIMARY KEY CLUSTERED 
-(
-	[HID] ASC,
-	[TRANDATE] ASC,
-	[CURR] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE TABLE [dbo].[t_fin_exrate](
+--	[HID] [int] NOT NULL,
+--	[TRANDATE] [date] NOT NULL,
+--	[CURR] [nvarchar](5) NOT NULL,
+--	[RATE] [decimal](17, 4) NOT NULL,
+--	[REFDOCID] [int] NULL,
+--	[CREATEDBY] [nvarchar](40) NULL,
+--	[CREATEDAT] [date] NULL,
+--	[UPDATEDBY] [nvarchar](40) NULL,
+--	[UPDATEDAT] [date] NULL,
+-- CONSTRAINT [PK_t_fin_exrate] PRIMARY KEY CLUSTERED 
+--(
+--	[HID] ASC,
+--	[TRANDATE] ASC,
+--	[CURR] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+--) ON [PRIMARY]
 
-GO
+--GO
 
-ALTER TABLE [dbo].[t_fin_exrate]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_exrate_HID] FOREIGN KEY([HID])
-REFERENCES [dbo].[t_homedef] ([ID])
-ON UPDATE CASCADE
-ON DELETE CASCADE
-GO
-ALTER TABLE [dbo].[t_fin_exrate] CHECK CONSTRAINT [FK_t_fin_exrate_HID]
-GO
+--ALTER TABLE [dbo].[t_fin_exrate]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_exrate_HID] FOREIGN KEY([HID])
+--REFERENCES [dbo].[t_homedef] ([ID])
+--ON UPDATE CASCADE
+--ON DELETE CASCADE
+--GO
+--ALTER TABLE [dbo].[t_fin_exrate] CHECK CONSTRAINT [FK_t_fin_exrate_HID]
+--GO
 
-ALTER TABLE [dbo].[t_fin_exrate] ADD  CONSTRAINT [DF_t_fin_exrate_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_fin_exrate] ADD  CONSTRAINT [DF_t_fin_exrate_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
+--ALTER TABLE [dbo].[t_fin_exrate] ADD  CONSTRAINT [DF_t_fin_exrate_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+--GO
+--ALTER TABLE [dbo].[t_fin_exrate] ADD  CONSTRAINT [DF_t_fin_exrate_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+--GO
 
 /****** Object:  Table [dbo].[t_fin_order]    Script Date: 2016-10-27 3:31:27 PM ******/
 SET ANSI_NULLS ON
@@ -748,6 +748,62 @@ GO
 ALTER TABLE [dbo].[t_learn_hist] ADD  CONSTRAINT [DF_t_learn_hist_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
 GO
 
+-- Updated at 2017.9.27
+
+-- Updatae tcolumn in t_fin_document
+IF NOT EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 't_fin_document' AND COLUMN_NAME = 'EXGRATE' AND DATA_TYPE = 'tinyint')
+BEGIN
+
+	ALTER TABLE [dbo].[t_fin_document]
+	ALTER COLUMN [EXGRATE] [decimal](17, 4) NULL;
+
+	ALTER TABLE [dbo].[t_fin_document]
+	ALTER COLUMN [EXGRATE2] [decimal](17, 4) NULL;
+
+	ALTER TABLE [dbo].[t_fin_document]
+	ALTER COLUMN [EXGRATE_PLAN] [bit] NULL;
+
+	ALTER TABLE [dbo].[t_fin_document]
+	ALTER COLUMN [EXGRATE_PLAN2] [bit]  NULL;
+
+	-- Example to execute the SQL!
+    --EXEC sp_executesql
+    --    N'UPDATE [dbo].[PurchaseOrder] SET [IsDownloadable] = 1 WHERE [Ref] IS NOT NULL'
+
+END
+
+-- Drop table: t_fin_setting
+IF (EXISTS (SELECT * 
+  FROM INFORMATION_SCHEMA.TABLES 
+  WHERE TABLE_SCHEMA = 'dbo' 
+  AND  TABLE_NAME = 't_fin_setting'))
+BEGIN
+	DROP TABLE [dbo].[t_fin_setting];
+END
+GO
+
+-- Drop table: t_fin_exrate
+IF (EXISTS (SELECT * 
+  FROM INFORMATION_SCHEMA.TABLES 
+  WHERE TABLE_SCHEMA = 'dbo' 
+  AND  TABLE_NAME = 't_fin_exrate'))
+BEGIN
+	DROP TABLE [dbo].[t_fin_exrate];
+END
+GO
+
+-- Update column in t_fin_document_item
+IF NOT EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 't_fin_document_item' AND COLUMN_NAME = 'USECURR2' AND DATA_TYPE = 'tinyint')
+BEGIN
+
+	ALTER TABLE [dbo].[t_fin_document_item]
+	ALTER COLUMN [USECURR2] [bit] NULL;
+
+END
+
+
 ---------------------------------
 -- TODO...
 
@@ -852,23 +908,6 @@ CREATE TABLE [dbo].[t_learn_recurtypedates](
 (
 	[ID] ASC,
 	[DEFDAYS] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
-GO
-/****** Object:  Table [dbo].[t_module]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_module](
-	[MODULE] [nvarchar](3) NOT NULL,
-	[NAME] [nvarchar](50) NOT NULL,
-	[AUTHFLAG] [bit] NULL,
-	[TAGFLAG] [bit] NULL,
- CONSTRAINT [PK_t_module] PRIMARY KEY CLUSTERED 
-(
-	[MODULE] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -1008,11 +1047,6 @@ GO
 ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
 GO
 
-/*
- * Views
- *
- *
- */
 
 
 
@@ -1324,3 +1358,4 @@ SELECT tab_a.[ORDERID],
 	ON tab_a.[ORDERID] = tab_b.[ORDERID]
 
 GO
+

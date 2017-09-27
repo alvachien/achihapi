@@ -660,11 +660,11 @@ namespace achihapi.Controllers
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.ExgRate = reader.GetByte(idx++);
+                    vm.ExgRate = reader.GetDecimal(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.ExgRate_Plan = reader.GetByte(idx++);
+                    vm.ExgRate_Plan = reader.GetBoolean(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
@@ -672,11 +672,11 @@ namespace achihapi.Controllers
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.ExgRate2 = reader.GetByte(idx++);
+                    vm.ExgRate2 = reader.GetDecimal(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.ExgRate_Plan2 = reader.GetByte(idx++);
+                    vm.ExgRate_Plan2 = reader.GetBoolean(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
@@ -842,6 +842,7 @@ namespace achihapi.Controllers
                                            ,[DESP]
                                            ,[EXGRATE]
                                            ,[EXGRATE_PLAN]
+                                           ,[EXGRATE_PLAN2]
                                            ,[TRANCURR2]
                                            ,[EXGRATE2]
                                            ,[CREATEDBY]
@@ -856,6 +857,7 @@ namespace achihapi.Controllers
                                            ,@DESP
                                            ,@EXGRATE
                                            ,@EXGRATE_PLAN
+                                           ,@EXGRATE_PLAN2
                                            ,@TRANCURR2
                                            ,@EXGRATE2
                                            ,@CREATEDBY
@@ -876,6 +878,7 @@ namespace achihapi.Controllers
             else
                 cmd.Parameters.AddWithValue("@EXGRATE", DBNull.Value);
             cmd.Parameters.AddWithValue("@EXGRATE_PLAN", vm.ExgRate_Plan);
+            cmd.Parameters.AddWithValue("@EXGRATE_PLAN2", vm.ExgRate_Plan2);
             if (String.IsNullOrEmpty(vm.TranCurr2))
                 cmd.Parameters.AddWithValue("@TRANCURR2", DBNull.Value);
             else
@@ -906,11 +909,11 @@ namespace achihapi.Controllers
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.ExgRate = reader.GetByte(idx++);
+                    vm.ExgRate = reader.GetDecimal(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.ExgRate_Plan = reader.GetByte(idx++);
+                    vm.ExgRate_Plan = reader.GetBoolean(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
@@ -918,11 +921,11 @@ namespace achihapi.Controllers
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.ExgRate2 = reader.GetByte(idx++);
+                    vm.ExgRate2 = reader.GetDecimal(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
-                    vm.ExgRate_Plan2 = reader.GetByte(idx++);
+                    vm.ExgRate_Plan2 = reader.GetBoolean(idx++);
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
@@ -1370,11 +1373,11 @@ namespace achihapi.Controllers
                     else
                         ++idx;
                     if (!reader.IsDBNull(idx))
-                        vm.ExgRate = reader.GetByte(idx++);
+                        vm.ExgRate = reader.GetDecimal(idx++);
                     else
                         ++idx;
                     if (!reader.IsDBNull(idx))
-                        vm.ExgRate_Plan = reader.GetByte(idx++);
+                        vm.ExgRate_Plan = reader.GetBoolean(idx++);
                     else
                         ++idx;
                     if (!reader.IsDBNull(idx))
@@ -1382,7 +1385,7 @@ namespace achihapi.Controllers
                     else
                         ++idx;
                     if (!reader.IsDBNull(idx))
-                        vm.ExgRate2 = reader.GetByte(idx++);
+                        vm.ExgRate2 = reader.GetDecimal(idx++);
                     else
                         ++idx;
                     if (!reader.IsDBNull(idx))
