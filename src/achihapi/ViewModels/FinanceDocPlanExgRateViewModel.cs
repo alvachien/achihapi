@@ -21,4 +21,11 @@ namespace achihapi.ViewModels
         public Boolean ExgRate_Plan2 { get; set; }
 
     }
+
+    public class FinanceDocPlanExgRateForUpdViewModel
+    {
+        public String TargetCurrency { get; set; }
+        public Decimal ExchangeRate { get; set; }
+        public List<Int32> DocIDs = new List<int>();
+    }
 }

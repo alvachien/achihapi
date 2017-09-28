@@ -121,9 +121,109 @@ namespace achihapi.Controllers
         
         // POST: api/FinanceDocWithPlanExgRate
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody]string value)
+        [Authorize]
+        public async Task<IActionResult> Post([FromBody]FinanceDocPlanExgRateForUpdViewModel vm)
         {
-            return BadRequest();
+            List<FinanceDocPlanExgRateViewModel> listVMs = new List<FinanceDocPlanExgRateViewModel>();
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            // Basic check
+            if (String.IsNullOrEmpty(vm.TargetCurrency))
+            {
+                return BadRequest();
+            }
+            if (vm.ExchangeRate <= 0)
+            {
+                return BadRequest();
+            }
+            if (vm.DocIDs.Count <= 0)
+            {
+                return BadRequest();
+            }
+            var usrName = User.FindFirst(c => c.Type == "sub").Value;
+            if (String.IsNullOrEmpty(usrName))
+            {
+                return BadRequest("User cannot recognize");
+            }
+
+            SqlTransaction tran = null;
+            try
+            {
+                await conn.OpenAsync();
+                tran = conn.BeginTransaction();
+                foreach (var did in vm.DocIDs)
+                {
+                    queryString = @"UPDATE [dbo].[t_fin_document]
+                               SET [EXGRATE] = @EXGRATE
+                                  ,[EXGRATE_PLAN] = @EXGRATE_PLAN
+                                  ,[UPDATEDBY] = @UPDATEDBY
+                                  ,[UPDATEDAT] = @UPDATEDAT
+                             WHERE [ID] = @id
+                               AND [TRANCURR] = @tcurr
+                               AND [EXGRATE_PLAN] = @isplan";
+
+                    SqlCommand cmd = new SqlCommand(queryString, conn);
+                    cmd.Transaction = tran;
+                    cmd.Parameters.AddWithValue("@EXGRATE", vm.ExchangeRate);
+                    cmd.Parameters.AddWithValue("@EXGRATE_PLAN", false);
+                    cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                    cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+                    cmd.Parameters.AddWithValue("@id", did);
+                    cmd.Parameters.AddWithValue("@tcurr", vm.TargetCurrency);
+                    cmd.Parameters.AddWithValue("@isplan", true);
+
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    queryString = @"UPDATE [dbo].[t_fin_document]
+                               SET [EXGRATE2] = @EXGRATE
+                                  ,[EXGRATE_PLAN2] = @EXGRATE_PLAN
+                                  ,[UPDATEDBY] = @UPDATEDBY
+                                  ,[UPDATEDAT] = @UPDATEDAT
+                             WHERE [ID] = @id
+                               AND [TRANCURR2] = @tcurr
+                               AND [EXGRATE_PLAN2] = @isplan";
+
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Transaction = tran;
+                    cmd.Parameters.AddWithValue("@EXGRATE", vm.ExchangeRate);
+                    cmd.Parameters.AddWithValue("@EXGRATE_PLAN", false);
+                    cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                    cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+                    cmd.Parameters.AddWithValue("@id", did);
+                    cmd.Parameters.AddWithValue("@tcurr", vm.TargetCurrency);
+                    cmd.Parameters.AddWithValue("@isplan", true);
+
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+                }
+
+                tran.Commit();
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                if (tran != null)
+                    tran.Rollback();
+
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                conn.Close();
+                conn.Dispose();
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return Ok();
         }
 
         // PUT: api/FinanceDocWithPlanExgRate/5
