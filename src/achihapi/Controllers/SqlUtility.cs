@@ -877,8 +877,14 @@ namespace achihapi.Controllers
                 cmd.Parameters.AddWithValue("@EXGRATE", vm.ExgRate);
             else
                 cmd.Parameters.AddWithValue("@EXGRATE", DBNull.Value);
-            cmd.Parameters.AddWithValue("@EXGRATE_PLAN", vm.ExgRate_Plan);
-            cmd.Parameters.AddWithValue("@EXGRATE_PLAN2", vm.ExgRate_Plan2);
+            if (vm.ExgRate_Plan)
+                cmd.Parameters.AddWithValue("@EXGRATE_PLAN", vm.ExgRate_Plan);
+            else
+                cmd.Parameters.AddWithValue("@EXGRATE_PLAN", DBNull.Value);
+            if (vm.ExgRate_Plan2)
+                cmd.Parameters.AddWithValue("@EXGRATE_PLAN2", vm.ExgRate_Plan2);
+            else
+                cmd.Parameters.AddWithValue("@EXGRATE_PLAN2", DBNull.Value);
             if (String.IsNullOrEmpty(vm.TranCurr2))
                 cmd.Parameters.AddWithValue("@TRANCURR2", DBNull.Value);
             else

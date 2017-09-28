@@ -220,7 +220,7 @@ namespace achihapi.Controllers
                 // Do the validation
                 try
                 {
-                    String strCheckString = @"SELECT TOP (1) [BASECURR] FROM [dbo].[t_homedef] WHERE [HID] = @hid;";
+                    String strCheckString = @"SELECT TOP (1) [BASECURR] FROM [dbo].[t_homedef] WHERE [ID] = @hid;";
                     SqlCommand cmdCheck = new SqlCommand(strCheckString, conn);
                     cmdCheck.Parameters.AddWithValue("@hid", vm.HID);
                     SqlDataReader reader = await cmdCheck.ExecuteReaderAsync();
@@ -228,7 +228,12 @@ namespace achihapi.Controllers
                         return BadRequest("No home found");
 
                     // Basic currency
-                    String basecurr = reader.GetString(0);
+                    string basecurr = String.Empty;
+                    while (reader.Read())
+                    {
+                        basecurr = reader.GetString(0);
+                        break;
+                    }
                     if (String.IsNullOrEmpty(basecurr))
                         return BadRequest("No base currency defined!");
                     reader.Dispose();
@@ -280,9 +285,9 @@ namespace achihapi.Controllers
                     }
 
                     // Doc type
-                    strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_doc_type] WHERE [HID] = @HID AND [ID] = @ID";
+                    strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_doc_type] WHERE [ID] = @ID"; // @"SELECT TOP (1) [ID] FROM [t_fin_doc_type] WHERE [HID] = @HID AND [ID] = @ID";
                     cmdCheck = new SqlCommand(strCheckString, conn);
-                    cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
+                    //cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
                     cmdCheck.Parameters.AddWithValue("@ID", vm.DocType);
                     reader = await cmdCheck.ExecuteReaderAsync();
                     if (!reader.HasRows)
@@ -309,16 +314,20 @@ namespace achihapi.Controllers
                         cmdCheck = null;
 
                         // Transaction type
-                        strCheckString = @"SELECT TOP (1) [ID], [EXPENSE] FROM [t_fin_tran_type] WHERE [HID] = @HID AND [ID] = @ID";
+                        strCheckString = @"SELECT TOP (1) [ID], [EXPENSE] FROM [t_fin_tran_type] WHERE [ID] = @ID";//@"SELECT TOP (1) [ID], [EXPENSE] FROM [t_fin_tran_type] WHERE [HID] = @HID AND [ID] = @ID";
                         cmdCheck = new SqlCommand(strCheckString, conn);
-                        cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
+                        //cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
                         cmdCheck.Parameters.AddWithValue("@ID", item.TranType);
                         reader = await cmdCheck.ExecuteReaderAsync();
                         if (!reader.HasRows)
                             return BadRequest("No tran. type found");
 
                         Boolean isexp = false;
-                        isexp = reader.GetBoolean(1);
+                        while (reader.Read())
+                        {
+                            isexp = reader.GetBoolean(1);
+                            break;
+                        }
                         reader.Dispose();
                         reader = null;
                         cmdCheck.Dispose();
@@ -364,22 +373,22 @@ namespace achihapi.Controllers
                             {
                                 if (vm.ExgRate2 > 0)
                                 {
-                                    itemAmt = -1 * vm.TranAmount / vm.ExgRate2;
+                                    itemAmt = -1 * item.TranAmount / vm.ExgRate2;
                                 }
                                 else
                                 {
-                                    itemAmt = -1 * vm.TranAmount;
+                                    itemAmt = -1 * item.TranAmount;
                                 }
                             }
                             else
                             {
                                 if (vm.ExgRate2 > 0)
                                 {
-                                    itemAmt = vm.TranAmount / vm.ExgRate2;
+                                    itemAmt = item.TranAmount / vm.ExgRate2;
                                 }
                                 else
                                 {
-                                    itemAmt = vm.TranAmount;
+                                    itemAmt = item.TranAmount;
                                 }
                             }
                         }
@@ -389,22 +398,22 @@ namespace achihapi.Controllers
                             {
                                 if (vm.ExgRate > 0)
                                 {
-                                    itemAmt = -1 * vm.TranAmount / vm.ExgRate;
+                                    itemAmt = -1 * item.TranAmount / vm.ExgRate;
                                 }
                                 else
                                 {
-                                    itemAmt = -1 * vm.TranAmount;
+                                    itemAmt = -1 * item.TranAmount;
                                 }
                             }
                             else
                             {
                                 if (vm.ExgRate > 0)
                                 {
-                                    itemAmt = vm.TranAmount / vm.ExgRate;
+                                    itemAmt = item.TranAmount / vm.ExgRate;
                                 }
                                 else
                                 {
-                                    itemAmt = vm.TranAmount;
+                                    itemAmt = item.TranAmount;
                                 }
                             }
                         }
