@@ -16,7 +16,8 @@ namespace achihapi.Controllers
     {
         // GET: api/financereportcc
         [HttpGet]
-        public async Task<IActionResult> Get()
+        [Authorize]
+        public async Task<IActionResult> Get([FromQuery]Int32 hid)
         {
             List<FinanceReportCCViewModel> listVm = new List<FinanceReportCCViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -24,16 +25,17 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
 
+            if (hid == 0)
+                return BadRequest("No HID inputted");
+
             try
             {
-                //var usrObj = User.FindFirst(c => c.Type == "sub");
-
                 queryString = @"SELECT [CONTROLCENTERID]
                               ,[CONTROLCENTERNAME]
                               ,[debit_balance]
                               ,[credit_balance]
                               ,[balance]
-                          FROM [dbo].[v_fin_report_cc]";
+                          FROM [dbo].[v_fin_report_cc] WHERE [HID] = " + hid.ToString();
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);

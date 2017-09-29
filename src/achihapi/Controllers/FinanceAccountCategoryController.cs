@@ -14,6 +14,7 @@ namespace achihapi.Controllers
     {
         // GET: api/financeaccountcategory
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceAccountCtgyViewModel> listVMs = new BaseListViewModel<FinanceAccountCtgyViewModel>();
@@ -22,11 +23,35 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
 
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest();
+
             try
             {
-                queryString = this.getQueryString(true, top, skip, null, hid);
+                if (hid == 0)
+                    queryString = this.getQueryString(true, top, skip, null, null);
+                else
+                    queryString = this.getQueryString(true, top, skip, null, hid);
 
                 await conn.OpenAsync();
+
+                // Basic check
+                if (hid != 0)
+                {
+                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
+                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
+                    cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
+                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
+                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
+                    if (!readHIDCheck.HasRows)
+                        return BadRequest("No home found");
+                    readHIDCheck.Dispose();
+                    readHIDCheck = null;
+                    cmdHIDCheck.Dispose();
+                    cmdHIDCheck = null;
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -84,8 +109,9 @@ namespace achihapi.Controllers
         }
 
         // GET api/financeaccountcateogry/5
-        [HttpGet("{hid, id}")]
-        public async Task<IActionResult> Get(int hid, int id)
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
         {
             FinanceAccountCtgyViewModel vm = new FinanceAccountCtgyViewModel();
 
@@ -95,11 +121,36 @@ namespace achihapi.Controllers
             String strErrMsg = "";
             Boolean bNotFound = false;
 
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest();
+
             try
             {
-                queryString = this.getQueryString(false, null, null, id, hid);
+                if (hid == 0)
+                    queryString = this.getQueryString(false, null, null, id, null);
+                else
+                    queryString = this.getQueryString(false, null, null, id, hid);
 
                 await conn.OpenAsync();
+
+                // Basic check
+                if (hid != 0)
+                {
+                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
+                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
+                    cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
+                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
+                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
+                    if (!readHIDCheck.HasRows)
+                        return BadRequest("No home found");
+                    readHIDCheck.Dispose();
+                    readHIDCheck = null;
+                    cmdHIDCheck.Dispose();
+                    cmdHIDCheck = null;
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -170,13 +221,14 @@ namespace achihapi.Controllers
         }
 
         #region Implmented methods
-        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32 hid)
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32? hid)
         {
             String strSQL = "";
             if (bListMode)
             {
                 strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account_ctgy] WHERE [HID] IS NULL ";
-                strSQL += @" OR [HID] = " + hid.ToString() + ";";
+                if (hid.HasValue)
+                    strSQL += @" OR [HID] = " + hid.Value.ToString() + ";";
             }
 
             strSQL += @" SELECT [ID]
@@ -191,13 +243,16 @@ namespace achihapi.Controllers
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
                 strSQL += @" WHERE [HID] IS NULL ";
-                strSQL += " OR [HID] = " + hid.ToString();
+                if (hid.HasValue)
+                    strSQL += " OR [HID] = " + hid.Value.ToString();
                 strSQL += @" ORDER BY (SELECT NULL)
                         OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
             }
             else if (!bListMode && nSearchID.HasValue)
             {
-                strSQL += " WHERE [t_fin_account_ctgy].[ID] = " + nSearchID.Value.ToString() + " AND [t_fin_account_ctgy].[ID] =  " + hid.ToString();
+                strSQL += " WHERE [t_fin_account_ctgy].[ID] = " + nSearchID.Value.ToString();
+                if (hid.HasValue)
+                    strSQL += " AND [t_fin_account_ctgy].[ID] =  " + hid.Value.ToString();
             }
 
             return strSQL;

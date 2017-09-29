@@ -25,6 +25,9 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
 
+            if (hid == 0)
+                return BadRequest("HID is missing");
+
             try
             {
                 String usrName = "";
@@ -33,18 +36,38 @@ namespace achihapi.Controllers
                 {
                     var usrObj = HIHAPIUtility.GetUserClaim(this);
                     usrName = usrObj.Value;
-                    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
+                    //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-                    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                    //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
                 }
                 catch
                 {
                     return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
                 }
 
+                if (String.IsNullOrEmpty(usrName))
+                    return BadRequest("No user found");
+
                 queryString = this.getQueryString(true, top, skip, null, scopeFilter, hid);
 
                 await conn.OpenAsync();
+
+                // Basic check
+                if (hid != 0)
+                {
+                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
+                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
+                    cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
+                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
+                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
+                    if (!readHIDCheck.HasRows)
+                        return BadRequest("No home found");
+                    readHIDCheck.Dispose();
+                    readHIDCheck = null;
+                    cmdHIDCheck.Dispose();
+                    cmdHIDCheck = null;
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
@@ -105,7 +128,7 @@ namespace achihapi.Controllers
         // GET api/financeaccount/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id)
+        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
         {
             FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -113,6 +136,9 @@ namespace achihapi.Controllers
             Boolean bExist = false;
             Boolean bError = false;
             String strErrMsg = "";
+
+            if (hid == 0)
+                return BadRequest("Not HID inputted");
 
             try
             {
@@ -122,18 +148,37 @@ namespace achihapi.Controllers
                 {
                     var usrObj = HIHAPIUtility.GetUserClaim(this);
                     usrName = usrObj.Value;
-                    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
+                    //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-                    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                    //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
                 }
                 catch
                 {
                     return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
                 }
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    return BadRequest("No user found");
+                }
 
                 queryString = this.getQueryString(false, null, null, id, scopeFilter, null);
 
                 await conn.OpenAsync();
+
+                if (hid != 0)
+                {
+                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
+                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
+                    cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
+                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
+                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
+                    if (!readHIDCheck.HasRows)
+                        return BadRequest("No home found");
+                    readHIDCheck.Dispose();
+                    readHIDCheck = null;
+                    cmdHIDCheck.Dispose();
+                    cmdHIDCheck = null;
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -194,19 +239,19 @@ namespace achihapi.Controllers
             {
                 var usrObj = HIHAPIUtility.GetUserClaim(this);
                 usrName = usrObj.Value;
-                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
+                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-                if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
-                {
-                    return StatusCode(401, "Current user has no authority to create account!");
-                }
-                else if(String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
-                {
-                    if (String.CompareOrdinal(vm.Owner, usrName) != 0)
-                    {
-                        return StatusCode(401, "Current user can only create account with owner.");
-                    }
-                }
+                //if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                //{
+                //    return StatusCode(401, "Current user has no authority to create account!");
+                //}
+                //else if(String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                //{
+                //    if (String.CompareOrdinal(vm.Owner, usrName) != 0)
+                //    {
+                //        return StatusCode(401, "Current user can only create account with owner.");
+                //    }
+                //}
             }
             catch
             {
@@ -219,7 +264,10 @@ namespace achihapi.Controllers
             {
                 return BadRequest("Name is a must!");
             }
-            
+
+            if (vm.HID <= 0)
+                return BadRequest("No HID inputted!");
+
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -236,6 +284,21 @@ namespace achihapi.Controllers
                   FROM [dbo].[t_fin_account] WHERE [HID] = " + vm.HID.ToString() + " AND [Name] = N'" + vm.Name + "'";
 
                 await conn.OpenAsync();
+
+                if (vm.HID != 0)
+                {
+                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
+                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
+                    cmdHIDCheck.Parameters.AddWithValue("@hid", vm.HID);
+                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
+                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
+                    if (!readHIDCheck.HasRows)
+                        return BadRequest("No home found");
+                    readHIDCheck.Dispose();
+                    readHIDCheck = null;
+                    cmdHIDCheck.Dispose();
+                    cmdHIDCheck = null;
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -322,28 +385,29 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody]FinanceAccountViewModel vm)
         {
-            if (vm == null)
+            if (vm == null || vm.HID <= 0)
             {
-                return BadRequest("No data is inputted");
+                return BadRequest("Invalid inputted data, such as miss HID");
             }
+
             String usrName = "";
             try
             {
                 var usrObj = HIHAPIUtility.GetUserClaim(this);
                 usrName = usrObj.Value;
-                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
+                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-                if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
-                {
-                    return StatusCode(401, "Current user has no authority to change account!");
-                }
-                else if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
-                {
-                    if (String.CompareOrdinal(vm.Owner, usrName) != 0)
-                    {
-                        return StatusCode(401, "Current user can only modify account with owner.");
-                    }
-                }
+                //if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                //{
+                //    return StatusCode(401, "Current user has no authority to change account!");
+                //}
+                //else if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                //{
+                //    if (String.CompareOrdinal(vm.Owner, usrName) != 0)
+                //    {
+                //        return StatusCode(401, "Current user can only modify account with owner.");
+                //    }
+                //}
             }
             catch
             {
@@ -375,6 +439,22 @@ namespace achihapi.Controllers
                      WHERE [ID] = @ID";
 
                 await conn.OpenAsync();
+
+                if (vm.HID > 0)
+                {
+                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
+                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
+                    cmdHIDCheck.Parameters.AddWithValue("@hid", vm.HID);
+                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
+                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
+                    if (!readHIDCheck.HasRows)
+                        return BadRequest("No home found");
+
+                    readHIDCheck.Dispose();
+                    readHIDCheck = null;
+                    cmdHIDCheck.Dispose();
+                    cmdHIDCheck = null;
+                }
 
                 SqlTransaction tran = conn.BeginTransaction();
                 SqlCommand cmd = new SqlCommand(queryString, conn)
@@ -430,7 +510,7 @@ namespace achihapi.Controllers
         // DELETE api/financeaccount/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, [FromQuery]Int32 hid = 0)
         {
             String usrName = "";
             String scopeValue = "";
@@ -438,18 +518,23 @@ namespace achihapi.Controllers
             {
                 var usrObj = HIHAPIUtility.GetUserClaim(this);
                 usrName = usrObj.Value;
-                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
-                scopeValue = scopeObj.Value;
+                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
+                //scopeValue = scopeObj.Value;
 
-                if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
-                {
-                    return StatusCode(401, "Current user has no authority to create account!");
-                }
+                //if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                //{
+                //    return StatusCode(401, "Current user has no authority to create account!");
+                //}
             }
             catch
             {
                 return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
             }
+
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("No user found");
+            if (hid == 0)
+                return BadRequest("No HID inputted!");
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -459,8 +544,24 @@ namespace achihapi.Controllers
             try
             {
                 // Check owner and the existence
-                queryString = @"SELECT [OWNER] FROM [dbo].[t_fin_account] WHERE [ID] = " + id.ToString();
+                queryString = @"SELECT [OWNER] FROM [dbo].[t_fin_account] WHERE [ID] = " + id.ToString() + " AND [HID] = " + hid.ToString();
                 await conn.OpenAsync();
+
+                if (hid != 0)
+                {
+                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
+                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
+                    cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
+                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
+                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
+                    if (!readHIDCheck.HasRows)
+                        return BadRequest("No home found");
+                    readHIDCheck.Dispose();
+                    readHIDCheck = null;
+                    cmdHIDCheck.Dispose();
+                    cmdHIDCheck = null;
+                }
+
                 SqlCommand cmdread = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmdread.ExecuteReader();
                 if (reader.HasRows)

@@ -14,9 +14,10 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class FinanceReportOrderController : Controller
     {
-        // GET: api/values
+        // GET: api/financereportorder
         [HttpGet]
-        public async Task<IActionResult> Get()
+        [Authorize]
+        public async Task<IActionResult> Get([FromQuery]Int32 hid)
         {
             List<FinanceReportOrderViewModel> listVm = new List<FinanceReportOrderViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -24,16 +25,17 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
 
+            if (hid == 0)
+                return BadRequest("No HID inputted");
+
             try
             {
-                //var usrObj = User.FindFirst(c => c.Type == "sub");
-
                 queryString = @"SELECT [ORDERID]
                           ,[ORDERNAME]
                           ,[debit_balance]
                           ,[credit_balance]
                           ,[balance]
-                      FROM [dbo].[v_fin_report_order]";
+                      FROM [dbo].[v_fin_report_order] WHERE [HID] = " + hid.ToString();
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);

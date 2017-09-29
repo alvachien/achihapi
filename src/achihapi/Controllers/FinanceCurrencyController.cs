@@ -15,6 +15,7 @@ namespace achihapi.Controllers
     {
         // GET: api/financecurrency
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceCurrencyViewModel> listVMs = new BaseListViewModel<FinanceCurrencyViewModel>();

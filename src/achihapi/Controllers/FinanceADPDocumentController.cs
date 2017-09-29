@@ -22,6 +22,7 @@ namespace achihapi.Controllers
 
         // GET api/financeadpdocument/5
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> Get(int id)
         {
             FinanceADPDocumentUIViewModel vm = new FinanceADPDocumentUIViewModel();
@@ -272,6 +273,7 @@ namespace achihapi.Controllers
 
         // PUT api/financeadpdocument/5
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody]string value)
         {
             return BadRequest();
@@ -279,6 +281,7 @@ namespace achihapi.Controllers
 
         // DELETE api/financeadpdocument/5
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
             return BadRequest();

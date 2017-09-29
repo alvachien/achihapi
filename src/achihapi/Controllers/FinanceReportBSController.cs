@@ -25,6 +25,9 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
 
+            if (hid == 0)
+                return BadRequest("No HID inputted");
+
             try
             {
                 queryString = @"SELECT [accountid]
@@ -34,7 +37,7 @@ namespace achihapi.Controllers
                           ,[debit_balance]
                           ,[credit_balance]
                           ,[balance]
-                      FROM [dbo].[v_fin_report_bs]";
+                      FROM [dbo].[v_fin_report_bs] WHERE [HID] = " + hid.ToString();
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);

@@ -16,6 +16,7 @@ namespace achihapi.Controllers
     {
         // GET: api/financeorder
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceOrderViewModel> listVMs = new BaseListViewModel<FinanceOrderViewModel>();
@@ -86,6 +87,7 @@ namespace achihapi.Controllers
 
         // GET api/financeorder/5
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> Get(int id)
         {
             FinanceOrderViewModel vm = new FinanceOrderViewModel();

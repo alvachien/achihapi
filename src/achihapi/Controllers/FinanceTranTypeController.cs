@@ -14,6 +14,7 @@ namespace achihapi.Controllers
     {
         // GET: api/trantype
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceTranTypeViewModel> listVMs = new BaseListViewModel<FinanceTranTypeViewModel>();
