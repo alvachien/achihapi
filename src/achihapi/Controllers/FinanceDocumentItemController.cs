@@ -15,6 +15,7 @@ namespace achihapi.Controllers
     {
         // GET: api/financedocumentitems
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32? acntid = null, Int32? ccid = null, Int32? ordid = null)
         {
             List<FinanceDocumentItemWithBalanceUIViewModel> listVMs = new List<FinanceDocumentItemWithBalanceUIViewModel>();

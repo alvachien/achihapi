@@ -114,6 +114,7 @@ namespace achihapi.Controllers
 
         // GET: api/FinanceDocWithPlanExgRate/5
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> Get(int id)
         {
             return BadRequest();

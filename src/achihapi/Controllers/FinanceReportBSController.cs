@@ -16,7 +16,8 @@ namespace achihapi.Controllers
     {
         // GET: api/financereportbs
         [HttpGet]
-        public async Task<IActionResult> Get()
+        [Authorize]
+        public async Task<IActionResult> Get([FromQuery]Int32 hid)
         {
             List<FinanceReportBSViewModel> listVm = new List<FinanceReportBSViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -26,8 +27,6 @@ namespace achihapi.Controllers
 
             try
             {
-                //var usrObj = User.FindFirst(c => c.Type == "sub");
-
                 queryString = @"SELECT [accountid]
                           ,[ACCOUNTNAME]
                           ,[ACCOUNTCTGYID]

@@ -124,7 +124,6 @@ namespace achihapi.Controllers
                     usrName = usrObj.Value;
                     var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-
                     scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
                 }
                 catch

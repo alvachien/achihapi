@@ -84,8 +84,8 @@ namespace achihapi.Controllers
         }
 
         // GET api/financeaccountcateogry/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        [HttpGet("{hid, id}")]
+        public async Task<IActionResult> Get(int hid, int id)
         {
             FinanceAccountCtgyViewModel vm = new FinanceAccountCtgyViewModel();
 
@@ -97,7 +97,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(false, null, null, id, null);
+                queryString = this.getQueryString(false, null, null, id, hid);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -170,14 +170,13 @@ namespace achihapi.Controllers
         }
 
         #region Implmented methods
-        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32? hid)
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32 hid)
         {
             String strSQL = "";
             if (bListMode)
             {
                 strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account_ctgy] WHERE [HID] IS NULL ";
-                if (hid.HasValue && hid.Value != 0)
-                    strSQL += @" OR [HID] = " + hid.Value.ToString() + ";";
+                strSQL += @" OR [HID] = " + hid.ToString() + ";";
             }
 
             strSQL += @" SELECT [ID]
@@ -192,14 +191,13 @@ namespace achihapi.Controllers
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
                 strSQL += @" WHERE [HID] IS NULL ";
-                if (hid.HasValue && hid.Value != 0)
-                    strSQL += " OR [HID] = " + hid.Value.ToString();
+                strSQL += " OR [HID] = " + hid.ToString();
                 strSQL += @" ORDER BY (SELECT NULL)
                         OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
             }
             else if (!bListMode && nSearchID.HasValue)
             {
-                strSQL += " WHERE [t_fin_account_ctgy].[ID] = " + nSearchID.Value.ToString();
+                strSQL += " WHERE [t_fin_account_ctgy].[ID] = " + nSearchID.Value.ToString() + " AND [t_fin_account_ctgy].[ID] =  " + hid.ToString();
             }
 
             return strSQL;
