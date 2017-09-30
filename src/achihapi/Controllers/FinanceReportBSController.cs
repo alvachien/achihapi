@@ -56,15 +56,15 @@ namespace achihapi.Controllers
                         if (reader.IsDBNull(4))
                             avm.DebitBalance = 0;
                         else
-                            avm.DebitBalance = reader.GetDecimal(4);
+                            avm.DebitBalance = Math.Round(reader.GetDecimal(4), 2);
                         if (reader.IsDBNull(5))
                             avm.CreditBalance = 0;
                         else
-                            avm.CreditBalance = reader.GetDecimal(5);
+                            avm.CreditBalance = Math.Round(reader.GetDecimal(5), 2);
                         if (reader.IsDBNull(6))
                             avm.Balance = 0;
                         else
-                            avm.Balance = reader.GetDecimal(6);
+                            avm.Balance = Math.Round(reader.GetDecimal(6), 2);
                         listVm.Add(avm);
                     }
                 }

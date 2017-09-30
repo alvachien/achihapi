@@ -542,3 +542,22 @@ SELECT tab_a.[ORDERID],
 
 GO
 
+-- Update at 2017.9.30
+/****** Object:  View [dbo].[v_fin_report_trantype]    Script Date: 2017-09-30 10:27:58 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+DROP VIEW IF EXISTS [dbo].[v_fin_report_trantype]
+GO
+
+create view [dbo].[v_fin_report_trantype]
+AS 
+select taba.HID, taba.TRANDATE, taba.TRANTYPE, tabb.NAME, tabb.EXPENSE, taba.tranamount
+from 
+(select hid, trandate, trantype, sum(tranamount_lc) as tranamount from [V_FIN_DOCUMENT_ITEM]
+	group by hid, trandate, trantype) taba
+	inner join t_fin_tran_type tabb on taba.TRANTYPE = tabb.ID
+GO

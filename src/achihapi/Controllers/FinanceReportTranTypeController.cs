@@ -1,25 +1,26 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using achihapi.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using System.Data;
 using System.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Authorization;
+using achihapi.ViewModels;
 
 namespace achihapi.Controllers
 {
-    [Route("api/[controller]")]
-    public class FinanceReportCCController : Controller
+    [Produces("application/json")]
+    [Route("api/FinanceReportTranType")]
+    public class FinanceReportTranTypeController : Controller
     {
-        // GET: api/financereportcc
+        // GET: api/FinanceReportTranType
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid)
         {
-            List<FinanceReportCCViewModel> listVm = new List<FinanceReportCCViewModel>();
+            List<FinanceReportTranTypeViewModel> listVm = new List<FinanceReportTranTypeViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -30,12 +31,13 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT [CONTROLCENTERID]
-                              ,[CONTROLCENTERNAME]
-                              ,[debit_balance]
-                              ,[credit_balance]
-                              ,[balance]
-                          FROM [dbo].[v_fin_report_cc] WHERE [HID] = " + hid.ToString();
+                queryString = @"SELECT [HID]
+                              ,[TRANDATE]
+                              ,[TRANTYPE]
+                              ,[NAME]
+                              ,[EXPENSE]
+                              ,[tranamount]
+                      FROM [dbo].[v_fin_report_trantype] WHERE [HID] = " + hid.ToString();
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -44,23 +46,23 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        FinanceReportCCViewModel avm = new FinanceReportCCViewModel
+                        FinanceReportTranTypeViewModel avm = new FinanceReportTranTypeViewModel
                         {
-                            ControlCenterID = reader.GetInt32(0),
-                            ControlCenterName = reader.GetString(1)
+                            TranDate = reader.GetDateTime(1),
+                            TranType = reader.GetInt32(2)
                         };
-                        if (reader.IsDBNull(2))
-                            avm.DebitBalance = 0;
-                        else
-                            avm.DebitBalance = Math.Round(reader.GetDecimal(2), 2);
                         if (reader.IsDBNull(3))
-                            avm.CreditBalance = 0;
+                            avm.Name = String.Empty;
                         else
-                            avm.CreditBalance = Math.Round(reader.GetDecimal(3), 2);
+                            avm.Name = reader.GetString(3);
                         if (reader.IsDBNull(4))
-                            avm.Balance = 0;
+                            avm.ExpenseFlag = false;
                         else
-                            avm.Balance = Math.Round(reader.GetDecimal(4), 2);
+                            avm.ExpenseFlag = reader.GetBoolean(4);
+                        if (reader.IsDBNull(5))
+                            avm.TranAmount = 0;
+                        else
+                            avm.TranAmount = Math.Round(reader.GetDecimal(5), 2);
                         listVm.Add(avm);
                     }
                 }
