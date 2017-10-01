@@ -18,7 +18,7 @@ namespace achihapi.Controllers
         // GET: api/FinanceReportTranType
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, DateTime? dtbgn = null, DateTime? dtend = null)
         {
             List<FinanceReportTranTypeViewModel> listVm = new List<FinanceReportTranTypeViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -37,10 +37,20 @@ namespace achihapi.Controllers
                               ,[NAME]
                               ,[EXPENSE]
                               ,[tranamount]
-                      FROM [dbo].[v_fin_report_trantype] WHERE [HID] = " + hid.ToString();
+                      FROM [dbo].[v_fin_report_trantype] WHERE [HID] = @hid ";
+                if (dtbgn.HasValue)
+                    queryString += " AND [TRANDATE] >= @dtbgn";
+                if (dtend.HasValue)
+                    queryString += " AND [TRANDATE] <= @dtend";
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Parameters.AddWithValue("@hid", hid);
+                if (dtbgn.HasValue)
+                    cmd.Parameters.AddWithValue("@dtbgn", dtbgn.Value);
+                if (dtbgn.HasValue)
+                    cmd.Parameters.AddWithValue("@dtend", dtend.Value);
+
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
                 {

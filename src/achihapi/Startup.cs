@@ -1,4 +1,4 @@
-﻿#define USINGAZURE
+﻿//#define USINGAZURE
 
 using System;
 using System.Collections.Generic;
@@ -84,8 +84,8 @@ namespace achihapi
                     )
 #else
                 builder.WithOrigins(
-                    "http://118.178.58.187:5220",
-                    "https://118.178.58.187:5220"
+                    "http://118.178.58.187:5200",
+                    "https://118.178.58.187:5200"
                     )
 #endif
 #endif

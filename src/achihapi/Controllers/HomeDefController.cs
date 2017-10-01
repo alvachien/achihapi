@@ -57,11 +57,15 @@ namespace achihapi.Controllers
                 {
                     var usrObj = HIHAPIUtility.GetUserClaim(this);
                     usrName = usrObj.Value;
-                    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
 
-                    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
-                    if (String.IsNullOrEmpty(scopeFilter))
-                        scopeFilter = usrName;
+                    // Disabled scope check just make it work, 2017.10.1
+                    scopeFilter = usrName;
+
+                    //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
+
+                    //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                    //if (String.IsNullOrEmpty(scopeFilter))
+                    //    scopeFilter = usrName;
                 }
                 catch
                 {
@@ -153,9 +157,12 @@ namespace achihapi.Controllers
                 {
                     var usrObj = HIHAPIUtility.GetUserClaim(this);
                     usrName = usrObj.Value;
-                    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
 
-                    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                    // Disabled scope check just make it work, 2017.10.1
+                    scopeFilter = usrName;
+                    //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
+
+                    //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
                 }
                 catch
                 {
@@ -230,19 +237,22 @@ namespace achihapi.Controllers
             {
                 var usrObj = HIHAPIUtility.GetUserClaim(this);
                 usrId = usrObj.Value;
-                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
 
-                if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
-                {
-                    return StatusCode(401, "Current user has no authority to create home!");
-                }
-                else if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
-                {
-                    if (String.CompareOrdinal(vm.Host, usrId) != 0)
-                    {
-                        return StatusCode(401, "Current user can only create home with owner.");
-                    }
-                }
+                // Disabled scope check just make it work, 2017.10.1
+
+                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
+
+                //if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                //{
+                //    return StatusCode(401, "Current user has no authority to create home!");
+                //}
+                //else if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                //{
+                //    if (String.CompareOrdinal(vm.Host, usrId) != 0)
+                //    {
+                //        return StatusCode(401, "Current user can only create home with owner.");
+                //    }
+                //}
             }
             catch
             {
@@ -354,19 +364,22 @@ namespace achihapi.Controllers
             {
                 var usrObj = HIHAPIUtility.GetUserClaim(this);
                 usrName = usrObj.Value;
-                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
 
-                if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
-                {
-                    return StatusCode(401, "Current user has no authority to create home!");
-                }
-                else if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
-                {
-                    if (String.CompareOrdinal(vm.Host, usrName) != 0)
-                    {
-                        return StatusCode(401, "Current user can only create home with owner.");
-                    }
-                }
+                // Disabled scope check just make it work, 2017.10.1
+
+                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
+
+                //if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                //{
+                //    return StatusCode(401, "Current user has no authority to create home!");
+                //}
+                //else if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                //{
+                //    if (String.CompareOrdinal(vm.Host, usrName) != 0)
+                //    {
+                //        return StatusCode(401, "Current user can only create home with owner.");
+                //    }
+                //}
             }
             catch
             {

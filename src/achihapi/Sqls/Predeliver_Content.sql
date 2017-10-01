@@ -2,7 +2,7 @@
 -- Content for language, updated at 2017.9.9
 INSERT INTO [dbo].[t_language] ([LCID],[ISONAME],[ENNAME],[NAVNAME],[APPFLAG]) VALUES (4, N'zh-Hans', N'Chinese (Simplified)', N'简体中文', 1);
 INSERT INTO [dbo].[t_language] ([LCID],[ISONAME],[ENNAME],[NAVNAME],[APPFLAG]) VALUES (9, N'en', N'English', N'English', 1);
-INSERT INTO [dbo].[t_language] ([LCID],[ISONAME],[ENNAME],[NAVNAME],[APPFLAG]) VALUES (17, N'ja', N'Japanese', N'日本语', 1);
+INSERT INTO [dbo].[t_language] ([LCID],[ISONAME],[ENNAME],[NAVNAME],[APPFLAG]) VALUES (17, N'ja', N'Japanese', N'日本语', 0);
 INSERT INTO [dbo].[t_language] ([LCID],[ISONAME],[ENNAME],[NAVNAME],[APPFLAG]) VALUES (31748, N'zh-Hant', N'Chinese (Traditional)', N'繁體中文', 0);
 
 -- Content for currency, updated at 2017.9.9
@@ -152,7 +152,7 @@ INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES 
 INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (2,N'Sys.AcntCty.DepositAccount',1,NULL);
 INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (3,N'Sys.AcntCty.CreditCard',1,NULL);
 INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (4,N'Sys.AcntCty.AccountPayable',0,NULL);
-INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (5,N'Sys.AcntCty.AccountReceivable',1,NULL);
+INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (5,N'Sys.AcntCty.AccountReceviable',1,NULL);
 INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (6,N'Sys.AcntCty.VirtualAccount',1,N'如支付宝等');
 INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (7,N'Sys.AcntCty.AssetAccount',1,NULL);
 INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (8,N'Sys.AcntCty.AdvancedPayment',1,NULL);
