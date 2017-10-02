@@ -561,3 +561,39 @@ from
 	group by hid, trandate, trantype) taba
 	inner join t_fin_tran_type tabb on taba.TRANTYPE = tabb.ID
 GO
+
+-- Updated at 2017.10.02
+/****** Object:  View [dbo].[v_lrn_usrlrndate]    Script Date: 2017-10-02 10:35:46 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create view [dbo].[v_lrn_usrlrndate]
+as
+select taba.HID, taba.USERID, tabb.[DISPLAYAS], taba.[LEARNDATE], taba.learncount
+from
+(select HID, USERID, [LEARNDATE], count(*) as learncount from t_learn_hist
+	group by hid, userid, [LEARNDATE] ) taba
+	left outer join t_homemem tabb
+	on taba.hid = tabb.HID
+	
+GO
+
+
+/****** Object:  View [dbo].[v_lrn_ctgylrndate]    Script Date: 2017-10-02 10:44:17 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create view [dbo].[v_lrn_ctgylrndate]
+as
+select HID, CATEGORY, LEARNDATE, COUNT(*) as learncount
+from (
+select taba.HID, taba.USERID, tabb.CATEGORY, taba.LEARNDATE from t_learn_hist taba
+	left outer join t_learn_obj tabb on taba.objectid = tabb.ID ) tabc
+	group by HID, CATEGORY, LEARNDATE
+GO
