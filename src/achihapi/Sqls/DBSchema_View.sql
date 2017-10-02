@@ -570,6 +570,9 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
+DROP VIEW IF EXISTS [dbo].[v_lrn_usrlrndate];
+GO
+
 create view [dbo].[v_lrn_usrlrndate]
 as
 select taba.HID, taba.USERID, tabb.[DISPLAYAS], taba.[LEARNDATE], taba.learncount
@@ -577,7 +580,7 @@ from
 (select HID, USERID, [LEARNDATE], count(*) as learncount from t_learn_hist
 	group by hid, userid, [LEARNDATE] ) taba
 	left outer join t_homemem tabb
-	on taba.hid = tabb.HID
+	on taba.hid = tabb.HID AND taba.userid = tabb.[USER];
 	
 GO
 
@@ -589,11 +592,14 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
+DROP VIEW IF EXISTS [dbo].[v_lrn_ctgylrndate];
+GO
+
 create view [dbo].[v_lrn_ctgylrndate]
 as
 select HID, CATEGORY, LEARNDATE, COUNT(*) as learncount
 from (
 select taba.HID, taba.USERID, tabb.CATEGORY, taba.LEARNDATE from t_learn_hist taba
 	left outer join t_learn_obj tabb on taba.objectid = tabb.ID ) tabc
-	group by HID, CATEGORY, LEARNDATE
+	group by HID, CATEGORY, LEARNDATE;
 GO
