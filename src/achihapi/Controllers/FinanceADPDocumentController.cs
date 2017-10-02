@@ -15,7 +15,7 @@ namespace achihapi.Controllers
     {
         // GET: api/financeadpdocument
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean skipPosted = true, DateTime? dtbgn = null, DateTime? dtend = null)
         {
             return BadRequest();
         }

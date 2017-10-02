@@ -261,20 +261,23 @@ namespace achihapi.Controllers
             {
                 var usrObj = HIHAPIUtility.GetUserClaim(this);
                 usrName = usrObj.Value;
-                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
-                var scopeValue = scopeObj.Value;
 
-                if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
-                {
-                    return StatusCode(401, "Current user has no authority to create learn history!");
-                }
-                else if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerFullControl) == 0)
-                {
-                    if (String.CompareOrdinal(usrName, vm.UserID) != 0)
-                    {
-                        return StatusCode(401, "Current user cannot create the history where he/she is not responsible for.");
-                    }
-                }
+                // Disable the scope filter just for now, 2017.10.2
+
+                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
+                //var scopeValue = scopeObj.Value;
+
+                //if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                //{
+                //    return StatusCode(401, "Current user has no authority to create learn history!");
+                //}
+                //else if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                //{
+                //    if (String.CompareOrdinal(usrName, vm.UserID) != 0)
+                //    {
+                //        return StatusCode(401, "Current user cannot create the history where he/she is not responsible for.");
+                //    }
+                //}
             }
             catch
             {

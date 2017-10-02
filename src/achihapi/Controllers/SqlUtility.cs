@@ -749,6 +749,25 @@ namespace achihapi.Controllers
             return strSQL;
         }
 
+        internal static string getFinanceDocADPListQueryString()
+        {
+            return @"SELECT [t_fin_tmpdoc_dp].[DOCID]
+                          ,[t_fin_tmpdoc_dp].[HID]
+                          ,[t_fin_tmpdoc_dp].[REFDOCID]
+                          ,[t_fin_tmpdoc_dp].[ACCOUNTID]
+                          ,[t_fin_tmpdoc_dp].[TRANDATE]
+                          ,[t_fin_tmpdoc_dp].[TRANTYPE]
+                          ,[t_fin_tmpdoc_dp].[TRANAMOUNT]
+                          ,[t_fin_tmpdoc_dp].[CONTROLCENTERID]
+                          ,[t_fin_tmpdoc_dp].[ORDERID]
+                          ,[t_fin_tmpdoc_dp].[DESP]
+                          ,[t_fin_tmpdoc_dp].[CREATEDBY]
+                          ,[t_fin_tmpdoc_dp].[CREATEDAT]
+                          ,[t_fin_tmpdoc_dp].[UPDATEDBY]
+                          ,[t_fin_tmpdoc_dp].[UPDATEDAT]
+                        FROM [dbo].[t_fin_tmpdoc_dp] ";
+        }
+
         internal static string getFinanceDocADPQueryString(Int32 nid)
         {
             String strSQL = @"SELECT [ID]

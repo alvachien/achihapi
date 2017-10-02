@@ -87,6 +87,7 @@ namespace achihapi.ViewModels
         internal const String LearnObjectScope = "LearnObjectScope";
 
         internal const String DateFormatPattern = "yyyy-MM-dd";
+        internal const Int16 FinDocType_Normal = 1;
         internal const Int16 FinDocType_Transfer = 2;
         internal const Int16 FinDocType_CurrExchange = 3;
     }
