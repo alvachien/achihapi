@@ -18,6 +18,14 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0, Boolean bIncContent = false)
         {
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             BaseListViewModel<LearnObjectUIViewModel> listVm = new BaseListViewModel<LearnObjectUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -29,6 +37,17 @@ namespace achihapi.Controllers
                 queryString = this.getQueryString(bIncContent, true, top, skip, null, hid);
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
@@ -165,8 +184,17 @@ namespace achihapi.Controllers
 
         // GET api/learnobject/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        [Authorize]
+        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
         {
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             LearnObjectUIViewModel vm = new LearnObjectUIViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -179,6 +207,17 @@ namespace achihapi.Controllers
                 queryString = this.getQueryString(true, false, null, null, id, 0);
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -229,10 +268,17 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]LearnObjectViewModel vm)
         {
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             if (vm == null)
             {
                 return BadRequest("No data is inputted");
             }
+            if (vm.HID <= 0)
+                return BadRequest("No Home Inputted");
 
             if (vm.Name != null)
                 vm.Name = vm.Name.Trim();
@@ -249,10 +295,6 @@ namespace achihapi.Controllers
             Int32 nNewID = -1;
             Boolean bError = false;
             String strErrMsg = "";
-            var usr = User.FindFirst(c => c.Type == "sub");
-            String usrName = String.Empty;
-            if (usr != null)
-                usrName = usr.Value;
 
             try
             {
@@ -260,6 +302,16 @@ namespace achihapi.Controllers
                             FROM [dbo].[t_learn_obj] WHERE [Name] = N'" + vm.Name + "'";
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -353,10 +405,17 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody]LearnObjectViewModel vm)
         {
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             if (vm == null)
             {
                 return BadRequest("No data is inputted");
             }
+            if (vm.HID <= 0)
+                return BadRequest("No Home Inputted");
 
             if (vm.Name != null)
                 vm.Name = vm.Name.Trim();
@@ -371,11 +430,6 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
 
-            var usr = User.FindFirst(c => c.Type == "sub");
-            String usrName = String.Empty;
-            if (usr != null)
-                usrName = usr.Value;
-
             try
             {
                 queryString = @"UPDATE [dbo].[t_learn_obj]
@@ -387,6 +441,16 @@ namespace achihapi.Controllers
                                 WHERE [ID] = @OBJID";
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@CTGY", vm.CategoryID);
@@ -426,8 +490,16 @@ namespace achihapi.Controllers
         // DELETE api/learnobject/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, [FromQuery]Int32 hid = 0)
         {
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -439,9 +511,19 @@ namespace achihapi.Controllers
             try
             {
                 queryString = @"SELECT COUNT( * )
-                            FROM [dbo].[t_learn_hist] WHERE [OBJECTID] = " + id.ToString();
+                            FROM [dbo].[t_learn_hist] WHERE [OBJECTID] = " + id.ToString() + " AND [HID] = " + hid.ToString();
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -454,7 +536,7 @@ namespace achihapi.Controllers
                     }
                 }
 
-                if (usageAmount > 0)
+                if (usageAmount <= 0)
                 {
                     reader.Dispose();
                     reader = null;

@@ -17,8 +17,15 @@ namespace achihapi.Controllers
         // GET: api/financeorder
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean? incInv = null)
         {
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             BaseListViewModel<FinanceOrderViewModel> listVMs = new BaseListViewModel<FinanceOrderViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -27,38 +34,51 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getListQueryString(hid, top, skip);
-
                 await conn.OpenAsync();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
 
-                Int32 nRstBatch = 0;
-                while (reader.HasRows)
+                // Check Home assignment with current user
+                try
                 {
-                    if (nRstBatch == 0)
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                queryString = @"SELECT count(*) FROM [dbo].[t_fin_order] WHERE [HID] = " + hid.ToString();
+                if (!incInv.HasValue || !incInv.Value)
+                    queryString += " AND [VALID_FROM] <= GETDATE() AND [VALID_TO] >= GETDATE()";
+
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                while (reader.Read())
+                {
+                    listVMs.TotalCount = reader.GetInt32(0);
+                    break;
+                }
+                reader.Dispose();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
+
+                if (listVMs.TotalCount > 0)
+                {
+                    queryString = this.getListQueryString(hid);
+                    if (!incInv.HasValue || !incInv.Value)
+                        queryString += " AND [VALID_FROM] <= GETDATE() AND [VALID_TO] >= GETDATE()";
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = await cmd.ExecuteReaderAsync();
+
+                    if (reader.HasRows)
                     {
                         while (reader.Read())
                         {
-                            listVMs.TotalCount = reader.GetInt32(0);
-                            break;
+                            FinanceOrderViewModel vm = new FinanceOrderViewModel();
+                            this.onListDB2VM(reader, vm);
+                            listVMs.Add(vm);
                         }
                     }
-                    else
-                    {
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                FinanceOrderViewModel vm = new FinanceOrderViewModel();
-                                this.onListDB2VM(reader, vm);
-                                listVMs.Add(vm);
-                            }
-                        }
-                    }
-                    ++nRstBatch;
-
-                    reader.NextResult();
                 }
             }
             catch (Exception exp)
@@ -88,8 +108,15 @@ namespace achihapi.Controllers
         // GET api/financeorder/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id)
+        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
         {
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             FinanceOrderViewModel vm = new FinanceOrderViewModel();
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -104,6 +131,17 @@ namespace achihapi.Controllers
                 queryString = this.getItemQueryString(id);
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -161,10 +199,17 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceOrderViewModel vm)
         {
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             if (vm == null)
             {
                 return BadRequest("No data is inputted");
             }
+            if (vm.HID <= 0)
+                return BadRequest("No Home Inputted");
 
             // Check on name
             if (vm.Name != null)
@@ -194,8 +239,6 @@ namespace achihapi.Controllers
                 return BadRequest("Total percentage shall sum up to 100");
             }
 
-            // ToDo: Check existence of the control center!!
-
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -207,12 +250,20 @@ namespace achihapi.Controllers
 
             try
             {
-                var usrName = User.FindFirst(c => c.Type == "sub").Value;
-
                 queryString = @"SELECT [ID]
                   FROM [dbo].[t_fin_order] WHERE [Name] = N'" + vm.Name + "'";
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -312,6 +363,8 @@ namespace achihapi.Controllers
 #if DEBUG
                         System.Diagnostics.Debug.WriteLine(exp.Message);
 #endif
+                        bError = true;
+                        strErrMsg = exp.Message;
                         tran.Rollback();
                     }                    
                 }
@@ -363,10 +416,9 @@ namespace achihapi.Controllers
         }
 
         #region Implmented methods
-        private string getListQueryString(Int32 hid, Int32 top, Int32 skip)
+        private string getListQueryString(Int32 hid)
         {
-            String strSQL = @"SELECT count(*) FROM [dbo].[t_fin_order] WHERE [HID] = " + hid.ToString() + "; ";
-            strSQL += @"SELECT [ID]
+            return @"SELECT [ID]
                       ,[HID]
                       ,[NAME]
                       ,[VALID_FROM]
@@ -377,8 +429,6 @@ namespace achihapi.Controllers
                       ,[UPDATEDBY]
                       ,[UPDATEDAT]
                   FROM [dbo].[t_fin_order] WHERE [HID] = " + hid.ToString();
-
-            return strSQL;
         }
         private void onListDB2VM(SqlDataReader reader, FinanceOrderViewModel vm)
         {

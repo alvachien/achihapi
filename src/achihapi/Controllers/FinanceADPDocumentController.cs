@@ -23,8 +23,15 @@ namespace achihapi.Controllers
         // GET api/financeadpdocument/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id)
+        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
         {
+            if (hid <= 0)
+                return BadRequest("Not HID inputted");
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User info cannot fetch");
+
             FinanceADPDocumentUIViewModel vm = new FinanceADPDocumentUIViewModel();
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -38,6 +45,17 @@ namespace achihapi.Controllers
                 queryString = SqlUtility.getFinanceDocADPQueryString(id);
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
@@ -127,17 +145,18 @@ namespace achihapi.Controllers
             {
                 return BadRequest("No data is inputted");
             }
-
-            // Todo: checks!
-            // Header check!
+            if (vm.HID <= 0)
+                return BadRequest("Not HID inputted");
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User info cannot fetch");
 
             // Check the items
             if (vm.Items.Count <= 0 || vm.TmpDocs.Count <= 0)
             {
                 return BadRequest("No item or no template docs");
             }
-
-            // Item check!
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -148,9 +167,18 @@ namespace achihapi.Controllers
 
             try
             {
-                var usrName = User.FindFirst(c => c.Type == "sub").Value;
-
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlTransaction tran = conn.BeginTransaction();
 
                 SqlCommand cmd = null;

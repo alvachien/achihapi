@@ -16,8 +16,14 @@ namespace achihapi.Controllers
     {
         // GET: api/learncategory
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             BaseListViewModel<LearnCategoryViewModel> listVm = new BaseListViewModel<LearnCategoryViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -29,6 +35,20 @@ namespace achihapi.Controllers
                 queryString = this.getQueryString(true, top, skip, null, hid);
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                if (hid > 0)
+                {
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception exp)
+                    {
+                        return BadRequest(exp.Message);
+                    }
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 Int32 nRstBatch = 0;
@@ -94,6 +114,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]LearnCategoryViewModel vm)
         {
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             if (vm == null)
             {
                 return BadRequest("No data is inputted");
@@ -114,13 +139,6 @@ namespace achihapi.Controllers
             Int32 nNewID = -1;
             Boolean bError = false;
             String strErrMsg = "";
-            var usr = User.FindFirst(c => c.Type == "sub");
-            String usrName = String.Empty;
-            if (usr != null)
-                usrName = usr.Value;
-
-            if (String.IsNullOrEmpty(usrName))
-                return BadRequest();
 
             try
             {
@@ -128,6 +146,19 @@ namespace achihapi.Controllers
                             FROM [dbo].[t_learn_ctgy] WHERE [Name] = N'" + vm.Name + "'";
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                if (vm.HID.HasValue && vm.HID.Value > 0)
+                {
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID.Value, usrName);
+                    }
+                    catch (Exception exp)
+                    {
+                        return BadRequest(exp.Message);
+                    }
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();

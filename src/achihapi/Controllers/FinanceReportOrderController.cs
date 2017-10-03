@@ -19,13 +19,18 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid)
         {
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             List<FinanceReportOrderViewModel> listVm = new List<FinanceReportOrderViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
 
-            if (hid == 0)
+            if (hid <= 0)
                 return BadRequest("No HID inputted");
 
             try
@@ -38,6 +43,17 @@ namespace achihapi.Controllers
                       FROM [dbo].[v_fin_report_order] WHERE [HID] = " + hid.ToString();
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)

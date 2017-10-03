@@ -20,14 +20,18 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean skipPosted = true, DateTime? dtbgn = null, DateTime? dtend = null)
         {
+            if (hid <= 0)
+                return BadRequest("No HID inputted");
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User info cannot fetch");
+
             List<FinanceTmpDocDPViewModel> listVm = new List<FinanceTmpDocDPViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
-
-            if (hid == 0)
-                return BadRequest("No HID inputted");
 
             try
             {
@@ -40,6 +44,17 @@ namespace achihapi.Controllers
                     queryString += " AND [TRANDATE] <= @dtend ";
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@hid", hid);
                 if (dtbgn.HasValue)
@@ -124,7 +139,7 @@ namespace achihapi.Controllers
             {
                 await conn.OpenAsync();
 
-                // Check: HID
+                // Check: HID, it requires more info than just check, so it implemented it 
                 if (hid != 0)
                 {
                     String strHIDCheck = SqlUtility.getHomeDefQueryString() + " WHERE [ID]= @hid AND [USER] = @user";

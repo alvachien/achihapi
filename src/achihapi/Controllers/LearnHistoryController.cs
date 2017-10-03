@@ -17,32 +17,49 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+
             BaseListViewModel<LearnHistoryUIViewModel> listVm = new BaseListViewModel<LearnHistoryUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
 
+            String usrName = "";
+            String scopeFilter = String.Empty;
             try
             {
-                String usrName = "";
-                String scopeFilter = String.Empty;
-                try
-                {
-                    var usrObj = HIHAPIUtility.GetUserClaim(this);
-                    usrName = usrObj.Value;
-                    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
 
-                    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
-                }
-                catch
-                {
-                    return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
-                }
+                //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+            }
+            catch
+            {
+                return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
+            }
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            try
+            {
 
                 queryString = this.getSQLString(true, top, skip, scopeFilter, hid);
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
@@ -168,6 +185,22 @@ namespace achihapi.Controllers
             {
                 return BadRequest("No data is inputted");
             }
+            String usrName = "";
+            String scopeFilter = String.Empty;
+            try
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
+
+                //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+            }
+            catch
+            {
+                return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
+            }
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
 
             LearnHistoryUIViewModel vm = new LearnHistoryUIViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -178,26 +211,21 @@ namespace achihapi.Controllers
 
             try
             {
-                String usrName = "";
-                String scopeFilter = String.Empty;
-                try
-                {
-                    var usrObj = HIHAPIUtility.GetUserClaim(this);
-                    usrName = usrObj.Value;
-                    var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
-
-                    scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
-                }
-                catch
-                {
-                    return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
-                }
-
                 vm.ParseGeneratedKey(sid);
 
                 queryString = this.getSQLString(false, null, null, String.Empty, null);
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@HID", vm.HID);
@@ -283,21 +311,28 @@ namespace achihapi.Controllers
             {
                 return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
             }
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest();
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
-            var usr = User.FindFirst(c => c.Type == "sub");
-            if (usr != null)
-                usrName = usr.Value;
-            if (String.IsNullOrEmpty(usrName))
-                return BadRequest();
 
             try
             {
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
 
                 // Do the check first: object id
                 String checkString = @"SELECT [ID] FROM [dbo].[t_learn_obj] WHERE [ID] = " + vm.ObjectID.ToString();
@@ -417,24 +452,26 @@ namespace achihapi.Controllers
             {
                 var usrObj = HIHAPIUtility.GetUserClaim(this);
                 usrName = usrObj.Value;
-                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
-                var scopeValue = scopeObj.Value;
-                if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
-                {
-                    return StatusCode(401, "Current user has no authority to change learn history!");
-                }
-                else if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerFullControl) == 0)
-                {
-                    if (String.CompareOrdinal(usrName, vm.UserID) != 0)
-                    {
-                        return StatusCode(401, "Current user cannot change the history where he/she is not responsible for.");
-                    }
-                }
+                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
+                //var scopeValue = scopeObj.Value;
+                //if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                //{
+                //    return StatusCode(401, "Current user has no authority to change learn history!");
+                //}
+                //else if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                //{
+                //    if (String.CompareOrdinal(usrName, vm.UserID) != 0)
+                //    {
+                //        return StatusCode(401, "Current user cannot change the history where he/she is not responsible for.");
+                //    }
+                //}
             }
             catch
             {
                 return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
             }
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -445,6 +482,16 @@ namespace achihapi.Controllers
             try
             {
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
 
                 // Do the check first: object id
                 String checkString = @"SELECT [ID] FROM [dbo].[t_learn_obj] WHERE [ID] = " + vm.ObjectID.ToString();
@@ -541,24 +588,26 @@ namespace achihapi.Controllers
             {
                 var usrObj = HIHAPIUtility.GetUserClaim(this);
                 usrName = usrObj.Value;
-                var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
-                var scopeValue = scopeObj.Value;
-                if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
-                {
-                    return StatusCode(401, "Current user has no authority to delete history!");
-                }
-                else if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerFullControl) == 0)
-                {
-                    if (String.CompareOrdinal(usrName, vm.UserID) != 0)
-                    {
-                        return StatusCode(401, "Current user cannot delete the history where he/she is not responsible for.");
-                    }
-                }
+                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.LearnHistoryScope);
+                //var scopeValue = scopeObj.Value;
+                //if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                //{
+                //    return StatusCode(401, "Current user has no authority to delete history!");
+                //}
+                //else if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                //{
+                //    if (String.CompareOrdinal(usrName, vm.UserID) != 0)
+                //    {
+                //        return StatusCode(401, "Current user cannot delete the history where he/she is not responsible for.");
+                //    }
+                //}
             }
             catch
             {
                 return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
             }
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -569,6 +618,16 @@ namespace achihapi.Controllers
             try
             {
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
 
                 // Now go ahead for the delete
                 queryString = @"DELETE FROM [dbo].[t_learn_hist]

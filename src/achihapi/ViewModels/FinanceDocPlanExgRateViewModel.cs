@@ -24,6 +24,7 @@ namespace achihapi.ViewModels
 
     public class FinanceDocPlanExgRateForUpdViewModel
     {
+        public Int32 HID { get; set; }
         public String TargetCurrency { get; set; }
         public Decimal ExchangeRate { get; set; }
         public List<Int32> DocIDs = new List<int>();

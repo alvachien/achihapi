@@ -16,7 +16,7 @@ namespace achihapi.Controllers
         // GET: api/financedocument
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, DateTime? dtbgn = null, DateTime? dtend = null)
         {
             BaseListViewModel<FinanceDocumentUIViewModel> listVMs = new BaseListViewModel<FinanceDocumentUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -24,41 +24,75 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
 
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             try
             {
-                queryString = SqlUtility.getFinanceDocListQueryString(hid, top, skip);
-
                 await conn.OpenAsync();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
 
-                Int32 nRstBatch = 0;
-                while (reader.HasRows)
+                // Check Home assignment with current user
+                try
                 {
-                    if (nRstBatch == 0)
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                queryString = @"SELECT count(*) FROM[dbo].[t_fin_document] WHERE[HID] = @hid ";
+                if (dtbgn.HasValue)
+                    queryString += " AND [TRANDATE] >= @dtbgn ";
+                if (dtend.HasValue)
+                    queryString += " AND [TRANDATE] <= @dtend ";
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Parameters.AddWithValue("@hid", hid);
+                if (dtbgn.HasValue)
+                    cmd.Parameters.AddWithValue("@dtbgn", dtbgn.Value);
+                if (dtend.HasValue)
+                    cmd.Parameters.AddWithValue("@dtend", dtend.Value);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                while (reader.Read())
+                {
+                    listVMs.TotalCount = reader.GetInt32(0);
+                    break;
+                }
+                reader.Dispose();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
+
+                if (listVMs.TotalCount > 0)
+                {
+                    queryString = SqlUtility.getFinanceDocListQueryString();
+                    queryString += @" WHERE [HID] = @hid ";
+                    if (dtbgn.HasValue)
+                        queryString += " AND [TRANDATE] >= @dtbgn ";
+                    if (dtend.HasValue)
+                        queryString += " AND [TRANDATE] <= @dtend ";
+                    queryString += " ORDER BY [TRANDATE] DESC";
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@hid", hid);
+                    if (dtbgn.HasValue)
+                        cmd.Parameters.AddWithValue("@dtbgn", dtbgn.Value);
+                    if (dtend.HasValue)
+                        cmd.Parameters.AddWithValue("@dtend", dtend.Value);
+                    reader = await cmd.ExecuteReaderAsync();
+                    if (reader.HasRows)
                     {
                         while (reader.Read())
                         {
-                            listVMs.TotalCount = reader.GetInt32(0);
-                            break;
+                            FinanceDocumentUIViewModel avm = new FinanceDocumentUIViewModel();
+                            SqlUtility.FinDocList_DB2VM(reader, avm);
+
+                            listVMs.Add(avm);
                         }
                     }
-                    else
-                    {
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                FinanceDocumentUIViewModel avm = new FinanceDocumentUIViewModel();
-                                SqlUtility.FinDocList_DB2VM(reader, avm);
-
-                                listVMs.Add(avm);
-                            }
-                        }
-                    }
-                    ++nRstBatch;
-
-                    reader.NextResult();
                 }
             }
             catch (Exception exp)
@@ -88,8 +122,15 @@ namespace achihapi.Controllers
         // GET api/financedocument/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id)
+        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
         {
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             FinanceDocumentUIViewModel vm = new FinanceDocumentUIViewModel();
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -103,6 +144,17 @@ namespace achihapi.Controllers
                 queryString = SqlUtility.getFinanceDocQueryString(id);
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
@@ -166,6 +218,10 @@ namespace achihapi.Controllers
             {
                 return BadRequest("No data is inputted");
             }
+            if (vm.HID <= 0)
+            {
+                return BadRequest("No Home ID inputted");
+            }
 
             // Do the basic check!
             // Header check!
@@ -206,15 +262,13 @@ namespace achihapi.Controllers
             Int32 nNewDocID = -1;
             Boolean bError = false;
             String strErrMsg = "";
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
 
             try
             {
-                var usrName = User.FindFirst(c => c.Type == "sub").Value;
-                if (String.IsNullOrEmpty(usrName))
-                {
-                    return BadRequest("User cannot recognize");
-                }
-
                 await conn.OpenAsync();
 
                 // Do the validation

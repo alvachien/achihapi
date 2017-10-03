@@ -17,6 +17,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             BaseListViewModel<FinanceTranTypeViewModel> listVMs = new BaseListViewModel<FinanceTranTypeViewModel>();
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -29,6 +34,19 @@ namespace achihapi.Controllers
                 queryString = this.getQueryString(true, top, skip, null, hid);
 
                 await conn.OpenAsync();
+
+                if (hid != 0)
+                {
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception exp)
+                    {
+                        return BadRequest(exp.Message);
+                    }
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();

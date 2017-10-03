@@ -40,17 +40,14 @@ namespace achihapi.Controllers
                 // Basic check
                 if (hid != 0)
                 {
-                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
-                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
-                    cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
-                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
-                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
-                    if (!readHIDCheck.HasRows)
-                        return BadRequest("No home found");
-                    readHIDCheck.Dispose();
-                    readHIDCheck = null;
-                    cmdHIDCheck.Dispose();
-                    cmdHIDCheck = null;
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch(Exception exp)
+                    {
+                        return BadRequest(exp.Message);
+                    }
                 }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -64,6 +61,10 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             listVMs.TotalCount = reader.GetInt32(0);
+                            //if (listVMs.TotalCount > top)
+                            //{
+                            //    listVMs.TotalCount = top;
+                            //}
                             break;
                         }
                     }
@@ -113,6 +114,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
         {
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest();
+
             FinanceAccountCtgyViewModel vm = new FinanceAccountCtgyViewModel();
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -120,11 +126,6 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
             Boolean bNotFound = false;
-
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
-            if (String.IsNullOrEmpty(usrName))
-                return BadRequest();
 
             try
             {

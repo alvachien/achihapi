@@ -19,6 +19,7 @@ namespace achihapi.Controllers
                           ,[BASECURR]
                           ,[DETAILS]
                           ,[USER]
+                          ,[DISPLAYAS]
                           ,[CREATEDBY]
                           ,[CREATEDAT]
                           ,[UPDATEDBY]
@@ -48,6 +49,11 @@ namespace achihapi.Controllers
                     ++idx;
                 // User - skipping
                 idx++;
+                // Display as
+                if (!reader.IsDBNull(idx))
+                    vm.CreatorDisplayAs = reader.GetString(idx++);
+                else
+                    ++idx;
                 if (!reader.IsDBNull(idx))
                     vm.CreatedBy = reader.GetString(idx++);
                 else
@@ -425,6 +431,7 @@ namespace achihapi.Controllers
                       ,[t_fin_account].[NAME]
                       ,[t_fin_account].[COMMENT]
                       ,[t_fin_account].[OWNER]
+                      ,[t_fin_account].[STATUS]
                       ,[t_fin_account].[CREATEDBY]
                       ,[t_fin_account].[CREATEDAT]
                       ,[t_fin_account].[UPDATEDBY]
@@ -523,6 +530,10 @@ namespace achihapi.Controllers
                 else
                     ++idx;
                 if (!reader.IsDBNull(idx))
+                    vm.Status = reader.GetByte(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
                     vm.CreatedBy = reader.GetString(idx++);
                 else
                     ++idx;
@@ -617,10 +628,9 @@ namespace achihapi.Controllers
         #endregion
 
         #region Finance document List
-        internal static string getFinanceDocListQueryString(Int32 hid, Int32 top, Int32 skip)
+        internal static string getFinanceDocListQueryString()
         {
-            String strSQL = @"SELECT count(*) FROM [dbo].[v_fin_document] WHERE [HID] = " + hid.ToString() + "; ";
-            strSQL += @" SELECT [ID]
+            return @" SELECT [ID]
                                 ,[HID]
                                 ,[DOCTYPE]
 	                            ,[DOCTYPENAME]
@@ -637,11 +647,7 @@ namespace achihapi.Controllers
                                 ,[UPDATEDBY]
                                 ,[UPDATEDAT]
                                 ,[TRANAMOUNT]
-                            FROM [dbo].[v_fin_document]
-                            WHERE [HID] = " + hid.ToString() +
-                            " ORDER BY [TRANDATE] DESC";
-
-            return strSQL;
+                            FROM [dbo].[v_fin_document]";                            
         }
 
         internal static void FinDocList_DB2VM(SqlDataReader reader, FinanceDocumentUIViewModel vm)

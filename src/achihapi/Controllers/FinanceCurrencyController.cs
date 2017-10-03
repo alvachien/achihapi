@@ -40,6 +40,10 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             listVMs.TotalCount = reader.GetInt32(0);
+                            //if (listVMs.TotalCount > top)
+                            //{
+                            //    listVMs.TotalCount = top;
+                            //}
                             break;
                         }
                     }

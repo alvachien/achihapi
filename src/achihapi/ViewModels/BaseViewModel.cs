@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace achihapi.ViewModels
 {
@@ -69,6 +71,48 @@ namespace achihapi.ViewModels
             }
 
             return scopeStr;
+        }
+
+        internal static void CheckHIDAssignment(SqlConnection conn, Int32 hid, String usrName)
+        {
+            if (hid == 0 || conn == null || String.IsNullOrEmpty(usrName))
+                throw new Exception("Inputted parameter invalid");
+
+            String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
+            SqlCommand cmdHIDCheck = null;
+            SqlDataReader readHIDCheck = null;
+
+            try
+            {
+                cmdHIDCheck = new SqlCommand(strHIDCheck, conn);                
+                cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
+                cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
+                readHIDCheck = cmdHIDCheck.ExecuteReader();
+                if (!readHIDCheck.HasRows)
+                    throw new Exception("No Home Definition found");
+            }
+            catch (Exception exp)
+            {
+#if DEBUG
+                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
+                // Re-throw the exception
+                throw exp;
+            }
+            finally
+            {
+                if (readHIDCheck != null)
+                {
+                    readHIDCheck.Dispose();
+                    readHIDCheck = null;
+                }
+
+                if (cmdHIDCheck != null)
+                {
+                    cmdHIDCheck.Dispose();
+                    cmdHIDCheck = null;
+                }
+            }
         }
     }
 

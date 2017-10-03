@@ -20,6 +20,14 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, String tgtcurr)
         {
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             List<FinanceDocPlanExgRateViewModel> listVMs = new List<FinanceDocPlanExgRateViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -45,6 +53,17 @@ namespace achihapi.Controllers
 		                            OR ( [EXGRATE_PLAN2] = 1 AND [TRANCURR2] = @curr ) )";
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@hid", hid);
                 cmd.Parameters.AddWithValue("@curr", tgtcurr);
@@ -125,6 +144,15 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceDocPlanExgRateForUpdViewModel vm)
         {
+            if (vm == null)
+                return BadRequest("No Data inputted");
+            if (vm.HID <= 0)
+                return BadRequest("No Home inputted");
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             List<FinanceDocPlanExgRateViewModel> listVMs = new List<FinanceDocPlanExgRateViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -144,16 +172,22 @@ namespace achihapi.Controllers
             {
                 return BadRequest();
             }
-            var usrName = User.FindFirst(c => c.Type == "sub").Value;
-            if (String.IsNullOrEmpty(usrName))
-            {
-                return BadRequest("User cannot recognize");
-            }
 
             SqlTransaction tran = null;
             try
             {
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 tran = conn.BeginTransaction();
                 foreach (var did in vm.DocIDs)
                 {

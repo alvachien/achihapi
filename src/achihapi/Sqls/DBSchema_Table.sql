@@ -194,6 +194,7 @@ CREATE TABLE [dbo].[t_fin_account](
 	[NAME] [nvarchar](30) NOT NULL,
 	[COMMENT] [nvarchar](45) NULL,
 	[OWNER] [nvarchar](50) NULL,
+	[STATUS] [tinyint] NULL,
 	[CREATEDBY] [nvarchar](50) NULL,
 	[CREATEDAT] [date] NULL,
 	[UPDATEDBY] [nvarchar](50) NULL,
@@ -800,6 +801,17 @@ BEGIN
 
 	ALTER TABLE [dbo].[t_fin_document_item]
 	ALTER COLUMN [USECURR2] [bit] NULL;
+
+END
+
+
+-- Updated at 2017.10.3
+IF NOT EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 't_fin_account' AND COLUMN_NAME = 'STATUS')
+BEGIN
+
+	ALTER TABLE [dbo].[t_fin_account]
+	ADD [STATUS] [tinyint] NULL;
 
 END
 

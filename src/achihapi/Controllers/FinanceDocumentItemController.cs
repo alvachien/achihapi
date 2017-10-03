@@ -16,8 +16,16 @@ namespace achihapi.Controllers
         // GET: api/financedocumentitems
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32? acntid = null, Int32? ccid = null, Int32? ordid = null)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32? acntid = null, Int32? ccid = null, Int32? ordid = null)
         {
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             List<FinanceDocumentItemWithBalanceUIViewModel> listVMs = new List<FinanceDocumentItemWithBalanceUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -41,6 +49,17 @@ namespace achihapi.Controllers
                     queryString = SqlUtility.getFinDocItemOrderView(ordid.Value);
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 

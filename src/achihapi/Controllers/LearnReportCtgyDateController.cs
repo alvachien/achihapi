@@ -19,14 +19,19 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, DateTime? dtbgn = null, DateTime? dtend = null)
         {
+            if (hid <= 0)
+                return BadRequest("No HID inputted");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             List<LearnReportCtgyDateViewModel> listVm = new List<LearnReportCtgyDateViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
-
-            if (hid == 0)
-                return BadRequest("No HID inputted");
 
             try
             {
@@ -41,6 +46,16 @@ namespace achihapi.Controllers
                     queryString += " AND [LEARNDATE] <= @dtend";
 
                 await conn.OpenAsync();
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@hid", hid);
                 if (dtbgn.HasValue)

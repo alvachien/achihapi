@@ -18,6 +18,14 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
+            if (hid <= 0)
+                return BadRequest("No Home inputted");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             BaseListViewModel<FinanceControlCenterViewModel> listVMs = new BaseListViewModel<FinanceControlCenterViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -29,6 +37,17 @@ namespace achihapi.Controllers
                 queryString = this.getQueryString(true, top, skip, null, hid);
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 Int32 nRstBatch = 0;
@@ -39,6 +58,10 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             listVMs.TotalCount = reader.GetInt32(0);
+                            //if (listVMs.TotalCount > top)
+                            //{
+                            //    listVMs.TotalCount = top;
+                            //}
                             break;
                         }
                     }
@@ -84,11 +107,19 @@ namespace achihapi.Controllers
             return new JsonResult(listVMs, setting);
         }
 
-        // GET api/financecontrollingcenter/5
+        // GET api/financecontrolcenter/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id)
+        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
         {
+            if (hid <= 0)
+                return BadRequest("No Home inputted");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             FinanceControlCenterViewModel vm = new FinanceControlCenterViewModel();
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -102,6 +133,17 @@ namespace achihapi.Controllers
                 queryString = this.getQueryString(false, null, null, id, null);
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -153,10 +195,14 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Post([FromBody]FinanceControlCenterViewModel vm)
         {
             if (vm == null)
-            {
                 return BadRequest("No data is inputted");
-            }
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
 
+            if (vm.HID <= 0)
+                return BadRequest("No Home Inputted");
             if (vm.Name != null)
                 vm.Name = vm.Name.Trim();
             if (String.IsNullOrEmpty(vm.Name))
@@ -175,18 +221,20 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
-                var usrName = User.FindFirst(c => c.Type == "sub").Value;
-
                 queryString = @"SELECT [ID]
                   FROM [dbo].[t_fin_controlcenter] WHERE [Name] = N'" + vm.Name + "'";
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();

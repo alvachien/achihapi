@@ -6,6 +6,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace achihapi.ViewModels
 {
+    public enum FinanceAccountStatus : Byte
+    {
+        Normal = 0,
+        Closed = 1,
+        Frozen = 2
+    }
+
     public class FinanceAccountViewModel : BaseViewModel
     {
         public Int32 ID { get; set; }
@@ -19,6 +26,7 @@ namespace achihapi.ViewModels
         public String Comment { get; set; }
         [StringLength(40)]
         public String Owner { get; set; }
+        public Byte Status { get; set; }
 
         public FinanceAccountExtDPViewModel AdvancePaymentInfo { get; set; }
     }

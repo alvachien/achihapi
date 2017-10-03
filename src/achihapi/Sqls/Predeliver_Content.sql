@@ -170,6 +170,7 @@ INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (2,N'Sys.DocTy.T
 INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (3,N'Sys.DocTy.CurrExg', N'兑换不同的货币');
 INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (4,N'Sys.DocTy.Installment', N'分期付款');
 INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (5,N'Sys.DocTy.AdvancedPayment', N'预付款');
+INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (6,N'Sys.DocTy.CreditCardRepay', N'信用卡还款');
 --INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (6,N'预收款', N'预收款');
 --INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (7,N'借入款', N'借入款项');
 --INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (8,N'借出款', N'借出款项');

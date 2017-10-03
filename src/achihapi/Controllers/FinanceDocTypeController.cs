@@ -23,11 +23,30 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
 
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             try
             {
                 queryString = this.getQueryString(true, top, skip, null, hid);
 
                 await conn.OpenAsync();
+
+                if (hid != 0)
+                {
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception exp)
+                    {
+                        return BadRequest(exp.Message);
+                    }
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
@@ -39,6 +58,10 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             listVMs.TotalCount = reader.GetInt32(0);
+                            //if (listVMs.TotalCount > top)
+                            //{
+                            //    listVMs.TotalCount = top;
+                            //}
                             break;
                         }
                     }

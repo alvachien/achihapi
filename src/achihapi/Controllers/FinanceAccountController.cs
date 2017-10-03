@@ -17,16 +17,16 @@ namespace achihapi.Controllers
         // GET: api/financeaccount
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Byte? status = null, Int32 top = 100, Int32 skip = 0)
         {
+            if (hid <= 0)
+                return BadRequest("HID is missing");
+
             BaseListViewModel<FinanceAccountUIViewModel> listVm = new BaseListViewModel<FinanceAccountUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
-
-            if (hid == 0)
-                return BadRequest("HID is missing");
 
             try
             {
@@ -48,25 +48,21 @@ namespace achihapi.Controllers
                 if (String.IsNullOrEmpty(usrName))
                     return BadRequest("No user found");
 
-                queryString = this.getQueryString(true, top, skip, null, scopeFilter, hid);
 
                 await conn.OpenAsync();
 
                 // Basic check
-                if (hid != 0)
+                // Check Home assignment with current user
+                try
                 {
-                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
-                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
-                    cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
-                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
-                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
-                    if (!readHIDCheck.HasRows)
-                        return BadRequest("No home found");
-                    readHIDCheck.Dispose();
-                    readHIDCheck = null;
-                    cmdHIDCheck.Dispose();
-                    cmdHIDCheck = null;
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                 }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                queryString = this.getQueryString(true, status, top, skip, null, scopeFilter, hid);
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -79,6 +75,10 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             listVm.TotalCount = reader.GetInt32(0);
+                            //if (listVm.TotalCount > top)
+                            //{
+                            //    listVm.TotalCount = top;
+                            //}
                             break;
                         }
                     }
@@ -130,15 +130,15 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
         {
+            if (hid <= 0)
+                return BadRequest("Not HID inputted");
+
             FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bExist = false;
             Boolean bError = false;
             String strErrMsg = "";
-
-            if (hid == 0)
-                return BadRequest("Not HID inputted");
 
             try
             {
@@ -161,23 +161,18 @@ namespace achihapi.Controllers
                     return BadRequest("No user found");
                 }
 
-                queryString = this.getQueryString(false, null, null, id, scopeFilter, null);
+                queryString = this.getQueryString(false, null, null, null, id, scopeFilter, null);
 
                 await conn.OpenAsync();
 
-                if (hid != 0)
+                // Check Home assignment with current user
+                try
                 {
-                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
-                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
-                    cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
-                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
-                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
-                    if (!readHIDCheck.HasRows)
-                        return BadRequest("No home found");
-                    readHIDCheck.Dispose();
-                    readHIDCheck = null;
-                    cmdHIDCheck.Dispose();
-                    cmdHIDCheck = null;
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
                 }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -268,7 +263,6 @@ namespace achihapi.Controllers
             if (vm.HID <= 0)
                 return BadRequest("No HID inputted!");
 
-
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -285,19 +279,14 @@ namespace achihapi.Controllers
 
                 await conn.OpenAsync();
 
-                if (vm.HID != 0)
+                // Check Home assignment with current user
+                try
                 {
-                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
-                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
-                    cmdHIDCheck.Parameters.AddWithValue("@hid", vm.HID);
-                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
-                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
-                    if (!readHIDCheck.HasRows)
-                        return BadRequest("No home found");
-                    readHIDCheck.Dispose();
-                    readHIDCheck = null;
-                    cmdHIDCheck.Dispose();
-                    cmdHIDCheck = null;
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
                 }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -440,20 +429,14 @@ namespace achihapi.Controllers
 
                 await conn.OpenAsync();
 
-                if (vm.HID > 0)
+                // Check Home assignment with current user
+                try
                 {
-                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
-                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
-                    cmdHIDCheck.Parameters.AddWithValue("@hid", vm.HID);
-                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
-                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
-                    if (!readHIDCheck.HasRows)
-                        return BadRequest("No home found");
-
-                    readHIDCheck.Dispose();
-                    readHIDCheck = null;
-                    cmdHIDCheck.Dispose();
-                    cmdHIDCheck = null;
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
                 }
 
                 SqlTransaction tran = conn.BeginTransaction();
@@ -547,19 +530,14 @@ namespace achihapi.Controllers
                 queryString = @"SELECT [OWNER] FROM [dbo].[t_fin_account] WHERE [ID] = " + id.ToString() + " AND [HID] = " + hid.ToString();
                 await conn.OpenAsync();
 
-                if (hid != 0)
+                // Check Home assignment with current user
+                try
                 {
-                    String strHIDCheck = @"SELECT TOP (1) [HID] FROM [dbo].[t_homemem] WHERE [HID]= @hid AND [USER] = @user";
-                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
-                    cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
-                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
-                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
-                    if (!readHIDCheck.HasRows)
-                        return BadRequest("No home found");
-                    readHIDCheck.Dispose();
-                    readHIDCheck = null;
-                    cmdHIDCheck.Dispose();
-                    cmdHIDCheck = null;
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
                 }
 
                 SqlCommand cmdread = new SqlCommand(queryString, conn);
@@ -632,17 +610,17 @@ namespace achihapi.Controllers
         }
 
         #region Implemented methods
-        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, String strOwner, Int32? hid)
+        private string getQueryString(Boolean bListMode, Byte? status, Int32? nTop, Int32? nSkip, Int32? nSearchID, String strOwner, Int32? hid)
         {
             
             String strSQL = "";
             if (bListMode)
             {
                 strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account] WHERE [hid] = " + hid.Value.ToString();
+                if (status.HasValue && status.Value > 0)
+                    strSQL += " AND [STATUS] = " + status.Value.ToString();
                 if (!String.IsNullOrEmpty(strOwner))
-                {
                     strSQL += " AND [OWNER] = N'" + strOwner + "'";
-                }
                 strSQL += ";";
             }
 
