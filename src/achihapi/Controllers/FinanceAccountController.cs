@@ -107,8 +107,11 @@ namespace achihapi.Controllers
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
 
             if (bError)
@@ -199,8 +202,11 @@ namespace achihapi.Controllers
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
 
             // In case not found, return a 404
@@ -335,7 +341,8 @@ namespace achihapi.Controllers
 #if DEBUG
                         System.Diagnostics.Debug.WriteLine(exp.Message);
 #endif
-                        tran.Rollback();
+                        if (tran != null)
+                            tran.Rollback();
                     }
                 }
             }
@@ -347,8 +354,11 @@ namespace achihapi.Controllers
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
 
             if (bDuplicatedEntry)
@@ -415,6 +425,7 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
+            SqlTransaction tran = null;
 
             try
             {
@@ -439,7 +450,7 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                SqlTransaction tran = conn.BeginTransaction();
+                tran = conn.BeginTransaction();
                 SqlCommand cmd = new SqlCommand(queryString, conn)
                 {
                     Transaction = tran
@@ -471,11 +482,17 @@ namespace achihapi.Controllers
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 bError = true;
                 strErrMsg = exp.Message;
+
+                if (tran != null)
+                    tran.Rollback();
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
 
             if (bError)
@@ -523,6 +540,7 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
+            SqlTransaction tran = null;
 
             try
             {
@@ -571,7 +589,7 @@ namespace achihapi.Controllers
 
                 await conn.OpenAsync();
 
-                SqlTransaction tran = conn.BeginTransaction();
+                tran = conn.BeginTransaction();
                 SqlCommand cmd = new SqlCommand(queryString, conn)
                 {
                     Transaction = tran
@@ -596,11 +614,17 @@ namespace achihapi.Controllers
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 bError = true;
                 strErrMsg = exp.Message;
+
+                if (tran != null)
+                    tran.Rollback();
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
 
             if (bError)

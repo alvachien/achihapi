@@ -114,8 +114,11 @@ namespace achihapi.Controllers
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
 
             if (bNotFound)
@@ -270,7 +273,8 @@ namespace achihapi.Controllers
 #if DEBUG
                     System.Diagnostics.Debug.WriteLine(exp.Message);
 #endif
-                    tran.Rollback();
+                    if (tran != null)
+                        tran.Rollback();
                     bError = true;
                 }
             }
@@ -282,8 +286,11 @@ namespace achihapi.Controllers
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
 
             if (bError)

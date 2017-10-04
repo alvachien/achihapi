@@ -93,8 +93,11 @@ namespace achihapi.Controllers
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
 
             if (bError)
@@ -175,8 +178,11 @@ namespace achihapi.Controllers
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
 
             if (bNotFound)

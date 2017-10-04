@@ -150,7 +150,7 @@ DELETE FROM dbo.[t_fin_account_ctgy] WHERE [HID] IS NULL;
 
 INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (1,N'Sys.AcntCty.Cash',1,NULL);
 INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (2,N'Sys.AcntCty.DepositAccount',1,NULL);
-INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (3,N'Sys.AcntCty.CreditCard',1,NULL);
+INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (3,N'Sys.AcntCty.CreditCard',0,NULL);
 INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (4,N'Sys.AcntCty.AccountPayable',0,NULL);
 INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (5,N'Sys.AcntCty.AccountReceviable',1,NULL);
 INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (6,N'Sys.AcntCty.VirtualAccount',1,N'如支付宝等');

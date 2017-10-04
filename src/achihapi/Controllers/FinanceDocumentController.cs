@@ -103,8 +103,11 @@ namespace achihapi.Controllers
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
 
             if (bError)
@@ -427,7 +430,7 @@ namespace achihapi.Controllers
                             {
                                 if (vm.ExgRate2 > 0)
                                 {
-                                    itemAmt = -1 * item.TranAmount / vm.ExgRate2;
+                                    itemAmt = -1 * item.TranAmount * vm.ExgRate2 / 100;
                                 }
                                 else
                                 {
@@ -438,7 +441,7 @@ namespace achihapi.Controllers
                             {
                                 if (vm.ExgRate2 > 0)
                                 {
-                                    itemAmt = item.TranAmount / vm.ExgRate2;
+                                    itemAmt = item.TranAmount * vm.ExgRate2 / 100;
                                 }
                                 else
                                 {
@@ -452,7 +455,7 @@ namespace achihapi.Controllers
                             {
                                 if (vm.ExgRate > 0)
                                 {
-                                    itemAmt = -1 * item.TranAmount / vm.ExgRate;
+                                    itemAmt = -1 * item.TranAmount * vm.ExgRate / 100;
                                 }
                                 else
                                 {
@@ -463,7 +466,7 @@ namespace achihapi.Controllers
                             {
                                 if (vm.ExgRate > 0)
                                 {
-                                    itemAmt = item.TranAmount / vm.ExgRate;
+                                    itemAmt = item.TranAmount * vm.ExgRate / 100;
                                 }
                                 else
                                 {
@@ -538,7 +541,8 @@ namespace achihapi.Controllers
 #endif
                     bError = true;
                     strErrMsg = exp.Message;
-                    tran.Rollback();
+                    if (tran != null)
+                        tran.Rollback();
                 }
             }
             catch (Exception exp)
@@ -549,8 +553,11 @@ namespace achihapi.Controllers
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
 
             if (bError)
@@ -577,9 +584,149 @@ namespace achihapi.Controllers
         // DELETE api/financedocument/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, [FromQuery]Int32 hid = 0)
         {
-            return BadRequest();
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            Int32 accID = -1, tmpdocID = -1;
+
+            String strErrMsg = "";
+            SqlTransaction tran = null;
+
+            try
+            {
+                queryString = @"SELECT [ACCOUNTID],[REFDOCID] FROM [dbo].[t_fin_account_ext_dp] WHERE [REFDOCID] = " + id.ToString();
+
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                // Check current document is used for creating account
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        accID = reader.GetInt32(0);
+                        break;
+                    }
+                }
+                reader.Dispose();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
+
+                // Check current document is referenced in template doc
+                queryString = @"SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [REFDOCID] = " + id.ToString();
+                cmd = new SqlCommand(queryString, conn);
+                reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        tmpdocID = reader.GetInt32(0);
+                        break;
+                    }
+                }
+                reader.Dispose();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
+
+                // Checks have been applied, go ahead to deletion
+                tran = conn.BeginTransaction();
+
+                // Document header
+                queryString = @"DELETE FROM [dbo].[t_fin_document] WHERE [ID] = " + id.ToString();
+                cmd = new SqlCommand(queryString, conn, tran);
+                await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
+                cmd = null;
+
+                // Document items
+                queryString = @"DELETE FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + id.ToString();
+                cmd = new SqlCommand(queryString, conn, tran);
+                await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
+                cmd = null;
+
+                if (accID != -1)
+                {
+                    // Account deletion
+                    queryString = @"DELETE FROM [t_fin_account] WHERE [ID] = " + accID.ToString();
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    queryString = @"DELETE FROM [dbo].[t_fin_account_ext_dp] WHERE [ACCOUNTID] = " + accID.ToString();
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    queryString = @"DELETE FROM [dbo].[t_fin_tmpdoc_dp] WHERE [ACCOUNTID] = " + accID.ToString();
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+                }
+
+                if (tmpdocID != -1)
+                {
+                    // Just clear the refernce id
+                    queryString = @"UPDATE [dbo].[t_fin_tmpdoc_dp] SET [REFDOCID] = NULL WHERE [REFDOCID] = " + id.ToString();
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+                }
+
+                tran.Commit();
+            }
+            catch (Exception exp)
+            {
+                if (tran != null)
+                    tran.Rollback();
+
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
+            }
+
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
+
+            return Ok();
         }
 
     }
