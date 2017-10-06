@@ -179,7 +179,19 @@ INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (9,N'Sys.DocTy.L
 
 SET IDENTITY_INSERT dbo.[t_fin_doc_type] OFF;
 
+-- Content for asset category
+SET IDENTITY_INSERT dbo.[t_fin_asset_ctgy] ON;
 
+DELETE FROM dbo.[t_fin_asset_ctgy] WHERE [HID] IS NULL;
+INSERT INTO [dbo].[t_fin_asset_ctgy] ([ID], [NAME],[DESP]) VALUES (1, N'Sys.AssCtgy.Apartment', N'公寓');
+INSERT INTO [dbo].[t_fin_asset_ctgy] ([ID], [NAME],[DESP]) VALUES (2, N'Sys.AssCtgy.Automobile', N'机动车');
+INSERT INTO [dbo].[t_fin_asset_ctgy] ([ID], [NAME],[DESP]) VALUES (3, N'Sys.AssCtgy.Furniture', N'家具');
+INSERT INTO [dbo].[t_fin_asset_ctgy] ([ID], [NAME],[DESP]) VALUES (4, N'Sys.AssCtgy.HouseAppliances', N'家用电器');
+INSERT INTO [dbo].[t_fin_asset_ctgy] ([ID], [NAME],[DESP]) VALUES (5, N'Sys.AssCtgy.Camera', N'相机');
+INSERT INTO [dbo].[t_fin_asset_ctgy] ([ID], [NAME],[DESP]) VALUES (6, N'Sys.AssCtgy.Computer', N'计算机');
+INSERT INTO [dbo].[t_fin_asset_ctgy] ([ID], [NAME],[DESP]) VALUES (7, N'Sys.AssCtgy.MobileDevice', N'移动设备');
+
+SET IDENTITY_INSERT dbo.[t_fin_asset_ctgy] OFF;
 
 
 
