@@ -19,5 +19,7 @@ namespace achihapi.ViewModels
         public String Comment { get; set; }
 
         public const Int32 AccountCategory_AdvancePayment = 8;
+        public const Int32 AccountCategory_Asset = 7;
+        public const Int32 AccountCategory_Loan = 9;
     }
 }

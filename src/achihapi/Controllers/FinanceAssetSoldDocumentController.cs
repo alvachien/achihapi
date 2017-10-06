@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.ViewModels;
@@ -10,17 +11,19 @@ using System.Data.SqlClient;
 
 namespace achihapi.Controllers
 {
-    [Route("api/[controller]")]
-    public class FinanceADPDocumentController : Controller
+    [Produces("application/json")]
+    [Route("api/FinanceAssetSoldDocument")]
+    public class FinanceAssetSoldDocumentController : Controller
     {
-        // GET: api/financeadpdocument
+        // GET: api/FinanceAssetSoldDocument
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean skipPosted = true, DateTime? dtbgn = null, DateTime? dtend = null)
+        [Authorize]
+        public async Task<IActionResult> Get()
         {
             return BadRequest();
         }
 
-        // GET api/financeadpdocument/5
+        // GET: api/FinanceAssetSoldDocument/5
         [HttpGet("{id}")]
         [Authorize]
         public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
@@ -33,7 +36,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User info cannot fetch");
 
-            FinanceADPDocumentUIViewModel vm = new FinanceADPDocumentUIViewModel();
+            FinanceAssetDocumentUIViewModel vm = new FinanceAssetDocumentUIViewModel();
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -43,7 +46,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.getFinanceDocADPQueryString(id);
+                queryString = SqlUtility.getFinanceDocAssetQueryString(id, false);
 
                 await conn.OpenAsync();
 
@@ -60,7 +63,7 @@ namespace achihapi.Controllers
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                Int32 nRstBatch = 0; // Total 4 batch!
+                Int32 nRstBatch = 0; // Total 3 batch!
 
                 while (reader.HasRows)
                 {
@@ -85,22 +88,13 @@ namespace achihapi.Controllers
                     }
                     else if (nRstBatch == 2) // Account
                     {
-                        while(reader.Read())
+                        while (reader.Read())
                         {
                             FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
                             Int32 aidx = 0;
                             SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
-                            SqlUtility.FinAccountADP_DB2VM(reader, vmAccount, aidx);
+                            SqlUtility.FinAccountAsset_DB2VM(reader, vmAccount, aidx);
                             vm.AccountVM = vmAccount;
-                        }
-                    } 
-                    else if(nRstBatch == 3) // Tmp doc
-                    {
-                        while(reader.Read())
-                        {
-                            FinanceTmpDocDPViewModel dpvm = new FinanceTmpDocDPViewModel();
-                            SqlUtility.FinTmpDoc_DB2VM(reader, dpvm);
-                            vm.TmpDocs.Add(dpvm);
                         }
                     }
 
@@ -142,12 +136,12 @@ namespace achihapi.Controllers
             return new JsonResult(vm, setting);
         }
 
-        // POST api/financeadpdocument
+        // POST: api/FinanceAssetSoldDocument
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Post([FromBody]FinanceADPDocumentUIViewModel vm)
+        public async Task<IActionResult> Post([FromBody]FinanceAssetDocumentUIViewModel vm)
         {
-            if (vm == null || vm.DocType != FinanceDocTypeViewModel.DocType_AdvancePayment)
+            if (vm == null || vm.DocType != FinanceDocTypeViewModel.DocType_AssetSoldOut)
             {
                 return BadRequest("No data is inputted");
             }
@@ -157,12 +151,6 @@ namespace achihapi.Controllers
             var usrName = usrObj.Value;
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User info cannot fetch");
-
-            // Check the items
-            if (vm.Items.Count <= 0 || vm.TmpDocs.Count <= 0)
-            {
-                return BadRequest("No item or no template docs");
-            }
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -186,7 +174,6 @@ namespace achihapi.Controllers
                 }
 
                 SqlTransaction tran = conn.BeginTransaction();
-
                 SqlCommand cmd = null;
 
                 try
@@ -223,51 +210,30 @@ namespace achihapi.Controllers
                         cmd2 = null;
                     }
 
-                    // Third, go to the account creation => nNewAccountID
-                    queryString = SqlUtility.GetFinanceAccountHeaderInsertString();
-
+                    // Third, update the Account
+                    queryString = SqlUtility.GetFinanceAccountHeaderUpdateString();
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
-                    SqlUtility.BindFinAccountInsertParameter(cmd, vm.AccountVM, usrName);
-
-                    SqlParameter idparam2 = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                    idparam2.Direction = ParameterDirection.Output;
-
+                    // Close this account
+                    vm.AccountVM.Status = (Byte)FinanceAccountStatus.Closed;
+                    SqlUtility.BindFinAccountUpdateParameter(cmd, vm.AccountVM, usrName);
                     nRst = await cmd.ExecuteNonQueryAsync();
-                    Int32 nNewAccountID = (Int32)idparam2.Value;
                     cmd.Dispose();
                     cmd = null;
 
-                    // Fourth, creat the ADP part
-                    queryString = SqlUtility.GetFinanceAccountADPInsertString();
+                    // Fourth, Update the Asset account part
+                    queryString = SqlUtility.GetFinanceAccountAssetUpdateString();
+                    ((FinanceAccountExtASViewModel)vm.AccountVM.ExtraInfo).RefDocForSold = nNewDocID;
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
-
-                    SqlUtility.BindFinAccountADPInsertParameter(cmd, vm.AccountVM.ExtraInfo as FinanceAccountExtDPViewModel, nNewDocID, nNewAccountID, usrName);
+                    SqlUtility.BindFinAccountAssetUpdateParameter(cmd, vm.AccountVM.ExtraInfo as FinanceAccountExtASViewModel);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
-
-                    // Fifth, create template docs
-                    foreach (FinanceTmpDocDPViewModel avm in vm.TmpDocs)
-                    {
-                        queryString = SqlUtility.getFinanceTmpDocADPInsertString();
-
-                        cmd = new SqlCommand(queryString, conn)
-                        {
-                            Transaction = tran
-                        };
-
-                        SqlUtility.bindFinTmpDocADPParameter(cmd, avm, nNewAccountID, usrName);
-                        await cmd.ExecuteNonQueryAsync();
-
-                        cmd.Dispose();
-                        cmd = null;
-                    }
 
                     tran.Commit();
                 }
@@ -308,16 +274,16 @@ namespace achihapi.Controllers
 
             return new JsonResult(vm, setting);
         }
-
-        // PUT api/financeadpdocument/5
+        
+        // PUT: api/FinanceAssetSoldDocument/5
         [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody]string value)
         {
             return BadRequest();
         }
-
-        // DELETE api/financeadpdocument/5
+        
+        // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
         [Authorize]
         public async Task<IActionResult> Delete(int id)

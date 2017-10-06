@@ -28,7 +28,7 @@ namespace achihapi.ViewModels
         public String Owner { get; set; }
         public Byte Status { get; set; }
 
-        public FinanceAccountExtDPViewModel AdvancePaymentInfo { get; set; }
+        public FinanceAccountExtViewModel ExtraInfo { get; set; }
     }
 
     public class FinanceAccountUIViewModel : FinanceAccountViewModel
@@ -36,11 +36,17 @@ namespace achihapi.ViewModels
         public string CtgyName { get; set; }
     }
 
-    public class FinanceAccountExtDPViewModel
+    public abstract class FinanceAccountExtViewModel
     {
         public Int32 AccountID { get; set; }
+    }
+
+    public sealed class FinanceAccountExtDPViewModel: FinanceAccountExtViewModel
+    {
         public Boolean Direct { get; set; }
+        [Required]
         public DateTime StartDate { get; set; }
+        [Required]
         public DateTime EndDate { get; set; }
         public Byte RptType { get; set; }
         public Int32 RefDocID { get; set; }
@@ -48,5 +54,18 @@ namespace achihapi.ViewModels
         public String DefrrDays { get; set; }
         [StringLength(45)]
         public String Comment { get; set; }
+    }
+
+    public sealed class FinanceAccountExtASViewModel: FinanceAccountExtViewModel
+    {
+        public Int32 CategoryID { get; set; }
+        [StringLength(50)]
+        [Required]
+        public String Name { get; set; }
+        [StringLength(50)]
+        public String Comment { get; set; }
+        [Required]
+        public Int32 RefDocForBuy { get; set; }
+        public Int32? RefDocForSold { get; set; }
     }
 }

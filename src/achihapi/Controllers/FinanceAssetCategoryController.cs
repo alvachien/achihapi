@@ -10,14 +10,14 @@ using System.Data.SqlClient;
 namespace achihapi.Controllers
 {
     [Route("api/[controller]")]
-    public class FinanceAccountCategoryController : Controller
+    public class FinanceAssetCategoryController : Controller
     {
-        // GET: api/financeaccountcategory
+        // GET: api/financeassetcategory
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
-            BaseListViewModel<FinanceAccountCtgyViewModel> listVMs = new BaseListViewModel<FinanceAccountCtgyViewModel>();
+            BaseListViewModel<FinanceAssetCtgyViewModel> listVMs = new BaseListViewModel<FinanceAssetCtgyViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -44,7 +44,7 @@ namespace achihapi.Controllers
                     {
                         HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                    catch(Exception exp)
+                    catch (Exception exp)
                     {
                         return BadRequest(exp.Message);
                     }
@@ -74,7 +74,7 @@ namespace achihapi.Controllers
                         {
                             while (reader.Read())
                             {
-                                FinanceAccountCtgyViewModel avm = new FinanceAccountCtgyViewModel();
+                                FinanceAssetCtgyViewModel avm = new FinanceAssetCtgyViewModel();
                                 this.onDB2VM(reader, avm);
                                 listVMs.Add(avm);
                             }
@@ -112,7 +112,7 @@ namespace achihapi.Controllers
             return new JsonResult(listVMs, setting);
         }
 
-        // GET api/financeaccountcateogry/5
+        // GET api/financeassetcategory/5
         [HttpGet("{id}")]
         [Authorize]
         public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
@@ -122,7 +122,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest();
 
-            FinanceAccountCtgyViewModel vm = new FinanceAccountCtgyViewModel();
+            FinanceAssetCtgyViewModel vm = new FinanceAssetCtgyViewModel();
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -200,7 +200,7 @@ namespace achihapi.Controllers
             return new JsonResult(vm, setting);
         }
 
-        // POST api/financeaccountcateogry
+        // POST api/financeassetcateogry
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Post([FromBody]string value)
@@ -208,7 +208,7 @@ namespace achihapi.Controllers
             return BadRequest();
         }
 
-        // PUT api/financeaccountcateogry/5
+        // PUT api/financeassetcateogry/5
         [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody]string value)
@@ -216,7 +216,7 @@ namespace achihapi.Controllers
             return BadRequest();
         }
 
-        // DELETE api/financeaccountcateogry/5
+        // DELETE api/financeassetcateogry/5
         [HttpDelete("{id}")]
         [Authorize]
         public async Task<IActionResult> Delete(int id)
@@ -230,7 +230,7 @@ namespace achihapi.Controllers
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account_ctgy] WHERE [HID] IS NULL ";
+                strSQL += @"SELECT count(*) FROM [dbo].[t_fin_asset_ctgy] WHERE [HID] IS NULL ";
                 if (hid.HasValue)
                     strSQL += @" OR [HID] = " + hid.Value.ToString() + ";";
             }
@@ -238,12 +238,11 @@ namespace achihapi.Controllers
             strSQL += @" SELECT [ID]
                           ,[HID]
                           ,[NAME]
-                          ,[ASSETFLAG]
-                          ,[COMMENT]
+                          ,[DESP]
                           ,[CREATEDBY]
                           ,[CREATEDAT]
                           ,[UPDATEDBY]
-                          ,[UPDATEDAT] FROM [dbo].[t_fin_account_ctgy] ";
+                          ,[UPDATEDAT] FROM [dbo].[t_fin_asset_ctgy] ";
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
                 strSQL += @" WHERE [HID] IS NULL ";
@@ -254,15 +253,15 @@ namespace achihapi.Controllers
             }
             else if (!bListMode && nSearchID.HasValue)
             {
-                strSQL += " WHERE [t_fin_account_ctgy].[ID] = " + nSearchID.Value.ToString();
+                strSQL += " WHERE [t_fin_asset_ctgy].[ID] = " + nSearchID.Value.ToString();
                 if (hid.HasValue)
-                    strSQL += " AND [t_fin_account_ctgy].[ID] =  " + hid.Value.ToString();
+                    strSQL += " AND [t_fin_asset_ctgy].[ID] =  " + hid.Value.ToString();
             }
 
             return strSQL;
         }
 
-        private void onDB2VM(SqlDataReader reader, FinanceAccountCtgyViewModel vm)
+        private void onDB2VM(SqlDataReader reader, FinanceAssetCtgyViewModel vm)
         {
             Int32 idx = 0;
             vm.ID = reader.GetInt32(idx++);
@@ -273,11 +272,7 @@ namespace achihapi.Controllers
                 ++idx;
             vm.Name = reader.GetString(idx++);
             if (!reader.IsDBNull(idx))
-                vm.AssetFlag = reader.GetBoolean(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.Comment = reader.GetString(idx++);
+                vm.Desp = reader.GetString(idx++);
             else
                 ++idx;
             if (!reader.IsDBNull(idx))
@@ -298,5 +293,6 @@ namespace achihapi.Controllers
                 ++idx;
         }
         #endregion
+
     }
 }

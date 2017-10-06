@@ -217,9 +217,12 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceDocumentUIViewModel vm)
         {
-            if (vm == null || vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment)
+            if (vm == null || vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment
+                    || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
+                    || vm.DocType == FinanceDocTypeViewModel.DocType_AssetSoldOut
+                    || vm.DocType == FinanceDocTypeViewModel.DocType_Loan)
             {
-                return BadRequest("No data is inputted");
+                return BadRequest("No data is inputted or for Advancepay/Loan/Asset");
             }
             if (vm.HID <= 0)
             {
@@ -619,7 +622,7 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                // Check current document is used for creating account
+                // Check current document is used for creating account for adp
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
@@ -634,6 +637,45 @@ namespace achihapi.Controllers
                 reader = null;
                 cmd.Dispose();
                 cmd = null;
+
+                if (accID == -1)
+                {
+                    // Check current document is used for creating account for asset
+                    queryString = @"SELECT [ACCOUNTID],[REFDOC_BUY] FROM [dbo].[t_fin_account_ext_as] WHERE [REFDOC_BUY] = " + id.ToString();
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            accID = reader.GetInt32(0);
+                            break;
+                        }
+                    }
+                    reader.Dispose();
+                    reader = null;
+                    cmd.Dispose();
+                    cmd = null;
+
+                    if (accID == -1)
+                    {
+                        queryString = @"SELECT [ACCOUNTID],[REFDOC_SOLD] FROM [dbo].[t_fin_account_ext_as] WHERE [REFDOC_SOLD] = " + id.ToString();
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = cmd.ExecuteReader();
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                accID = reader.GetInt32(0);
+                                break;
+                            }
+                        }
+                        reader.Dispose();
+                        reader = null;
+                        cmd.Dispose();
+                        cmd = null;
+                    }
+                }
 
                 // Check current document is referenced in template doc
                 queryString = @"SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [REFDOCID] = " + id.ToString();
@@ -678,7 +720,15 @@ namespace achihapi.Controllers
                     cmd.Dispose();
                     cmd = null;
 
+                    // ADP account
                     queryString = @"DELETE FROM [dbo].[t_fin_account_ext_dp] WHERE [ACCOUNTID] = " + accID.ToString();
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // Asset account
+                    queryString = @"DELETE FROM [dbo].[t_fin_account_ext_as] WHERE [ACCOUNTID] = " + accID.ToString();
                     cmd = new SqlCommand(queryString, conn, tran);
                     await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();

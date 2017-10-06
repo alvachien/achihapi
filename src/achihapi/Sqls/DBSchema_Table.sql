@@ -815,9 +815,94 @@ BEGIN
 
 END
 
+-- Updated at 2017.10.06
+/****** Object:  Table [dbo].[t_fin_asset_ctgy]    Script Date: 2017-10-06 12:18:56 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_fin_asset_ctgy](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NULL,
+	[NAME] [nvarchar](50) NOT NULL,
+	[DESP] [nvarchar](50) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_fin_asset_ctgy] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_fin_asset_ctgy] ADD  CONSTRAINT [DF_t_fin_asset_ctgy_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_fin_asset_ctgy]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_asset_ctgy_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_fin_asset_ctgy] CHECK CONSTRAINT [FK_t_fin_asset_ctgy_HID]
+GO
+
+/****** Object:  Table [dbo].[t_fin_account_exp_as]    Script Date: 2017-10-06 12:19:14 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_fin_account_exp_as](
+	[ACCOUNTID] [int] NOT NULL,
+	[CTGYID] [int] NOT NULL,
+	[NAME] [nvarchar](50) NOT NULL,
+	[REFDOC_BUY] [int] NOT NULL,
+	[COMMENT] [nvarchar](100) NULL,
+	[REFDOC_SOLD] [int] NULL,
+ CONSTRAINT [PK_t_fin_account_exp_as] PRIMARY KEY CLUSTERED 
+(
+	[ACCOUNTID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_fin_account_exp_as]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_account_exp_as_ID] FOREIGN KEY([CTGYID])
+REFERENCES [dbo].[t_fin_asset_ctgy] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_fin_account_exp_as] CHECK CONSTRAINT [FK_t_fin_account_exp_as_ID]
+GO
 
 ---------------------------------
 -- TODO...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

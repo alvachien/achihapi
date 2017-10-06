@@ -48,10 +48,8 @@ namespace achihapi.Controllers
                 if (String.IsNullOrEmpty(usrName))
                     return BadRequest("No user found");
 
-
                 await conn.OpenAsync();
 
-                // Basic check
                 // Check Home assignment with current user
                 try
                 {
@@ -230,9 +228,12 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceAccountViewModel vm)
         {
-            if (vm == null || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
+            if (vm == null 
+                || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment
+                || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset
+                || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Loan)
             {
-                return BadRequest("No data is inputted or inputted data for Advance payment");
+                return BadRequest("No data is inputted or inputted data for Advance payment/Asset/Loan");
             }
 
             String usrName = "";
@@ -317,7 +318,7 @@ namespace achihapi.Controllers
                     SqlTransaction tran = conn.BeginTransaction();
 
                     // Now go ahead for the creating
-                    queryString = SqlUtility.getFinanceAccountInsertString();
+                    queryString = SqlUtility.GetFinanceAccountHeaderInsertString();
 
                     try
                     {
@@ -326,7 +327,7 @@ namespace achihapi.Controllers
                             Transaction = tran
                         };
 
-                        SqlUtility.bindFinAccountParameter(cmd, vm, usrName);
+                        SqlUtility.BindFinAccountInsertParameter(cmd, vm, usrName);
                         SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                         idparam.Direction = ParameterDirection.Output;
 

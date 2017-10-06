@@ -19,5 +19,8 @@ namespace achihapi.ViewModels
         // Constants
         public const Int32 DocType_Transfer = 2;
         public const Int32 DocType_AdvancePayment = 5;
+        public const Int32 DocType_AssetBuyIn = 7;
+        public const Int32 DocType_AssetSoldOut = 8;
+        public const Int32 DocType_Loan = 9;
     }
 }

@@ -8,6 +8,13 @@ using System.Data.SqlClient;
 
 namespace achihapi.Controllers
 {
+    internal enum AccountLoadMode
+    {
+        All = 0,
+        AccountPlusADP = 1,
+        AccountPlusAsset = 2
+    }
+
     internal class SqlUtility
     {
         #region Home define
@@ -443,9 +450,16 @@ namespace achihapi.Controllers
                       ,[t_fin_account_ext_dp].[REFDOCID]
                       ,[t_fin_account_ext_dp].[DEFRRDAYS]
                       ,[t_fin_account_ext_dp].[COMMENT]
+                      ,[t_fin_account_ext_as].[CTGYID] AS [ASCTGYID]
+                      ,[t_fin_account_ext_as].[NAME] AS [ASNAME]
+                      ,[t_fin_account_ext_as].[REFDOC_BUY] AS [ASREFDOC_BUY]
+                      ,[t_fin_account_ext_as].[REFDOC_SOLD] AS [ASREFDOC_SOLD]
+                      ,[t_fin_account_ext_as].[COMMENT] AS [ASCOMMENT]
                   FROM [dbo].[t_fin_account]
                   LEFT OUTER JOIN [dbo].[t_fin_account_ext_dp]
-                       ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID] ";
+                       ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID]
+                  LEFT OUTER JOIN [dbo].[t_fin_account_ext_as]
+                       ON [t_fin_account].[ID] = [t_fin_account_ext_as].[ACCOUNTID]";
             if (hid.HasValue)
             {
                 strSQL += " WHERE [t_fin_account].[HID] = " + hid.Value.ToString();
@@ -462,7 +476,7 @@ namespace achihapi.Controllers
             return strSQL;
         }
 
-        internal static string getFinanceAccountInsertString()
+        internal static string GetFinanceAccountHeaderInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_account]
                                 ([HID]    
@@ -471,117 +485,184 @@ namespace achihapi.Controllers
                                 ,[COMMENT]
                                 ,[OWNER]
                                 ,[CREATEDBY]
-                                ,[CREATEDAT]
-                                ,[UPDATEDBY]
-                                ,[UPDATEDAT])
-                            VALUES
-                                (@HID
+                                ,[CREATEDAT])
+                            VALUES (@HID
                                 ,@CTGYID
                                 ,@NAME
                                 ,@COMMENT
                                 ,@OWNER
                                 ,@CREATEDBY
-                                ,@CREATEDAT
-                                ,@UPDATEDBY
-                                ,@UPDATEDAT
-                            ); SELECT @Identity = SCOPE_IDENTITY();";
+                                ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
         }
 
-        internal static void bindFinAccountParameter(SqlCommand cmd, FinanceAccountViewModel vm, String usrName)
+        internal static string GetFinanceAccountHeaderUpdateString()
+        {
+            return @"UPDATE [dbo].[t_fin_account]
+                           SET [CTGYID] = @CTGYID
+                              ,[NAME] = @NAME
+                              ,[COMMENT] = @COMMENT
+                              ,[OWNER] = @OWNER
+                              ,[STATUS] = @STATUS
+                              ,[UPDATEDBY] = @UPDATEDBY
+                              ,[UPDATEDAT] = @UPDATEDAT
+                         WHERE [ID] = @ID AND [HID] = @HID";
+        }
+
+        internal static void BindFinAccountInsertParameter(SqlCommand cmd, FinanceAccountViewModel vm, String usrName)
         {
             cmd.Parameters.AddWithValue("@HID", vm.HID);
             cmd.Parameters.AddWithValue("@CTGYID", vm.CtgyID);
             cmd.Parameters.AddWithValue("@NAME", vm.Name);
             cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
             if (String.IsNullOrEmpty(vm.Owner))
-            {
                 cmd.Parameters.AddWithValue("@OWNER", DBNull.Value);
-            }
             else
-            {
                 cmd.Parameters.AddWithValue("@OWNER", vm.Owner);
-            }
+            cmd.Parameters.AddWithValue("@STATUS", vm.Status);
             cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
             cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
-            cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
-            cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
         }
-        
+
+        internal static void BindFinAccountUpdateParameter(SqlCommand cmd, FinanceAccountViewModel vm, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@CTGYID", vm.CtgyID);
+            cmd.Parameters.AddWithValue("@NAME", vm.Name);
+            cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
+            if (String.IsNullOrEmpty(vm.Owner))
+                cmd.Parameters.AddWithValue("@OWNER", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@OWNER", vm.Owner);
+            cmd.Parameters.AddWithValue("@STATUS", vm.Status);
+            cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+            cmd.Parameters.AddWithValue("@ID", vm.ID);
+            cmd.Parameters.AddWithValue("@HID", vm.HID);
+        }
+
+        internal static void FinAccountHeader_DB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm, Int32 idx)
+        {
+            vm.ID = reader.GetInt32(idx++);
+            vm.HID = reader.GetInt32(idx++);
+            vm.CtgyID = reader.GetInt32(idx++);
+            //if (!reader.IsDBNull(idx))
+            //    vm.CtgyName = reader.GetString(idx++);
+            //else
+            //    ++idx;
+            vm.Name = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.Comment = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.Owner = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.Status = reader.GetByte(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+        }
+
+        internal static void FinAccountADP_DB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm, Int32 idx)
+        {
+            FinanceAccountExtDPViewModel vmdp = new FinanceAccountExtDPViewModel();
+
+            // Advance payment
+            if (!reader.IsDBNull(idx))
+                vmdp.Direct = reader.GetBoolean(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.StartDate = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.EndDate = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.RptType = reader.GetByte(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.RefDocID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.DefrrDays = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.Comment = reader.GetString(idx++);
+            else
+                ++idx;
+
+            vm.ExtraInfo = vmdp;
+        }
+
+        internal static void FinAccountAsset_DB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm, Int32 idx)
+        {
+            FinanceAccountExtASViewModel vmas = new FinanceAccountExtASViewModel();
+            if (!reader.IsDBNull(idx))
+                vmas.CategoryID = reader.GetInt32(reader.GetInt32(idx++));
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmas.Name = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmas.RefDocForBuy = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmas.RefDocForSold = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmas.Comment = reader.GetString(idx++);
+            else
+                ++idx;
+
+            vm.ExtraInfo = vmas;
+        }
+
         internal static void FinAccount_DB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm)
         {
             Int32 idx = 0;
 
             try
             {
-                vm.ID = reader.GetInt32(idx++);
-                vm.HID = reader.GetInt32(idx++);
-                vm.CtgyID = reader.GetInt32(idx++);
-                //if (!reader.IsDBNull(idx))
-                //    vm.CtgyName = reader.GetString(idx++);
-                //else
-                //    ++idx;
-                vm.Name = reader.GetString(idx++);
-                if (!reader.IsDBNull(idx))
-                    vm.Comment = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Owner = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.Status = reader.GetByte(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.CreatedBy = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.CreatedAt = reader.GetDateTime(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.UpdatedBy = reader.GetString(idx++);
-                else
-                    ++idx;
-                if (!reader.IsDBNull(idx))
-                    vm.UpdatedAt = reader.GetDateTime(idx++);
-                else
-                    ++idx;
+                FinAccountHeader_DB2VM(reader, vm, idx);
 
                 if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
                 {
-                    vm.AdvancePaymentInfo = new FinanceAccountExtDPViewModel();
-                    // Advance payment
-                    if (!reader.IsDBNull(idx))
-                        vm.AdvancePaymentInfo.Direct = reader.GetBoolean(idx++);
-                    else
-                        ++idx;
-                    if (!reader.IsDBNull(idx))
-                        vm.AdvancePaymentInfo.StartDate = reader.GetDateTime(idx++);
-                    else
-                        ++idx;
-                    if (!reader.IsDBNull(idx))
-                        vm.AdvancePaymentInfo.EndDate = reader.GetDateTime(idx++);
-                    else
-                        ++idx;
-                    if (!reader.IsDBNull(idx))
-                        vm.AdvancePaymentInfo.RptType = reader.GetByte(idx++);
-                    else
-                        ++idx;
-                    if (!reader.IsDBNull(idx))
-                        vm.AdvancePaymentInfo.RefDocID = reader.GetInt32(idx++);
-                    else
-                        ++idx;
-                    if (!reader.IsDBNull(idx))
-                        vm.AdvancePaymentInfo.DefrrDays = reader.GetString(idx++);
-                    else
-                        ++idx;
-                    if (!reader.IsDBNull(idx))
-                        vm.AdvancePaymentInfo.Comment = reader.GetString(idx++);
-                    else
-                        ++idx;
+                    FinAccountADP_DB2VM(reader, vm, idx);
+                }
+                else
+                {
+                    idx += 7;
+                }
+
+                if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
+                {
+                    FinAccountAsset_DB2VM(reader, vm, idx);
                 }
             }
             catch(Exception exp)
@@ -593,7 +674,7 @@ namespace achihapi.Controllers
         #endregion
 
         #region Finance Account Extra: ADP
-        internal static string getFinanceAccountADPInsertString()
+        internal static string GetFinanceAccountADPInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_account_ext_dp]
                                 ([ACCOUNTID]
@@ -613,7 +694,7 @@ namespace achihapi.Controllers
                                 ,@COMMENT )";
         }
 
-        internal static void bindFinAccountADPParameter(SqlCommand cmd, FinanceAccountExtDPViewModel vm, Int32 nNewDocID, Int32 nNewAccountID, String usrName)
+        internal static void BindFinAccountADPInsertParameter(SqlCommand cmd, FinanceAccountExtDPViewModel vm, Int32 nNewDocID, Int32 nNewAccountID, String usrName)
         {
             cmd.Parameters.AddWithValue("@ACCOUNTID", nNewAccountID);
             cmd.Parameters.AddWithValue("@DIRECT", vm.Direct);
@@ -624,6 +705,58 @@ namespace achihapi.Controllers
             //cmd.Parameters.AddWithValue("@DEFRRDAYS", vm.AccountVM.AdvancePaymentInfo.DefrrDays);
             cmd.Parameters.AddWithValue("@COMMENT",
                 String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
+        }
+        #endregion
+
+        #region Finance Account Extra: Asset
+        internal static string GetFinanceAccountAssetInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_fin_account_exp_as]
+                   ([ACCOUNTID]
+                   ,[CTGYID]
+                   ,[NAME]
+                   ,[REFDOC_BUY]
+                   ,[COMMENT])
+             VALUES( @ACCOUNTID
+                   ,@CTGYID
+                   ,@NAME
+                   ,@REFDOC_BUY
+                   ,@COMMENT)";
+        }
+
+        internal static string GetFinanceAccountAssetUpdateString()
+        {
+            return @"UPDATE [dbo].[t_fin_account_exp_as]
+                       SET [CTGYID] = @CTGYID
+                          ,[NAME] = @NAME
+                          ,[REFDOC_BUY] = @REFDOC_BUY
+                          ,[COMMENT] = @COMMENT
+                          ,[REFDOC_SOLD] = @REFDOC_SOLD
+                     WHERE [ACCOUNTID] = @ACCOUNTID";
+        }
+
+        internal static void BindFinAccountAssetInsertParameter(SqlCommand cmd, FinanceAccountExtASViewModel vm, Int32 nNewDocID, Int32 nNewAccountID)
+        {
+            cmd.Parameters.AddWithValue("@ACCOUNTID", nNewAccountID);
+            cmd.Parameters.AddWithValue("@CTGYID", vm.CategoryID);
+            cmd.Parameters.AddWithValue("@NAME", vm.Name);
+            cmd.Parameters.AddWithValue("@REFDOC_BUY", vm.RefDocForBuy);
+            cmd.Parameters.AddWithValue("@COMMENT",
+                String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
+        }
+
+        internal static void BindFinAccountAssetUpdateParameter(SqlCommand cmd, FinanceAccountExtASViewModel vm)
+        {
+            cmd.Parameters.AddWithValue("@CTGYID", vm.CategoryID);
+            cmd.Parameters.AddWithValue("@NAME", vm.Name);
+            cmd.Parameters.AddWithValue("@REFDOC_BUY", vm.RefDocForBuy);
+            cmd.Parameters.AddWithValue("@COMMENT",
+                String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
+            if (vm.RefDocForSold.HasValue)
+                cmd.Parameters.AddWithValue("@REFDOC_SOLD", vm.RefDocForSold.Value.ToString());
+            else
+                cmd.Parameters.AddWithValue("@REFDOC_SOLD", DBNull.Value);
+            cmd.Parameters.AddWithValue("@ACCOUNTID", vm.AccountID);
         }
         #endregion
 
@@ -847,6 +980,68 @@ namespace achihapi.Controllers
 	                    INNER JOIN [dbo].[t_fin_account_ext_dp]
 	                    ON [dbo].[t_fin_tmpdoc_dp].[ACCOUNTID] = [dbo].[t_fin_account_ext_dp].[ACCOUNTID]
 	                    AND [dbo].[t_fin_account_ext_dp].[REFDOCID] = " + nid.ToString() + ";";
+
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine(strSQL);
+#endif
+
+            return strSQL;
+        }
+        internal static string getFinanceDocAssetQueryString(Int32 nid, Boolean isBuyIn)
+        {
+            String strSQL = @"SELECT [ID]
+                          ,[HID]
+                          ,[DOCTYPE]
+                          ,[TRANDATE]
+                          ,[TRANCURR]
+                          ,[DESP]
+                          ,[EXGRATE]
+                          ,[EXGRATE_PLAN]
+                          ,[TRANCURR2]
+                          ,[EXGRATE2]
+                          ,[EXGRATE_PLAN2]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                      FROM [t_fin_document] WHERE [DOCTYPE] = " 
+                        + (isBuyIn? FinanceDocTypeViewModel.DocType_AssetBuyIn.ToString() : FinanceDocTypeViewModel.DocType_AssetSoldOut.ToString()) 
+                        + " AND [ID] = " + nid.ToString() + @"; 
+                      SELECT [DOCID]
+                            ,[ITEMID]
+                            ,[ACCOUNTID]
+                            ,[ACCOUNTNAME]
+                            ,[TRANTYPE]
+                            ,[TRANTYPENAME]
+                            ,[USECURR2]
+                            ,[TRANAMOUNT_ORG] AS [TRANAMOUNT]
+                            ,[CONTROLCENTERID]
+                            ,[CONTROLCENTERNAME]
+                            ,[ORDERID]
+                            ,[ORDERNAME]
+                            ,[DESP]
+                        FROM [v_fin_document_item1] WHERE [DOCID] = " + nid.ToString() + @"; 
+                      SELECT [t_fin_account].[ID]
+                            ,[t_fin_account].[HID]
+                            ,[t_fin_account].[CTGYID]
+                            ,[t_fin_account].[NAME]
+                            ,[t_fin_account].[COMMENT]
+                            ,[t_fin_account].[OWNER]
+                            ,[t_fin_account].[CREATEDBY]
+                            ,[t_fin_account].[CREATEDAT]
+                            ,[t_fin_account].[UPDATEDBY]
+                            ,[t_fin_account].[UPDATEDAT]
+                            ,[t_fin_account_ext_as].[CTGYID] AS [ASCTGYID]
+                            ,[t_fin_account_ext_as].[NAME] AS [ASNAME]
+                            ,[t_fin_account_ext_as].[REFDOC_BUY] AS [ASREFDOC_BUY]
+                            ,[t_fin_account_ext_as].[REFDOC_SOLD] AS [ASREFDOC_SOLD]
+                            ,[t_fin_account_ext_as].[COMMENT] AS [ASCOMMENT]
+                        FROM [dbo].[t_fin_account]
+                        LEFT OUTER JOIN [dbo].[t_fin_account_ext_as]
+                            ON [t_fin_account].[ID] = [t_fin_account_ext_as].[ACCOUNTID]
+                        WHERE [t_fin_account].[CTGYID] = "
+                        + FinanceAccountCtgyViewModel.AccountCategory_Asset.ToString()
+                        + ( isBuyIn? " AND [t_fin_account_ext_as].[REFDOC_BUY] = " : " AND [t_fin_account_ext_as].[REFDOC_SOLD] = ") + nid.ToString();
 
 #if DEBUG
             System.Diagnostics.Debug.WriteLine(strSQL);
