@@ -851,14 +851,14 @@ GO
 ALTER TABLE [dbo].[t_fin_asset_ctgy] CHECK CONSTRAINT [FK_t_fin_asset_ctgy_HID]
 GO
 
-/****** Object:  Table [dbo].[t_fin_account_exp_as]    Script Date: 2017-10-06 12:19:14 PM ******/
+/****** Object:  Table [dbo].[t_fin_account_ext_as]    Script Date: 2017-10-06 10:58:24 PM ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE TABLE [dbo].[t_fin_account_exp_as](
+CREATE TABLE [dbo].[t_fin_account_ext_as](
 	[ACCOUNTID] [int] NOT NULL,
 	[CTGYID] [int] NOT NULL,
 	[NAME] [nvarchar](50) NOT NULL,
@@ -872,13 +872,20 @@ CREATE TABLE [dbo].[t_fin_account_exp_as](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[t_fin_account_exp_as]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_account_exp_as_ID] FOREIGN KEY([CTGYID])
-REFERENCES [dbo].[t_fin_asset_ctgy] ([ID])
+ALTER TABLE [dbo].[t_fin_account_ext_as]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_account_ext_as_ACNTID] FOREIGN KEY([ACCOUNTID])
+REFERENCES [dbo].[t_fin_account] ([ID])
 ON UPDATE CASCADE
 ON DELETE CASCADE
 GO
 
-ALTER TABLE [dbo].[t_fin_account_exp_as] CHECK CONSTRAINT [FK_t_fin_account_exp_as_ID]
+ALTER TABLE [dbo].[t_fin_account_ext_as] CHECK CONSTRAINT [FK_t_fin_account_ext_as_ACNTID]
+GO
+
+ALTER TABLE [dbo].[t_fin_account_ext_as]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_account_ext_as_CTGYID] FOREIGN KEY([CTGYID])
+REFERENCES [dbo].[t_fin_asset_ctgy] ([ID])
+GO
+
+ALTER TABLE [dbo].[t_fin_account_ext_as] CHECK CONSTRAINT [FK_t_fin_account_ext_as_CTGYID]
 GO
 
 ---------------------------------
