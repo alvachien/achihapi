@@ -89,8 +89,10 @@ namespace achihapi.Controllers
                         {
                             FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
                             Int32 aidx = 0;
-                            SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
-                            SqlUtility.FinAccountADP_DB2VM(reader, vmAccount, aidx);
+                            aidx = SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+                            vmAccount.ExtraInfo_ADP = new FinanceAccountExtDPViewModel();
+                            SqlUtility.FinAccountADP_DB2VM(reader, vmAccount.ExtraInfo_ADP, aidx);
+
                             vm.AccountVM = vmAccount;
                         }
                     } 
@@ -162,6 +164,10 @@ namespace achihapi.Controllers
             if (vm.Items.Count <= 0 || vm.TmpDocs.Count <= 0)
             {
                 return BadRequest("No item or no template docs");
+            }
+            if (vm.AccountVM == null || vm.AccountVM.ExtraInfo_ADP == null)
+            {
+                return BadRequest("No account info!");
             }
 
             // Update the database
@@ -247,7 +253,7 @@ namespace achihapi.Controllers
                         Transaction = tran
                     };
 
-                    SqlUtility.BindFinAccountADPInsertParameter(cmd, vm.AccountVM.ExtraInfo as FinanceAccountExtDPViewModel, nNewDocID, nNewAccountID, usrName);
+                    SqlUtility.BindFinAccountADPInsertParameter(cmd, vm.AccountVM.ExtraInfo_ADP, nNewDocID, nNewAccountID, usrName);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;

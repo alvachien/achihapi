@@ -92,8 +92,9 @@ namespace achihapi.Controllers
                         {
                             FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
                             Int32 aidx = 0;
-                            SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
-                            SqlUtility.FinAccountAsset_DB2VM(reader, vmAccount, aidx);
+                            aidx = SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+                            vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+                            SqlUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
                             vm.AccountVM = vmAccount;
                         }
                     }
@@ -225,12 +226,12 @@ namespace achihapi.Controllers
 
                     // Fourth, Update the Asset account part
                     queryString = SqlUtility.GetFinanceAccountAssetUpdateString();
-                    ((FinanceAccountExtASViewModel)vm.AccountVM.ExtraInfo).RefDocForSold = nNewDocID;
+                    vm.AccountVM.ExtraInfo_AS.RefDocForSold = nNewDocID;
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
-                    SqlUtility.BindFinAccountAssetUpdateParameter(cmd, vm.AccountVM.ExtraInfo as FinanceAccountExtASViewModel);
+                    SqlUtility.BindFinAccountAssetUpdateParameter(cmd, vm.AccountVM.ExtraInfo_AS);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;

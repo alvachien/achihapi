@@ -28,7 +28,10 @@ namespace achihapi.ViewModels
         public String Owner { get; set; }
         public Byte Status { get; set; }
 
-        public FinanceAccountExtViewModel ExtraInfo { get; set; }
+        // Ext ADP
+        public FinanceAccountExtDPViewModel ExtraInfo_ADP { get; set; }
+        // Ext Asset
+        public FinanceAccountExtASViewModel ExtraInfo_AS { get; set; }
     }
 
     public class FinanceAccountUIViewModel : FinanceAccountViewModel

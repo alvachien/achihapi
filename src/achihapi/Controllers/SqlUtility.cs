@@ -539,7 +539,7 @@ namespace achihapi.Controllers
             cmd.Parameters.AddWithValue("@HID", vm.HID);
         }
 
-        internal static void FinAccountHeader_DB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm, Int32 idx)
+        internal static Int32 FinAccountHeader_DB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm, Int32 idx)
         {
             vm.ID = reader.GetInt32(idx++);
             vm.HID = reader.GetInt32(idx++);
@@ -577,12 +577,12 @@ namespace achihapi.Controllers
                 vm.UpdatedAt = reader.GetDateTime(idx++);
             else
                 ++idx;
+
+            return idx;
         }
 
-        internal static void FinAccountADP_DB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm, Int32 idx)
+        internal static void FinAccountADP_DB2VM(SqlDataReader reader, FinanceAccountExtDPViewModel vmdp, Int32 idx)
         {
-            FinanceAccountExtDPViewModel vmdp = new FinanceAccountExtDPViewModel();
-
             // Advance payment
             if (!reader.IsDBNull(idx))
                 vmdp.Direct = reader.GetBoolean(idx++);
@@ -612,13 +612,10 @@ namespace achihapi.Controllers
                 vmdp.Comment = reader.GetString(idx++);
             else
                 ++idx;
-
-            vm.ExtraInfo = vmdp;
         }
 
-        internal static void FinAccountAsset_DB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm, Int32 idx)
+        internal static void FinAccountAsset_DB2VM(SqlDataReader reader, FinanceAccountExtASViewModel vmas, Int32 idx)
         {
-            FinanceAccountExtASViewModel vmas = new FinanceAccountExtASViewModel();
             if (!reader.IsDBNull(idx))
                 vmas.CategoryID = reader.GetInt32(reader.GetInt32(idx++));
             else
@@ -639,8 +636,6 @@ namespace achihapi.Controllers
                 vmas.Comment = reader.GetString(idx++);
             else
                 ++idx;
-
-            vm.ExtraInfo = vmas;
         }
 
         internal static void FinAccount_DB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm)
@@ -649,11 +644,13 @@ namespace achihapi.Controllers
 
             try
             {
-                FinAccountHeader_DB2VM(reader, vm, idx);
+                idx = FinAccountHeader_DB2VM(reader, vm, idx);
 
                 if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
                 {
-                    FinAccountADP_DB2VM(reader, vm, idx);
+                    vm.ExtraInfo_ADP = new FinanceAccountExtDPViewModel();
+
+                    FinAccountADP_DB2VM(reader, vm.ExtraInfo_ADP, idx);
                 }
                 else
                 {
@@ -662,7 +659,12 @@ namespace achihapi.Controllers
 
                 if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
                 {
-                    FinAccountAsset_DB2VM(reader, vm, idx);
+                    vm.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+                    FinAccountAsset_DB2VM(reader, vm.ExtraInfo_AS, idx);
+                }
+                else
+                {
+                    idx += 4; // ?!
                 }
             }
             catch(Exception exp)
@@ -945,6 +947,7 @@ namespace achihapi.Controllers
                             ,[t_fin_account].[NAME]
                             ,[t_fin_account].[COMMENT]
                             ,[t_fin_account].[OWNER]
+                            ,[t_fin_account].[STATUS]
                             ,[t_fin_account].[CREATEDBY]
                             ,[t_fin_account].[CREATEDAT]
                             ,[t_fin_account].[UPDATEDBY]
@@ -1027,6 +1030,7 @@ namespace achihapi.Controllers
                             ,[t_fin_account].[NAME]
                             ,[t_fin_account].[COMMENT]
                             ,[t_fin_account].[OWNER]
+                            ,[t_fin_account].[STATUS]
                             ,[t_fin_account].[CREATEDBY]
                             ,[t_fin_account].[CREATEDAT]
                             ,[t_fin_account].[UPDATEDBY]
