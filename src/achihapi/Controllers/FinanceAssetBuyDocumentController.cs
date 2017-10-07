@@ -144,17 +144,29 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceAssetDocumentUIViewModel vm)
         {
-            if (vm == null || vm.DocType != FinanceDocTypeViewModel.DocType_AssetBuyIn)
-            {
+            if (vm == null || vm.DocType != FinanceDocTypeViewModel.DocType_AssetBuyIn 
+                || vm.AccountVM == null || vm.AccountVM.ExtraInfo_AS == null
+                || vm.Items.Count <= 0)
                 return BadRequest("No data is inputted");
+            // Do basic checks
+            if (String.IsNullOrEmpty(vm.TranCurr) || String.IsNullOrEmpty(vm.AccountVM.Name)
+                || String.IsNullOrEmpty(vm.AccountVM.ExtraInfo_AS.Name))
+                return BadRequest("Invalid input data");
+            foreach(var di in vm.Items)
+            {
+                if (di.TranAmount == 0 || di.AccountID <= 0 || di.TranType <= 0)
+                    return BadRequest("Invalid input data in items!");
             }
+
             if (vm.HID <= 0)
                 return BadRequest("Not HID inputted");
+
             var usrObj = HIHAPIUtility.GetUserClaim(this);
             var usrName = usrObj.Value;
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User info cannot fetch");
 
+            
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -197,7 +209,7 @@ namespace achihapi.Controllers
                     cmd.Dispose();
                     cmd = null;
 
-                    // Then, creating the items
+                    // Then, creating the items                    
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
                         queryString = SqlUtility.getFinDocItemInsertString();
@@ -226,18 +238,20 @@ namespace achihapi.Controllers
                     idparam2.Direction = ParameterDirection.Output;
 
                     nRst = await cmd.ExecuteNonQueryAsync();
-                    Int32 nNewAccountID = (Int32)idparam2.Value;
+                    vm.AccountVM.ID = (Int32)idparam2.Value;
                     cmd.Dispose();
                     cmd = null;
 
                     // Fourth, creat the Asset part
+                    vm.AccountVM.ExtraInfo_AS.AccountID = vm.AccountVM.ID;
+                    vm.AccountVM.ExtraInfo_AS.RefDocForBuy = nNewDocID;
                     queryString = SqlUtility.GetFinanceAccountAssetInsertString();
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
 
-                    SqlUtility.BindFinAccountAssetInsertParameter(cmd, vm.AccountVM.ExtraInfo_AS, nNewDocID, nNewAccountID);
+                    SqlUtility.BindFinAccountAssetInsertParameter(cmd, vm.AccountVM.ExtraInfo_AS);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;

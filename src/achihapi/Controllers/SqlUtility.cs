@@ -617,7 +617,7 @@ namespace achihapi.Controllers
         internal static void FinAccountAsset_DB2VM(SqlDataReader reader, FinanceAccountExtASViewModel vmas, Int32 idx)
         {
             if (!reader.IsDBNull(idx))
-                vmas.CategoryID = reader.GetInt32(reader.GetInt32(idx++));
+                vmas.CategoryID = reader.GetInt32(idx++);
             else
                 ++idx;
             if (!reader.IsDBNull(idx))
@@ -713,7 +713,7 @@ namespace achihapi.Controllers
         #region Finance Account Extra: Asset
         internal static string GetFinanceAccountAssetInsertString()
         {
-            return @"INSERT INTO [dbo].[t_fin_account_exp_as]
+            return @"INSERT INTO [dbo].[t_fin_account_ext_as]
                    ([ACCOUNTID]
                    ,[CTGYID]
                    ,[NAME]
@@ -728,7 +728,7 @@ namespace achihapi.Controllers
 
         internal static string GetFinanceAccountAssetUpdateString()
         {
-            return @"UPDATE [dbo].[t_fin_account_exp_as]
+            return @"UPDATE [dbo].[t_fin_account_ext_as]
                        SET [CTGYID] = @CTGYID
                           ,[NAME] = @NAME
                           ,[REFDOC_BUY] = @REFDOC_BUY
@@ -737,9 +737,9 @@ namespace achihapi.Controllers
                      WHERE [ACCOUNTID] = @ACCOUNTID";
         }
 
-        internal static void BindFinAccountAssetInsertParameter(SqlCommand cmd, FinanceAccountExtASViewModel vm, Int32 nNewDocID, Int32 nNewAccountID)
+        internal static void BindFinAccountAssetInsertParameter(SqlCommand cmd, FinanceAccountExtASViewModel vm)
         {
-            cmd.Parameters.AddWithValue("@ACCOUNTID", nNewAccountID);
+            cmd.Parameters.AddWithValue("@ACCOUNTID", vm.AccountID);
             cmd.Parameters.AddWithValue("@CTGYID", vm.CategoryID);
             cmd.Parameters.AddWithValue("@NAME", vm.Name);
             cmd.Parameters.AddWithValue("@REFDOC_BUY", vm.RefDocForBuy);
