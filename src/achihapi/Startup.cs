@@ -1,4 +1,5 @@
-﻿//#define USINGAZURE
+﻿//#define USE_MICROSOFTAZURE
+//#define USE_ALIYUN
 
 using System;
 using System.Collections.Generic;
@@ -16,59 +17,50 @@ namespace achihapi
 {
     public class Startup
     {
-        public Startup(IHostingEnvironment env)
+        public Startup(IConfiguration configuration)
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-#if DEBUG
-                .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
-#else
-#if USINGAZURE
-                .AddJsonFile("appsettings.Azure.json", optional: true, reloadOnChange: true)
-#else
-                .AddJsonFile("appsettings.Production.json", optional: true, reloadOnChange: true)
-#endif
-#endif
-                .AddEnvironmentVariables()                
-                ;
-
-            if (env.IsDevelopment())
-            {
-                //builder.AddUserSecrets();
-            }
-
-            Configuration = builder.Build();
+            Configuration = configuration;
         }
 
-        public IConfigurationRoot Configuration { get; }
+        public IConfiguration Configuration { get; }
+
         internal static String DBConnectionString { get; private set; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
 
             // Add framework services.
             services.AddMvcCore()
+                .AddAuthorization()
                 .AddJsonFormatters()
                 .AddAuthorization();
 
+            services.AddAuthentication("Bearer")
+                .AddIdentityServerAuthentication(options =>
+                {
+#if DEBUG
+                    options.Authority = "http://localhost:41016";
+#else
+#if USE_MICROSOFTAZURE
+                    options.Authority = "http://acidserver.azurewebsites.net";
+#elif USE_ALIYUN
+                    options.Authority = "http://118.178.58.187:5100/";
+#endif
+#endif
+                    options.RequireHttpsMetadata = false;
+                    options.ApiName = "api.hihapi";
+                    //options.AutomaticAuthenticate = true;
+                    //options.AutomaticChallenge = true;
+                });
+
+            // DB connection string
             DBConnectionString = Configuration.GetConnectionString("DefaultConnection");
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
-
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
-            app.UseStatusCodePages();
+            app.UseAuthentication();
 
             app.UseCors(builder =>
 #if DEBUG
@@ -77,12 +69,12 @@ namespace achihapi
                     "https://localhost:29521"
                     )
 #else
-#if USINGAZURE
+#if USE_MICROSOFTAZURE
                 builder.WithOrigins(
                     "http://achihui.azurewebsites.net",
                     "https://achihui.azurewebsites.net"
                     )
-#else
+#elif USE_ALIYUN
                 builder.WithOrigins(
                     "http://118.178.58.187:5200",
                     "https://118.178.58.187:5200"
@@ -93,25 +85,6 @@ namespace achihapi
                 .AllowAnyMethod()
                 .AllowCredentials()
                 );
-
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
-            {
-#if DEBUG
-                Authority = "http://localhost:41016",
-#else
-#if USINGAZURE
-                Authority = "http://acidserver.azurewebsites.net",
-#else
-                Authority = "http://118.178.58.187:5100/",
-#endif
-#endif
-                RequireHttpsMetadata = false,
-
-                AllowedScopes = { "api.hihapi" },
-                AutomaticAuthenticate = true,
-                AutomaticChallenge = true
-            });
 
             app.UseMvc();
         }
