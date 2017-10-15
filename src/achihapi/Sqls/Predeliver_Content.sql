@@ -194,7 +194,13 @@ INSERT INTO [dbo].[t_fin_asset_ctgy] ([ID], [NAME],[DESP]) VALUES (7, N'Sys.AssC
 SET IDENTITY_INSERT dbo.[t_fin_asset_ctgy] OFF;
 
 
+-- Update at 2017.10.15
+SET IDENTITY_INSERT dbo.[t_lib_book_ctgy] ON;
 
+DELETE FROM dbo.[t_lib_book_ctgy] WHERE [HID] IS NULL;
+INSERT INTO [dbo].[t_lib_book_ctgy] ([ID], [NAME],[PARID], [OTHERS]) VALUES (1, N'Sys.BkCtgy.Novel', NULL, N'小说');
+
+SET IDENTITY_INSERT dbo.[t_lib_book_ctgy] OFF;
 
 
 

@@ -888,8 +888,225 @@ GO
 ALTER TABLE [dbo].[t_fin_account_ext_as] CHECK CONSTRAINT [FK_t_fin_account_ext_as_CTGYID]
 GO
 
+-- Updated at 2017.10.15
+/****** Object:  Table [dbo].[t_lib_person]    Script Date: 2017-10-15 7:00:47 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_lib_person](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[NativeName] [nvarchar](50) NOT NULL,
+	[EnglishName] [nvarchar](50) NULL,
+	[EnglishIsNative] [bit] NULL,
+	[Gender] [tinyint] NULL,
+	[ShortIntro] [nvarchar](100) NULL,
+	[ExtLink1] [nvarchar](100) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_lib_person] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_lib_person] ADD  CONSTRAINT [DF_t_lib_person_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_lib_person] ADD  CONSTRAINT [DF_t_lib_person_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_lib_person]  WITH CHECK ADD  CONSTRAINT [FK_t_lib_person_t_lib_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_lib_person] CHECK CONSTRAINT [FK_t_lib_person_t_lib_HID]
+GO
+
+/****** Object:  Table [dbo].[t_lib_book_ctgy]    Script Date: 2017-10-15 7:01:06 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_lib_book_ctgy](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NULL,
+	[Name] [nvarchar](50) NOT NULL,
+	[ParID] [int] NULL,
+	[Others] [nvarchar](50) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_lib_book_ctgy] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_lib_book_ctgy] ADD  CONSTRAINT [DF_t_lib_book_ctgy_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_lib_book_ctgy] ADD  CONSTRAINT [DF_t_lib_book_ctgy_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_lib_book_ctgy]  WITH CHECK ADD  CONSTRAINT [FK_t_lib_book_ctgy_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_lib_book_ctgy] CHECK CONSTRAINT [FK_t_lib_book_ctgy_HID]
+GO
+
+/****** Object:  Table [dbo].[t_lib_book]    Script Date: 2017-10-15 7:00:13 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_lib_book](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[Ctgy] [int] NULL,
+	[NativeName] [nvarchar](50) NOT NULL,
+	[EnglishName] [nvarchar](50) NULL,
+	[EnglishIsNative] [bit] NULL,
+	[ShortIntro] [nvarchar](100) NULL,
+	[ExtLink1] [nvarchar](100) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_lib_book] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_lib_book] ADD  CONSTRAINT [DF_t_lib_book_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_lib_book] ADD  CONSTRAINT [DF_t_lib_book_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_lib_book]  WITH CHECK ADD  CONSTRAINT [FK_t_lib_book_ctgy] FOREIGN KEY([Ctgy])
+REFERENCES [dbo].[t_lib_book_ctgy] ([ID])
+GO
+
+ALTER TABLE [dbo].[t_lib_book] CHECK CONSTRAINT [FK_t_lib_book_ctgy]
+GO
+
+ALTER TABLE [dbo].[t_lib_book]  WITH CHECK ADD  CONSTRAINT [FK_t_lib_book_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_lib_book] CHECK CONSTRAINT [FK_t_lib_book_HID]
+GO
+
+/****** Object:  Table [dbo].[t_lib_location]    Script Date: 2017-10-15 7:01:29 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_lib_location](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[Name] [nvarchar](50) NOT NULL,
+	[IsDevice] [bit] NULL,
+	[Desp] [nvarchar](50) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_lib_location] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_lib_location] ADD  CONSTRAINT [DF_t_lib_location_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_lib_location] ADD  CONSTRAINT [DF_t_lib_location_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_lib_location]  WITH CHECK ADD  CONSTRAINT [FK_t_lib_location_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_lib_location] CHECK CONSTRAINT [FK_t_lib_location_HID]
+GO
+
+/****** Object:  Table [dbo].[t_lib_location_detail]    Script Date: 2017-10-15 6:20:34 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_lib_location_detail](
+	[LOCID] [int] NOT NULL,
+	[SEQNO] [int] NOT NULL,
+	[CONTENTTYPE] [tinyint] NOT NULL,
+	[CONTENTID] [int] NOT NULL,
+	[Others] [nvarchar](50) NULL,
+ CONSTRAINT [PK_t_lib_location_detail] PRIMARY KEY CLUSTERED 
+(
+	[LOCID] ASC,
+	[SEQNO] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_lib_location_detail]  WITH CHECK ADD  CONSTRAINT [FK_t_lib_locationdet_LOCID] FOREIGN KEY([LOCID])
+REFERENCES [dbo].[t_lib_location] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_lib_location_detail] CHECK CONSTRAINT [FK_t_lib_locationdet_LOCID]
+GO
+
 ---------------------------------
 -- TODO...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
