@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using achihapi.ViewModels;
+using System.Data;
+using System.Data.Common;
+using System.Data.SqlClient;
+using Microsoft.AspNetCore.Authorization;
 
 namespace achihapi.Controllers
 {
@@ -19,7 +23,7 @@ namespace achihapi.Controllers
         }
 
         // GET: api/LibPerson/5
-        [HttpGet("{id}", Name = "Get")]
+        [HttpGet("{id}")]
         public string Get(int id)
         {
             return "value";

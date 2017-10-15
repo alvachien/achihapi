@@ -1578,6 +1578,67 @@ namespace achihapi.Controllers
         }
         #endregion
 
+        #region Lib book category
+        internal static string getLibBookCategoryQueryString()
+        {
+            string strSQL = @"SELECT [ID]
+                              ,[HID]
+                              ,[Name]
+                              ,[ParID]
+                              ,[Others]
+                              ,[CREATEDBY]
+                              ,[CREATEDAT]
+                              ,[UPDATEDBY]
+                              ,[UPDATEDAT]
+                          FROM [dbo].[t_lib_book_ctgy]";
+            return strSQL;
+        }
+
+        internal static void LibBookCategory_DB2VM(SqlDataReader reader, LibBookCategoryViewModel vm)
+        {
+            Int32 idx = 0;
+
+            try
+            {
+                vm.ID = reader.GetInt32(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.HID = reader.GetInt32(idx++);
+                else
+                    ++idx;
+                vm.Name = reader.GetString(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.ParentID = reader.GetInt32(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Others = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Error occurred: ID {0}, index {1}, {2}", vm.ID, idx, exp.Message));
+                throw exp;
+            }
+        }
+        #endregion
+
         #region Obsoleted methods
         internal static void FinDocDB2VM(SqlDataReader reader, BaseListViewModel<FinanceDocumentUIViewModel> listVMs)
         {
