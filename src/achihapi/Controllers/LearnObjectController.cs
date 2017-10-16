@@ -100,7 +100,7 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+            
             return new JsonResult(listVm, setting);
         }
 
@@ -265,7 +265,7 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+            
             return new JsonResult(vm, setting);
         }
 
@@ -305,7 +305,7 @@ namespace achihapi.Controllers
             try
             {
                 queryString = @"SELECT [ID]
-                            FROM [dbo].[t_learn_obj] WHERE [Name] = N'" + vm.Name + "'";
+                            FROM [dbo].[t_learn_obj] WHERE [Name] = N'" + vm.Name + "' AND [HID] = " + vm.HID.ToString();
 
                 await conn.OpenAsync();
 
@@ -405,7 +405,7 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+            
             return new JsonResult(vm, setting);
         }
 

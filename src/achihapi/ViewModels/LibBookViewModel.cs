@@ -11,6 +11,7 @@ namespace achihapi.ViewModels
         public Int32 ID { get; set; }
         [Required]
         public Int32 HID { get; set; }
+        public Int32 CategoryID { get; set; }
         [Required]
         [StringLength(50)]
         public String NativeName { get; set; }
