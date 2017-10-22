@@ -1,5 +1,5 @@
 ﻿//#define USE_MICROSOFTAZURE
-//#define USE_ALIYUN
+#define USE_ALIYUN
 
 using System;
 using System.Collections.Generic;
