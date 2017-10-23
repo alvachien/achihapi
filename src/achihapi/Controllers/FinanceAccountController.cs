@@ -642,14 +642,20 @@ namespace achihapi.Controllers
             if (bListMode)
             {
                 strSQL += @"SELECT count(*) FROM [dbo].[t_fin_account] WHERE [hid] = " + hid.Value.ToString();
-                if (status.HasValue && status.Value > 0)
-                    strSQL += " AND [STATUS] = " + status.Value.ToString();
+                if (status.HasValue)
+                {
+                    if (status.Value == 0)
+                        strSQL += " AND ( [STATUS] = 0 OR [STATUS] IS NULL) ";
+                    else
+                        strSQL += " AND [STATUS] = " + status.Value.ToString();
+                }
+                    
                 if (!String.IsNullOrEmpty(strOwner))
                     strSQL += " AND [OWNER] = N'" + strOwner + "'";
                 strSQL += ";";
             }
 
-            strSQL += SqlUtility.getFinanceAccountQueryString(hid, strOwner);
+            strSQL += SqlUtility.getFinanceAccountQueryString(hid, status, strOwner);
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {

@@ -207,6 +207,11 @@ SET IDENTITY_INSERT dbo.[t_lib_book_ctgy] OFF;
 SET IDENTITY_INSERT dbo.[t_fin_tran_type] ON;
 
 INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (1,N'起始资金',0,NULL,N'起始资金');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (69,N'公共交通类',1,NULL,N'公共交通类开支');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (70,N'公交地铁等',1,69,N'短途交通类开支');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (71,N'长途客车等',1,69,N'长途汽车类开支');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (72,N'火车动车等',1,69,N'火车动车类开支');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (73,N'飞机等',1,69,N'飞机类开支');
 
 SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 

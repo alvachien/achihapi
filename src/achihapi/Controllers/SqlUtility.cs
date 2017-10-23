@@ -430,7 +430,7 @@ namespace achihapi.Controllers
         #endregion
 
         #region Finance Account
-        internal static string getFinanceAccountQueryString(Int32? hid, String strOwner = "")
+        internal static string getFinanceAccountQueryString(Int32? hid, Byte? status, String strOwner = "")
         {
             String strSQL = @"SELECT [t_fin_account].[ID]
                       ,[t_fin_account].[HID]  
@@ -460,17 +460,42 @@ namespace achihapi.Controllers
                        ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID]
                   LEFT OUTER JOIN [dbo].[t_fin_account_ext_as]
                        ON [t_fin_account].[ID] = [t_fin_account_ext_as].[ACCOUNTID]";
+
+            Boolean bwhere = false;
             if (hid.HasValue)
             {
+                bwhere = true;
                 strSQL += " WHERE [t_fin_account].[HID] = " + hid.Value.ToString();
                 if (!String.IsNullOrEmpty(strOwner))
                 {
                     strSQL += " AND [t_fin_account].[OWNER] = N'" + strOwner + "'";
                 }
             }
-            else if (!String.IsNullOrEmpty(strOwner))
+
+            if (status.HasValue)
             {
-                strSQL += " WHERE [t_fin_account].[OWNER] = N'" + strOwner + "'";
+                if (!bwhere)
+                {
+                    bwhere = true;
+                    strSQL += " WHERE ";
+                }
+                else
+                    strSQL += " AND ";
+                
+                if (status.Value == 0)
+                    strSQL += " ( [t_fin_account].[STATUS] = 0 OR [t_fin_account].[STATUS] IS NULL ) ";
+                else
+                    strSQL += " [t_fin_account].[STATUS] = " + status.Value.ToString();
+            }
+
+            if (!String.IsNullOrEmpty(strOwner))
+            {
+                if (bwhere)
+                    strSQL += " WHERE ";
+                else
+                    strSQL += " AND ";
+
+                strSQL += " [t_fin_account].[OWNER] = N'" + strOwner + "'";
             }
 
             return strSQL;

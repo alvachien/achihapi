@@ -50,12 +50,18 @@ namespace achihapi
 #endif
                     options.RequireHttpsMetadata = false;
                     options.ApiName = "api.hihapi";
-                    //options.AutomaticAuthenticate = true;
-                    //options.AutomaticChallenge = true;
                 });
 
             // DB connection string
-            DBConnectionString = Configuration.GetConnectionString("DefaultConnection");
+#if DEBUG
+            DBConnectionString = Configuration.GetConnectionString("DebugConnection");
+#else
+#if USE_ALIYUN
+            DBConnectionString = Configuration.GetConnectionString("AliyunConnection");
+#elif USE_MICROSOFTAZURE
+            DBConnectionString = Configuration.GetConnectionString("AzureConnection");
+#endif
+#endif
         }
 
         public void Configure(IApplicationBuilder app)
