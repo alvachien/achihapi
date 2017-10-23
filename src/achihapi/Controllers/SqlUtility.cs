@@ -1553,7 +1553,7 @@ namespace achihapi.Controllers
                           ,[ORDERNAME]
                           ,[DESP]
                       FROM [dbo].[v_fin_document_item1]
-                      WHERE [CONTROLCENTERID] = " + nOrderID.ToString() +
+                      WHERE [ORDERID] = " + nOrderID.ToString() +
                     @")
                     SELECT [DOCID]
                           ,[ITEMID]

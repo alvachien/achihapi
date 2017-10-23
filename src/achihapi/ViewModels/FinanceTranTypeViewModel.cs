@@ -17,5 +17,9 @@ namespace achihapi.ViewModels
         public Int32 ParID { get; set; }
         [StringLength(45)]
         public String Comment { get; set; }
+
+        // Constants
+        public const Int32 TranType_Opening = 2;
+
     }
 }

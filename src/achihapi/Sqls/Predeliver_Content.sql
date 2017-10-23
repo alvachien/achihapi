@@ -203,6 +203,13 @@ INSERT INTO [dbo].[t_lib_book_ctgy] ([ID], [NAME],[PARID], [OTHERS]) VALUES (1, 
 SET IDENTITY_INSERT dbo.[t_lib_book_ctgy] OFF;
 
 
+-- Update at 2017.10.23
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] ON;
+
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (1,N'起始资金',0,NULL,N'起始资金');
+
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
+
 
 
 
