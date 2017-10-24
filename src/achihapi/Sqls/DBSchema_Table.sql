@@ -1135,238 +1135,238 @@ GO
 
 
 
-/****** Object:  Table [dbo].[t_learn_award]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_learn_award](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[USERID] [nvarchar](40) NOT NULL,
-	[ADATE] [date] NOT NULL,
-	[SCORE] [int] NOT NULL,
-	[REASON] [nvarchar](40) NOT NULL,
-	[CREATEDBY] [nvarchar](40) NULL,
-	[CREATEDAT] [date] NULL,
-	[UPDATEDBY] [nvarchar](40) NULL,
-	[UPDATEDAT] [date] NULL,
- CONSTRAINT [PK_t_learn_award] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+--/****** Object:  Table [dbo].[t_learn_award]    Script Date: 2016-10-27 3:31:27 PM ******/
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE TABLE [dbo].[t_learn_award](
+--	[ID] [int] IDENTITY(1,1) NOT NULL,
+--	[USERID] [nvarchar](40) NOT NULL,
+--	[ADATE] [date] NOT NULL,
+--	[SCORE] [int] NOT NULL,
+--	[REASON] [nvarchar](40) NOT NULL,
+--	[CREATEDBY] [nvarchar](40) NULL,
+--	[CREATEDAT] [date] NULL,
+--	[UPDATEDBY] [nvarchar](40) NULL,
+--	[UPDATEDAT] [date] NULL,
+-- CONSTRAINT [PK_t_learn_award] PRIMARY KEY CLUSTERED 
+--(
+--	[ID] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+--) ON [PRIMARY]
 
-GO
+--GO
 
-/****** Object:  Table [dbo].[t_learn_plan]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_learn_plan](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[NAME] [nvarchar](45) NOT NULL,
-	[COMMENT] [nvarchar](45) NULL,
-	[CREATEDBY] [nvarchar](40) NULL,
-	[CREATEDAT] [date] NULL,
-	[UPDATEDBY] [nvarchar](40) NULL,
-	[UPDATEDAT] [date] NULL,
- CONSTRAINT [PK_t_learn_plan] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+--/****** Object:  Table [dbo].[t_learn_plan]    Script Date: 2016-10-27 3:31:27 PM ******/
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE TABLE [dbo].[t_learn_plan](
+--	[ID] [int] IDENTITY(1,1) NOT NULL,
+--	[NAME] [nvarchar](45) NOT NULL,
+--	[COMMENT] [nvarchar](45) NULL,
+--	[CREATEDBY] [nvarchar](40) NULL,
+--	[CREATEDAT] [date] NULL,
+--	[UPDATEDBY] [nvarchar](40) NULL,
+--	[UPDATEDAT] [date] NULL,
+-- CONSTRAINT [PK_t_learn_plan] PRIMARY KEY CLUSTERED 
+--(
+--	[ID] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+--) ON [PRIMARY]
 
-GO
-/****** Object:  Table [dbo].[t_learn_plandtl]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_learn_plandtl](
-	[ID] [int] NOT NULL,
-	[OBJECTID] [int] NOT NULL,
-	[DEFERREDDAY] [int] NOT NULL,
-	[RECURTYPE] [tinyint] NOT NULL,
-	[COMMENT] [nvarchar](45) NULL,
- CONSTRAINT [PK_t_learn_plandtl] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC,
-	[OBJECTID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+--GO
+--/****** Object:  Table [dbo].[t_learn_plandtl]    Script Date: 2016-10-27 3:31:27 PM ******/
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE TABLE [dbo].[t_learn_plandtl](
+--	[ID] [int] NOT NULL,
+--	[OBJECTID] [int] NOT NULL,
+--	[DEFERREDDAY] [int] NOT NULL,
+--	[RECURTYPE] [tinyint] NOT NULL,
+--	[COMMENT] [nvarchar](45) NULL,
+-- CONSTRAINT [PK_t_learn_plandtl] PRIMARY KEY CLUSTERED 
+--(
+--	[ID] ASC,
+--	[OBJECTID] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+--) ON [PRIMARY]
 
-GO
-/****** Object:  Table [dbo].[t_learn_planpat]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_learn_planpat](
-	[ID] [int] NOT NULL,
-	[USERID] [nvarchar](40) NOT NULL,
-	[STARTDATE] [date] NOT NULL,
-	[STATUS] [tinyint] NULL,
-	[COMMENT] [nvarchar](45) NULL,
- CONSTRAINT [PK_t_learn_planpat] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC,
-	[USERID] ASC,
-	[STARTDATE] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+--GO
+--/****** Object:  Table [dbo].[t_learn_planpat]    Script Date: 2016-10-27 3:31:27 PM ******/
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE TABLE [dbo].[t_learn_planpat](
+--	[ID] [int] NOT NULL,
+--	[USERID] [nvarchar](40) NOT NULL,
+--	[STARTDATE] [date] NOT NULL,
+--	[STATUS] [tinyint] NULL,
+--	[COMMENT] [nvarchar](45) NULL,
+-- CONSTRAINT [PK_t_learn_planpat] PRIMARY KEY CLUSTERED 
+--(
+--	[ID] ASC,
+--	[USERID] ASC,
+--	[STARTDATE] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+--) ON [PRIMARY]
 
-GO
-/****** Object:  Table [dbo].[t_learn_recurtypedates]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_learn_recurtypedates](
-	[ID] [smallint] NOT NULL,
-	[DEFDAYS] [int] NOT NULL,
- CONSTRAINT [PK_t_learn_recurtypedates] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC,
-	[DEFDAYS] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+--GO
+--/****** Object:  Table [dbo].[t_learn_recurtypedates]    Script Date: 2016-10-27 3:31:27 PM ******/
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE TABLE [dbo].[t_learn_recurtypedates](
+--	[ID] [smallint] NOT NULL,
+--	[DEFDAYS] [int] NOT NULL,
+-- CONSTRAINT [PK_t_learn_recurtypedates] PRIMARY KEY CLUSTERED 
+--(
+--	[ID] ASC,
+--	[DEFDAYS] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+--) ON [PRIMARY]
 
-GO
-/****** Object:  Table [dbo].[t_tag]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_tag](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[NAME] [nvarchar](50) NOT NULL,
- CONSTRAINT [PK_t_tag] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+--GO
+--/****** Object:  Table [dbo].[t_tag]    Script Date: 2016-10-27 3:31:27 PM ******/
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE TABLE [dbo].[t_tag](
+--	[ID] [int] IDENTITY(1,1) NOT NULL,
+--	[NAME] [nvarchar](50) NOT NULL,
+-- CONSTRAINT [PK_t_tag] PRIMARY KEY CLUSTERED 
+--(
+--	[ID] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+--) ON [PRIMARY]
 
-GO
-/****** Object:  Table [dbo].[t_tag_link]    Script Date: 2016-10-27 3:31:27 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_tag_link](
-	[TAGID] [int] NOT NULL,
-	[MODULE] [nvarchar](3) NOT NULL,
-	[OBJID] [int] NOT NULL,
- CONSTRAINT [PK_t_tag_link] PRIMARY KEY CLUSTERED 
-(
-	[TAGID] ASC,
-	[MODULE] ASC,
-	[OBJID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+--GO
+--/****** Object:  Table [dbo].[t_tag_link]    Script Date: 2016-10-27 3:31:27 PM ******/
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE TABLE [dbo].[t_tag_link](
+--	[TAGID] [int] NOT NULL,
+--	[MODULE] [nvarchar](3) NOT NULL,
+--	[OBJID] [int] NOT NULL,
+-- CONSTRAINT [PK_t_tag_link] PRIMARY KEY CLUSTERED 
+--(
+--	[TAGID] ASC,
+--	[MODULE] ASC,
+--	[OBJID] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+--) ON [PRIMARY]
 
-GO
+--GO
 
-/****** Object:  Table [dbo].[t_event]    Script Date: 2017-05-04 5:54:17 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[t_event](
-	[HID] [int] NOT NULL,
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[Name] [nvarchar](50) NOT NULL,
-	[StartTime] [datetime] NOT NULL,
-	[EndTime] [datetime] NOT NULL,
-	[Content] [nvarchar](max) NULL,
-	[IsPublic] [bit] NOT NULL,
-	[Owner] [nvarchar](40) NULL,
-	[RefID] [int] NULL,
-	[CREATEDBY] [nvarchar](40) NULL,
-	[CREATEDAT] [date] NULL,
-	[UPDATEDBY] [nvarchar](40) NULL,
-	[UPDATEDAT] [date] NULL,
- CONSTRAINT [PK_t_event] PRIMARY KEY CLUSTERED 
-(
-	[HID] ASC,
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
- CONSTRAINT [UX_t_event_name] UNIQUE NONCLUSTERED 
-(
-	[HID] ASC,
-	[Name] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+--/****** Object:  Table [dbo].[t_event]    Script Date: 2017-05-04 5:54:17 PM ******/
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE TABLE [dbo].[t_event](
+--	[HID] [int] NOT NULL,
+--	[ID] [int] IDENTITY(1,1) NOT NULL,
+--	[Name] [nvarchar](50) NOT NULL,
+--	[StartTime] [datetime] NOT NULL,
+--	[EndTime] [datetime] NOT NULL,
+--	[Content] [nvarchar](max) NULL,
+--	[IsPublic] [bit] NOT NULL,
+--	[Owner] [nvarchar](40) NULL,
+--	[RefID] [int] NULL,
+--	[CREATEDBY] [nvarchar](40) NULL,
+--	[CREATEDAT] [date] NULL,
+--	[UPDATEDBY] [nvarchar](40) NULL,
+--	[UPDATEDAT] [date] NULL,
+-- CONSTRAINT [PK_t_event] PRIMARY KEY CLUSTERED 
+--(
+--	[HID] ASC,
+--	[ID] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+-- CONSTRAINT [UX_t_event_name] UNIQUE NONCLUSTERED 
+--(
+--	[HID] ASC,
+--	[Name] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+--) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 
-ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_StartTime]  DEFAULT (getdate()) FOR [StartTime]
-GO
-ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_EndTime]  DEFAULT (getdate()) FOR [EndTime]
-GO
-ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
-GO
-ALTER TABLE [dbo].[t_event]  WITH CHECK ADD  CONSTRAINT [FK_t_event_t_hid] FOREIGN KEY([HID])
-REFERENCES [dbo].[t_homedef] ([ID])
-ON UPDATE CASCADE
-ON DELETE CASCADE
-GO
-ALTER TABLE [dbo].[t_event] CHECK CONSTRAINT [FK_t_event_t_hid]
-GO
+--ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_StartTime]  DEFAULT (getdate()) FOR [StartTime]
+--GO
+--ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_EndTime]  DEFAULT (getdate()) FOR [EndTime]
+--GO
+--ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
+--GO
+--ALTER TABLE [dbo].[t_event]  WITH CHECK ADD  CONSTRAINT [FK_t_event_t_hid] FOREIGN KEY([HID])
+--REFERENCES [dbo].[t_homedef] ([ID])
+--ON UPDATE CASCADE
+--ON DELETE CASCADE
+--GO
+--ALTER TABLE [dbo].[t_event] CHECK CONSTRAINT [FK_t_event_t_hid]
+--GO
 
-/****** Object:  Index [IUX_t_tag_NAME]    Script Date: 2016-10-27 3:31:27 PM ******/
-CREATE UNIQUE NONCLUSTERED INDEX [IUX_t_tag_NAME] ON [dbo].[t_tag]
-(
-	[NAME] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-GO
-ALTER TABLE [dbo].[t_learn_award] ADD  CONSTRAINT [DF_t_learn_award_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_learn_award] ADD  CONSTRAINT [DF_t_learn_award_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_learn_plan] ADD  CONSTRAINT [DF_t_learn_plan_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
-GO
-ALTER TABLE [dbo].[t_learn_plan] ADD  CONSTRAINT [DF_t_learn_plan_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
-GO
-ALTER TABLE [dbo].[t_learn_plandtl] ADD  CONSTRAINT [DF_t_learn_plandtl_DEFERREDDAY]  DEFAULT ((0)) FOR [DEFERREDDAY]
-GO
-ALTER TABLE [dbo].[t_learn_plandtl] ADD  CONSTRAINT [DF_t_learn_plandtl_RECURTYPE]  DEFAULT ((0)) FOR [RECURTYPE]
-GO
-ALTER TABLE [dbo].[t_learn_planpat] ADD  CONSTRAINT [DF_t_learn_planpat_STARTDATE]  DEFAULT (getdate()) FOR [STARTDATE]
-GO
-ALTER TABLE [dbo].[t_learn_plandtl]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_plandtl_plan] FOREIGN KEY([ID])
-REFERENCES [dbo].[t_learn_plan] ([ID])
-ON UPDATE CASCADE
-ON DELETE CASCADE
-GO
-ALTER TABLE [dbo].[t_learn_plandtl] CHECK CONSTRAINT [FK_t_learn_plandtl_plan]
-GO
-ALTER TABLE [dbo].[t_learn_plandtl]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_plandtl_t_learn_plandtl] FOREIGN KEY([ID], [OBJECTID])
-REFERENCES [dbo].[t_learn_plandtl] ([ID], [OBJECTID])
-GO
-ALTER TABLE [dbo].[t_learn_plandtl] CHECK CONSTRAINT [FK_t_learn_plandtl_t_learn_plandtl]
-GO
-ALTER TABLE [dbo].[t_learn_planpat]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_planpat_plan] FOREIGN KEY([ID])
-REFERENCES [dbo].[t_learn_plan] ([ID])
-ON UPDATE CASCADE
-ON DELETE CASCADE
-GO
-ALTER TABLE [dbo].[t_learn_planpat] CHECK CONSTRAINT [FK_t_learn_planpat_plan]
-GO
-ALTER TABLE [dbo].[t_tag_link]  WITH CHECK ADD  CONSTRAINT [FK_t_tag_link_tag] FOREIGN KEY([TAGID])
-REFERENCES [dbo].[t_tag] ([ID])
-ON UPDATE CASCADE
-ON DELETE CASCADE
-GO
-ALTER TABLE [dbo].[t_tag_link] CHECK CONSTRAINT [FK_t_tag_link_tag]
-GO
+--/****** Object:  Index [IUX_t_tag_NAME]    Script Date: 2016-10-27 3:31:27 PM ******/
+--CREATE UNIQUE NONCLUSTERED INDEX [IUX_t_tag_NAME] ON [dbo].[t_tag]
+--(
+--	[NAME] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+--GO
+--ALTER TABLE [dbo].[t_learn_award] ADD  CONSTRAINT [DF_t_learn_award_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+--GO
+--ALTER TABLE [dbo].[t_learn_award] ADD  CONSTRAINT [DF_t_learn_award_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+--GO
+--ALTER TABLE [dbo].[t_learn_plan] ADD  CONSTRAINT [DF_t_learn_plan_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+--GO
+--ALTER TABLE [dbo].[t_learn_plan] ADD  CONSTRAINT [DF_t_learn_plan_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+--GO
+--ALTER TABLE [dbo].[t_learn_plandtl] ADD  CONSTRAINT [DF_t_learn_plandtl_DEFERREDDAY]  DEFAULT ((0)) FOR [DEFERREDDAY]
+--GO
+--ALTER TABLE [dbo].[t_learn_plandtl] ADD  CONSTRAINT [DF_t_learn_plandtl_RECURTYPE]  DEFAULT ((0)) FOR [RECURTYPE]
+--GO
+--ALTER TABLE [dbo].[t_learn_planpat] ADD  CONSTRAINT [DF_t_learn_planpat_STARTDATE]  DEFAULT (getdate()) FOR [STARTDATE]
+--GO
+--ALTER TABLE [dbo].[t_learn_plandtl]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_plandtl_plan] FOREIGN KEY([ID])
+--REFERENCES [dbo].[t_learn_plan] ([ID])
+--ON UPDATE CASCADE
+--ON DELETE CASCADE
+--GO
+--ALTER TABLE [dbo].[t_learn_plandtl] CHECK CONSTRAINT [FK_t_learn_plandtl_plan]
+--GO
+--ALTER TABLE [dbo].[t_learn_plandtl]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_plandtl_t_learn_plandtl] FOREIGN KEY([ID], [OBJECTID])
+--REFERENCES [dbo].[t_learn_plandtl] ([ID], [OBJECTID])
+--GO
+--ALTER TABLE [dbo].[t_learn_plandtl] CHECK CONSTRAINT [FK_t_learn_plandtl_t_learn_plandtl]
+--GO
+--ALTER TABLE [dbo].[t_learn_planpat]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_planpat_plan] FOREIGN KEY([ID])
+--REFERENCES [dbo].[t_learn_plan] ([ID])
+--ON UPDATE CASCADE
+--ON DELETE CASCADE
+--GO
+--ALTER TABLE [dbo].[t_learn_planpat] CHECK CONSTRAINT [FK_t_learn_planpat_plan]
+--GO
+--ALTER TABLE [dbo].[t_tag_link]  WITH CHECK ADD  CONSTRAINT [FK_t_tag_link_tag] FOREIGN KEY([TAGID])
+--REFERENCES [dbo].[t_tag] ([ID])
+--ON UPDATE CASCADE
+--ON DELETE CASCADE
+--GO
+--ALTER TABLE [dbo].[t_tag_link] CHECK CONSTRAINT [FK_t_tag_link_tag]
+--GO
 
-ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_StartTime]  DEFAULT (getdate()) FOR [StartTime]
-GO
+--ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_StartTime]  DEFAULT (getdate()) FOR [StartTime]
+--GO
 
-ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_EndTime]  DEFAULT (getdate()) FOR [EndTime]
-GO
+--ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_EndTime]  DEFAULT (getdate()) FOR [EndTime]
+--GO
 
-ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
-GO
+--ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
+--GO
 
 
 

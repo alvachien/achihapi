@@ -12,6 +12,8 @@ namespace achihapi.ViewModels
         public Int32 OrderID { get; set; }
         [StringLength(30)]
         public String OrderName { get; set; }
+        public DateTime ValidFrom { get; set; }
+        public DateTime ValidTo { get; set; }
         public Decimal DebitBalance { get; set; }
         public Decimal CreditBalance { get; set; }
         public Decimal Balance { get; set; }

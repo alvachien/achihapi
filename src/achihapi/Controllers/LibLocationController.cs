@@ -329,14 +329,16 @@ namespace achihapi.Controllers
 
         // PUT: api/LibLocation/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public async Task<IActionResult> Put(int id, [FromBody]string value)
         {
+            return BadRequest();
         }
-        
+
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            return BadRequest();
         }
 
         #region Implemented methods

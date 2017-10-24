@@ -109,30 +109,33 @@ namespace achihapi.Controllers
         // GET: api/LibBook/5
         [HttpGet("{id}")]
         [Authorize]
-        public string Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            return "value";
+            return BadRequest();
         }
-        
+
         // POST: api/LibBook
         [HttpPost]
         [Authorize]
-        public void Post([FromBody]string value)
+        public async Task<IActionResult> Post([FromBody]string value)
         {
+            return BadRequest();
         }
-        
+
         // PUT: api/LibBook/5
         [HttpPut("{id}")]
         [Authorize]
-        public void Put(int id, [FromBody]string value)
+        public async Task<IActionResult> Put(int id, [FromBody]string value)
         {
+            return BadRequest();
         }
-        
+
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
         [Authorize]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            return BadRequest();
         }
 
         #region Implemented methods

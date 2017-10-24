@@ -603,3 +603,54 @@ select taba.HID, taba.USERID, tabb.CATEGORY, taba.LEARNDATE from t_learn_hist ta
 	left outer join t_learn_obj tabb on taba.objectid = tabb.ID ) tabc
 	group by HID, CATEGORY, LEARNDATE;
 GO
+
+-- Updated at 2017.10.24
+/****** Object:  View [dbo].[v_fin_report_order]    Script Date: 2017-10-24 10:04:07 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+DROP VIEW IF EXISTS [dbo].[v_fin_report_order]
+GO
+
+create view [dbo].[v_fin_report_order]
+AS 
+SELECT tab_a.[ORDERID],
+	   tab_a.[HID],
+	   tab_a.[ORDERNAME],
+	   tab_a.ORDERVALID_FROM,
+	   tab_a.ORDERVALID_TO,
+       tab_a.[balance_lc] AS [debit_balance],
+       tab_b.[balance_lc] AS [credit_balance],
+        (tab_a.[balance_lc] - tab_b.[balance_lc]) AS [balance]
+ FROM 
+	(SELECT [t_fin_order].[ID] AS [ORDERID],
+		[t_fin_order].[HID] AS [HID],
+		[t_fin_order].[NAME] AS [ORDERNAME],
+		[t_fin_order].[VALID_FROM] AS [ORDERVALID_FROM],
+		[t_fin_order].[VALID_TO] AS [ORDERVALID_TO],
+		(case
+            when ([v_fin_grp_order_tranexp].[balance_lc] is not null) then [v_fin_grp_order_tranexp].[balance_lc]
+            else 0.0
+        end) AS [balance_lc]
+	FROM [dbo].[t_fin_order]
+	LEFT OUTER JOIN [dbo].[v_fin_grp_order_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_order_tranexp].orderid
+		AND [v_fin_grp_order_tranexp].[trantype_exp] = 0 ) tab_a
+
+	JOIN 
+
+	( SELECT [t_fin_order].[ID] AS [ORDERID],
+		[t_fin_order].[NAME] AS [ORDERNAME],
+		(case
+            when ([v_fin_grp_order_tranexp].[balance_lc] is not null) then [v_fin_grp_order_tranexp].[balance_lc] * -1
+            else 0.0
+        end) AS [balance_lc]
+	FROM [dbo].[t_fin_order]
+	LEFT OUTER JOIN [dbo].[v_fin_grp_order_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_order_tranexp].orderid
+		AND [v_fin_grp_order_tranexp].[trantype_exp] = 1 ) tab_b
+
+	ON tab_a.[ORDERID] = tab_b.[ORDERID]
+
+GO
