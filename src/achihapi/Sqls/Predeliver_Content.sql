@@ -216,9 +216,17 @@ INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALU
 SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 
 
+-- Update at 2017.10.24
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] ON;
 
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (74,N'出租车等',1,69,N'出租车类开支');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (75,N'医疗保健',1,NULL,N'医疗保健类开支');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (76,N'诊疗费',1,75,N'门诊、检查类开支');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (77,N'医药费',1,75,N'药费类开支');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (78,N'保健品费',1,75,N'保健品类开支');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (79,N'有线电视费',1,11,N'有线电视费');
 
-
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 
 
 
