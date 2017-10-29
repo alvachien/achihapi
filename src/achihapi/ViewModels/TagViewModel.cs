@@ -8,19 +8,12 @@ namespace achihapi.ViewModels
 {
     public class TagViewModel
     {
-        public Int32 ID { get; set; }
+        public Int32 HID { get; set; }
         [Required]
-        [StringLength(50)]
-        public String Name { get; set; }
-    }
-
-    public class TagLinkViewModel
-    {
+        public Int16 TagType { get; set; }
         public Int32 TagID { get; set; }
         [Required]
-        [StringLength(3)]
-        public String Module { get; set; }
-        [Required]
-        public Int32 ObjID { get; set; }
+        [StringLength(50)]
+        public String Term { get; set; }
     }
 }

@@ -654,3 +654,24 @@ SELECT tab_a.[ORDERID],
 	ON tab_a.[ORDERID] = tab_b.[ORDERID]
 
 GO
+
+-- Updated at 2017.10.29
+/****** Object:  View [dbo].[v_lrn_qtnbank]    Script Date: 2017-10-29 12:26:21 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+DROP VIEW IF EXISTS [dbo].[v_lrn_qtnbank]
+GO
+
+create view [dbo].[v_lrn_qtnbank]
+as
+select taba.ID, taba.HID, taba.[Type], taba.Question, tabb.SUBITEM, tabb.DETAIL,  
+	taba.BriefAnswer, taba.CREATEDBY, taba.CREATEDAT, taba.UPDATEDBY, taba.UPDATEDAT,
+	tabb.OTHERS
+	 from t_learn_qtn_bank taba
+	left outer join t_learn_qtn_bank_sub tabb
+		on taba.ID = tabb.QTNID
+GO

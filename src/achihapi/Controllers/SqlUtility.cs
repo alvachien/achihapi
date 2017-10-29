@@ -1664,6 +1664,22 @@ namespace achihapi.Controllers
         }
         #endregion
 
+        #region Tag
+        internal static void GetTagTerms()
+        {
+
+        }
+        internal static void RemoveTag()
+        {
+
+        }
+
+        internal static void AddTag()
+        {
+
+        }
+        #endregion
+
         #region Obsoleted methods
         internal static void FinDocDB2VM(SqlDataReader reader, BaseListViewModel<FinanceDocumentUIViewModel> listVMs)
         {

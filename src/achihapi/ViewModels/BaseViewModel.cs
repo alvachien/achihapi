@@ -143,4 +143,17 @@ namespace achihapi.ViewModels
         Child = 2,
         Parent = 3
     }
+
+    internal enum HIHTagTypeEnum : Int16
+    {
+        LearnQuestionBank = 1,
+
+        FinanceDocumentItem = 10
+    }
+
+    internal enum HIHQuestionBankType : Byte
+    {
+        EssayQuestion       = 1,
+        MultipleChoice      = 2
+    }
 }

@@ -5,17 +5,28 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Data.SqlClient;
 using achihapi.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace achihapi.Controllers
 {
+    [Produces("application/json")]
     [Route("api/[controller]")]
+    [Authorize]
     public class TagController : Controller
     {
         // GET: api/tag
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery]Int32 hid)
         {
-            List<TagViewModel> listVMs = new List<TagViewModel>();
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            List<String> listTerms = new List<String>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -23,32 +34,165 @@ namespace achihapi.Controllers
 
             try
             {
-#if DEBUG
-                foreach (var clm in User.Claims.AsEnumerable())
-                {
-                    System.Diagnostics.Debug.WriteLine("Type = " + clm.Type + "; Value = " + clm.Value);
-                }
-#endif
-                var usrObj = User.FindFirst(c => c.Type == "sub");
-
-                queryString = @"SELECT TOP (1000) [ID]
-                              ,[NAME]
-                          FROM [dbo].[t_tag]";
-
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                queryString = @"SELECT DISTINCT [Term] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
+
                 if (reader.HasRows)
                 {
                     while (reader.Read())
                     {
-                        TagViewModel avm = new TagViewModel
-                        {
-                            ID = reader.GetInt32(0),
-                            Name = reader.GetString(1)
-                        };
+                        listTerms.Add(reader.GetString(0));
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                    conn = null;
+                }
+            }
 
-                        listVMs.Add(avm);
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return new JsonResult(listTerms);
+        }
+
+        // POST api/tag
+        [HttpPost]
+        public async Task<IActionResult> Post([FromBody]TagViewModel vm)
+        {
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            if (vm == null)
+            {
+                return BadRequest("No data is inputted");
+            }
+            if (vm.HID <= 0)
+                return BadRequest("No Home Inputted");
+
+            // Check on term
+            if (vm.Term != null)
+                vm.Term = vm.Term.Trim();
+            if (String.IsNullOrEmpty(vm.Term))
+            {
+                return BadRequest("Term is a must!");
+            }
+            if (vm.TagID <= 0)
+            {
+                return BadRequest("Tag ID is invalid");
+            }
+            if (vm.TagType == (Byte)HIHTagTypeEnum.FinanceDocumentItem
+                || vm.TagType == (Byte)HIHTagTypeEnum.LearnQuestionBank)
+            {
+            }
+            else
+            {
+                return BadRequest("Non supported type");
+            }
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bDuplicatedEntry = false;
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                queryString = @"SELECT [HID],[TagType],[TagID],[Term] FROM [dbo].[t_tag] WHERE [HID] = " + vm.HID.ToString() + " AND [TagType] = " + vm.TagType.ToString() 
+                    + " AND [TagID] = " + vm.TagID.ToString() + " AND [Term] = N'" + vm.Term + "'";
+
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    bDuplicatedEntry = true;
+                }
+                else
+                {
+                    reader.Dispose();
+                    reader = null;
+
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // Now go ahead for the creating
+                    SqlTransaction tran = conn.BeginTransaction();
+
+                    queryString = @"INSERT INTO [dbo].[t_tag]
+                                       ([HID]
+                                       ,[TagType]
+                                       ,[TagID]
+                                       ,[Term])
+                                 VALUES (@HID
+                                       ,@TagType
+                                       ,@TagID
+                                       ,@Term)";
+
+                    try
+                    {
+                        cmd = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
+                        cmd.Parameters.AddWithValue("@HID", vm.HID);
+                        cmd.Parameters.AddWithValue("@TagType", vm.TagType);
+                        cmd.Parameters.AddWithValue("@TagID", vm.TagID);
+                        cmd.Parameters.AddWithValue("@Term", vm.Term);
+
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+
+                        tran.Commit();
+                    }
+                    catch (Exception exp)
+                    {
+#if DEBUG
+                        System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
+                        bError = true;
+                        strErrMsg = exp.Message;
+
+                        if (tran != null)
+                            tran.Rollback();
                     }
                 }
             }
@@ -67,6 +211,11 @@ namespace achihapi.Controllers
                 }
             }
 
+            if (bDuplicatedEntry)
+            {
+                return BadRequest("Tag already existed!");
+            }
+
             if (bError)
                 return StatusCode(500, strErrMsg);
 
@@ -75,21 +224,8 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
-            return new JsonResult(listVMs, setting);
-        }
-
-        // GET api/tag/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST api/tag
-        [HttpPost]
-        public void Post([FromBody]string value)
-        {
+            
+            return new JsonResult(vm, setting);
         }
 
         // PUT api/tag/5

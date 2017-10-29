@@ -1088,6 +1088,98 @@ GO
 ALTER TABLE [dbo].[t_lib_location_detail] CHECK CONSTRAINT [FK_t_lib_locationdet_LOCID]
 GO
 
+
+-- Updated at 2017.10.29
+/****** Object:  Table [dbo].[t_learn_qtn_bank]    Script Date: 2017-10-29 12:17:24 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_learn_qtn_bank](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[Type] [tinyint] NOT NULL,
+	[Question] [nvarchar](100) NOT NULL,
+	[BriefAnswer] [nvarchar](50) NULL,
+	[CREATEDBY] [nvarchar](50) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](50) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_learn_qtn_bank] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_learn_qtn_bank] ADD  CONSTRAINT [DF_t_learn_qtn_bank_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_learn_qtn_bank] ADD  CONSTRAINT [DF_t_learn_qtn_bank_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_learn_qtn_bank]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_qtn_bank_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_learn_qtn_bank] CHECK CONSTRAINT [FK_t_learn_qtn_bank_HID]
+GO
+
+/****** Object:  Table [dbo].[t_learn_qtn_bank_sub]    Script Date: 2017-10-29 12:19:02 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_learn_qtn_bank_sub](
+	[QTNID] [int] NOT NULL,
+	[SUBITEM] [nvarchar](20) NOT NULL,
+	[DETAIL] [nvarchar](100) NOT NULL,
+	[OTHERS] [nvarchar](50) NULL,
+ CONSTRAINT [PK_t_learn_qtn_bank_sub] PRIMARY KEY CLUSTERED 
+(
+	[QTNID] ASC,
+	[SUBITEM] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_learn_qtn_bank_sub]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_qtn_bank_sub_QTNID] FOREIGN KEY([QTNID])
+REFERENCES [dbo].[t_learn_qtn_bank] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_learn_qtn_bank_sub] CHECK CONSTRAINT [FK_t_learn_qtn_bank_sub_QTNID]
+GO
+
+/****** Object:  Table [dbo].[t_tag]    Script Date: 2017-10-29 12:19:22 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_tag](
+	[HID] [int] NOT NULL,
+	[TagType] [smallint] NOT NULL,
+	[TagID] [int] NOT NULL,
+	[Term] [nvarchar](50) NOT NULL,
+ CONSTRAINT [PK_t_tag] PRIMARY KEY CLUSTERED 
+(
+	[HID] ASC,
+	[TagType] ASC,
+	[TagID] ASC,
+	[Term] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
 ---------------------------------
 -- TODO...
 
@@ -1233,39 +1325,6 @@ GO
 --) ON [PRIMARY]
 
 --GO
---/****** Object:  Table [dbo].[t_tag]    Script Date: 2016-10-27 3:31:27 PM ******/
---SET ANSI_NULLS ON
---GO
---SET QUOTED_IDENTIFIER ON
---GO
---CREATE TABLE [dbo].[t_tag](
---	[ID] [int] IDENTITY(1,1) NOT NULL,
---	[NAME] [nvarchar](50) NOT NULL,
--- CONSTRAINT [PK_t_tag] PRIMARY KEY CLUSTERED 
---(
---	[ID] ASC
---)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
---) ON [PRIMARY]
-
---GO
---/****** Object:  Table [dbo].[t_tag_link]    Script Date: 2016-10-27 3:31:27 PM ******/
---SET ANSI_NULLS ON
---GO
---SET QUOTED_IDENTIFIER ON
---GO
---CREATE TABLE [dbo].[t_tag_link](
---	[TAGID] [int] NOT NULL,
---	[MODULE] [nvarchar](3) NOT NULL,
---	[OBJID] [int] NOT NULL,
--- CONSTRAINT [PK_t_tag_link] PRIMARY KEY CLUSTERED 
---(
---	[TAGID] ASC,
---	[MODULE] ASC,
---	[OBJID] ASC
---)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
---) ON [PRIMARY]
-
---GO
 
 --/****** Object:  Table [dbo].[t_event]    Script Date: 2017-05-04 5:54:17 PM ******/
 --SET ANSI_NULLS ON
@@ -1350,13 +1409,6 @@ GO
 --ON DELETE CASCADE
 --GO
 --ALTER TABLE [dbo].[t_learn_planpat] CHECK CONSTRAINT [FK_t_learn_planpat_plan]
---GO
---ALTER TABLE [dbo].[t_tag_link]  WITH CHECK ADD  CONSTRAINT [FK_t_tag_link_tag] FOREIGN KEY([TAGID])
---REFERENCES [dbo].[t_tag] ([ID])
---ON UPDATE CASCADE
---ON DELETE CASCADE
---GO
---ALTER TABLE [dbo].[t_tag_link] CHECK CONSTRAINT [FK_t_tag_link_tag]
 --GO
 
 --ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_StartTime]  DEFAULT (getdate()) FOR [StartTime]
