@@ -247,6 +247,7 @@ namespace achihapi.Controllers
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlTransaction tran = null;
             String queryString = "";
             Int32 nNewID = -1;
             Boolean bError = false;
@@ -266,49 +267,99 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                queryString = @"";
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                // Now go ahead for the creating
-                queryString = @"INSERT INTO [dbo].[t_learn_obj]
-                                       ([HID]
-                                       ,[CATEGORY]
-                                       ,[NAME]
-                                       ,[CONTENT]
-                                       ,[CREATEDBY]
-                                       ,[CREATEDAT]
-                                       ,[UPDATEDBY]
-                                       ,[UPDATEDAT])
-                                 VALUES (@HID
-                                       ,@CTGY
-                                       ,@NAME
-                                       ,@CONTENT
-                                       ,@CREATEDBY
-                                       ,@CREATEDAT
-                                       ,@UPDATEDBY
-                                       ,@UPDATEDAT
-                                    ); SELECT @Identity = SCOPE_IDENTITY();";
+                tran = conn.BeginTransaction();
 
-                cmd = new SqlCommand(queryString, conn);
+                // Question bank
+                queryString = @"INSERT INTO [dbo].[t_learn_qtn_bank]
+                               ([HID]
+                               ,[Type]
+                               ,[Question]
+                               ,[BriefAnswer]
+                               ,[CREATEDBY]
+                               ,[CREATEDAT])
+                         VALUES
+                               (@HID
+                               ,@Type
+                               ,@Question
+                               ,@BriefAnswer
+                               ,@CREATEDBY
+                               ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Transaction = tran;
                 cmd.Parameters.AddWithValue("@HID", vm.HID);
-                //cmd.Parameters.AddWithValue("@CTGY", vm.CategoryID);
-                //cmd.Parameters.AddWithValue("@NAME", vm.Name);
-                //cmd.Parameters.AddWithValue("@CONTENT", vm.Content);
+                cmd.Parameters.AddWithValue("@Type", vm.QuestionType);
+                cmd.Parameters.AddWithValue("@Question", vm.Question);
+                if (!String.IsNullOrEmpty(vm.BriefAnswer))
+                    cmd.Parameters.AddWithValue("@BriefAnswer", vm.BriefAnswer);
+                else
+                    cmd.Parameters.AddWithValue("@BriefAnswer", DBNull.Value);
                 cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
-                cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-                cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
-                cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
+                cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
                 SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                 idparam.Direction = ParameterDirection.Output;
 
                 Int32 nRst = await cmd.ExecuteNonQueryAsync();
                 nNewID = (Int32)idparam.Value;
+
+                cmd.Dispose();
+                cmd = null;
+
+                // Question bank sub item
+                foreach(var si in vm.SubItemList)
+                {
+                    queryString = @"INSERT INTO [dbo].[t_learn_qtn_bank_sub]
+                                   ([QTNID]
+                                   ,[SUBITEM]
+                                   ,[DETAIL]
+                                   ,[OTHERS])
+                             VALUES (@QTNID
+                                   ,@SUBITEM
+                                   ,@DETAIL
+                                   ,@OTHERS)";
+
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    cmd.Parameters.AddWithValue("@QTNID", nNewID);
+                    cmd.Parameters.AddWithValue("@SUBITEM", si.SubItem);
+                    cmd.Parameters.AddWithValue("@DETAIL", si.Detail);
+                    if (!String.IsNullOrEmpty(si.Others))
+                        cmd.Parameters.AddWithValue("@OTHERS", si.Others);
+                    else
+                        cmd.Parameters.AddWithValue("@OTHERS", DBNull.Value);
+
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                // Tag
+                foreach(var tag in vm.TagTerms)
+                {
+                    queryString = @"INSERT INTO [dbo].[t_tag]
+                                           ([HID]
+                                           ,[TagType]
+                                           ,[TagID]
+                                           ,[Term])
+                                     VALUES (@HID
+                                           ,@TagType
+                                           ,@TagID
+                                           ,@Term)";
+
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    cmd.Parameters.AddWithValue("@HID", vm.HID);
+                    cmd.Parameters.AddWithValue("@TagType", HIHTagTypeEnum.LearnQuestionBank);
+                    cmd.Parameters.AddWithValue("@TagID", nNewID);
+                    cmd.Parameters.AddWithValue("@Term", tag);
+
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                tran.Commit();
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 bError = true;
                 strErrMsg = exp.Message;
+
+                tran.Rollback();
             }
             finally
             {
@@ -316,13 +367,12 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
             if (bError)
-            {
                 return StatusCode(500, strErrMsg);
-            }
 
             vm.ID = nNewID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings
