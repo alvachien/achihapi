@@ -203,8 +203,10 @@ namespace achihapi.Controllers
                                AND [TRANCURR] = @tcurr
                                AND [EXGRATE_PLAN] = @isplan";
 
-                    SqlCommand cmd = new SqlCommand(queryString, conn);
-                    cmd.Transaction = tran;
+                    SqlCommand cmd = new SqlCommand(queryString, conn)
+                    {
+                        Transaction = tran
+                    };
                     cmd.Parameters.AddWithValue("@EXGRATE", vm.ExchangeRate);
                     cmd.Parameters.AddWithValue("@EXGRATE_PLAN", false);
                     cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
@@ -226,8 +228,10 @@ namespace achihapi.Controllers
                                AND [TRANCURR2] = @tcurr
                                AND [EXGRATE_PLAN2] = @isplan";
 
-                    cmd = new SqlCommand(queryString, conn);
-                    cmd.Transaction = tran;
+                    cmd = new SqlCommand(queryString, conn)
+                    {
+                        Transaction = tran
+                    };
                     cmd.Parameters.AddWithValue("@EXGRATE", vm.ExchangeRate);
                     cmd.Parameters.AddWithValue("@EXGRATE_PLAN", false);
                     cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);

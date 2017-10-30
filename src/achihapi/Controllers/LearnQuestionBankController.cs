@@ -423,10 +423,7 @@ namespace achihapi.Controllers
                         ,[CREATEDBY]
                         ,[CREATEDAT]
                         ,[UPDATEDBY]
-                        ,[UPDATEDAT]
-                        ,[SUBITEM]
-                        ,[DETAIL]
-                        ,[OTHERS]";
+                        ,[UPDATEDAT]";
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
@@ -434,7 +431,8 @@ namespace achihapi.Controllers
             }
             else if (!bListMode && nSearchID.HasValue)
             {
-                strSQL += " FROM [v_lrn_qtnbank] WHERE [ID] = " + nSearchID.Value.ToString();
+                strSQL += " FROM [v_lrn_qtnbank] WHERE [ID] = " + nSearchID.Value.ToString() + "; ";
+                strSQL += @"SELECT [Term] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString() + " AND [TagType] = 1 AND [TagID] = " + nSearchID.Value.ToString();
             }
 
             return strSQL;
@@ -468,18 +466,18 @@ namespace achihapi.Controllers
             else
                 ++idx;
 
-            if (!reader.IsDBNull(idx))
-            {
-                LearnQuestionBankSubItemViewModel si = new LearnQuestionBankSubItemViewModel();
-                si.SubItem = reader.GetString(idx++);
-                si.Detail = reader.GetString(idx++);
-                if (!reader.IsDBNull(idx))
-                    si.Others = reader.GetString(idx++);
-                else
-                    ++idx;
+            //if (!reader.IsDBNull(idx))
+            //{
+            //    LearnQuestionBankSubItemViewModel si = new LearnQuestionBankSubItemViewModel();
+            //    si.SubItem = reader.GetString(idx++);
+            //    si.Detail = reader.GetString(idx++);
+            //    if (!reader.IsDBNull(idx))
+            //        si.Others = reader.GetString(idx++);
+            //    else
+            //        ++idx;
 
-                vm.SubItemList.Add(si);
-            }
+            //    vm.SubItemList.Add(si);
+            //}
         }
         #endregion
     }

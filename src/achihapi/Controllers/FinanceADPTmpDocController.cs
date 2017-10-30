@@ -216,8 +216,10 @@ namespace achihapi.Controllers
                 vmFIDOC.TranCurr = vmHome.BaseCurrency;
                 vmFIDOC.TranDate = vmTmpDoc.TranDate;
                 vmFIDOC.CreatedAt = DateTime.Now;
-                FinanceDocumentItemUIViewModel vmItem = new FinanceDocumentItemUIViewModel();
-                vmItem.AccountID = vmTmpDoc.AccountID;
+                FinanceDocumentItemUIViewModel vmItem = new FinanceDocumentItemUIViewModel
+                {
+                    AccountID = vmTmpDoc.AccountID
+                };
                 if (vmTmpDoc.ControlCenterID.HasValue)
                     vmItem.ControlCenterID = vmTmpDoc.ControlCenterID.Value;
                 if (vmTmpDoc.OrderID.HasValue)
