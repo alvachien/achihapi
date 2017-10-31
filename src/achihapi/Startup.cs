@@ -2,6 +2,7 @@
 #else
 //#define USE_MICROSOFTAZURE
 #define USE_ALIYUN
+#undef USE_MICROSOFTAZURE
 #endif
 
 using System;
@@ -48,7 +49,7 @@ namespace achihapi
 #if USE_MICROSOFTAZURE
                     options.Authority = "http://acidserver.azurewebsites.net";
 #elif USE_ALIYUN
-                    options.Authority = "http://118.178.58.187:5100/";
+                    options.Authority = "http://118.178.58.187:5100";
 #endif
 #endif
                     options.RequireHttpsMetadata = false;
