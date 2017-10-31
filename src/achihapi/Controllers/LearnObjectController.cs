@@ -207,7 +207,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(true, false, null, null, id, 0);
+                queryString = this.getQueryString(true, false, null, null, id, hid);
 
                 await conn.OpenAsync();
 

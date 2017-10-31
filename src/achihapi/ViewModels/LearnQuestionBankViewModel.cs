@@ -19,13 +19,14 @@ namespace achihapi.ViewModels
         [StringLength(50)]
         public String BriefAnswer { get; set; }
 
-        public List<String> TagTerms { get; set; }
+        public List<String> TagTerms { get; }
 
         public List<LearnQuestionBankSubItemViewModel> SubItemList { get; }
 
         public LearnQuestionBankViewModel() : base()
         {
             SubItemList = new List<LearnQuestionBankSubItemViewModel>();
+            TagTerms = new List<String>();
         }
     }
 

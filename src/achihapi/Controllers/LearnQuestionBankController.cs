@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.ViewModels;
 using System.Data;
@@ -70,7 +69,7 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             LearnQuestionBankViewModel vm = new LearnQuestionBankViewModel();
-                            OnDB2VM(reader, vm);
+                            OnHeader2VM(reader, vm);
 
                             // Check the ID exist in the list already or not.
                             Boolean bExist = false;
@@ -134,7 +133,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            LearnQuestionBankViewModel vm = null;
+            LearnQuestionBankViewModel vm = new LearnQuestionBankViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -143,8 +142,8 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(false, null, null, id, 0);
-
+                queryString = this.getQueryString(false, null, null, id, hid);
+            
                 await conn.OpenAsync();
 
                 // Check Home assignment with current user
@@ -159,26 +158,55 @@ namespace achihapi.Controllers
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
+
+                // Header
                 if (reader.HasRows)
                 {
                     while (reader.Read())
                     {
-                        if (vm == null)
-                        {
-                            vm = new LearnQuestionBankViewModel();
-                            OnDB2VM(reader, vm);
-                        } 
-                        else
-                        {
-                            LearnQuestionBankViewModel vm2 = new LearnQuestionBankViewModel();
-                            OnDB2VM(reader, vm2);
-                            vm.SubItemList.AddRange(vm2.SubItemList);
-                        }
+                        OnHeader2VM(reader, vm);
+                        break; // Shall only one item exist
                     }
                 }
                 else
                 {
                     bNotFound = true;
+                }
+
+                if (!bNotFound)
+                {
+                    // Item
+                    reader.NextResult();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            LearnQuestionBankSubItemViewModel svm = new LearnQuestionBankSubItemViewModel
+                            {
+                                // QTNID
+                                // [SUBITEM]
+                                SubItem = reader.GetString(1),
+                                // [DETAIL]
+                                Detail = reader.GetString(2)
+                            };
+                            // [OTHERS]
+                            if (!reader.IsDBNull(3))
+                                svm.Others = reader.GetString(3);
+
+                            vm.SubItemList.Add(svm);
+                        }
+                    }
+
+                    // Tag
+                    reader.NextResult();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            String strTag = reader.GetString(0);
+                            vm.TagTerms.Add(strTag);
+                        }
+                    }
                 }
             }
             catch (Exception exp)
@@ -284,8 +312,10 @@ namespace achihapi.Controllers
                                ,@BriefAnswer
                                ,@CREATEDBY
                                ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Transaction = tran;
+                SqlCommand cmd = new SqlCommand(queryString, conn)
+                {
+                    Transaction = tran
+                };
                 cmd.Parameters.AddWithValue("@HID", vm.HID);
                 cmd.Parameters.AddWithValue("@Type", vm.QuestionType);
                 cmd.Parameters.AddWithValue("@Question", vm.Question);
@@ -405,18 +435,19 @@ namespace achihapi.Controllers
                 strSQL += @"SELECT count(*) FROM [dbo].[t_learn_qtn_bank] WHERE [HID] = " + hid.ToString() + "; ";
             }
 
-            if (bListMode && nTop.HasValue && nSkip.HasValue)
-            {
-                strSQL += @" WITH ZQuestionBank_CTE (ID) AS ( SELECT [ID] FROM [dbo].[t_learn_qtn_bank] WHERE [HID] = " + hid.ToString()
-                        + @" ORDER BY (SELECT NULL) OFFSET " + nSkip.Value.ToString() + @" ROWS FETCH NEXT " + nTop.Value.ToString() + @" ROWS ONLY ) ";
-                strSQL += @" SELECT [ZQuestionBank_CTE].[ID] ";
-            }
-            else
-            {
-                strSQL += @" SELECT [ID] ";
-            }
+            //if (bListMode && nTop.HasValue && nSkip.HasValue)
+            //{
+            //    strSQL += @" WITH ZQuestionBank_CTE (ID) AS ( SELECT [ID] FROM [dbo].[t_learn_qtn_bank] WHERE [HID] = " + hid.ToString()
+            //            + @" ORDER BY (SELECT NULL) OFFSET " + nSkip.Value.ToString() + @" ROWS FETCH NEXT " + nTop.Value.ToString() + @" ROWS ONLY ) ";
+            //    strSQL += @" SELECT [ZQuestionBank_CTE].[ID] ";
+            //}
+            //else
+            //{
+            //    strSQL += @" SELECT [ID] ";
+            //}
 
-            strSQL += @",[HID]
+            strSQL += @"SELECT [ID] 
+                        ,[HID]
                         ,[Type]
                         ,[Question]
                         ,[BriefAnswer]
@@ -427,18 +458,20 @@ namespace achihapi.Controllers
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
-                strSQL += " FROM [ZQuestionBank_CTE] LEFT OUTER JOIN [v_lrn_qtnbank] ON [ZQuestionBank_CTE].[ID] = [v_lrn_qtnbank].[ID] ORDER BY [ID] ";
+                //strSQL += " FROM [ZQuestionBank_CTE] LEFT OUTER JOIN [v_lrn_qtnbank] ON [ZQuestionBank_CTE].[ID] = [v_lrn_qtnbank].[ID] ORDER BY [ID] ";
+                strSQL += " FROM [t_learn_qtn_bank] WHERE [HID] = " + hid.ToString() + " ORDER BY (SELECT NULL) OFFSET " + nSkip.Value.ToString() + @" ROWS FETCH NEXT " + nTop.Value.ToString() + @" ROWS ONLY ";
             }
             else if (!bListMode && nSearchID.HasValue)
             {
-                strSQL += " FROM [v_lrn_qtnbank] WHERE [ID] = " + nSearchID.Value.ToString() + "; ";
-                strSQL += @"SELECT [Term] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString() + " AND [TagType] = 1 AND [TagID] = " + nSearchID.Value.ToString();
+                strSQL += " FROM [t_learn_qtn_bank] WHERE [ID] = " + nSearchID.Value.ToString();
+                strSQL += @"; SELECT [QTNID],[SUBITEM],[DETAIL],[OTHERS] FROM [dbo].[t_learn_qtn_bank_sub] WHERE [QTNID] = " + nSearchID.Value.ToString();
+                strSQL += @"; SELECT [Term] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString() + " AND [TagType] = 1 AND [TagID] = " + nSearchID.Value.ToString();
             }
 
             return strSQL;
         }
 
-        private void OnDB2VM(SqlDataReader reader, LearnQuestionBankViewModel vm)
+        private void OnHeader2VM(SqlDataReader reader, LearnQuestionBankViewModel vm)
         {
             Int32 idx = 0;
             vm.ID = reader.GetInt32(idx++);
