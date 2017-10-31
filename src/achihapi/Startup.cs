@@ -1,5 +1,8 @@
-﻿//#define USE_MICROSOFTAZURE
+﻿#if DEBUG
+#else
+//#define USE_MICROSOFTAZURE
 #define USE_ALIYUN
+#endif
 
 using System;
 using System.Collections.Generic;
@@ -54,12 +57,12 @@ namespace achihapi
 
             // DB connection string
 #if DEBUG
-            DBConnectionString = Configuration.GetConnectionString("DebugConnection");
+            DBConnectionString = Configuration["ConnectionStrings:DebugConnection"];
 #else
 #if USE_ALIYUN
-            DBConnectionString = Configuration.GetConnectionString("AliyunConnection");
+            DBConnectionString = Configuration["ConnectionStrings:AliyunConnection"];
 #elif USE_MICROSOFTAZURE
-            DBConnectionString = Configuration.GetConnectionString("AzureConnection");
+            DBConnectionString = Configuration["ConnectionStrings:AzureConnection"];
 #endif
 #endif
         }

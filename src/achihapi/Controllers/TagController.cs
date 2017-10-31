@@ -16,7 +16,7 @@ namespace achihapi.Controllers
     {
         // GET: api/tag
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Byte? tagtype = null, Int32? tagid = null)
         {
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
@@ -47,6 +47,14 @@ namespace achihapi.Controllers
                 }
 
                 queryString = @"SELECT DISTINCT [Term] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
+                if (tagtype.HasValue)
+                {
+                    queryString += " AND [TagType] = " + tagtype.Value.ToString();
+                }
+                if (tagid.HasValue)
+                {
+                    queryString += " AND [TagID] = " + tagid.Value.ToString();
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
