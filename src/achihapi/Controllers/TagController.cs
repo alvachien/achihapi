@@ -16,7 +16,7 @@ namespace achihapi.Controllers
     {
         // GET: api/tag
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Byte? tagtype = null, Int32? tagid = null)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean reqamt = true, Byte? tagtype = null, string tagterm = null)
         {
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
@@ -26,7 +26,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            List<String> listTerms = new List<String>();
+            List<TagCountViewModel> listTerms = new List<TagCountViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -46,14 +46,23 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                queryString = @"SELECT DISTINCT [Term] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
-                if (tagtype.HasValue)
+                //queryString = @"SELECT DISTINCT [Term] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
+                if (reqamt)
                 {
-                    queryString += " AND [TagType] = " + tagtype.Value.ToString();
-                }
-                if (tagid.HasValue)
+                    queryString = @"SELECT [Term], COUNT(*) AS TERMCOUNT FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
+                    if (tagtype.HasValue)
+                    {
+                        queryString += " AND [TagType] = " + tagtype.Value.ToString();
+                    }
+                    if (!String.IsNullOrEmpty(tagterm))
+                    {
+                        queryString += " AND [Term] LIKE '%" + tagterm + "%'";
+                    }
+                    queryString += @" GROUP BY [Term]";
+                } 
+                else
                 {
-                    queryString += " AND [TagID] = " + tagid.Value.ToString();
+
                 }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -63,7 +72,11 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        listTerms.Add(reader.GetString(0));
+                        listTerms.Add(new TagCountViewModel()
+                        {
+                            Term = reader.GetString(0),
+                            TermCount = reader.GetInt32(1)
+                        });
                     }
                 }
             }

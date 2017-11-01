@@ -16,4 +16,13 @@ namespace achihapi.ViewModels
         [StringLength(50)]
         public String Term { get; set; }
     }
+
+    public class TagCountViewModel
+    {
+        [Required]
+        [StringLength(50)]
+        public String Term { get; set; }
+        [Required]
+        public Int32 TermCount { get; set; }
+    }
 }
