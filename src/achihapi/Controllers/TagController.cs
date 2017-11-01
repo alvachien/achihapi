@@ -26,7 +26,8 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            List<TagCountViewModel> listTerms = new List<TagCountViewModel>();
+            List<TagCountViewModel> listTermCounts = new List<TagCountViewModel>();
+            List<TagViewModel> listTerms = new List<TagViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -62,7 +63,15 @@ namespace achihapi.Controllers
                 } 
                 else
                 {
-
+                    queryString = @"SELECT [Term], [TagType], [TagID] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
+                    if (tagtype.HasValue)
+                    {
+                        queryString += " AND [TagType] = " + tagtype.Value.ToString();
+                    }
+                    if (!String.IsNullOrEmpty(tagterm))
+                    {
+                        queryString += " AND [Term] LIKE '%" + tagterm + "%'";
+                    }
                 }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -72,11 +81,23 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        listTerms.Add(new TagCountViewModel()
+                        if (reqamt)
                         {
-                            Term = reader.GetString(0),
-                            TermCount = reader.GetInt32(1)
-                        });
+                            listTermCounts.Add(new TagCountViewModel()
+                            {
+                                Term = reader.GetString(0),
+                                TermCount = reader.GetInt32(1)
+                            });
+                        }
+                        else
+                        {
+                            listTerms.Add(new TagViewModel()
+                            {
+                                Term = reader.GetString(0),
+                                TagType = reader.GetInt16(1),
+                                TagID = reader.GetInt32(2)
+                            });
+                        }
                     }
                 }
             }
@@ -99,7 +120,7 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            return new JsonResult(listTerms);
+            return reqamt? new JsonResult(listTermCounts) : new JsonResult(listTerms);
         }
 
         // POST api/tag
