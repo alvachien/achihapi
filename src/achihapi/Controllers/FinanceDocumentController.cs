@@ -225,41 +225,29 @@ namespace achihapi.Controllers
                 return BadRequest("No data is inputted or for Advancepay/Loan/Asset");
             }
             if (vm.HID <= 0)
-            {
                 return BadRequest("No Home ID inputted");
-            }
 
             // Do the basic check!
             // Header check!
             if (String.IsNullOrEmpty(vm.Desp))
-            {
                 return BadRequest("No Desp in the header");
-            }
             if (vm.DocType == 0)
-            {
                 return BadRequest("Doc type is must!");
-            }
 
             // Check the items
             if (vm.Items.Count <= 0)
-            {
                 return BadRequest("No item has been assigned yet");
-            }
+
             foreach (var item in vm.Items)
             {
                 if (item.AccountID == 0 || item.TranAmount == 0 || item.TranType == 0)
-                {
                     return BadRequest("Item must have account or tran. amount or tran. type"); ;
-                }
-
                 if (item.ControlCenterID == 0 && item.OrderID == 0)
-                {
                     return BadRequest("Must input control object");
-                }
                 if (item.ControlCenterID > 0 && item.OrderID > 0)
-                {
                     return BadRequest("Either control center or order shall be inputted, not both");
-                }
+                if (String.IsNullOrEmpty(item.Desp))
+                    return BadRequest("Desp is a must for an item");
             }
 
             // Update the database
