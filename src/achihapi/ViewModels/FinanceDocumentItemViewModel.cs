@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace achihapi.ViewModels
@@ -18,6 +19,9 @@ namespace achihapi.ViewModels
         public Int32 OrderID { get; set; }
         [StringLength(45)]
         public String Desp { get; set; }
+
+        // Tag
+        public List<String> TagTerms { get; }
     }
 
     public class FinanceDocumentItemUIViewModel : FinanceDocumentItemViewModel
