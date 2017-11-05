@@ -42,6 +42,7 @@ namespace achihapi.Controllers
                     queryString += " AND [TRANDATE] >= @dtbgn ";
                 if (dtend.HasValue)
                     queryString += " AND [TRANDATE] <= @dtend ";
+                queryString += " ORDER BY [TRANDATE] DESC";
 
                 await conn.OpenAsync();
 
@@ -210,7 +211,7 @@ namespace achihapi.Controllers
                 SqlCommand cmd = null;
                 Int32 nNewDocID = 0;
                 vmFIDOC.Desp = vmTmpDoc.Desp;
-                vmFIDOC.DocType = HIHAPIConstants.FinDocType_Normal;
+                vmFIDOC.DocType = FinanceDocTypeViewModel.DocType_Normal;
                 vmFIDOC.HID = hid;
                 //vmFIDOC.TranAmount = vmTmpDoc.TranAmount;
                 vmFIDOC.TranCurr = vmHome.BaseCurrency;

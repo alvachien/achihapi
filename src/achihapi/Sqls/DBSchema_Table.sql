@@ -1102,7 +1102,7 @@ CREATE TABLE [dbo].[t_learn_qtn_bank](
 	[HID] [int] NOT NULL,
 	[Type] [tinyint] NOT NULL,
 	[Question] [nvarchar](100) NOT NULL,
-	[BriefAnswer] [nvarchar](50) NULL,
+	[BriefAnswer] [nvarchar](100) NULL,
 	[CREATEDBY] [nvarchar](50) NULL,
 	[CREATEDAT] [date] NULL,
 	[UPDATEDBY] [nvarchar](50) NULL,
@@ -1170,16 +1170,49 @@ CREATE TABLE [dbo].[t_tag](
 	[TagType] [smallint] NOT NULL,
 	[TagID] [int] NOT NULL,
 	[Term] [nvarchar](50) NOT NULL,
+	[TagSubID] [int] NOT NULL,
  CONSTRAINT [PK_t_tag] PRIMARY KEY CLUSTERED 
 (
 	[HID] ASC,
 	[TagType] ASC,
 	[TagID] ASC,
-	[Term] ASC
+	[Term] ASC,
+	[TagSubID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
 
+
+-- Updated at 2017.11.05
+-- Update the BriefAnswer from 50 to 100
+IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 't_learn_qtn_bank' AND COLUMN_NAME = 'BriefAnswer' AND DATA_TYPE = 'nvarchar' AND CHARACTER_MAXIMUM_LENGTH = 50)
+BEGIN
+
+	ALTER TABLE [dbo].[t_learn_qtn_bank]
+	ALTER COLUMN [BriefAnswer] [nvarchar](100) NULL;
+
+END
+
+-- Add subid
+IF NOT EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 't_tag' AND COLUMN_NAME = 'TagSubID')
+BEGIN
+
+	ALTER TABLE [dbo].[t_tag] DROP CONSTRAINT [PK_t_tag];
+
+	ALTER TABLE [dbo].[t_tag]
+	ADD [TagSubID] [int] NOT NULL DEFAULT 0;
+
+	ALTER TABLE [dbo].[t_tag] ADD CONSTRAINT [PK_t_tag] PRIMARY KEY CLUSTERED (
+		[HID] ASC,
+		[TagType] ASC,
+		[TagID] ASC,
+		[Term] ASC,
+		[TagSubID] ASC
+	);
+
+END
 
 ---------------------------------
 -- TODO...

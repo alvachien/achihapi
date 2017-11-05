@@ -43,7 +43,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.getFinanceDocADPQueryString(id);
+                queryString = SqlUtility.getFinanceDocADPQueryString(id, hid);
 
                 await conn.OpenAsync();
 
@@ -60,55 +60,61 @@ namespace achihapi.Controllers
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                Int32 nRstBatch = 0; // Total 4 batch!
-
-                while (reader.HasRows)
+                // Header
+                while (reader.Read())
                 {
-                    if (nRstBatch == 0) // Doc. header
+                    SqlUtility.FinDocHeader_DB2VM(reader, vm);
+                }
+                reader.NextResult();
+
+                // Items
+                while (reader.Read())
+                {
+                    FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
+                    SqlUtility.FinDocItem_DB2VM(reader, itemvm);
+
+                    vm.Items.Add(itemvm);
+                }
+                reader.NextResult();
+
+                // Account
+                while (reader.Read())
+                {
+                    FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
+                    Int32 aidx = 0;
+                    aidx = SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+                    vmAccount.ExtraInfo_ADP = new FinanceAccountExtDPViewModel();
+                    SqlUtility.FinAccountADP_DB2VM(reader, vmAccount.ExtraInfo_ADP, aidx);
+
+                    vm.AccountVM = vmAccount;
+                }
+                reader.NextResult();
+
+                // Tmp docs
+                while (reader.Read())
+                {
+                    FinanceTmpDocDPViewModel dpvm = new FinanceTmpDocDPViewModel();
+                    SqlUtility.FinTmpDoc_DB2VM(reader, dpvm);
+                    vm.TmpDocs.Add(dpvm);
+                }
+                reader.NextResult();
+
+                // Tag
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
                     {
-                        // Header
-                        while (reader.Read())
+                        Int32 itemID = reader.GetInt32(0);
+                        String sterm = reader.GetString(1);
+
+                        foreach (var vitem in vm.Items)
                         {
-                            SqlUtility.FinDocHeader_DB2VM(reader, vm);
+                            if (vitem.ItemID == itemID)
+                            {
+                                vitem.TagTerms.Add(sterm);
+                            }
                         }
                     }
-                    else if (nRstBatch == 1) // Doc item
-                    {
-                        // Items
-                        while (reader.Read())
-                        {
-                            FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                            SqlUtility.FinDocItem_DB2VM(reader, itemvm);
-
-                            vm.Items.Add(itemvm);
-                        }
-                    }
-                    else if (nRstBatch == 2) // Account
-                    {
-                        while(reader.Read())
-                        {
-                            FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
-                            Int32 aidx = 0;
-                            aidx = SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
-                            vmAccount.ExtraInfo_ADP = new FinanceAccountExtDPViewModel();
-                            SqlUtility.FinAccountADP_DB2VM(reader, vmAccount.ExtraInfo_ADP, aidx);
-
-                            vm.AccountVM = vmAccount;
-                        }
-                    } 
-                    else if(nRstBatch == 3) // Tmp doc
-                    {
-                        while(reader.Read())
-                        {
-                            FinanceTmpDocDPViewModel dpvm = new FinanceTmpDocDPViewModel();
-                            SqlUtility.FinTmpDoc_DB2VM(reader, dpvm);
-                            vm.TmpDocs.Add(dpvm);
-                        }
-                    }
-
-                    ++nRstBatch;
-
-                    reader.NextResult();
                 }
             }
             catch (Exception exp)
@@ -227,6 +233,25 @@ namespace achihapi.Controllers
 
                         cmd2.Dispose();
                         cmd2 = null;
+
+                        // Tags
+                        if (ivm.TagTerms.Count > 0)
+                        {
+                            // Create tags
+                            foreach (var term in ivm.TagTerms)
+                            {
+                                queryString = SqlUtility.GetTagInsertString();
+
+                                cmd2 = new SqlCommand(queryString, conn, tran);
+
+                                SqlUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, ivm.ItemID, term);
+
+                                await cmd2.ExecuteNonQueryAsync();
+
+                                cmd2.Dispose();
+                                cmd2 = null;
+                            }
+                        }
                     }
 
                     // Third, go to the account creation => nNewAccountID

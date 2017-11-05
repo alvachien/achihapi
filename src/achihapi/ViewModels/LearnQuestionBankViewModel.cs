@@ -16,7 +16,7 @@ namespace achihapi.ViewModels
         [Required]
         [StringLength(100)]
         public String Question { get; set; }
-        [StringLength(50)]
+        [StringLength(100)]
         public String BriefAnswer { get; set; }
 
         public List<String> TagTerms { get; }

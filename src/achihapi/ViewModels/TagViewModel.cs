@@ -12,6 +12,7 @@ namespace achihapi.ViewModels
         [Required]
         public Int16 TagType { get; set; }
         public Int32 TagID { get; set; }
+        public Int32 TagSubID { get; set; }
         [Required]
         [StringLength(50)]
         public String Term { get; set; }

@@ -17,10 +17,12 @@ namespace achihapi.ViewModels
         public String Comment { get; set; }
 
         // Constants
-        public const Int32 DocType_Transfer = 2;
-        public const Int32 DocType_AdvancePayment = 5;
-        public const Int32 DocType_AssetBuyIn = 7;
-        public const Int32 DocType_AssetSoldOut = 8;
-        public const Int32 DocType_Loan = 9;
+        public const Int16 DocType_Normal = 1;
+        public const Int16 DocType_Transfer = 2;
+        public const Int16 DocType_CurrExchange = 3;
+        public const Int16 DocType_AdvancePayment = 5;
+        public const Int16 DocType_AssetBuyIn = 7;
+        public const Int16 DocType_AssetSoldOut = 8;
+        public const Int16 DocType_Loan = 9;
     }
 }

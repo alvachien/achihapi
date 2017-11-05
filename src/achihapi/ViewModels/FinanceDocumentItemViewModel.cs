@@ -22,6 +22,11 @@ namespace achihapi.ViewModels
 
         // Tag
         public List<String> TagTerms { get; }
+
+        public FinanceDocumentItemViewModel()
+        {
+            this.TagTerms = new List<String>();
+        }
     }
 
     public class FinanceDocumentItemUIViewModel : FinanceDocumentItemViewModel

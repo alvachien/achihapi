@@ -144,7 +144,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.getFinanceDocQueryString(id);
+                queryString = SqlUtility.getFinanceDocQueryString(id, hid);
 
                 await conn.OpenAsync();
 
@@ -161,31 +161,39 @@ namespace achihapi.Controllers
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                Int32 nRstBatch = 0;
-                while (reader.HasRows)
+                // Header
+                while (reader.Read())
                 {
-                    if (nRstBatch == 0)
+                    SqlUtility.FinDocHeader_DB2VM(reader, vm);
+                }
+                reader.NextResult();
+
+                // Items
+                while (reader.Read())
+                {
+                    FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
+                    SqlUtility.FinDocItem_DB2VM(reader, itemvm);
+
+                    vm.Items.Add(itemvm);
+                }
+                reader.NextResult();
+
+                // Tags
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
                     {
-                        // Header
-                        while (reader.Read())
+                        Int32 itemID = reader.GetInt32(0);
+                        String sterm = reader.GetString(1);
+
+                        foreach (var vitem in vm.Items)
                         {
-                            SqlUtility.FinDocHeader_DB2VM(reader, vm);
+                            if (vitem.ItemID == itemID)
+                            {
+                                vitem.TagTerms.Add(sterm);
+                            }
                         }
                     }
-                    else if (nRstBatch == 1)
-                    {
-                        // Items
-                        while (reader.Read())
-                        {
-                            FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                            SqlUtility.FinDocItem_DB2VM(reader, itemvm);
-
-                            vm.Items.Add(itemvm);
-                        }
-                    }
-                    ++nRstBatch;
-
-                    reader.NextResult();
                 }
             }
             catch (Exception exp)
@@ -474,7 +482,7 @@ namespace achihapi.Controllers
                         totalamount += itemAmt;
                     }
 
-                    if (vm.DocType == HIHAPIConstants.FinDocType_Transfer || vm.DocType == HIHAPIConstants.FinDocType_CurrExchange)
+                    if (vm.DocType == FinanceDocTypeViewModel.DocType_Transfer || vm.DocType == FinanceDocTypeViewModel.DocType_CurrExchange)
                     {
                         if (totalamount != 0)
                         {
@@ -521,6 +529,28 @@ namespace achihapi.Controllers
                         SqlUtility.bindFinDocItemParameter(cmd2, ivm, nNewDocID);
 
                         await cmd2.ExecuteNonQueryAsync();
+
+                        cmd2.Dispose();
+                        cmd2 = null;
+
+                        // Tags
+                        if (ivm.TagTerms.Count > 0)
+                        {
+                            // Create tags
+                            foreach(var term in ivm.TagTerms)
+                            {
+                                queryString = SqlUtility.GetTagInsertString();
+
+                                cmd2 = new SqlCommand(queryString, conn, tran);
+
+                                SqlUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, ivm.ItemID, term);
+
+                                await cmd2.ExecuteNonQueryAsync();
+
+                                cmd2.Dispose();
+                                cmd2 = null;
+                            }
+                        }
                     }
 
                     tran.Commit();

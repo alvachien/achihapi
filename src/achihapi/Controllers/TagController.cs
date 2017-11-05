@@ -63,7 +63,7 @@ namespace achihapi.Controllers
                 } 
                 else
                 {
-                    queryString = @"SELECT [Term], [TagType], [TagID] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
+                    queryString = @"SELECT [Term], [TagType], [TagID], [TagSubID] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
                     if (tagtype.HasValue)
                     {
                         queryString += " AND [TagType] = " + tagtype.Value.ToString();
@@ -95,7 +95,8 @@ namespace achihapi.Controllers
                             {
                                 Term = reader.GetString(0),
                                 TagType = reader.GetInt16(1),
-                                TagID = reader.GetInt32(2)
+                                TagID = reader.GetInt32(2),
+                                TagSubID = reader.GetInt32(3)
                             });
                         }
                     }

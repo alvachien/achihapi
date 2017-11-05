@@ -875,7 +875,7 @@ namespace achihapi.Controllers
         #endregion
 
         #region Finance document READ
-        internal static string getFinanceDocQueryString(Int32 nid)
+        internal static string getFinanceDocQueryString(Int32 nid, Int32 hid)
         {
             String strSQL = @"SELECT [ID]
                           ,[HID]
@@ -893,20 +893,18 @@ namespace achihapi.Controllers
                           ,[UPDATEDBY]
                           ,[UPDATEDAT]
                       FROM [t_fin_document] WHERE [ID] = " + nid.ToString() + @"; 
-                      SELECT [DOCID]
-                            ,[ITEMID]
-                            ,[ACCOUNTID]
-                            ,[ACCOUNTNAME]
-                            ,[TRANTYPE]
-                            ,[TRANTYPENAME]
-                            ,[USECURR2]
-                            ,[TRANAMOUNT_ORG] AS [TRANAMOUNT]
-                            ,[CONTROLCENTERID]
-                            ,[CONTROLCENTERNAME]
-                            ,[ORDERID]
-                            ,[ORDERNAME]
-                            ,[DESP]
-                        FROM [v_fin_document_item1] WHERE [DOCID] = " + nid.ToString();
+                    SELECT [DOCID]
+                          ,[ITEMID]
+                          ,[ACCOUNTID]
+                          ,[TRANTYPE]
+                          ,[TRANAMOUNT]
+                          ,[USECURR2]
+                          ,[CONTROLCENTERID]
+                          ,[ORDERID]
+                          ,[DESP]
+                        FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + nid.ToString() + @";
+                    SELECT [TagSubID], [Term]
+                      FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString() + " AND [TagType] = 10 AND [TagID] = " + nid.ToString();
 
 #if DEBUG
             System.Diagnostics.Debug.WriteLine(strSQL);
@@ -934,7 +932,7 @@ namespace achihapi.Controllers
                         FROM [dbo].[t_fin_tmpdoc_dp] ";
         }
 
-        internal static string getFinanceDocADPQueryString(Int32 nid)
+        internal static string getFinanceDocADPQueryString(Int32 nid, Int32 hid)
         {
             String strSQL = @"SELECT [ID]
                           ,[HID]
@@ -952,20 +950,16 @@ namespace achihapi.Controllers
                           ,[UPDATEDBY]
                           ,[UPDATEDAT]
                       FROM [t_fin_document] WHERE [DOCTYPE] = " + FinanceDocTypeViewModel.DocType_AdvancePayment.ToString() + " AND [ID] = " + nid.ToString() + @"; 
-                      SELECT [DOCID]
-                            ,[ITEMID]
-                            ,[ACCOUNTID]
-                            ,[ACCOUNTNAME]
-                            ,[TRANTYPE]
-                            ,[TRANTYPENAME]
-                            ,[USECURR2]
-                            ,[TRANAMOUNT_ORG] AS [TRANAMOUNT]
-                            ,[CONTROLCENTERID]
-                            ,[CONTROLCENTERNAME]
-                            ,[ORDERID]
-                            ,[ORDERNAME]
-                            ,[DESP]
-                        FROM [v_fin_document_item1] WHERE [DOCID] = " + nid.ToString() + @"; 
+                    SELECT [DOCID]
+                          ,[ITEMID]
+                          ,[ACCOUNTID]
+                          ,[TRANTYPE]
+                          ,[TRANAMOUNT]
+                          ,[USECURR2]
+                          ,[CONTROLCENTERID]
+                          ,[ORDERID]
+                          ,[DESP]
+                        FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + nid.ToString() + @";
                       SELECT [t_fin_account].[ID]
                             ,[t_fin_account].[HID]
                             ,[t_fin_account].[CTGYID]
@@ -1007,7 +1001,9 @@ namespace achihapi.Controllers
                       FROM [dbo].[t_fin_tmpdoc_dp]
 	                    INNER JOIN [dbo].[t_fin_account_ext_dp]
 	                    ON [dbo].[t_fin_tmpdoc_dp].[ACCOUNTID] = [dbo].[t_fin_account_ext_dp].[ACCOUNTID]
-	                    AND [dbo].[t_fin_account_ext_dp].[REFDOCID] = " + nid.ToString() + ";";
+	                    AND [dbo].[t_fin_account_ext_dp].[REFDOCID] = " + nid.ToString() + @";
+                    SELECT [TagSubID], [Term]
+                      FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString() + " AND [TagType] = 10 AND [TagID] = " + nid.ToString();
 
 #if DEBUG
             System.Diagnostics.Debug.WriteLine(strSQL);
@@ -1015,7 +1011,7 @@ namespace achihapi.Controllers
 
             return strSQL;
         }
-        internal static string getFinanceDocAssetQueryString(Int32 nid, Boolean isBuyIn)
+        internal static string getFinanceDocAssetQueryString(Int32 nid, Boolean isBuyIn, Int32 hid)
         {
             String strSQL = @"SELECT [ID]
                           ,[HID]
@@ -1035,20 +1031,16 @@ namespace achihapi.Controllers
                       FROM [t_fin_document] WHERE [DOCTYPE] = " 
                         + (isBuyIn? FinanceDocTypeViewModel.DocType_AssetBuyIn.ToString() : FinanceDocTypeViewModel.DocType_AssetSoldOut.ToString()) 
                         + " AND [ID] = " + nid.ToString() + @"; 
-                      SELECT [DOCID]
-                            ,[ITEMID]
-                            ,[ACCOUNTID]
-                            ,[ACCOUNTNAME]
-                            ,[TRANTYPE]
-                            ,[TRANTYPENAME]
-                            ,[USECURR2]
-                            ,[TRANAMOUNT_ORG] AS [TRANAMOUNT]
-                            ,[CONTROLCENTERID]
-                            ,[CONTROLCENTERNAME]
-                            ,[ORDERID]
-                            ,[ORDERNAME]
-                            ,[DESP]
-                        FROM [v_fin_document_item1] WHERE [DOCID] = " + nid.ToString() + @"; 
+                    SELECT [DOCID]
+                          ,[ITEMID]
+                          ,[ACCOUNTID]
+                          ,[TRANTYPE]
+                          ,[TRANAMOUNT]
+                          ,[USECURR2]
+                          ,[CONTROLCENTERID]
+                          ,[ORDERID]
+                          ,[DESP]
+                        FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + nid.ToString() + @";
                       SELECT [t_fin_account].[ID]
                             ,[t_fin_account].[HID]
                             ,[t_fin_account].[CTGYID]
@@ -1070,7 +1062,9 @@ namespace achihapi.Controllers
                             ON [t_fin_account].[ID] = [t_fin_account_ext_as].[ACCOUNTID]
                         WHERE [t_fin_account].[CTGYID] = "
                         + FinanceAccountCtgyViewModel.AccountCategory_Asset.ToString()
-                        + ( isBuyIn? " AND [t_fin_account_ext_as].[REFDOC_BUY] = " : " AND [t_fin_account_ext_as].[REFDOC_SOLD] = ") + nid.ToString();
+                        + ( isBuyIn? " AND [t_fin_account_ext_as].[REFDOC_BUY] = " : " AND [t_fin_account_ext_as].[REFDOC_SOLD] = ") + nid.ToString() + @";
+                    SELECT [TagSubID], [Term]
+                      FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString() + " AND [TagType] = 10 AND [TagID] = " + nid.ToString();
 
 #if DEBUG
             System.Diagnostics.Debug.WriteLine(strSQL);
@@ -1262,36 +1256,36 @@ namespace achihapi.Controllers
             itemvm.DocID = reader.GetInt32(idx++);
             itemvm.ItemID = reader.GetInt32(idx++);
             itemvm.AccountID = reader.GetInt32(idx++);
-            if (!reader.IsDBNull(idx))
-                itemvm.AccountName = reader.GetString(idx++);
-            else
-                ++idx;
+            //if (!reader.IsDBNull(idx))
+            //    itemvm.AccountName = reader.GetString(idx++);
+            //else
+            //    ++idx;
             itemvm.TranType = reader.GetInt32(idx++);
-            if (!reader.IsDBNull(idx))
-                itemvm.TranTypeName = reader.GetString(idx++);
-            else
-                ++idx;
+            //if (!reader.IsDBNull(idx))
+            //    itemvm.TranTypeName = reader.GetString(idx++);
+            //else
+            //    ++idx;
+            itemvm.TranAmount = reader.GetDecimal(idx++);
             if (!reader.IsDBNull(idx))
                 itemvm.UseCurr2 = reader.GetBoolean(idx++);
             else
                 ++idx;
-            itemvm.TranAmount = reader.GetDecimal(idx++);
             if (!reader.IsDBNull(idx))
                 itemvm.ControlCenterID = reader.GetInt32(idx++);
             else
                 ++idx;
-            if (!reader.IsDBNull(idx))
-                itemvm.ControlCenterName = reader.GetString(idx++);
-            else
-                ++idx;
+            //if (!reader.IsDBNull(idx))
+            //    itemvm.ControlCenterName = reader.GetString(idx++);
+            //else
+            //    ++idx;
             if (!reader.IsDBNull(idx))
                 itemvm.OrderID = reader.GetInt32(idx++);
             else
                 ++idx;
-            if (!reader.IsDBNull(idx))
-                itemvm.OrderName = reader.GetString(idx++);
-            else
-                ++idx;
+            //if (!reader.IsDBNull(idx))
+            //    itemvm.OrderName = reader.GetString(idx++);
+            //else
+            //    ++idx;
             if (!reader.IsDBNull(idx))
                 itemvm.Desp = reader.GetString(idx++);
             else
@@ -1665,6 +1659,30 @@ namespace achihapi.Controllers
         #endregion
 
         #region Tag
+        internal static string GetTagInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_tag]
+                            ([HID]
+                            ,[TagType]
+                            ,[TagID]
+                            ,[TagSubID]
+                            ,[Term])
+                        VALUES (@HID
+                            ,@TagType
+                            ,@TagID
+                            ,@TagSubID
+                            ,@Term)";
+        }
+
+        internal static void BindTagInsertParameter(SqlCommand cmd2, Int32 hid, HIHTagTypeEnum tagType, Int32 nTagID, Int32 nTagSubID, String term)
+        {
+            cmd2.Parameters.AddWithValue("@HID", hid);
+            cmd2.Parameters.AddWithValue("@TagType", tagType);
+            cmd2.Parameters.AddWithValue("@TagID", nTagID);
+            cmd2.Parameters.AddWithValue("@TagSubID", nTagSubID);
+            cmd2.Parameters.AddWithValue("@Term", term);
+        }
+
         internal static void GetTagTerms()
         {
 
