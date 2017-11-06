@@ -94,7 +94,7 @@ namespace achihapi.Controllers
                 while (reader.Read())
                 {
                     FinanceTmpDocDPViewModel dpvm = new FinanceTmpDocDPViewModel();
-                    SqlUtility.FinTmpDoc_DB2VM(reader, dpvm);
+                    SqlUtility.FinTmpDocADP_DB2VM(reader, dpvm);
                     vm.TmpDocs.Add(dpvm);
                 }
                 reader.NextResult();

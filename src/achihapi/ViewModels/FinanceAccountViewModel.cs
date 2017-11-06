@@ -71,4 +71,25 @@ namespace achihapi.ViewModels
         public Int32 RefDocForBuy { get; set; }
         public Int32? RefDocForSold { get; set; }
     }
+
+    public enum LoanRepaymentMethod
+    {
+        EqualPrincipalAndInterset = 1,  // Equal principal & interest
+        EqualPrincipal = 2,  // Equal principal
+        DueRepayment = 3  // Due repayment
+    }
+
+    public sealed class FinanceAccountExtLoanViewModel: FinanceAccountExtViewModel
+    {
+        [Required]
+        public DateTime StartDate { get; set; }
+        public Decimal? AnnualRate { get; set; }
+        public Boolean? InterestFree { get; set; }
+        public LoanRepaymentMethod? RepaymentMethod { get; set; }
+        public Int16 TotalMonths { get; set; }
+        [Required]
+        public Int32 RefDocID { get; set; }
+        [StringLength(100)]
+        public String Others { get; set; }
+    }
 }

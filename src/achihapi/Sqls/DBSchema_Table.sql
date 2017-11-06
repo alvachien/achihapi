@@ -1214,6 +1214,83 @@ BEGIN
 
 END
 
+-- Updated at 2017.11.6
+/****** Object:  Table [dbo].[t_fin_account_ext_loan]    Script Date: 2017-11-06 3:57:42 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_fin_account_ext_loan](
+	[ACCOUNTID] [int] NOT NULL,
+	[STARTDATE] [datetime] NOT NULL,
+	[ANNUALRATE] [decimal](17, 2) NULL,
+	[INTERESTFREE] [bit] NULL,
+	[REPAYMETHOD] [tinyint] NULL,
+	[TOTALMONTH] [smallint] NULL,
+	[REFDOCID] [int] NOT NULL,
+	[OTHERS] [nvarchar](100) NULL,
+ CONSTRAINT [PK_t_fin_account_ext_loan] PRIMARY KEY CLUSTERED 
+(
+	[ACCOUNTID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_fin_account_ext_loan]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_account_ext_loan_ID] FOREIGN KEY([ACCOUNTID])
+REFERENCES [dbo].[t_fin_account] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_fin_account_ext_loan] CHECK CONSTRAINT [FK_t_fin_account_ext_loan_ID]
+GO
+
+/****** Object:  Table [dbo].[t_fin_tmpdoc_loan]    Script Date: 2017-11-06 5:47:05 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_fin_tmpdoc_loan](
+	[DOCID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[REFDOCID] [int] NULL,
+	[ACCOUNTID] [int] NOT NULL,
+	[TRANDATE] [date] NOT NULL,
+	[TRANTYPE] [int] NOT NULL,
+	[TRANAMOUNT] [decimal](17, 2) NOT NULL,
+	[CONTROLCENTERID] [int] NULL,
+	[ORDERID] [int] NULL,
+	[DESP] [nvarchar](45) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_fin_tmpdoc_loan] PRIMARY KEY CLUSTERED 
+(
+	[DOCID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_fin_tmpdoc_loan] ADD  CONSTRAINT [DF_t_fin_tmpdoc_loan_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_fin_tmpdoc_loan] ADD  CONSTRAINT [DF_t_fin_tmpdoc_loan_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_fin_tmpdoc_loan]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_tmpdocloan_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_fin_tmpdoc_loan] CHECK CONSTRAINT [FK_t_fin_tmpdocloan_HID]
+GO
+
 ---------------------------------
 -- TODO...
 

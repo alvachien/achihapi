@@ -787,6 +787,56 @@ namespace achihapi.Controllers
         }
         #endregion
 
+        #region Finance Account Extra: Loan
+        internal static string GetFinanceAccountLoanInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_fin_account_ext_loan]
+                   ([ACCOUNTID]
+                   ,[STARTDATE]
+                   ,[ANNUALRATE]
+                   ,[INTERESTFREE]
+                   ,[REPAYMETHOD]
+                   ,[TOTALMONTH]
+                   ,[REFDOCID]
+                   ,[OTHERS])
+             VALUES
+                   (@ACCOUNTID
+                   ,@STARTDATE
+                   ,@ANNUALRATE
+                   ,@INTERESTFREE
+                   ,@REPAYMETHOD
+                   ,@TOTALMONTH
+                   ,@REFDOCID
+                   ,@OTHERS)";
+        }
+
+        internal static void BindFinAccountLoanInsertParameter(SqlCommand cmd, FinanceAccountExtLoanViewModel vm, Int32 nNewDocID, Int32 nNewAccountID, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@ACCOUNTID", nNewAccountID);
+            cmd.Parameters.AddWithValue("@STARTDATE", vm.StartDate);
+            if (vm.AnnualRate.HasValue)
+                cmd.Parameters.AddWithValue("@ANNUALRATE", vm.AnnualRate.Value);
+            else
+                cmd.Parameters.AddWithValue("@ANNUALRATE", DBNull.Value);
+            if (vm.InterestFree.HasValue)
+                cmd.Parameters.AddWithValue("@INTERESTFREE", vm.InterestFree.Value);
+            else
+                cmd.Parameters.AddWithValue("@INTERESTFREE", DBNull.Value);
+            if (vm.RepaymentMethod.HasValue)
+                cmd.Parameters.AddWithValue("@REPAYMETHOD", vm.RepaymentMethod.Value);
+            else
+                cmd.Parameters.AddWithValue("@REPAYMETHOD", DBNull.Value);
+            if (vm.TotalMonths.HasValue)
+                cmd.Parameters.AddWithValue("@TOTALMONTH", vm.TotalMonths.Value);
+            else
+                cmd.Parameters.AddWithValue("@TOTALMONTH", DBNull.Value);
+            cmd.Parameters.AddWithValue("@REFDOCID", nNewDocID);
+            //cmd.Parameters.AddWithValue("@DEFRRDAYS", vm.AccountVM.AdvancePaymentInfo.DefrrDays);
+            cmd.Parameters.AddWithValue("@OTHERS",
+                String.IsNullOrEmpty(vm.Others) ? String.Empty : vm.Others);
+        }
+        #endregion
+
         #region Finance document List
         internal static string getFinanceDocListQueryString()
         {
@@ -913,104 +963,6 @@ namespace achihapi.Controllers
             return strSQL;
         }
 
-        internal static string getFinanceDocADPListQueryString()
-        {
-            return @"SELECT [t_fin_tmpdoc_dp].[DOCID]
-                          ,[t_fin_tmpdoc_dp].[HID]
-                          ,[t_fin_tmpdoc_dp].[REFDOCID]
-                          ,[t_fin_tmpdoc_dp].[ACCOUNTID]
-                          ,[t_fin_tmpdoc_dp].[TRANDATE]
-                          ,[t_fin_tmpdoc_dp].[TRANTYPE]
-                          ,[t_fin_tmpdoc_dp].[TRANAMOUNT]
-                          ,[t_fin_tmpdoc_dp].[CONTROLCENTERID]
-                          ,[t_fin_tmpdoc_dp].[ORDERID]
-                          ,[t_fin_tmpdoc_dp].[DESP]
-                          ,[t_fin_tmpdoc_dp].[CREATEDBY]
-                          ,[t_fin_tmpdoc_dp].[CREATEDAT]
-                          ,[t_fin_tmpdoc_dp].[UPDATEDBY]
-                          ,[t_fin_tmpdoc_dp].[UPDATEDAT]
-                        FROM [dbo].[t_fin_tmpdoc_dp] ";
-        }
-
-        internal static string getFinanceDocADPQueryString(Int32 nid, Int32 hid)
-        {
-            String strSQL = @"SELECT [ID]
-                          ,[HID]
-                          ,[DOCTYPE]
-                          ,[TRANDATE]
-                          ,[TRANCURR]
-                          ,[DESP]
-                          ,[EXGRATE]
-                          ,[EXGRATE_PLAN]
-                          ,[TRANCURR2]
-                          ,[EXGRATE2]
-                          ,[EXGRATE_PLAN2]
-                          ,[CREATEDBY]
-                          ,[CREATEDAT]
-                          ,[UPDATEDBY]
-                          ,[UPDATEDAT]
-                      FROM [t_fin_document] WHERE [DOCTYPE] = " + FinanceDocTypeViewModel.DocType_AdvancePayment.ToString() + " AND [ID] = " + nid.ToString() + @"; 
-                    SELECT [DOCID]
-                          ,[ITEMID]
-                          ,[ACCOUNTID]
-                          ,[TRANTYPE]
-                          ,[TRANAMOUNT]
-                          ,[USECURR2]
-                          ,[CONTROLCENTERID]
-                          ,[ORDERID]
-                          ,[DESP]
-                        FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + nid.ToString() + @";
-                      SELECT [t_fin_account].[ID]
-                            ,[t_fin_account].[HID]
-                            ,[t_fin_account].[CTGYID]
-                            ,[t_fin_account].[NAME]
-                            ,[t_fin_account].[COMMENT]
-                            ,[t_fin_account].[OWNER]
-                            ,[t_fin_account].[STATUS]
-                            ,[t_fin_account].[CREATEDBY]
-                            ,[t_fin_account].[CREATEDAT]
-                            ,[t_fin_account].[UPDATEDBY]
-                            ,[t_fin_account].[UPDATEDAT]
-                            ,[t_fin_account_ext_dp].[DIRECT]
-                            ,[t_fin_account_ext_dp].[STARTDATE]
-                            ,[t_fin_account_ext_dp].[ENDDATE]
-                            ,[t_fin_account_ext_dp].[RPTTYPE]
-                            ,[t_fin_account_ext_dp].[REFDOCID]
-                            ,[t_fin_account_ext_dp].[DEFRRDAYS]
-                            ,[t_fin_account_ext_dp].[COMMENT]
-                        FROM [dbo].[t_fin_account]
-                        LEFT OUTER JOIN [dbo].[t_fin_account_ext_dp]
-                            ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID]
-                        WHERE [t_fin_account].[CTGYID] = "
-                        + FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment.ToString()
-                        + " AND [t_fin_account_ext_dp].[REFDOCID] = " + nid.ToString() + @"; 
-                      SELECT [dbo].[t_fin_tmpdoc_dp].[DOCID]
-                          ,[dbo].[t_fin_tmpdoc_dp].[HID]
-                          ,[dbo].[t_fin_tmpdoc_dp].[REFDOCID]
-                          ,[dbo].[t_fin_tmpdoc_dp].[ACCOUNTID]
-                          ,[dbo].[t_fin_tmpdoc_dp].[TRANDATE]
-                          ,[dbo].[t_fin_tmpdoc_dp].[TRANTYPE]
-                          ,[dbo].[t_fin_tmpdoc_dp].[TRANAMOUNT]
-                          ,[dbo].[t_fin_tmpdoc_dp].[CONTROLCENTERID]
-                          ,[dbo].[t_fin_tmpdoc_dp].[ORDERID]
-                          ,[dbo].[t_fin_tmpdoc_dp].[DESP]
-                          ,[dbo].[t_fin_tmpdoc_dp].[CREATEDBY]
-                          ,[dbo].[t_fin_tmpdoc_dp].[CREATEDAT]
-                          ,[dbo].[t_fin_tmpdoc_dp].[UPDATEDBY]
-                          ,[dbo].[t_fin_tmpdoc_dp].[UPDATEDAT]
-                      FROM [dbo].[t_fin_tmpdoc_dp]
-	                    INNER JOIN [dbo].[t_fin_account_ext_dp]
-	                    ON [dbo].[t_fin_tmpdoc_dp].[ACCOUNTID] = [dbo].[t_fin_account_ext_dp].[ACCOUNTID]
-	                    AND [dbo].[t_fin_account_ext_dp].[REFDOCID] = " + nid.ToString() + @";
-                    SELECT [TagSubID], [Term]
-                      FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString() + " AND [TagType] = 10 AND [TagID] = " + nid.ToString();
-
-#if DEBUG
-            System.Diagnostics.Debug.WriteLine(strSQL);
-#endif
-
-            return strSQL;
-        }
         internal static string getFinanceDocAssetQueryString(Int32 nid, Boolean isBuyIn, Int32 hid)
         {
             String strSQL = @"SELECT [ID]
@@ -1293,7 +1245,106 @@ namespace achihapi.Controllers
         }
         #endregion
 
-        #region Finance Template Doc
+        #region Finance Template Doc - ADP
+        internal static string getFinanceDocADPListQueryString()
+        {
+            return @"SELECT [t_fin_tmpdoc_dp].[DOCID]
+                          ,[t_fin_tmpdoc_dp].[HID]
+                          ,[t_fin_tmpdoc_dp].[REFDOCID]
+                          ,[t_fin_tmpdoc_dp].[ACCOUNTID]
+                          ,[t_fin_tmpdoc_dp].[TRANDATE]
+                          ,[t_fin_tmpdoc_dp].[TRANTYPE]
+                          ,[t_fin_tmpdoc_dp].[TRANAMOUNT]
+                          ,[t_fin_tmpdoc_dp].[CONTROLCENTERID]
+                          ,[t_fin_tmpdoc_dp].[ORDERID]
+                          ,[t_fin_tmpdoc_dp].[DESP]
+                          ,[t_fin_tmpdoc_dp].[CREATEDBY]
+                          ,[t_fin_tmpdoc_dp].[CREATEDAT]
+                          ,[t_fin_tmpdoc_dp].[UPDATEDBY]
+                          ,[t_fin_tmpdoc_dp].[UPDATEDAT]
+                        FROM [dbo].[t_fin_tmpdoc_dp] ";
+        }
+
+        internal static string getFinanceDocADPQueryString(Int32 nid, Int32 hid)
+        {
+            String strSQL = @"SELECT [ID]
+                          ,[HID]
+                          ,[DOCTYPE]
+                          ,[TRANDATE]
+                          ,[TRANCURR]
+                          ,[DESP]
+                          ,[EXGRATE]
+                          ,[EXGRATE_PLAN]
+                          ,[TRANCURR2]
+                          ,[EXGRATE2]
+                          ,[EXGRATE_PLAN2]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                      FROM [t_fin_document] WHERE [DOCTYPE] = " + FinanceDocTypeViewModel.DocType_AdvancePayment.ToString() + " AND [ID] = " + nid.ToString() + @"; 
+                    SELECT [DOCID]
+                          ,[ITEMID]
+                          ,[ACCOUNTID]
+                          ,[TRANTYPE]
+                          ,[TRANAMOUNT]
+                          ,[USECURR2]
+                          ,[CONTROLCENTERID]
+                          ,[ORDERID]
+                          ,[DESP]
+                        FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + nid.ToString() + @";
+                      SELECT [t_fin_account].[ID]
+                            ,[t_fin_account].[HID]
+                            ,[t_fin_account].[CTGYID]
+                            ,[t_fin_account].[NAME]
+                            ,[t_fin_account].[COMMENT]
+                            ,[t_fin_account].[OWNER]
+                            ,[t_fin_account].[STATUS]
+                            ,[t_fin_account].[CREATEDBY]
+                            ,[t_fin_account].[CREATEDAT]
+                            ,[t_fin_account].[UPDATEDBY]
+                            ,[t_fin_account].[UPDATEDAT]
+                            ,[t_fin_account_ext_dp].[DIRECT]
+                            ,[t_fin_account_ext_dp].[STARTDATE]
+                            ,[t_fin_account_ext_dp].[ENDDATE]
+                            ,[t_fin_account_ext_dp].[RPTTYPE]
+                            ,[t_fin_account_ext_dp].[REFDOCID]
+                            ,[t_fin_account_ext_dp].[DEFRRDAYS]
+                            ,[t_fin_account_ext_dp].[COMMENT]
+                        FROM [dbo].[t_fin_account]
+                        LEFT OUTER JOIN [dbo].[t_fin_account_ext_dp]
+                            ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID]
+                        WHERE [t_fin_account].[CTGYID] = "
+                        + FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment.ToString()
+                        + " AND [t_fin_account_ext_dp].[REFDOCID] = " + nid.ToString() + @"; 
+                      SELECT [dbo].[t_fin_tmpdoc_dp].[DOCID]
+                          ,[dbo].[t_fin_tmpdoc_dp].[HID]
+                          ,[dbo].[t_fin_tmpdoc_dp].[REFDOCID]
+                          ,[dbo].[t_fin_tmpdoc_dp].[ACCOUNTID]
+                          ,[dbo].[t_fin_tmpdoc_dp].[TRANDATE]
+                          ,[dbo].[t_fin_tmpdoc_dp].[TRANTYPE]
+                          ,[dbo].[t_fin_tmpdoc_dp].[TRANAMOUNT]
+                          ,[dbo].[t_fin_tmpdoc_dp].[CONTROLCENTERID]
+                          ,[dbo].[t_fin_tmpdoc_dp].[ORDERID]
+                          ,[dbo].[t_fin_tmpdoc_dp].[DESP]
+                          ,[dbo].[t_fin_tmpdoc_dp].[CREATEDBY]
+                          ,[dbo].[t_fin_tmpdoc_dp].[CREATEDAT]
+                          ,[dbo].[t_fin_tmpdoc_dp].[UPDATEDBY]
+                          ,[dbo].[t_fin_tmpdoc_dp].[UPDATEDAT]
+                      FROM [dbo].[t_fin_tmpdoc_dp]
+	                    INNER JOIN [dbo].[t_fin_account_ext_dp]
+	                    ON [dbo].[t_fin_tmpdoc_dp].[ACCOUNTID] = [dbo].[t_fin_account_ext_dp].[ACCOUNTID]
+	                    AND [dbo].[t_fin_account_ext_dp].[REFDOCID] = " + nid.ToString() + @";
+                    SELECT [TagSubID], [Term]
+                      FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString() + " AND [TagType] = 10 AND [TagID] = " + nid.ToString();
+
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine(strSQL);
+#endif
+
+            return strSQL;
+        }
+
         internal static String getFinanceTmpDocADPInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_tmpdoc_dp]
@@ -1354,7 +1405,211 @@ namespace achihapi.Controllers
             cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
         }
         
-        internal static void FinTmpDoc_DB2VM(SqlDataReader reader, FinanceTmpDocDPViewModel vm)
+        internal static void FinTmpDocADP_DB2VM(SqlDataReader reader, FinanceTmpDocDPViewModel vm)
+        {
+            Int32 idx = 0;
+            vm.DocID = reader.GetInt32(idx++);
+            vm.HID = reader.GetInt32(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.RefDocID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            vm.AccountID = reader.GetInt32(idx++);
+            vm.TranDate = reader.GetDateTime(idx++);
+            vm.TranType = reader.GetInt32(idx++);
+            vm.TranAmount = reader.GetDecimal(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.ControlCenterID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.OrderID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.Desp = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+        }
+        #endregion
+
+        #region Finance Template Doc - Loan
+        internal static string GetFinanceDocLoanListQueryString()
+        {
+            return @"SELECT [DOCID]
+                          ,[HID]
+                          ,[REFDOCID]
+                          ,[ACCOUNTID]
+                          ,[TRANDATE]
+                          ,[TRANTYPE]
+                          ,[TRANAMOUNT]
+                          ,[CONTROLCENTERID]
+                          ,[ORDERID]
+                          ,[DESP]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                        FROM [dbo].[t_fin_tmpdoc_loan] ";
+        }
+
+        internal static string GetFinanceDocLoanQueryString(Int32 nid, Int32 hid)
+        {
+            String strSQL = @"SELECT [ID]
+                          ,[HID]
+                          ,[DOCTYPE]
+                          ,[TRANDATE]
+                          ,[TRANCURR]
+                          ,[DESP]
+                          ,[EXGRATE]
+                          ,[EXGRATE_PLAN]
+                          ,[TRANCURR2]
+                          ,[EXGRATE2]
+                          ,[EXGRATE_PLAN2]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                      FROM [t_fin_document] WHERE [DOCTYPE] = " + FinanceDocTypeViewModel.DocType_Loan.ToString() + " AND [ID] = " + nid.ToString() + @"; 
+                    SELECT [DOCID]
+                          ,[ITEMID]
+                          ,[ACCOUNTID]
+                          ,[TRANTYPE]
+                          ,[TRANAMOUNT]
+                          ,[USECURR2]
+                          ,[CONTROLCENTERID]
+                          ,[ORDERID]
+                          ,[DESP]
+                        FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + nid.ToString() + @";
+                      SELECT [t_fin_account].[ID]
+                            ,[t_fin_account].[HID]
+                            ,[t_fin_account].[CTGYID]
+                            ,[t_fin_account].[NAME]
+                            ,[t_fin_account].[COMMENT]
+                            ,[t_fin_account].[OWNER]
+                            ,[t_fin_account].[STATUS]
+                            ,[t_fin_account].[CREATEDBY]
+                            ,[t_fin_account].[CREATEDAT]
+                            ,[t_fin_account].[UPDATEDBY]
+                            ,[t_fin_account].[UPDATEDAT]
+                            ,[t_fin_account_ext_loan].[DIRECT]
+                            ,[t_fin_account_ext_loan].[STARTDATE]
+                            ,[t_fin_account_ext_loan].[ENDDATE]
+                            ,[t_fin_account_ext_loan].[RPTTYPE]
+                            ,[t_fin_account_ext_loan].[REFDOCID]
+                            ,[t_fin_account_ext_loan].[DEFRRDAYS]
+                            ,[t_fin_account_ext_loan].[COMMENT]
+                        FROM [dbo].[t_fin_account]
+                        LEFT OUTER JOIN [dbo].[t_fin_account_ext_loan]
+                            ON [t_fin_account].[ID] = [t_fin_account_ext_loan].[ACCOUNTID]
+                        WHERE [t_fin_account].[CTGYID] = "
+                        + FinanceAccountCtgyViewModel.AccountCategory_Loan.ToString()
+                        + " AND [t_fin_account_ext_loan].[REFDOCID] = " + nid.ToString() + @"; 
+                      SELECT [t_fin_tmpdoc_loan].[DOCID]
+                          ,[t_fin_tmpdoc_loan].[HID]
+                          ,[t_fin_tmpdoc_loan].[REFDOCID]
+                          ,[t_fin_tmpdoc_loan].[ACCOUNTID]
+                          ,[t_fin_tmpdoc_loan].[TRANDATE]
+                          ,[t_fin_tmpdoc_loan].[TRANTYPE]
+                          ,[t_fin_tmpdoc_loan].[TRANAMOUNT]
+                          ,[t_fin_tmpdoc_loan].[CONTROLCENTERID]
+                          ,[t_fin_tmpdoc_loan].[ORDERID]
+                          ,[t_fin_tmpdoc_loan].[DESP]
+                          ,[t_fin_tmpdoc_loan].[CREATEDBY]
+                          ,[t_fin_tmpdoc_loan].[CREATEDAT]
+                          ,[t_fin_tmpdoc_loan].[UPDATEDBY]
+                          ,[t_fin_tmpdoc_loan].[UPDATEDAT]
+                      FROM [dbo].[t_fin_tmpdoc_dp]
+	                    INNER JOIN [dbo].[t_fin_account_ext_loan]
+	                    ON [dbo].[t_fin_tmpdoc_loan].[ACCOUNTID] = [dbo].[t_fin_account_ext_loan].[ACCOUNTID]
+	                    AND [dbo].[t_fin_account_ext_loan].[REFDOCID] = " + nid.ToString() + @";
+                    SELECT [TagSubID], [Term]
+                      FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString() + " AND [TagType] = 10 AND [TagID] = " + nid.ToString();
+
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine(strSQL);
+#endif
+
+            return strSQL;
+        }
+
+        internal static String GetFinanceTmpDocLoanInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_fin_tmpdoc_loan]
+                                ([HID]
+                                ,[REFDOCID]
+                                ,[ACCOUNTID]
+                                ,[TRANDATE]
+                                ,[TRANTYPE]
+                                ,[TRANAMOUNT]
+                                ,[CONTROLCENTERID]
+                                ,[ORDERID]
+                                ,[DESP]
+                                ,[CREATEDBY]
+                                ,[CREATEDAT]
+                                ,[UPDATEDBY]
+                                ,[UPDATEDAT])
+                            VALUES
+                                (@HID
+                                ,@REFDOCID
+                                ,@ACCOUNTID
+                                ,@TRANDATE
+                                ,@TRANTYPE
+                                ,@TRANAMOUNT
+                                ,@CONTROLCENTERID
+                                ,@ORDERID
+                                ,@DESP
+                                ,@CREATEDBY
+                                ,@CREATEDAT
+                                ,@UPDATEDBY
+                                ,@UPDATEDAT)";
+        }
+
+        internal static void BindFinTmpDocLoanParameter(SqlCommand cmd, FinanceTmpDocLoanViewModel avm, Int32 nNewAccountID, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@HID", avm.HID);
+            if (avm.RefDocID.HasValue)
+                cmd.Parameters.AddWithValue("@REFDOCID", avm.RefDocID.Value);
+            else
+                cmd.Parameters.AddWithValue("@REFDOCID", DBNull.Value);
+            cmd.Parameters.AddWithValue("@ACCOUNTID", nNewAccountID);
+            cmd.Parameters.AddWithValue("@TRANDATE", avm.TranDate);
+            cmd.Parameters.AddWithValue("@TRANTYPE", avm.TranType);
+            cmd.Parameters.AddWithValue("@TRANAMOUNT", avm.TranAmount);
+            if (avm.ControlCenterID.HasValue)
+                cmd.Parameters.AddWithValue("@CONTROLCENTERID", avm.ControlCenterID.Value);
+            else
+                cmd.Parameters.AddWithValue("@CONTROLCENTERID", DBNull.Value);
+            if (avm.OrderID.HasValue)
+                cmd.Parameters.AddWithValue("@ORDERID", avm.OrderID.Value);
+            else
+                cmd.Parameters.AddWithValue("@ORDERID", DBNull.Value);
+            cmd.Parameters.AddWithValue("@DESP",
+                String.IsNullOrEmpty(avm.Desp) ? String.Empty : avm.Desp);
+
+            cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
+            cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
+            cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
+        }
+
+        internal static void FinTmpDocLoan_DB2VM(SqlDataReader reader, FinanceTmpDocLoanViewModel vm)
         {
             Int32 idx = 0;
             vm.DocID = reader.GetInt32(idx++);

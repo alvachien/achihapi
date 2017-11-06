@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,10 +12,10 @@ using System.Data.SqlClient;
 namespace achihapi.Controllers
 {
     [Produces("application/json")]
-    [Route("api/FinanceADPTmpDoc")]
-    public class FinanceADPTmpDocController : Controller
+    [Route("api/FinanceLoanTmpDoc")]
+    public class FinanceLoanTmpDocController : Controller
     {
-        // GET: api/FinanceADPTmpDoc
+        // GET: api/FinanceLoanTmpDoc
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean skipPosted = true, DateTime? dtbgn = null, DateTime? dtend = null)
@@ -27,7 +27,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User info cannot fetch");
 
-            List<FinanceTmpDocDPViewModel> listVm = new List<FinanceTmpDocDPViewModel>();
+            List<FinanceTmpDocLoanViewModel> listVm = new List<FinanceTmpDocLoanViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -35,7 +35,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.getFinanceDocADPListQueryString() + " WHERE [HID] = @hid ";
+                queryString = SqlUtility.GetFinanceDocLoanListQueryString() + " WHERE [HID] = @hid ";
                 if (skipPosted)
                     queryString += " AND [REFDOCID] IS NULL ";
                 if (dtbgn.HasValue)
@@ -68,8 +68,8 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        FinanceTmpDocDPViewModel dpvm = new FinanceTmpDocDPViewModel();
-                        SqlUtility.FinTmpDocADP_DB2VM(reader, dpvm);
+                        FinanceTmpDocLoanViewModel dpvm = new FinanceTmpDocLoanViewModel();
+                        SqlUtility.FinTmpDocLoan_DB2VM(reader, dpvm);
                         listVm.Add(dpvm);
                     }
                 }
@@ -101,14 +101,14 @@ namespace achihapi.Controllers
             return new JsonResult(listVm, setting);
         }
 
-        // GET: api/FinanceADPTmpDoc/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        // GET: api/FinanceLoanTmpDoc/5
+        [HttpGet("{id}", Name = "Get")]
+        public string Get(int id)
         {
-            return BadRequest();
+            return "value";
         }
         
-        // POST: api/FinanceADPTmpDoc
+        // POST: api/FinanceLoanTmpDoc
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Post([FromQuery]Int32 hid, Int32 docid)
@@ -118,7 +118,7 @@ namespace achihapi.Controllers
             // 2. Update the template doc with REFDOCID
 
             // Basic check
-            if (hid <= 0|| docid <= 0)
+            if (hid <= 0 || docid <= 0)
             {
                 return BadRequest("No data inputted!");
             }
@@ -129,7 +129,7 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = String.Empty;
             String usrName = String.Empty;
-            FinanceTmpDocDPViewModel vmTmpDoc = new FinanceTmpDocDPViewModel();
+            FinanceTmpDocLoanViewModel vmTmpDoc = new FinanceTmpDocLoanViewModel();
             HomeDefViewModel vmHome = new HomeDefViewModel();
             FinanceDocumentUIViewModel vmFIDOC = new FinanceDocumentUIViewModel();
 
@@ -162,7 +162,7 @@ namespace achihapi.Controllers
                             // It shall be only one entry if found!
                             break;
                         }
-                    }                        
+                    }
 
                     readHIDCheck.Dispose();
                     readHIDCheck = null;
@@ -176,23 +176,23 @@ namespace achihapi.Controllers
                 }
 
                 // Check: DocID
-                String checkString = SqlUtility.getFinanceDocADPListQueryString() + " WHERE [DOCID] = " + docid.ToString() + " AND [HID] = " + hid.ToString();
+                String checkString = SqlUtility.GetFinanceDocLoanListQueryString() + " WHERE [DOCID] = " + docid.ToString() + " AND [HID] = " + hid.ToString();
                 SqlCommand chkcmd = new SqlCommand(checkString, conn);
                 SqlDataReader chkreader = chkcmd.ExecuteReader();
                 if (!chkreader.HasRows)
                 {
                     return BadRequest("Invalid Doc ID inputted: " + docid.ToString());
-                } 
+                }
                 else
                 {
-                    while(chkreader.Read())
+                    while (chkreader.Read())
                     {
-                        SqlUtility.FinTmpDocADP_DB2VM(chkreader, vmTmpDoc);
+                        SqlUtility.FinTmpDocLoan_DB2VM(chkreader, vmTmpDoc);
 
                         // It shall be only one entry if found!
                         break;
                     }
-                    
+
                 }
                 chkreader.Dispose();
                 chkreader = null;
@@ -265,7 +265,7 @@ namespace achihapi.Controllers
                     }
 
                     // Then, update the template doc
-                    queryString = @"UPDATE [dbo].[t_fin_tmpdoc_dp]
+                    queryString = @"UPDATE [dbo].[t_fin_tmpdoc_loan]
                                        SET [REFDOCID] = @REFDOCID
                                           ,[UPDATEDBY] = @UPDATEDBY
                                           ,[UPDATEDAT] = @UPDATEDAT
@@ -320,19 +320,21 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-
+            
             return new JsonResult(vmFIDOC, setting);
         }
 
-        // PUT: api/FinanceADPTmpDoc/5
+        // PUT: api/FinanceLoanTmpDoc/5
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody]FinanceTmpDocDPViewModel vm)
         {
             return BadRequest();
         }
-        
-        // DELETE: api/ApiWithActions/5
+
+        // DELETE: api/FinanceLoanTmpDoc/5
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
             return BadRequest();
