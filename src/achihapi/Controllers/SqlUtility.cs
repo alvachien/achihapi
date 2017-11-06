@@ -831,7 +831,6 @@ namespace achihapi.Controllers
             else
                 cmd.Parameters.AddWithValue("@TOTALMONTH", DBNull.Value);
             cmd.Parameters.AddWithValue("@REFDOCID", nNewDocID);
-            //cmd.Parameters.AddWithValue("@DEFRRDAYS", vm.AccountVM.AdvancePaymentInfo.DefrrDays);
             cmd.Parameters.AddWithValue("@OTHERS",
                 String.IsNullOrEmpty(vm.Others) ? String.Empty : vm.Others);
         }

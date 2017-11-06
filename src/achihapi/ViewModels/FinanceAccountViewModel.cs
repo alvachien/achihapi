@@ -32,6 +32,8 @@ namespace achihapi.ViewModels
         public FinanceAccountExtDPViewModel ExtraInfo_ADP { get; set; }
         // Ext Asset
         public FinanceAccountExtASViewModel ExtraInfo_AS { get; set; }
+        // Ext Loan
+        public FinanceAccountExtLoanViewModel ExtraInfo_Loan { get; set; }
     }
 
     public class FinanceAccountUIViewModel : FinanceAccountViewModel

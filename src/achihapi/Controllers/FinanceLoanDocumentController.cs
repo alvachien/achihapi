@@ -156,7 +156,7 @@ namespace achihapi.Controllers
         // POST: api/FinanceLoanDocument
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Post([FromBody]FinanceADPDocumentUIViewModel vm)
+        public async Task<IActionResult> Post([FromBody]FinanceLoanDocumentUIViewModel vm)
         {
             if (vm == null || vm.DocType != FinanceDocTypeViewModel.DocType_Loan)
             {
@@ -281,22 +281,22 @@ namespace achihapi.Controllers
                         Transaction = tran
                     };
 
-                    SqlUtility.BindFinAccountADPInsertParameter(cmd, vm.AccountVM.ExtraInfo_ADP, nNewDocID, nNewAccountID, usrName);
+                    SqlUtility.BindFinAccountLoanInsertParameter(cmd, vm.AccountVM.ExtraInfo_Loan, nNewDocID, nNewAccountID, usrName);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
 
                     // Fifth, create template docs
-                    foreach (FinanceTmpDocDPViewModel avm in vm.TmpDocs)
+                    foreach (FinanceTmpDocLoanViewModel avm in vm.TmpDocs)
                     {
-                        queryString = SqlUtility.getFinanceTmpDocADPInsertString();
+                        queryString = SqlUtility.GetFinanceTmpDocLoanInsertString();
 
                         cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
 
-                        SqlUtility.bindFinTmpDocADPParameter(cmd, avm, nNewAccountID, usrName);
+                        SqlUtility.BindFinTmpDocLoanParameter(cmd, avm, nNewAccountID, usrName);
                         await cmd.ExecuteNonQueryAsync();
 
                         cmd.Dispose();
