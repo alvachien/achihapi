@@ -86,7 +86,7 @@ namespace achihapi.ViewModels
         public Decimal? AnnualRate { get; set; }
         public Boolean? InterestFree { get; set; }
         public LoanRepaymentMethod? RepaymentMethod { get; set; }
-        public Int16 TotalMonths { get; set; }
+        public Int16? TotalMonths { get; set; }
         [Required]
         public Int32 RefDocID { get; set; }
         [StringLength(100)]
