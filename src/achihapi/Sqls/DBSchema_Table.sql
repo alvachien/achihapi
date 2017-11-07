@@ -1262,6 +1262,7 @@ CREATE TABLE [dbo].[t_fin_tmpdoc_loan](
 	[TRANDATE] [date] NOT NULL,
 	[TRANTYPE] [int] NOT NULL,
 	[TRANAMOUNT] [decimal](17, 2) NOT NULL,
+	[INTERESTAMOUNT] [decimal](17, 2) NULL,
 	[CONTROLCENTERID] [int] NULL,
 	[ORDERID] [int] NULL,
 	[DESP] [nvarchar](45) NULL,

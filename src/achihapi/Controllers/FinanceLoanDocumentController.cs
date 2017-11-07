@@ -86,8 +86,8 @@ namespace achihapi.Controllers
                     FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
                     Int32 aidx = 0;
                     aidx = SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
-                    vmAccount.ExtraInfo_ADP = new FinanceAccountExtDPViewModel();
-                    SqlUtility.FinAccountADP_DB2VM(reader, vmAccount.ExtraInfo_ADP, aidx);
+                    vmAccount.ExtraInfo_Loan = new FinanceAccountExtLoanViewModel();
+                    SqlUtility.FinAccountLoan_DB2VM(reader, vmAccount.ExtraInfo_Loan, aidx);
 
                     vm.AccountVM = vmAccount;
                 }

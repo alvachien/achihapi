@@ -639,6 +639,38 @@ namespace achihapi.Controllers
                 ++idx;
         }
 
+        internal static void FinAccountLoan_DB2VM(SqlDataReader reader, FinanceAccountExtLoanViewModel vmdp, Int32 idx)
+        {
+            if (!reader.IsDBNull(idx))
+                vmdp.StartDate = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.AnnualRate = reader.GetDecimal(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.InterestFree = reader.GetBoolean(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.RepaymentMethod = (LoanRepaymentMethod)reader.GetByte(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.TotalMonths = reader.GetInt16(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.RefDocID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.Others = reader.GetString(idx++);
+            else
+                ++idx;
+        }
+
         internal static void FinAccountAsset_DB2VM(SqlDataReader reader, FinanceAccountExtASViewModel vmas, Int32 idx)
         {
             if (!reader.IsDBNull(idx))
@@ -1458,6 +1490,7 @@ namespace achihapi.Controllers
                           ,[TRANDATE]
                           ,[TRANTYPE]
                           ,[TRANAMOUNT]
+                          ,[INTERESTAMOUNT]
                           ,[CONTROLCENTERID]
                           ,[ORDERID]
                           ,[DESP]
@@ -1507,13 +1540,13 @@ namespace achihapi.Controllers
                             ,[t_fin_account].[CREATEDAT]
                             ,[t_fin_account].[UPDATEDBY]
                             ,[t_fin_account].[UPDATEDAT]
-                            ,[t_fin_account_ext_loan].[DIRECT]
                             ,[t_fin_account_ext_loan].[STARTDATE]
-                            ,[t_fin_account_ext_loan].[ENDDATE]
-                            ,[t_fin_account_ext_loan].[RPTTYPE]
+                            ,[t_fin_account_ext_loan].[ANNUALRATE]
+                            ,[t_fin_account_ext_loan].[INTERESTFREE]
+                            ,[t_fin_account_ext_loan].[REPAYMETHOD]
+                            ,[t_fin_account_ext_loan].[TOTALMONTH]
                             ,[t_fin_account_ext_loan].[REFDOCID]
-                            ,[t_fin_account_ext_loan].[DEFRRDAYS]
-                            ,[t_fin_account_ext_loan].[COMMENT]
+                            ,[t_fin_account_ext_loan].[OTHERS]
                         FROM [dbo].[t_fin_account]
                         LEFT OUTER JOIN [dbo].[t_fin_account_ext_loan]
                             ON [t_fin_account].[ID] = [t_fin_account_ext_loan].[ACCOUNTID]
@@ -1527,6 +1560,7 @@ namespace achihapi.Controllers
                           ,[t_fin_tmpdoc_loan].[TRANDATE]
                           ,[t_fin_tmpdoc_loan].[TRANTYPE]
                           ,[t_fin_tmpdoc_loan].[TRANAMOUNT]
+                          ,[t_fin_tmpdoc_loan].[INTERESTAMOUNT]
                           ,[t_fin_tmpdoc_loan].[CONTROLCENTERID]
                           ,[t_fin_tmpdoc_loan].[ORDERID]
                           ,[t_fin_tmpdoc_loan].[DESP]

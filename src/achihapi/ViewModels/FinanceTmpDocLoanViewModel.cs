@@ -21,6 +21,7 @@ namespace achihapi.ViewModels
         public Int32 TranType { get; set; }
         [Required]
         public Decimal TranAmount { get; set; }
+        public Decimal? InterestAmount { get; set; }
         public Int32? ControlCenterID { get; set; }
         public Int32? OrderID { get; set; }
         [StringLength(45)]
