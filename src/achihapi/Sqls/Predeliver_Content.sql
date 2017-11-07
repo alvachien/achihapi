@@ -229,7 +229,12 @@ INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALU
 SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 
 
+-- Updated at 2017.11.07
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] ON;
 
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (80,N'贷款入账',0,10,N'收到贷款');
+
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 
 
 

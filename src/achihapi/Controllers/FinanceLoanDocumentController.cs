@@ -132,6 +132,7 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
@@ -170,9 +171,9 @@ namespace achihapi.Controllers
                 return BadRequest("User info cannot fetch");
 
             // Check the items
-            if (vm.Items.Count <= 0 || vm.TmpDocs.Count <= 0)
+            if (vm.Items.Count != 1 || vm.TmpDocs.Count <= 0)
             {
-                return BadRequest("No item or no template docs");
+                return BadRequest("Only one item allowed or no template docs");
             }
             if (vm.AccountVM == null || vm.AccountVM.ExtraInfo_ADP == null)
             {
@@ -225,6 +226,8 @@ namespace achihapi.Controllers
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
+                        ivm.TranType = FinanceTranTypeViewModel.TranType_LoanIn; // Todo: switch to check!
+
                         queryString = SqlUtility.getFinDocItemInsertString();
                         SqlCommand cmd2 = new SqlCommand(queryString, conn)
                         {
@@ -327,6 +330,7 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 

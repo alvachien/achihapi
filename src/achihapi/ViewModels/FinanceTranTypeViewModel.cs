@@ -22,5 +22,7 @@ namespace achihapi.ViewModels
         public const Int32 TranType_Opening = 1;
         public const Int32 TranType_TransferIn = 37;
         public const Int32 TranType_TransferOut = 60;
+
+        public const Int32 TranType_LoanIn = 80;
     }
 }
