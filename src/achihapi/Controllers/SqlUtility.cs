@@ -8,13 +8,6 @@ using System.Data.SqlClient;
 
 namespace achihapi.Controllers
 {
-    internal enum AccountLoadMode
-    {
-        All = 0,
-        AccountPlusADP = 1,
-        AccountPlusAsset = 2
-    }
-
     internal class SqlUtility
     {
         #region Home define
