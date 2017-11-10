@@ -41,25 +41,31 @@ namespace achihapi.Controllers
                 {
                     case LoanRepaymentMethod.EqualPrincipalAndInterset:
                         {
-                            // 每月还本付息金额 = 本金 x 月利率 x (1+月利率)^贷款月数 ] / [(1+月利率)^还款月数 - 1)]
-                            // 每月利息 = 本金 × 月利率 × [(1+月利率)^还款月数 - (1+月利率)^(还款月-1)] ÷[(1+月利率)^还款月数-1]
-                            // 还款总利息 = 贷款额 * 贷款月数 * 月利率* (1+月利率)^贷款月数 / [(1+月利率) ^ 还款月数 - 1)] - 贷款额
-                            // 还款总额 = 还款月数 * 贷款额 * 月利率 * (1+月利率)^ 贷款月数 / [(1+月利率) ^ 还款月数 - 1)]
+                            //每月月供额 =〔贷款本金×月利率×(1＋月利率)＾还款月数〕÷〔(1＋月利率)＾还款月数 - 1〕
+                            //每月应还利息 = 贷款本金×月利率×〔(1 + 月利率) ^ 还款月数 - (1 + 月利率) ^ (还款月序号 - 1)〕÷〔(1 + 月利率) ^ 还款月数 - 1〕
+                            //每月应还本金 = 贷款本金×月利率×(1 + 月利率) ^ (还款月序号 - 1)÷〔(1 + 月利率) ^ 还款月数 - 1〕
                             Decimal monthRate = datInput.InterestRate / 12;
                             Decimal d3 = (Decimal)Math.Pow((double)(1 + monthRate), datInput.TotalMonths) - 1;
                             Decimal monthRepay = datInput.TotalAmount * monthRate * (Decimal)Math.Pow((double)(1 + monthRate), datInput.TotalMonths) / d3;
 
-                            Decimal totalAmt = datInput.TotalAmount;
+                            Decimal totalInterestAmt = 0;
                             for(int i = 0; i < datInput.TotalMonths; i++)
                             {
                                 var rst = new LoanCalcResult
                                 {
                                     TranDate = datInput.StartDate.AddMonths(i + 1),
-                                    TranAmount = Math.Round(monthRepay, 2),
-                                    InterestAmount = Math.Round(totalAmt * monthRate, 2)
+                                    TranAmount = Math.Round(datInput.TotalAmount * monthRate * (Decimal)Math.Pow((double)(1 + monthRate), i) / d3, 2),
+                                    InterestAmount = Math.Round(datInput.TotalAmount * monthRate * ((Decimal)Math.Pow((double)(1 + monthRate), datInput.TotalMonths) - (Decimal)Math.Pow((double)(1 + monthRate), i)) / d3, 2)
                                 };
 
-                                totalAmt -= monthRepay;
+                                //var diff = rst.TranAmount + rst.InterestAmount - monthRepay;
+                                //if (diff != 0)
+                                //{
+                                //    rst.TranAmount -= diff;
+                                //    rst.TranAmount = Math.Round(rst.TranAmount, 2);
+                                //}
+
+                                totalInterestAmt += rst.InterestAmount;
 
                                 listResults.Add(rst);
                             }
@@ -68,11 +74,11 @@ namespace achihapi.Controllers
 
                     case LoanRepaymentMethod.EqualPrincipal:
                         {
-                            // 每月还本付息金额 = (本金/还款月数) + (本金-累计已还本金)×月利率
-                            // 每月本金 = 总本金 / 还款月数
-                            // 每月利息 = (本金 - 累计已还本金)×月利率 
-                            // 还款总利息 =（还款月数 + 1）*贷款额 * 月利率 / 2
-                            // 还款总额 = (还款月数 + 1) * 贷款额 * 月利率 / 2 + 贷款额
+                            // 每月月供额 = (贷款本金÷还款月数) + (贷款本金 - 已归还本金累计额)×月利率
+                            // 每月应还本金 = 贷款本金÷还款月数
+                            // 每月应还利息 = 剩余本金×月利率 = (贷款本金 - 已归还本金累计额)×月利率
+                            // 每月月供递减额 = 每月应还本金×月利率 = 贷款本金÷还款月数×月利率
+                            // 总利息 = 还款月数×(总贷款额×月利率 - 月利率×(总贷款额÷还款月数)*(还款月数 - 1)÷2 + 总贷款额÷还款月数)
                             Decimal monthRate = datInput.InterestRate / 12;
                             Decimal totalAmt = datInput.TotalAmount;
                             var monthPrincipal = datInput.TotalAmount / datInput.TotalMonths;
