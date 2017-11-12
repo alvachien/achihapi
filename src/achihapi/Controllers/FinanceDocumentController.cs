@@ -688,7 +688,8 @@ namespace achihapi.Controllers
                 {
                     // Need fetch out the document posted already
                     queryString = @"SELECT [REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [ACCOUNTID] = " + accID.ToString()
-                            + @" UNION ALL SELECT [REFDOCID] FROM [dbo].[t_fin_tmpdoc_loan] WHERE [ACCOUNTID] = " + accID.ToString();
+                            + @" AND [REFDOCID] IS NOT NULL UNION ALL SELECT [REFDOCID] FROM [dbo].[t_fin_tmpdoc_loan] WHERE [ACCOUNTID] = " + accID.ToString()
+                            + " AND [REFDOCID] IS NOT NULL";
 
                     cmd = new SqlCommand(queryString, conn);
                     reader = cmd.ExecuteReader();

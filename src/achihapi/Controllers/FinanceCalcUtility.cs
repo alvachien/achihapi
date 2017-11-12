@@ -28,12 +28,27 @@ namespace achihapi.Controllers
 
             if (datInput.InterestFreeLoan)
             {
-                listResults.Add(new LoanCalcResult
+                if (datInput.TotalMonths > 0)
                 {
-                    TranDate = datInput.StartDate.AddMonths(datInput.TotalMonths),
-                    TranAmount = datInput.TotalAmount,
-                    InterestAmount = 0
-                });
+                    for (int i = 0; i < datInput.TotalMonths; i++)
+                    {
+                        listResults.Add(new LoanCalcResult
+                        {
+                            TranDate = datInput.StartDate.AddMonths(i),
+                            TranAmount = Math.Round(datInput.TotalAmount / datInput.TotalMonths, 2),
+                            InterestAmount = 0
+                        });
+                    }
+                }
+                else
+                {
+                    listResults.Add(new LoanCalcResult
+                    {
+                        TranDate = datInput.StartDate.AddMonths(datInput.TotalMonths),
+                        TranAmount = datInput.TotalAmount,
+                        InterestAmount = 0
+                    });
+                }
             }
             else
             {
@@ -53,7 +68,7 @@ namespace achihapi.Controllers
                             {
                                 var rst = new LoanCalcResult
                                 {
-                                    TranDate = datInput.StartDate.AddMonths(i + 1),
+                                    TranDate = datInput.StartDate.AddMonths(i),
                                     TranAmount = Math.Round(datInput.TotalAmount * monthRate * (Decimal)Math.Pow((double)(1 + monthRate), i) / d3, 2),
                                     InterestAmount = Math.Round(datInput.TotalAmount * monthRate * ((Decimal)Math.Pow((double)(1 + monthRate), datInput.TotalMonths) - (Decimal)Math.Pow((double)(1 + monthRate), i)) / d3, 2)
                                 };

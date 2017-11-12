@@ -25,18 +25,23 @@ namespace achihapi.test
             {
                 InterestFreeLoan = true,
                 StartDate = new DateTime(2020, 1, 1),
-                TotalAmount = 300000,
+                TotalAmount = 120000,
                 TotalMonths = 12
             };
             List<LoanCalcResult> results = FinanceCalcUtility.LoanCalculate(vm);
 
-            Assert.AreEqual(1, results.Count);
-            Assert.AreEqual(300000, results[0].TranAmount);
+            Assert.AreEqual(12, results.Count);
 
             var realdate = results[0].TranDate;
-            Assert.AreEqual(2021, realdate.Year);
+            Assert.AreEqual(2020, realdate.Year);
             Assert.AreEqual(1, realdate.Month);
             Assert.AreEqual(1, realdate.Day);
+
+            foreach(var rst in results)
+            {
+                Assert.AreEqual(10000, rst.TranAmount);
+                Assert.IsTrue(rst.InterestAmount == 0);
+            }
         }
 
         [TestMethod]
@@ -415,7 +420,7 @@ namespace achihapi.test
                 StartDate = DateTime.Now.Date,
                 EndDate = DateTime.Now.AddDays(10),
                 TotalAmount = 10000,
-                Desp = 'Test_Day'
+                Desp = "Test_Day"
             };
 
             results = FinanceCalcUtility.GenerateAdvancePaymentTmps(vm);

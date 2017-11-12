@@ -1655,7 +1655,7 @@ namespace achihapi.Controllers
             vm.TranType = reader.GetInt32(idx++);
             vm.TranAmount = reader.GetDecimal(idx++);
             if (!reader.IsDBNull(idx))
-                vm.InterestAmount = reader.GetInt32(idx++);
+                vm.InterestAmount = reader.GetDecimal(idx++);
             else
                 ++idx;
             if (!reader.IsDBNull(idx))
