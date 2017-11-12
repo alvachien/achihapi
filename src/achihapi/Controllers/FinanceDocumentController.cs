@@ -620,6 +620,7 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             Int32 accID = -1, tmpdocID = -1;
+            List<Int32> listPostedID = new List<Int32>();
 
             String strErrMsg = "";
             SqlTransaction tran = null;
@@ -666,6 +667,7 @@ namespace achihapi.Controllers
                     // Check current document is referenced in template doc
                     queryString = @"SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [REFDOCID] = " + id.ToString()
                             + @" UNION ALL SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_loan] WHERE [REFDOCID] = " + id.ToString();
+
                     cmd = new SqlCommand(queryString, conn);
                     reader = cmd.ExecuteReader();
                     if (reader.HasRows)
@@ -676,6 +678,28 @@ namespace achihapi.Controllers
                             break; // One doc shall be reference to one tmp. doc at maximum
                         }
                     }
+
+                    reader.Dispose();
+                    reader = null;
+                    cmd.Dispose();
+                    cmd = null;
+                }
+                else
+                {
+                    // Need fetch out the document posted already
+                    queryString = @"SELECT [REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [ACCOUNTID] = " + accID.ToString()
+                            + @" UNION ALL SELECT [REFDOCID] FROM [dbo].[t_fin_tmpdoc_loan] WHERE [ACCOUNTID] = " + accID.ToString();
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            listPostedID.Add(reader.GetInt32(0));
+                        }
+                    }
+
                     reader.Dispose();
                     reader = null;
                     cmd.Dispose();
@@ -742,6 +766,22 @@ namespace achihapi.Controllers
                     await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
+
+                    // Posted documents
+                    foreach(Int32 npostid in listPostedID)
+                    {
+                        queryString = @"DELETE FROM [dbo].[t_fin_document] WHERE [ID] = " + npostid.ToString();
+                        cmd = new SqlCommand(queryString, conn, tran);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+
+                        queryString = @"DELETE FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + npostid.ToString();
+                        cmd = new SqlCommand(queryString, conn, tran);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+                    }
                 }
                 else if (tmpdocID != -1)
                 {

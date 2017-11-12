@@ -1584,6 +1584,7 @@ namespace achihapi.Controllers
                                 ,[TRANDATE]
                                 ,[TRANTYPE]
                                 ,[TRANAMOUNT]
+                                ,[INTERESTAMOUNT]
                                 ,[CONTROLCENTERID]
                                 ,[ORDERID]
                                 ,[DESP]
@@ -1598,6 +1599,7 @@ namespace achihapi.Controllers
                                 ,@TRANDATE
                                 ,@TRANTYPE
                                 ,@TRANAMOUNT
+                                ,@INTERESTAMOUNT
                                 ,@CONTROLCENTERID
                                 ,@ORDERID
                                 ,@DESP
@@ -1618,6 +1620,10 @@ namespace achihapi.Controllers
             cmd.Parameters.AddWithValue("@TRANDATE", avm.TranDate);
             cmd.Parameters.AddWithValue("@TRANTYPE", avm.TranType);
             cmd.Parameters.AddWithValue("@TRANAMOUNT", avm.TranAmount);
+            if (avm.InterestAmount.HasValue)
+                cmd.Parameters.AddWithValue("@INTERESTAMOUNT", avm.InterestAmount.Value);
+            else
+                cmd.Parameters.AddWithValue("@INTERESTAMOUNT", DBNull.Value);
             if (avm.ControlCenterID.HasValue)
                 cmd.Parameters.AddWithValue("@CONTROLCENTERID", avm.ControlCenterID.Value);
             else
