@@ -626,7 +626,11 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT [ACCOUNTID],[REFDOCID] FROM [dbo].[t_fin_account_ext_dp] WHERE [REFDOCID] = " + id.ToString();
+                queryString = @"SELECT [ACCOUNTID],[REFDOCID] FROM [dbo].[t_fin_account_ext_dp] WHERE [REFDOCID] = " + id.ToString() 
+                        + " UNION ALL SELECT [ACCOUNTID],[REFDOCID] FROM [dbo].[t_fin_account_ext_loan] WHERE [REFDOCID] = " + id.ToString()
+                        + " UNION ALL SELECT [ACCOUNTID],[REFDOC_BUY] AS [REFDOCID] FROM [dbo].[t_fin_account_ext_as] WHERE [REFDOC_BUY] = " + id.ToString()
+                        + " UNION ALL SELECT [ACCOUNTID],[REFDOC_SOLD] AS [REFDOCID] FROM [dbo].[t_fin_account_ext_as] WHERE [REFDOC_SOLD] = " + id.ToString()
+                        ;
 
                 await conn.OpenAsync();
 
@@ -643,12 +647,13 @@ namespace achihapi.Controllers
                 // Check current document is used for creating account for adp
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
+                
                 if (reader.HasRows)
                 {
                     while (reader.Read())
                     {
                         accID = reader.GetInt32(0);
-                        break;
+                        break; // One doc shall be reference to one Account at maximum
                     }
                 }
                 reader.Dispose();
@@ -658,59 +663,24 @@ namespace achihapi.Controllers
 
                 if (accID == -1)
                 {
-                    // Check current document is used for creating account for asset
-                    queryString = @"SELECT [ACCOUNTID],[REFDOC_BUY] FROM [dbo].[t_fin_account_ext_as] WHERE [REFDOC_BUY] = " + id.ToString();
+                    // Check current document is referenced in template doc
+                    queryString = @"SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [REFDOCID] = " + id.ToString()
+                            + @" UNION ALL SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_loan] WHERE [REFDOCID] = " + id.ToString();
                     cmd = new SqlCommand(queryString, conn);
                     reader = cmd.ExecuteReader();
                     if (reader.HasRows)
                     {
                         while (reader.Read())
                         {
-                            accID = reader.GetInt32(0);
-                            break;
+                            tmpdocID = reader.GetInt32(0);
+                            break; // One doc shall be reference to one tmp. doc at maximum
                         }
                     }
                     reader.Dispose();
                     reader = null;
                     cmd.Dispose();
                     cmd = null;
-
-                    if (accID == -1)
-                    {
-                        queryString = @"SELECT [ACCOUNTID],[REFDOC_SOLD] FROM [dbo].[t_fin_account_ext_as] WHERE [REFDOC_SOLD] = " + id.ToString();
-                        cmd = new SqlCommand(queryString, conn);
-                        reader = cmd.ExecuteReader();
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                accID = reader.GetInt32(0);
-                                break;
-                            }
-                        }
-                        reader.Dispose();
-                        reader = null;
-                        cmd.Dispose();
-                        cmd = null;
-                    }
                 }
-
-                // Check current document is referenced in template doc
-                queryString = @"SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [REFDOCID] = " + id.ToString();
-                cmd = new SqlCommand(queryString, conn);
-                reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        tmpdocID = reader.GetInt32(0);
-                        break;
-                    }
-                }
-                reader.Dispose();
-                reader = null;
-                cmd.Dispose();
-                cmd = null;
 
                 // Checks have been applied, go ahead to deletion
                 tran = conn.BeginTransaction();
@@ -745,6 +715,13 @@ namespace achihapi.Controllers
                     cmd.Dispose();
                     cmd = null;
 
+                    // Loan account
+                    queryString = @"DELETE FROM [dbo].[t_fin_account_ext_loan] WHERE [ACCOUNTID] = " + accID.ToString();
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
                     // Asset account
                     queryString = @"DELETE FROM [dbo].[t_fin_account_ext_as] WHERE [ACCOUNTID] = " + accID.ToString();
                     cmd = new SqlCommand(queryString, conn, tran);
@@ -752,17 +729,31 @@ namespace achihapi.Controllers
                     cmd.Dispose();
                     cmd = null;
 
+                    // Template doc - ADP
                     queryString = @"DELETE FROM [dbo].[t_fin_tmpdoc_dp] WHERE [ACCOUNTID] = " + accID.ToString();
                     cmd = new SqlCommand(queryString, conn, tran);
                     await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
-                }
 
-                if (tmpdocID != -1)
+                    // Template doc - Loan
+                    queryString = @"DELETE FROM [dbo].[t_fin_tmpdoc_loan] WHERE [ACCOUNTID] = " + accID.ToString();
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+                }
+                else if (tmpdocID != -1)
                 {
                     // Just clear the refernce id
                     queryString = @"UPDATE [dbo].[t_fin_tmpdoc_dp] SET [REFDOCID] = NULL WHERE [REFDOCID] = " + id.ToString();
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // Just clear the refernce id
+                    queryString = @"UPDATE [dbo].[t_fin_tmpdoc_loan] SET [REFDOCID] = NULL WHERE [REFDOCID] = " + id.ToString();
                     cmd = new SqlCommand(queryString, conn, tran);
                     await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
@@ -786,6 +777,7 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 

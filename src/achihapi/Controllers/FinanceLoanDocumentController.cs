@@ -175,7 +175,7 @@ namespace achihapi.Controllers
             {
                 return BadRequest("Only one item allowed or no template docs");
             }
-            if (vm.AccountVM == null || vm.AccountVM.ExtraInfo_ADP == null)
+            if (vm.AccountVM == null || vm.AccountVM.ExtraInfo_Loan == null)
             {
                 return BadRequest("No account info!");
             }

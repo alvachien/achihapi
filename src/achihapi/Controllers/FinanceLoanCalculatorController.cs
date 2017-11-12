@@ -13,10 +13,10 @@ namespace achihapi.Controllers
     [Route("api/FinanceLoanCalculator")]
     public class FinanceLoanCalculatorController : Controller
     {
-        // GET: api/FinanceLoanCalculator
-        [HttpGet]
+        // POST: api/FinanceLoanCalculator
+        [HttpPost]
         [Authorize]
-        public IActionResult Get([FromBody]LoanCalcViewModel vm)
+        public IActionResult Calculate([FromBody]LoanCalcViewModel vm)
         {
             try
             {

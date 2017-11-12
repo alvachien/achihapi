@@ -1561,7 +1561,7 @@ namespace achihapi.Controllers
                           ,[t_fin_tmpdoc_loan].[CREATEDAT]
                           ,[t_fin_tmpdoc_loan].[UPDATEDBY]
                           ,[t_fin_tmpdoc_loan].[UPDATEDAT]
-                      FROM [dbo].[t_fin_tmpdoc_dp]
+                      FROM [dbo].[t_fin_tmpdoc_loan]
 	                    INNER JOIN [dbo].[t_fin_account_ext_loan]
 	                    ON [dbo].[t_fin_tmpdoc_loan].[ACCOUNTID] = [dbo].[t_fin_account_ext_loan].[ACCOUNTID]
 	                    AND [dbo].[t_fin_account_ext_loan].[REFDOCID] = " + nid.ToString() + @";
@@ -1648,6 +1648,10 @@ namespace achihapi.Controllers
             vm.TranDate = reader.GetDateTime(idx++);
             vm.TranType = reader.GetInt32(idx++);
             vm.TranAmount = reader.GetDecimal(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.InterestAmount = reader.GetInt32(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.ControlCenterID = reader.GetInt32(idx++);
             else

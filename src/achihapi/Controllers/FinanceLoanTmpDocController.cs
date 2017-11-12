@@ -217,6 +217,8 @@ namespace achihapi.Controllers
                 vmFIDOC.TranCurr = vmHome.BaseCurrency;
                 vmFIDOC.TranDate = vmTmpDoc.TranDate;
                 vmFIDOC.CreatedAt = DateTime.Now;
+
+                // Tran amount
                 FinanceDocumentItemUIViewModel vmItem = new FinanceDocumentItemUIViewModel
                 {
                     AccountID = vmTmpDoc.AccountID
@@ -230,6 +232,24 @@ namespace achihapi.Controllers
                 vmItem.TranAmount = vmTmpDoc.TranAmount;
                 vmItem.TranType = vmTmpDoc.TranType;
                 vmFIDOC.Items.Add(vmItem);
+
+                // Interest amount
+                if (vmTmpDoc.InterestAmount.HasValue && vmTmpDoc.InterestAmount.Value > 0)
+                {
+                    vmItem = new FinanceDocumentItemUIViewModel
+                    {
+                        AccountID = vmTmpDoc.AccountID
+                    };
+                    if (vmTmpDoc.ControlCenterID.HasValue)
+                        vmItem.ControlCenterID = vmTmpDoc.ControlCenterID.Value;
+                    if (vmTmpDoc.OrderID.HasValue)
+                        vmItem.OrderID = vmTmpDoc.OrderID.Value;
+                    vmItem.Desp = vmTmpDoc.Desp;
+                    vmItem.ItemID = 2;
+                    vmItem.TranAmount = vmTmpDoc.InterestAmount.Value;
+                    vmItem.TranType = FinanceTranTypeViewModel.TranType_InterestOut; // Interest out
+                    vmFIDOC.Items.Add(vmItem);
+                }
 
                 // Now go ahead for the creating
                 queryString = SqlUtility.getFinDocHeaderInsertString();
