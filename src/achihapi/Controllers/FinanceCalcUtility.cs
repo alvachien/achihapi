@@ -22,7 +22,7 @@ namespace achihapi.Controllers
             if (datInput.TotalAmount <= 0)
                 throw new Exception("Total amount must large than zero!");
             if (datInput.TotalMonths <= 0)
-                throw new Exception("Total amount must large than zero");
+                throw new Exception("Total months must large than zero");
             if (datInput.StartDate == null)
                 throw new Exception("Start date is must");
 
