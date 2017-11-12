@@ -100,12 +100,113 @@ namespace achihapi.Controllers
                         break;
 
                     case LoanRepaymentMethod.DueRepayment: {
-                            // 
+                            Decimal monthRate = datInput.InterestRate / 12;
+                            Decimal amtInterest = datInput.TotalAmount * datInput.TotalMonths * monthRate;
+
+                            var rst = new LoanCalcResult
+                            {
+                                TranDate = datInput.StartDate.AddMonths(datInput.TotalMonths),
+                                TranAmount = datInput.TotalAmount,
+                                InterestAmount = amtInterest
+                            };
+
+                            listResults.Add(rst);
                         }
                         break;
 
-                    default: break;
+                    default: throw new Exception("Unsupported repayment method");
                 }
+            }
+
+            return listResults;
+        }
+
+        public static List<ADPGenerateResult> GenerateAdvancePaymentTmps(ADPGenerateViewModel datInput)
+        {
+            List<ADPGenerateResult> listResults = new List<ADPGenerateResult>();
+
+            // Input checks
+            if (datInput == null)
+                throw new Exception("Input the data!");
+            if (datInput.EndDate < datInput.StartDate)
+                throw new Exception("Invalid data range");
+            if (datInput.TotalAmount <= 0)
+                throw new Exception("Invalid total amount");
+            if (String.IsNullOrEmpty(datInput.Desp))
+                throw new Exception("Invalid desp");
+
+            var tspans = datInput.EndDate.Date - datInput.StartDate.Date;
+            var tdays = (Int32)tspans.Days;
+
+            switch (datInput.RptType)
+            {
+                case RepeatFrequency.Day:
+                    {
+                        var tamt = Math.Round(datInput.TotalAmount / tdays, 2);
+                        for(int i = 0; i < tdays; i++)
+                        {
+                            listResults.Add(new ADPGenerateResult
+                            {
+                                TranDate = datInput.StartDate.AddDays(i),
+                                TranAmount = tamt,
+                                Desp = datInput.Desp + " | " + (i+1).ToString() + " / " + tdays.ToString()
+                            });
+                        }
+                    }
+                    break;
+
+                case RepeatFrequency.Fortnight:
+                    {
+                        var nitems = tdays / 14;
+                        var tamt = Math.Round(datInput.TotalAmount / nitems, 2);
+
+                        for (int i = 0; i < nitems; i++)
+                        {
+                            listResults.Add(new ADPGenerateResult
+                            {
+                                TranDate = datInput.StartDate.AddDays(i),
+                                TranAmount = tamt,
+                                Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nitems.ToString()
+                            });
+                        }
+                    }
+                    break;
+
+                case RepeatFrequency.HalfYear:
+                    {
+
+                    }
+                    break;
+
+                case RepeatFrequency.Month:
+                    {
+                        var nmonths = tdays / 30;
+                    }
+                    break;
+
+                case RepeatFrequency.Quarter:
+                    {
+
+                    }
+                    break;
+
+                case RepeatFrequency.Week:
+                    {
+
+                    }
+                    break;
+
+                case RepeatFrequency.Year:
+                    {
+
+                    }
+                    break;
+
+                case RepeatFrequency.Manual:
+                    {
+
+                    }
+                    break;
             }
 
             return listResults;

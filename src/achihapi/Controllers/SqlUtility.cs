@@ -615,7 +615,7 @@ namespace achihapi.Controllers
             else
                 ++idx;
             if (!reader.IsDBNull(idx))
-                vmdp.RptType = reader.GetByte(idx++);
+                vmdp.RptType = (RepeatFrequency)reader.GetByte(idx++);
             else
                 ++idx;
             if (!reader.IsDBNull(idx))
