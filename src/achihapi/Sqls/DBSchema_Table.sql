@@ -1292,6 +1292,167 @@ GO
 ALTER TABLE [dbo].[t_fin_tmpdoc_loan] CHECK CONSTRAINT [FK_t_fin_tmpdocloan_HID]
 GO
 
+-- Updated at 2017.11.13
+/****** Object:  Table [dbo].[t_learn_enword]    Script Date: 2017-11-13 1:18:50 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_learn_enword](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[Word] [nvarchar](100) NOT NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](50) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [UK_Table_learn_word] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_learn_enword] ADD  CONSTRAINT [DF_t_learn_enword_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_learn_enword] ADD  CONSTRAINT [DF_t_learn_enword_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_learn_enword]  WITH CHECK ADD  CONSTRAINT [FK_Table_learn_word_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_learn_enword] CHECK CONSTRAINT [FK_Table_learn_word_HID]
+GO
+
+/****** Object:  Table [dbo].[t_learn_enwordexp]    Script Date: 2017-11-13 1:21:54 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_learn_enwordexp](
+	[WORDID] [int] NOT NULL,
+	[ExpID] [smallint] NOT NULL,
+	[POSAbb] [nvarchar](10) NULL,
+	[LangKey] [nvarchar](10) NOT NULL,
+	[ExpDetail] [nvarchar](100) NOT NULL,
+ CONSTRAINT [PK_t_learn_enwordexp] PRIMARY KEY CLUSTERED 
+(
+	[WORDID] ASC,
+	[ExpID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_learn_enwordexp]  WITH CHECK ADD  CONSTRAINT [FK_Table_learn_wordexp_word] FOREIGN KEY([WORDID])
+REFERENCES [dbo].[t_learn_enword] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_learn_enwordexp] CHECK CONSTRAINT [FK_Table_learn_wordexp_word]
+GO
+
+/****** Object:  Table [dbo].[t_learn_ensent]    Script Date: 2017-11-13 2:22:19 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_learn_ensent](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[Sentence] [nvarchar](100) NOT NULL,
+	[CREATEDBY] [nvarchar](50) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](50) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_learn_ensent] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_learn_ensent] ADD  CONSTRAINT [DF_t_learn_ensent_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_learn_ensent] ADD  CONSTRAINT [DF_t_learn_ensent_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_learn_ensent]  WITH CHECK ADD  CONSTRAINT [FK_Table_learn_ensent_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_learn_ensent] CHECK CONSTRAINT [FK_Table_learn_ensent_HID]
+GO
+
+/****** Object:  Table [dbo].[t_learn_ensentexp]    Script Date: 2017-11-13 2:22:39 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_learn_ensentexp](
+	[SentID] [int] NOT NULL,
+	[ExpID] [smallint] NOT NULL,
+	[LangKey] [nvarchar](10) NOT NULL,
+	[ExpDetail] [nvarchar](100) NOT NULL,
+ CONSTRAINT [PK_t_learn_ensentexp] PRIMARY KEY CLUSTERED 
+(
+	[SentID] ASC,
+	[ExpID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_learn_ensentexp]  WITH CHECK ADD  CONSTRAINT [FK_Table_ensentexp_SentID] FOREIGN KEY([SentID])
+REFERENCES [dbo].[t_learn_ensent] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_learn_ensentexp] CHECK CONSTRAINT [FK_Table_ensentexp_SentID]
+GO
+
+/****** Object:  Table [dbo].[t_learn_ensent_word]    Script Date: 2017-11-13 2:22:56 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_learn_ensent_word](
+	[SentID] [int] NOT NULL,
+	[WordID] [int] NOT NULL,
+ CONSTRAINT [PK_t_learn_ensent_word] PRIMARY KEY CLUSTERED 
+(
+	[SentID] ASC,
+	[WordID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_learn_ensent_word]  WITH CHECK ADD  CONSTRAINT [FK_t_learn_ensent_word_sent] FOREIGN KEY([SentID])
+REFERENCES [dbo].[t_learn_ensent] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_learn_ensent_word] CHECK CONSTRAINT [FK_t_learn_ensent_word_sent]
+GO
+
 ---------------------------------
 -- TODO...
 
@@ -1530,6 +1691,29 @@ GO
 --GO
 
 --ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
+--GO
+
+--/****** Object:  Table [dbo].[TodoItem]    Script Date: 7/19/2016 11:50:38 AM ******/
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE TABLE [dbo].[TodoItem](
+--	[ToDoID] [int] NOT NULL,
+--	[ItemName] [nvarchar](50) NOT NULL,
+--	[Priority] [int] NOT NULL,
+--	[Assignee] [nvarchar](50) NULL,
+--	[Dependence] [nvarchar](50) NULL,
+--	[StartDate] [datetime] NULL,
+--	[EndDate] [datetime] NULL,
+--	[ItemContent] [nvarchar](max) NULL,
+--	[Tags] [nvarchar](50) NULL,
+-- CONSTRAINT [PK_TodoItem] PRIMARY KEY CLUSTERED 
+--(
+--	[ToDoID] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+--)
+
 --GO
 
 
