@@ -89,6 +89,7 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
@@ -248,6 +249,7 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
@@ -345,17 +347,13 @@ namespace achihapi.Controllers
                                        ,[NAME]
                                        ,[CONTENT]
                                        ,[CREATEDBY]
-                                       ,[CREATEDAT]
-                                       ,[UPDATEDBY]
-                                       ,[UPDATEDAT])
+                                       ,[CREATEDAT])
                                  VALUES (@HID
                                        ,@CTGY
                                        ,@NAME
                                        ,@CONTENT
                                        ,@CREATEDBY
                                        ,@CREATEDAT
-                                       ,@UPDATEDBY
-                                       ,@UPDATEDAT
                                     ); SELECT @Identity = SCOPE_IDENTITY();";
 
                     cmd = new SqlCommand(queryString, conn);
@@ -365,8 +363,6 @@ namespace achihapi.Controllers
                     cmd.Parameters.AddWithValue("@CONTENT", vm.Content);
                     cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
                     cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-                    cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
-                    cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
