@@ -1101,8 +1101,8 @@ CREATE TABLE [dbo].[t_learn_qtn_bank](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[HID] [int] NOT NULL,
 	[Type] [tinyint] NOT NULL,
-	[Question] [nvarchar](100) NOT NULL,
-	[BriefAnswer] [nvarchar](100) NULL,
+	[Question] [nvarchar](200) NOT NULL,
+	[BriefAnswer] [nvarchar](200) NULL,
 	[CREATEDBY] [nvarchar](50) NULL,
 	[CREATEDAT] [date] NULL,
 	[UPDATEDBY] [nvarchar](50) NULL,
@@ -1139,7 +1139,7 @@ GO
 CREATE TABLE [dbo].[t_learn_qtn_bank_sub](
 	[QTNID] [int] NOT NULL,
 	[SUBITEM] [nvarchar](20) NOT NULL,
-	[DETAIL] [nvarchar](100) NOT NULL,
+	[DETAIL] [nvarchar](200) NOT NULL,
 	[OTHERS] [nvarchar](50) NULL,
  CONSTRAINT [PK_t_learn_qtn_bank_sub] PRIMARY KEY CLUSTERED 
 (
@@ -1190,7 +1190,13 @@ IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS
 BEGIN
 
 	ALTER TABLE [dbo].[t_learn_qtn_bank]
-	ALTER COLUMN [BriefAnswer] [nvarchar](100) NULL;
+	ALTER COLUMN [Question] [nvarchar](200) NULL;
+
+	ALTER TABLE [dbo].[t_learn_qtn_bank]
+	ALTER COLUMN [BriefAnswer] [nvarchar](200) NULL;
+
+	ALTER TABLE [dbo].[t_learn_qtn_bank_sub]
+	ALTER COLUMN [DETAIL] [nvarchar](200) NULL;
 
 END
 
@@ -1304,6 +1310,10 @@ CREATE TABLE [dbo].[t_learn_enword](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[HID] [int] NOT NULL,
 	[Word] [nvarchar](100) NOT NULL,
+	[UKPron] [nvarchar] (50) NULL,
+	[USPron] [nvarchar] (50) NULL,
+	[UKPronFile] [nvarchar] (100) NULL,
+	[USPronFile] [nvarchar] (100) NULL,
 	[CREATEDBY] [nvarchar](40) NULL,
 	[CREATEDAT] [date] NULL,
 	[UPDATEDBY] [nvarchar](50) NULL,

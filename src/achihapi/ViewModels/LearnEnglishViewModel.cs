@@ -13,6 +13,14 @@ namespace achihapi.ViewModels
         [Required]
         [StringLength(100)]
         public String Word { get; set; }
+        [StringLength(50)]
+        public String UKPron { get; set; }
+        [StringLength(50)]
+        public String USPron { get; set; }
+        [StringLength(100)]
+        public String UKPronFile { get; set; }
+        [StringLength(100)]
+        public String USPronFile { get; set; }
 
         public List<LearnEnWordExpViewModel> Explains { get; private set; }
 

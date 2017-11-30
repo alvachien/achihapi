@@ -14,9 +14,9 @@ namespace achihapi.ViewModels
         [Required]
         public Byte QuestionType { get; set; }
         [Required]
-        [StringLength(100)]
+        [StringLength(200)]
         public String Question { get; set; }
-        [StringLength(100)]
+        [StringLength(200)]
         public String BriefAnswer { get; set; }
 
         public List<String> TagTerms { get; }
@@ -36,7 +36,7 @@ namespace achihapi.ViewModels
         [StringLength(20)]
         public String SubItem { get; set; }
         [Required]
-        [StringLength(100)]
+        [StringLength(200)]
         public String Detail { get; set; }
         [StringLength(50)]
         public String Others { get; set; }
