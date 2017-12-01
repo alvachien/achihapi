@@ -357,6 +357,9 @@ namespace achihapi.Controllers
                         cmd.Parameters.AddWithValue("@OTHERS", DBNull.Value);
 
                     await cmd.ExecuteNonQueryAsync();
+
+                    cmd.Dispose();
+                    cmd = null;
                 }
 
                 // Tag
@@ -379,6 +382,9 @@ namespace achihapi.Controllers
                     cmd.Parameters.AddWithValue("@Term", tag);
 
                     await cmd.ExecuteNonQueryAsync();
+
+                    cmd.Dispose();
+                    cmd = null;
                 }
 
                 tran.Commit();
@@ -451,7 +457,6 @@ namespace achihapi.Controllers
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             SqlTransaction tran = null;
             String queryString = "";
-            Int32 nNewID = -1;
             Boolean bError = false;
             String strErrMsg = "";
 
@@ -494,11 +499,17 @@ namespace achihapi.Controllers
                 cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
                 cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
 
+                await cmd.ExecuteNonQueryAsync();
                 cmd.Dispose();
                 cmd = null;
 
                 // Question bank sub item 
-                // TBD!!!
+                queryString = @"DELETE FROM [dbo].[t_learn_qtn_bank_sub] WHERE [QTNID] = " + id.ToString();
+                cmd = new SqlCommand(queryString, conn, tran);
+                await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
+                cmd = null;
+
                 foreach (var si in vm.SubItemList)
                 {
                     queryString = @"INSERT INTO [dbo].[t_learn_qtn_bank_sub]
@@ -512,7 +523,7 @@ namespace achihapi.Controllers
                                    ,@OTHERS)";
 
                     cmd = new SqlCommand(queryString, conn, tran);
-                    cmd.Parameters.AddWithValue("@QTNID", nNewID);
+                    cmd.Parameters.AddWithValue("@QTNID", id);
                     cmd.Parameters.AddWithValue("@SUBITEM", si.SubItem);
                     cmd.Parameters.AddWithValue("@DETAIL", si.Detail);
                     if (!String.IsNullOrEmpty(si.Others))
@@ -521,10 +532,21 @@ namespace achihapi.Controllers
                         cmd.Parameters.AddWithValue("@OTHERS", DBNull.Value);
 
                     await cmd.ExecuteNonQueryAsync();
+
+                    cmd.Dispose();
+                    cmd = null;
                 }
 
                 // Tag
-                // TBD!!
+                queryString = @"DELETE FROM [dbo].[t_tag] WHERE [TagType] = @tagtype AND [TagID] = @tagid";
+                cmd = new SqlCommand(queryString, conn, tran);
+                cmd.Parameters.AddWithValue("@tagtype", HIHTagTypeEnum.LearnQuestionBank);
+                cmd.Parameters.AddWithValue("@tagid", id);
+
+                await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
+                cmd = null;
+
                 foreach (var tag in vm.TagTerms)
                 {
                     queryString = @"INSERT INTO [dbo].[t_tag]
@@ -540,7 +562,7 @@ namespace achihapi.Controllers
                     cmd = new SqlCommand(queryString, conn, tran);
                     cmd.Parameters.AddWithValue("@HID", vm.HID);
                     cmd.Parameters.AddWithValue("@TagType", HIHTagTypeEnum.LearnQuestionBank);
-                    cmd.Parameters.AddWithValue("@TagID", nNewID);
+                    cmd.Parameters.AddWithValue("@TagID", id);
                     cmd.Parameters.AddWithValue("@Term", tag);
 
                     await cmd.ExecuteNonQueryAsync();
@@ -569,7 +591,6 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            vm.ID = nNewID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
@@ -581,12 +602,102 @@ namespace achihapi.Controllers
 
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id, [FromQuery]Int32 hid = 0)
         {
-            // TBD!
+            if (id <= 0)
+                return BadRequest("Invalid ID");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlTransaction tran = null;
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                tran = conn.BeginTransaction();
+
+                // Question bank
+                queryString = @"DELETE FROM [dbo].[t_learn_qtn_bank] WHERE [ID] = @ID AND [HID] = @HID";
+                SqlCommand cmd = new SqlCommand(queryString, conn)
+                {
+                    Transaction = tran
+                };
+                cmd.Parameters.AddWithValue("@ID", id);
+                cmd.Parameters.AddWithValue("@HID", hid);
+                await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
+                cmd = null;
+
+                // Question bank sub
+                queryString = @"DELETE FROM [dbo].[t_learn_qtn_bank_sub] WHERE [QTNID] = @QTNID";
+                cmd = new SqlCommand(queryString, conn)
+                {
+                    Transaction = tran
+                };
+                cmd.Parameters.AddWithValue("@QTNID", id);
+                await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
+                cmd = null;
+
+                // Tags
+                queryString = @"DELETE FROM [dbo].[t_tag] WHERE [TagType] = @tagtype AND [TagID] = @tagid AND [HID] = @HID";
+                cmd = new SqlCommand(queryString, conn)
+                {
+                    Transaction = tran
+                };
+                cmd.Parameters.AddWithValue("@tagtype", HIHTagTypeEnum.LearnQuestionBank);
+                cmd.Parameters.AddWithValue("@tagid", id);
+                cmd.Parameters.AddWithValue("@HID", hid);
+                await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
+                cmd = null;
+
+                tran.Commit();
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+
+                tran.Rollback();
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                    conn = null;
+                }
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return Ok();
         }
 
-        #region Implemented methods
+         #region Implemented methods
         private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32 hid)
         {
             String strSQL = "";
