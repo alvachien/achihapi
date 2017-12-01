@@ -416,14 +416,174 @@ namespace achihapi.Controllers
         
         // PUT: api/LearnQuestionBank/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public async Task<IActionResult> Put(int id, [FromBody]LearnQuestionBankViewModel vm)
         {
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            if (vm == null)
+                return BadRequest("No data is inputted");
+
+            if (vm.HID <= 0)
+                return BadRequest("No Home Inputted");
+
+            // Check
+            if (vm.ID != id)
+                return BadRequest("Invalid data");
+            if (vm.Question != null)
+                vm.Question = vm.Question.Trim();
+            if (String.IsNullOrEmpty(vm.Question))
+                return BadRequest("Question is a must!");
+
+            if (vm.QuestionType == (Byte)HIHQuestionBankType.EssayQuestion
+                || vm.QuestionType == (Byte)HIHQuestionBankType.MultipleChoice)
+            {
+            }
+            else
+            {
+                // Non supported type
+                return BadRequest("Non-supported type");
+            }
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlTransaction tran = null;
+            String queryString = "";
+            Int32 nNewID = -1;
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                tran = conn.BeginTransaction();
+
+                // Question bank
+                queryString = @"UPDATE [dbo].[t_learn_qtn_bank]
+                               SET [Type] = @Type
+                                  ,[Question] = @Question
+                                  ,[BriefAnswer] = @BriefAnswer
+                                  ,[UPDATEDBY] = @UPDATEDBY
+                                  ,[UPDATEDAT] = @UPDATEDAT
+                             WHERE [HID] = @HID AND [ID] = @ID";
+                SqlCommand cmd = new SqlCommand(queryString, conn)
+                {
+                    Transaction = tran
+                };
+                cmd.Parameters.AddWithValue("@HID", vm.HID);
+                cmd.Parameters.AddWithValue("@ID", vm.ID);
+                cmd.Parameters.AddWithValue("@Type", vm.QuestionType);
+                cmd.Parameters.AddWithValue("@Question", vm.Question);
+                if (!String.IsNullOrEmpty(vm.BriefAnswer))
+                    cmd.Parameters.AddWithValue("@BriefAnswer", vm.BriefAnswer);
+                else
+                    cmd.Parameters.AddWithValue("@BriefAnswer", DBNull.Value);
+                cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+
+                cmd.Dispose();
+                cmd = null;
+
+                // Question bank sub item 
+                // TBD!!!
+                foreach (var si in vm.SubItemList)
+                {
+                    queryString = @"INSERT INTO [dbo].[t_learn_qtn_bank_sub]
+                                   ([QTNID]
+                                   ,[SUBITEM]
+                                   ,[DETAIL]
+                                   ,[OTHERS])
+                             VALUES (@QTNID
+                                   ,@SUBITEM
+                                   ,@DETAIL
+                                   ,@OTHERS)";
+
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    cmd.Parameters.AddWithValue("@QTNID", nNewID);
+                    cmd.Parameters.AddWithValue("@SUBITEM", si.SubItem);
+                    cmd.Parameters.AddWithValue("@DETAIL", si.Detail);
+                    if (!String.IsNullOrEmpty(si.Others))
+                        cmd.Parameters.AddWithValue("@OTHERS", si.Others);
+                    else
+                        cmd.Parameters.AddWithValue("@OTHERS", DBNull.Value);
+
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                // Tag
+                // TBD!!
+                foreach (var tag in vm.TagTerms)
+                {
+                    queryString = @"INSERT INTO [dbo].[t_tag]
+                                           ([HID]
+                                           ,[TagType]
+                                           ,[TagID]
+                                           ,[Term])
+                                     VALUES (@HID
+                                           ,@TagType
+                                           ,@TagID
+                                           ,@Term)";
+
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    cmd.Parameters.AddWithValue("@HID", vm.HID);
+                    cmd.Parameters.AddWithValue("@TagType", HIHTagTypeEnum.LearnQuestionBank);
+                    cmd.Parameters.AddWithValue("@TagID", nNewID);
+                    cmd.Parameters.AddWithValue("@Term", tag);
+
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                tran.Commit();
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+
+                tran.Rollback();
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                    conn = null;
+                }
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            vm.ID = nNewID;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+
+            return new JsonResult(vm, setting);
         }
-        
+
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
+            // TBD!
         }
 
         #region Implemented methods
