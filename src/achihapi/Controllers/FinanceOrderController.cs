@@ -212,9 +212,7 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             if (vm == null)
-            {
                 return BadRequest("No data is inputted");
-            }
             if (vm.HID <= 0)
                 return BadRequest("No Home Inputted");
 
@@ -222,29 +220,21 @@ namespace achihapi.Controllers
             if (vm.Name != null)
                 vm.Name = vm.Name.Trim();
             if (String.IsNullOrEmpty(vm.Name))
-            {
                 return BadRequest("Name is a must!");
-            }
 
             // Check the s.rule
             if (vm.SRuleList.Count <= 0)
-            {
                 return BadRequest("No rule has been assigned yet");
-            }
             Int32 nPer = 0;
             foreach(FinanceOrderSRuleUIViewModel svm in vm.SRuleList)
             {
                 if (svm.Precent <= 0)
-                {
                     return BadRequest("Percentage less than zero!");
-                }
 
                 nPer += svm.Precent;
             }
             if (nPer != 100 )
-            {
                 return BadRequest("Total percentage shall sum up to 100");
-            }
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -301,9 +291,7 @@ namespace achihapi.Controllers
                                ,[VALID_TO]
                                ,[COMMENT]
                                ,[CREATEDBY]
-                               ,[CREATEDAT]
-                               ,[UPDATEDBY]
-                               ,[UPDATEDAT])
+                               ,[CREATEDAT] )
                          VALUES
                                (@HID
                                ,@NAME
@@ -311,9 +299,7 @@ namespace achihapi.Controllers
                                ,@VALID_TO
                                ,@COMMENT
                                ,@CREATEDBY
-                               ,@CREATEDAT
-                               ,@UPDATEDBY
-                               ,@UPDATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+                               ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
 
                     try
                     {
@@ -328,13 +314,14 @@ namespace achihapi.Controllers
                         cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
                         cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
                         cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-                        cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
                         SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                         idparam.Direction = ParameterDirection.Output;
 
                         Int32 nRst = await cmd.ExecuteNonQueryAsync();
                         nNewID = (Int32)idparam.Value;
+
+                        cmd.Dispose();
+                        cmd = null;
 
                         // Then, creating the srules
                         foreach (FinanceOrderSRuleUIViewModel suivm in vm.SRuleList)
@@ -361,6 +348,9 @@ namespace achihapi.Controllers
                             cmd2.Parameters.AddWithValue("@PRECENT", suivm.Precent);
                             cmd2.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(suivm.Comment) ? String.Empty : suivm.Comment);
                             await cmd2.ExecuteNonQueryAsync();
+
+                            cmd2.Dispose();
+                            cmd2 = null;
                         }
 
                         tran.Commit();
@@ -390,13 +380,12 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
             if (bDuplicatedEntry)
-            {
-                return BadRequest("Order already exists: " + nDuplicatedID.ToString());
-            }
+                return BadRequest("Order with same name already exists: " + nDuplicatedID.ToString());
 
             if (bError)
                 return StatusCode(500, strErrMsg);
@@ -414,17 +403,325 @@ namespace achihapi.Controllers
         // PUT api/financeorder/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(int id, [FromBody]string value)
+        public async Task<IActionResult> Put(int id, [FromBody]FinanceOrderViewModel vm)
         {
-            return BadRequest();
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            if (vm == null)
+                return BadRequest("No data is inputted");
+            if (vm.HID <= 0)
+                return BadRequest("No Home Inputted");
+            if (vm.ID != id)
+                return BadRequest("Data inconsistent!");
+
+            // Check on name
+            if (vm.Name != null)
+                vm.Name = vm.Name.Trim();
+            if (String.IsNullOrEmpty(vm.Name))
+                return BadRequest("Name is a must!");
+
+            // Check the s.rule
+            if (vm.SRuleList.Count <= 0)
+                return BadRequest("No rule has been assigned yet");
+            Int32 nPer = 0;
+            foreach (FinanceOrderSRuleUIViewModel svm in vm.SRuleList)
+            {
+                if (svm.Precent <= 0)
+                    return BadRequest("Percentage less than zero!");
+
+                nPer += svm.Precent;
+            }
+            if (nPer != 100)
+                return BadRequest("Total percentage shall sum up to 100");
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bDuplicatedEntry = false;
+            Int32 nDuplicatedID = -1;
+            Int32 nNewID = -1;
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            try
+            {
+                queryString = @"SELECT [ID]
+                  FROM [dbo].[t_fin_order] WHERE [Name] = N'" + vm.Name + "' AND [ID] <> " + id.ToString();
+
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    bDuplicatedEntry = true;
+                    while (reader.Read())
+                    {
+                        nDuplicatedID = reader.GetInt32(0);
+                        break;
+                    }
+                }
+                else
+                {
+                    reader.Dispose();
+                    reader = null;
+
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // Now go ahead for the creating
+                    SqlTransaction tran = conn.BeginTransaction();
+
+                    queryString = @"UPDATE [dbo].[t_fin_order]
+                                       SET [NAME] = @NAME
+                                          ,[VALID_FROM] = @VALID_FROM
+                                          ,[VALID_TO] = @VALID_TO
+                                          ,[COMMENT] = @COMMENT
+                                          ,[UPDATEDBY] = @UPDATEDBY
+                                          ,[UPDATEDAT] = @UPDATEDAT
+                                     WHERE [ID] = @ID";
+
+                    try
+                    {
+                        cmd = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
+                        cmd.Parameters.AddWithValue("@ID", id);
+                        cmd.Parameters.AddWithValue("@NAME", vm.Name);
+                        cmd.Parameters.AddWithValue("@VALID_FROM", vm.ValidFrom);
+                        cmd.Parameters.AddWithValue("@VALID_TO", vm.ValidTo);
+                        cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
+                        cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                        cmd.Parameters.AddWithValue("@UPDATEDAT", vm.CreatedAt);
+
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Then, delete existing srules
+                        queryString = @"DELETE FROM [dbo].[t_fin_order_srule] WHERE [ORDID] = @id";
+                        cmd = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
+                        cmd.Parameters.AddWithValue("@ID", id);
+                        nRst = await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Then, creating the srules
+                        foreach (FinanceOrderSRuleUIViewModel suivm in vm.SRuleList)
+                        {
+                            queryString = @"INSERT INTO [dbo].[t_fin_order_srule]
+                                               ([ORDID]
+                                               ,[RULEID]
+                                               ,[CONTROLCENTERID]
+                                               ,[PRECENT]
+                                               ,[COMMENT])
+                                         VALUES
+                                               (@ORDID
+                                               ,@RULEID
+                                               ,@CONTROLCENTERID
+                                               ,@PRECENT
+                                               ,@COMMENT)";
+                            SqlCommand cmd2 = new SqlCommand(queryString, conn)
+                            {
+                                Transaction = tran
+                            };
+                            cmd2.Parameters.AddWithValue("@ORDID", nNewID);
+                            cmd2.Parameters.AddWithValue("@RULEID", suivm.RuleID);
+                            cmd2.Parameters.AddWithValue("@CONTROLCENTERID", suivm.ControlCenterID);
+                            cmd2.Parameters.AddWithValue("@PRECENT", suivm.Precent);
+                            cmd2.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(suivm.Comment) ? String.Empty : suivm.Comment);
+                            await cmd2.ExecuteNonQueryAsync();
+
+                            cmd2.Dispose();
+                            cmd2 = null;
+                        }
+
+                        tran.Commit();
+                    }
+                    catch (Exception exp)
+                    {
+#if DEBUG
+                        System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
+                        bError = true;
+                        strErrMsg = exp.Message;
+
+                        if (tran != null)
+                            tran.Rollback();
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                    conn = null;
+                }
+            }
+
+            if (bDuplicatedEntry)
+                return BadRequest("Order with same name already exists: " + nDuplicatedID.ToString());
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+
+            return new JsonResult(vm, setting);
         }
 
         // DELETE api/financeorder/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, [FromQuery] Int32 hid = 0)
         {
-            return BadRequest();
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            if (hid <= 0)
+                return BadRequest("No Home Inputted");
+
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+            Boolean bStillInUse = false;
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                // Check whether the order is used already
+                queryString = @"SELECT ID FROM [t_fin_order] WHERE EXISTS (SELECT * FROM [t_fin_document_item] WHERE ORDERID = t_fin_order.ID) AND ID = " + id.ToString();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                if (reader.HasRows)
+                {
+                    bStillInUse = true;
+                }
+                else
+                {
+                    reader.Dispose();
+                    reader = null;
+
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // Now go ahead for the deletion
+                    SqlTransaction tran = conn.BeginTransaction();
+
+                    queryString = @"DELETE FROM [dbo].[t_fin_order] WHERE [ID] = @id";
+
+                    try
+                    {
+                        cmd = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
+                        cmd.Parameters.AddWithValue("@id", id);
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Then, delete srules
+                        queryString = @"DELETE FROM [dbo].[t_fin_order_srule] WHERE [ORDID] = @id";
+                        cmd = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
+                        cmd.Parameters.AddWithValue("@id", id);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+
+                        tran.Commit();
+                    }
+                    catch (Exception exp)
+                    {
+#if DEBUG
+                        System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
+                        bError = true;
+                        strErrMsg = exp.Message;
+
+                        if (tran != null)
+                            tran.Rollback();
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                    conn = null;
+                }
+            }
+
+            if (bStillInUse)
+            {
+                return BadRequest("Order still in use!");
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+
+            return Ok();
         }
 
         #region Implmented methods
