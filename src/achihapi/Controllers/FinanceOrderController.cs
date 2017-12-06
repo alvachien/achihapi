@@ -228,6 +228,9 @@ namespace achihapi.Controllers
             Int32 nPer = 0;
             foreach(FinanceOrderSRuleUIViewModel svm in vm.SRuleList)
             {
+                if (svm.RuleID <= 0)
+                    return BadRequest("Invalid rule ID");
+
                 if (svm.Precent <= 0)
                     return BadRequest("Percentage less than zero!");
 
@@ -429,6 +432,9 @@ namespace achihapi.Controllers
             Int32 nPer = 0;
             foreach (FinanceOrderSRuleUIViewModel svm in vm.SRuleList)
             {
+                if (svm.RuleID <= 0)
+                    return BadRequest("Invalid rule ID");
+
                 if (svm.Precent <= 0)
                     return BadRequest("Percentage less than zero!");
 
@@ -442,7 +448,6 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bDuplicatedEntry = false;
             Int32 nDuplicatedID = -1;
-            Int32 nNewID = -1;
             Boolean bError = false;
             String strErrMsg = "";
 
@@ -543,7 +548,7 @@ namespace achihapi.Controllers
                             {
                                 Transaction = tran
                             };
-                            cmd2.Parameters.AddWithValue("@ORDID", nNewID);
+                            cmd2.Parameters.AddWithValue("@ORDID", id);
                             cmd2.Parameters.AddWithValue("@RULEID", suivm.RuleID);
                             cmd2.Parameters.AddWithValue("@CONTROLCENTERID", suivm.ControlCenterID);
                             cmd2.Parameters.AddWithValue("@PRECENT", suivm.Precent);

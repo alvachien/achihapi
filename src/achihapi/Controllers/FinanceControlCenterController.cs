@@ -543,11 +543,11 @@ namespace achihapi.Controllers
             if (bError)
                 return StatusCode(500, strErrMsg);
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings
-            {
-                DateFormatString = HIHAPIConstants.DateFormatPattern,
-                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
-            };
+            //var setting = new Newtonsoft.Json.JsonSerializerSettings
+            //{
+            //    DateFormatString = HIHAPIConstants.DateFormatPattern,
+            //    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            //};
 
             return Ok();
         }
