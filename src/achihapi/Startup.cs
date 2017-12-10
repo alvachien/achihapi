@@ -1,8 +1,11 @@
 ﻿#if DEBUG
+#undef RELEASE
 #undef USE_ALIYUN
 #undef USE_AZURE
-#else
-//#define USE_AZURE
+#endif
+
+#if RELEASE
+#undef DEBUG
 #define USE_ALIYUN
 #undef USE_AZURE
 #endif
