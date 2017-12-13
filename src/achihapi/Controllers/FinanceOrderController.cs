@@ -105,7 +105,7 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+
             return new JsonResult(listVMs, setting);
         }
 
@@ -519,7 +519,7 @@ namespace achihapi.Controllers
                         cmd = null;
 
                         // Then, delete existing srules
-                        queryString = @"DELETE FROM [dbo].[t_fin_order_srule] WHERE [ORDID] = @id";
+                        queryString = @"DELETE FROM [dbo].[t_fin_order_srule] WHERE [ORDID] = @ID";
                         cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
