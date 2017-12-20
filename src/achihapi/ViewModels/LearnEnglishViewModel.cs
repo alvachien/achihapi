@@ -75,4 +75,29 @@ namespace achihapi.ViewModels
     public class LearnEnglishViewModel
     {
     }
+
+    internal class WordRefSent
+    {
+        internal string EnSent { get; set; }
+        internal string CnSent { get; set; }
+    }
+
+    internal class WordResult
+    {
+        internal string WordString { get; set; }
+        internal string WordPronUK { get; set; }
+        internal string WordPronUS { get; set; }
+        internal string WordPronUKFile { get; set; }
+        internal string WordPronUSFile { get; set; }
+        internal List<String> WordForms { get; set; }
+        internal List<String> WordExplains { get; private set; }
+        internal List<WordRefSent> WordSentences { get; private set; }
+
+        internal WordResult()
+        {
+            this.WordExplains = new List<string>();
+            this.WordSentences = new List<WordRefSent>();
+            this.WordForms = new List<string>();
+        }
+    }
 }

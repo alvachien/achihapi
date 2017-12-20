@@ -11,6 +11,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Threading;
 using System.Text.RegularExpressions;
+using achihapi.ViewModels;
 
 namespace achihapi.Controllers
 {
@@ -26,9 +27,9 @@ namespace achihapi.Controllers
     {
         // GET: api/LearnEnglishInfoBuild
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<IActionResult> Get()
         {
-            return new string[] { "value1", "value2" };
+            return BadRequest();
         }
 
         // GET: api/LearnEnglishInfoBuild/5
@@ -39,7 +40,24 @@ namespace achihapi.Controllers
             if (hid <= 0)
                 return BadRequest("Not HID inputted");
 
-            return "value";
+            // Basic check
+            WordSource src = (WordSource)sid;
+            switch(src)
+            {
+                case WordSource.Bing:
+                case WordSource.Iciba:
+                    {
+                        // Fetch the result
+                        WordResult wr = new WordResult();
+                        await LearnEnglishInfoBuildController.FetchWordFromSourceAsync(word, src, wr);
+
+                        // After then,
+                        return new JsonResult(wr);
+                    }
+
+                default:
+                    return BadRequest("No such source yet!");
+            }
         }
         
         // POST: api/LearnEnglishInfoBuild
@@ -61,7 +79,7 @@ namespace achihapi.Controllers
         {
         }
 
-        private static async Task FetchWordFromSourceAsync(String strword, WordSource wordsrc)
+        private static async Task FetchWordFromSourceAsync(String strword, WordSource wordsrc, WordResult wr)
         {
             var client = new HttpClient();
             client.DefaultRequestHeaders.Accept.Clear();
@@ -82,7 +100,6 @@ namespace achihapi.Controllers
                 {
                     String strword2 = strword.Replace(" ", "+");
                     resString = await client.GetStringAsync("https://www.bing.com/dict/search?q=" + strword2);
-                    WordResult wr = new WordResult();
 
                     wr.WordString = strword;
 
@@ -199,13 +216,6 @@ namespace achihapi.Controllers
                             }
                         }
                     }
-
-                    //Int32 iPos = resString.IndexOf("<div class=\"qdef\">");
-                    //Int32 iPos2 = resString.IndexOf("<div class=\"se_div\">");
-                    Program.Results.Add(wr);
-                    // Explains
-
-                    //Console.WriteLine("MP3: " + usPron);
                 }
                 else if (wordsrc == WordSource.Iciba)
                 {
@@ -215,7 +225,6 @@ namespace achihapi.Controllers
                     resString = await client.GetStringAsync("http://www.iciba.com/" + strword2);
 
                     Boolean bfailed = false;
-                    WordResult wr = new WordResult();
                     wr.WordString = strword;
 
                     // Pron.
@@ -367,11 +376,6 @@ namespace achihapi.Controllers
                         wr.WordSentences.Add(wrs);
 
                         iPos = resString.IndexOf("<div class='sentence-item'>", iPos2);
-                    }
-
-                    if (!bfailed)
-                    {
-                        Program.Results.Add(wr);
                     }
                 }
                 else
