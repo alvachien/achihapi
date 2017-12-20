@@ -34,7 +34,7 @@ namespace achihapi.Controllers
 
         // GET: api/LearnEnglishInfoBuild/5
         [HttpGet("{word}")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> Get(String word, [FromQuery]Int32 hid = 0, [FromQuery]Int32 sid = 0)
         {
             if (hid <= 0)
@@ -48,8 +48,7 @@ namespace achihapi.Controllers
                 case WordSource.Iciba:
                     {
                         // Fetch the result
-                        WordResult wr = new WordResult();
-                        await LearnEnglishInfoBuildController.FetchWordFromSourceAsync(word, src, wr);
+                        WordResult wr = await this.FetchWordFromSourceAsync(word, src);
 
                         // After then,
                         return new JsonResult(wr);
@@ -79,7 +78,7 @@ namespace achihapi.Controllers
         {
         }
 
-        private static async Task FetchWordFromSourceAsync(String strword, WordSource wordsrc, WordResult wr)
+        private async Task<WordResult> FetchWordFromSourceAsync(String strword, WordSource wordsrc)
         {
             var client = new HttpClient();
             client.DefaultRequestHeaders.Accept.Clear();
@@ -90,6 +89,7 @@ namespace achihapi.Controllers
             //Boolean useIciba = false; // http://www.iciba.com/
             //Boolean useYoudao = false; // US pron: https://dict.youdao.com/dictvoice?audio=take+part+in&type=2
             String resString = String.Empty;
+            WordResult wr = new WordResult();
 
             try
             {
@@ -386,6 +386,8 @@ namespace achihapi.Controllers
             {
                 Console.WriteLine("Error on " + strword + " : " + exp.Message);
             }
+
+            return wr;
         }
     }
 }

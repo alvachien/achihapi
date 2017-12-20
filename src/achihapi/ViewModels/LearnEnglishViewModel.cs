@@ -76,24 +76,24 @@ namespace achihapi.ViewModels
     {
     }
 
-    internal class WordRefSent
+    public class WordRefSent
     {
-        internal string EnSent { get; set; }
-        internal string CnSent { get; set; }
+        public string EnSent { get; set; }
+        public string CnSent { get; set; }
     }
 
-    internal class WordResult
+    public class WordResult
     {
-        internal string WordString { get; set; }
-        internal string WordPronUK { get; set; }
-        internal string WordPronUS { get; set; }
-        internal string WordPronUKFile { get; set; }
-        internal string WordPronUSFile { get; set; }
-        internal List<String> WordForms { get; set; }
-        internal List<String> WordExplains { get; private set; }
-        internal List<WordRefSent> WordSentences { get; private set; }
+        public string WordString { get; set; }
+        public string WordPronUK { get; set; }
+        public string WordPronUS { get; set; }
+        public string WordPronUKFile { get; set; }
+        public string WordPronUSFile { get; set; }
+        public List<String> WordForms { get; set; }
+        public List<String> WordExplains { get; private set; }
+        public List<WordRefSent> WordSentences { get; private set; }
 
-        internal WordResult()
+        public WordResult()
         {
             this.WordExplains = new List<string>();
             this.WordSentences = new List<WordRefSent>();
