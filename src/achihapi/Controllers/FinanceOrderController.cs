@@ -287,22 +287,7 @@ namespace achihapi.Controllers
                     // Now go ahead for the creating
                     SqlTransaction tran = conn.BeginTransaction();
 
-                    queryString = @"INSERT INTO [dbo].[t_fin_order]
-                               ([HID]            
-                               ,[NAME]
-                               ,[VALID_FROM]
-                               ,[VALID_TO]
-                               ,[COMMENT]
-                               ,[CREATEDBY]
-                               ,[CREATEDAT] )
-                         VALUES
-                               (@HID
-                               ,@NAME
-                               ,@VALID_FROM
-                               ,@VALID_TO
-                               ,@COMMENT
-                               ,@CREATEDBY
-                               ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+                    queryString = SqlUtility.GetFinOrderInsertString();
 
                     try
                     {
@@ -310,13 +295,7 @@ namespace achihapi.Controllers
                         {
                             Transaction = tran
                         };
-                        cmd.Parameters.AddWithValue("@HID", vm.HID);
-                        cmd.Parameters.AddWithValue("@NAME", vm.Name);
-                        cmd.Parameters.AddWithValue("@VALID_FROM", vm.ValidFrom);
-                        cmd.Parameters.AddWithValue("@VALID_TO", vm.ValidTo);
-                        cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
-                        cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
-                        cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
+                        SqlUtility.BindFinOrderInsertParameter(cmd, vm, usrName);
                         SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                         idparam.Direction = ParameterDirection.Output;
 
@@ -329,27 +308,13 @@ namespace achihapi.Controllers
                         // Then, creating the srules
                         foreach (FinanceOrderSRuleUIViewModel suivm in vm.SRuleList)
                         {
-                            queryString = @"INSERT INTO [dbo].[t_fin_order_srule]
-                                               ([ORDID]
-                                               ,[RULEID]
-                                               ,[CONTROLCENTERID]
-                                               ,[PRECENT]
-                                               ,[COMMENT])
-                                         VALUES
-                                               (@ORDID
-                                               ,@RULEID
-                                               ,@CONTROLCENTERID
-                                               ,@PRECENT
-                                               ,@COMMENT)";
+                            queryString = SqlUtility.GetFinOrderSRuleInsertString();
+
                             SqlCommand cmd2 = new SqlCommand(queryString, conn)
                             {
                                 Transaction = tran
                             };
-                            cmd2.Parameters.AddWithValue("@ORDID", nNewID);
-                            cmd2.Parameters.AddWithValue("@RULEID", suivm.RuleID);
-                            cmd2.Parameters.AddWithValue("@CONTROLCENTERID", suivm.ControlCenterID);
-                            cmd2.Parameters.AddWithValue("@PRECENT", suivm.Precent);
-                            cmd2.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(suivm.Comment) ? String.Empty : suivm.Comment);
+                            SqlUtility.BindFinOrderSRuleInsertParameter(cmd2, suivm, nNewID);
                             await cmd2.ExecuteNonQueryAsync();
 
                             cmd2.Dispose();
@@ -490,14 +455,7 @@ namespace achihapi.Controllers
                     // Now go ahead for the creating
                     SqlTransaction tran = conn.BeginTransaction();
 
-                    queryString = @"UPDATE [dbo].[t_fin_order]
-                                       SET [NAME] = @NAME
-                                          ,[VALID_FROM] = @VALID_FROM
-                                          ,[VALID_TO] = @VALID_TO
-                                          ,[COMMENT] = @COMMENT
-                                          ,[UPDATEDBY] = @UPDATEDBY
-                                          ,[UPDATEDAT] = @UPDATEDAT
-                                     WHERE [ID] = @ID";
+                    queryString = SqlUtility.GetFinOrderUpdateString();
 
                     try
                     {
@@ -505,13 +463,7 @@ namespace achihapi.Controllers
                         {
                             Transaction = tran
                         };
-                        cmd.Parameters.AddWithValue("@ID", id);
-                        cmd.Parameters.AddWithValue("@NAME", vm.Name);
-                        cmd.Parameters.AddWithValue("@VALID_FROM", vm.ValidFrom);
-                        cmd.Parameters.AddWithValue("@VALID_TO", vm.ValidTo);
-                        cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
-                        cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
-                        cmd.Parameters.AddWithValue("@UPDATEDAT", vm.CreatedAt);
+                        SqlUtility.BindFinOrderUpdateParameter(cmd, vm, usrName);
 
                         Int32 nRst = await cmd.ExecuteNonQueryAsync();
 
@@ -519,40 +471,25 @@ namespace achihapi.Controllers
                         cmd = null;
 
                         // Then, delete existing srules
-                        queryString = @"DELETE FROM [dbo].[t_fin_order_srule] WHERE [ORDID] = @ID";
+                        queryString = SqlUtility.GetFinOrderSRuleDeleteString();
                         cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        cmd.Parameters.AddWithValue("@ID", id);
-                        nRst = await cmd.ExecuteNonQueryAsync();
+                        SqlUtility.BindFinOrderSRuleDeleteParameter(cmd, id);
+                        await cmd.ExecuteNonQueryAsync();
                         cmd.Dispose();
                         cmd = null;
 
                         // Then, creating the srules
                         foreach (FinanceOrderSRuleUIViewModel suivm in vm.SRuleList)
                         {
-                            queryString = @"INSERT INTO [dbo].[t_fin_order_srule]
-                                               ([ORDID]
-                                               ,[RULEID]
-                                               ,[CONTROLCENTERID]
-                                               ,[PRECENT]
-                                               ,[COMMENT])
-                                         VALUES
-                                               (@ORDID
-                                               ,@RULEID
-                                               ,@CONTROLCENTERID
-                                               ,@PRECENT
-                                               ,@COMMENT)";
+                            queryString = SqlUtility.GetFinOrderSRuleInsertString();
                             SqlCommand cmd2 = new SqlCommand(queryString, conn)
                             {
                                 Transaction = tran
                             };
-                            cmd2.Parameters.AddWithValue("@ORDID", id);
-                            cmd2.Parameters.AddWithValue("@RULEID", suivm.RuleID);
-                            cmd2.Parameters.AddWithValue("@CONTROLCENTERID", suivm.ControlCenterID);
-                            cmd2.Parameters.AddWithValue("@PRECENT", suivm.Precent);
-                            cmd2.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(suivm.Comment) ? String.Empty : suivm.Comment);
+                            SqlUtility.BindFinOrderSRuleInsertParameter(cmd2, suivm, vm.ID);
                             await cmd2.ExecuteNonQueryAsync();
 
                             cmd2.Dispose();

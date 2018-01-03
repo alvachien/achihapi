@@ -15,7 +15,7 @@ namespace achihapi.Controllers
     {
         // GET: api/financeadpdocument
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean skipPosted = true, DateTime? dtbgn = null, DateTime? dtend = null)
+        public IActionResult Get([FromQuery]Int32 hid, Boolean skipPosted = true, DateTime? dtbgn = null, DateTime? dtend = null)
         {
             return BadRequest();
         }
@@ -204,13 +204,13 @@ namespace achihapi.Controllers
                 try
                 {
                     // First, craete the doc header => nNewDocID
-                    queryString = SqlUtility.getFinDocHeaderInsertString();
+                    queryString = SqlUtility.GetFinDocHeaderInsertString();
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
 
-                    SqlUtility.bindFinDocHeaderParameter(cmd, vm, usrName);
+                    SqlUtility.BindFinDocHeaderInsertParameter(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -222,12 +222,12 @@ namespace achihapi.Controllers
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
-                        queryString = SqlUtility.getFinDocItemInsertString();
+                        queryString = SqlUtility.GetFinDocItemInsertString();
                         SqlCommand cmd2 = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        SqlUtility.bindFinDocItemParameter(cmd2, ivm, nNewDocID);
+                        SqlUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
 
                         await cmd2.ExecuteNonQueryAsync();
 
@@ -244,7 +244,7 @@ namespace achihapi.Controllers
 
                                 cmd2 = new SqlCommand(queryString, conn, tran);
 
-                                SqlUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, ivm.ItemID, term);
+                                SqlUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
 
                                 await cmd2.ExecuteNonQueryAsync();
 
@@ -343,7 +343,7 @@ namespace achihapi.Controllers
         // PUT api/financeadpdocument/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
             return BadRequest();
         }
@@ -351,7 +351,7 @@ namespace achihapi.Controllers
         // DELETE api/financeadpdocument/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             return BadRequest();
         }

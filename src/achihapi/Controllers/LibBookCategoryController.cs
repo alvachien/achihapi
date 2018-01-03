@@ -108,28 +108,28 @@ namespace achihapi.Controllers
 
         // GET: api/LibBookCategory/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        public IActionResult Get(int id)
         {
             return BadRequest();
         }
 
         // POST: api/LibBookCategory
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody]string value)
+        public IActionResult Post([FromBody]string value)
         {
             return BadRequest();
         }
 
         // PUT: api/LibBookCategory/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
             return BadRequest();
         }
 
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             return BadRequest();
         }

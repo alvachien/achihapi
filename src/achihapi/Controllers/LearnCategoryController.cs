@@ -107,7 +107,7 @@ namespace achihapi.Controllers
 
         // GET api/learncategory/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        public IActionResult Get(int id)
         {
             return BadRequest();
         }
@@ -232,7 +232,7 @@ namespace achihapi.Controllers
         // PUT api/learncategory/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
             return BadRequest();
         }
@@ -240,7 +240,7 @@ namespace achihapi.Controllers
         // DELETE api/learncategory/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             return BadRequest();
         }

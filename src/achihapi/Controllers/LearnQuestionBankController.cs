@@ -365,21 +365,10 @@ namespace achihapi.Controllers
                 // Tag
                 foreach(var tag in vm.TagTerms)
                 {
-                    queryString = @"INSERT INTO [dbo].[t_tag]
-                                           ([HID]
-                                           ,[TagType]
-                                           ,[TagID]
-                                           ,[Term])
-                                     VALUES (@HID
-                                           ,@TagType
-                                           ,@TagID
-                                           ,@Term)";
+                    queryString = SqlUtility.GetTagInsertString();
 
                     cmd = new SqlCommand(queryString, conn, tran);
-                    cmd.Parameters.AddWithValue("@HID", vm.HID);
-                    cmd.Parameters.AddWithValue("@TagType", HIHTagTypeEnum.LearnQuestionBank);
-                    cmd.Parameters.AddWithValue("@TagID", nNewID);
-                    cmd.Parameters.AddWithValue("@Term", tag);
+                    SqlUtility.BindTagInsertParameter(cmd, vm.HID, HIHTagTypeEnum.LearnQuestionBank, nNewID, tag);
 
                     await cmd.ExecuteNonQueryAsync();
 
@@ -538,10 +527,9 @@ namespace achihapi.Controllers
                 }
 
                 // Tag
-                queryString = @"DELETE FROM [dbo].[t_tag] WHERE [TagType] = @tagtype AND [TagID] = @tagid";
+                queryString = SqlUtility.GetTagDeleteString();
                 cmd = new SqlCommand(queryString, conn, tran);
-                cmd.Parameters.AddWithValue("@tagtype", HIHTagTypeEnum.LearnQuestionBank);
-                cmd.Parameters.AddWithValue("@tagid", id);
+                SqlUtility.BindTagDeleteParameter(cmd, vm.HID, HIHTagTypeEnum.LearnQuestionBank, id);
 
                 await cmd.ExecuteNonQueryAsync();
                 cmd.Dispose();
@@ -549,21 +537,10 @@ namespace achihapi.Controllers
 
                 foreach (var tag in vm.TagTerms)
                 {
-                    queryString = @"INSERT INTO [dbo].[t_tag]
-                                           ([HID]
-                                           ,[TagType]
-                                           ,[TagID]
-                                           ,[Term])
-                                     VALUES (@HID
-                                           ,@TagType
-                                           ,@TagID
-                                           ,@Term)";
+                    queryString = SqlUtility.GetTagInsertString();
 
                     cmd = new SqlCommand(queryString, conn, tran);
-                    cmd.Parameters.AddWithValue("@HID", vm.HID);
-                    cmd.Parameters.AddWithValue("@TagType", HIHTagTypeEnum.LearnQuestionBank);
-                    cmd.Parameters.AddWithValue("@TagID", id);
-                    cmd.Parameters.AddWithValue("@Term", tag);
+                    SqlUtility.BindTagInsertParameter(cmd, vm.HID, HIHTagTypeEnum.LearnQuestionBank, id, tag);
 
                     await cmd.ExecuteNonQueryAsync();
                 }

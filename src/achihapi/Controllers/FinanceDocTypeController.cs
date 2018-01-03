@@ -177,7 +177,7 @@ namespace achihapi.Controllers
         // POST api/financedoctype
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Post([FromBody]string value)
+        public IActionResult Post([FromBody]string value)
         {
             return BadRequest();
         }
@@ -185,7 +185,7 @@ namespace achihapi.Controllers
         // PUT api/financedoctype/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
             return BadRequest();
         }
@@ -193,7 +193,7 @@ namespace achihapi.Controllers
         // DELETE api/financedoctype/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             return BadRequest();
         }

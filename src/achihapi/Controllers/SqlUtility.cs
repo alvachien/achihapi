@@ -1051,7 +1051,7 @@ namespace achihapi.Controllers
         #endregion
 
         #region Finance document Header
-        internal static string getFinDocHeaderInsertString()
+        internal static string GetFinDocHeaderInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_document]
                                            ([HID]
@@ -1065,9 +1065,7 @@ namespace achihapi.Controllers
                                            ,[TRANCURR2]
                                            ,[EXGRATE2]
                                            ,[CREATEDBY]
-                                           ,[CREATEDAT]
-                                           ,[UPDATEDBY]
-                                           ,[UPDATEDAT])
+                                           ,[CREATEDAT])
                                      VALUES
                                            (@HID
                                            ,@DOCTYPE
@@ -1080,12 +1078,28 @@ namespace achihapi.Controllers
                                            ,@TRANCURR2
                                            ,@EXGRATE2
                                            ,@CREATEDBY
-                                           ,@CREATEDAT
-                                           ,@UPDATEDBY
-                                           ,@UPDATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+                                           ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
         }
 
-        internal static void bindFinDocHeaderParameter(SqlCommand cmd, FinanceDocumentViewModel vm, String usrName)
+        internal static string GetFinDocHeaderUpdateString()
+        {
+            return @"UPDATE [dbo].[t_fin_document]
+                       SET [HID] = @HID
+                          ,[DOCTYPE] = @DOCTYPE
+                          ,[TRANDATE] = @TRANDATE
+                          ,[TRANCURR] = @TRANCURR
+                          ,[DESP] = @DESP
+                          ,[EXGRATE] = @EXGRATE
+                          ,[EXGRATE_PLAN] = @EXGRATE_PLAN
+                          ,[EXGRATE_PLAN2] = @EXGRATE_PLAN2
+                          ,[TRANCURR2] = @TRANCURR2
+                          ,[EXGRATE2] = @EXGRATE2
+                          ,[UPDATEDBY] = @UPDATEDBY
+                          ,[UPDATEDAT] = @UPDATEDAT
+                     WHERE [ID] = @ID";
+        }
+
+        internal static void BindFinDocHeaderInsertParameter(SqlCommand cmd, FinanceDocumentViewModel vm, String usrName)
         {
             cmd.Parameters.AddWithValue("@HID", vm.HID);
             cmd.Parameters.AddWithValue("@DOCTYPE", vm.DocType);
@@ -1114,8 +1128,38 @@ namespace achihapi.Controllers
                 cmd.Parameters.AddWithValue("@EXGRATE2", DBNull.Value);
             cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
             cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-            cmd.Parameters.AddWithValue("@UPDATEDBY", DBNull.Value);
-            cmd.Parameters.AddWithValue("@UPDATEDAT", DBNull.Value);
+        }
+
+        internal static void BindFinDocHeaderUpdateParameter(SqlCommand cmd, FinanceDocumentViewModel vm, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@HID", vm.HID);
+            cmd.Parameters.AddWithValue("@DOCTYPE", vm.DocType);
+            cmd.Parameters.AddWithValue("@TRANDATE", vm.TranDate);
+            cmd.Parameters.AddWithValue("@TRANCURR", vm.TranCurr);
+            cmd.Parameters.AddWithValue("@DESP", vm.Desp);
+            if (vm.ExgRate > 0)
+                cmd.Parameters.AddWithValue("@EXGRATE", vm.ExgRate);
+            else
+                cmd.Parameters.AddWithValue("@EXGRATE", DBNull.Value);
+            if (vm.ExgRate_Plan)
+                cmd.Parameters.AddWithValue("@EXGRATE_PLAN", vm.ExgRate_Plan);
+            else
+                cmd.Parameters.AddWithValue("@EXGRATE_PLAN", DBNull.Value);
+            if (vm.ExgRate_Plan2)
+                cmd.Parameters.AddWithValue("@EXGRATE_PLAN2", vm.ExgRate_Plan2);
+            else
+                cmd.Parameters.AddWithValue("@EXGRATE_PLAN2", DBNull.Value);
+            if (String.IsNullOrEmpty(vm.TranCurr2))
+                cmd.Parameters.AddWithValue("@TRANCURR2", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@TRANCURR2", vm.TranCurr2);
+            if (vm.ExgRate2 > 0)
+                cmd.Parameters.AddWithValue("@EXGRATE2", vm.ExgRate2);
+            else
+                cmd.Parameters.AddWithValue("@EXGRATE2", DBNull.Value);
+            cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+            cmd.Parameters.AddWithValue("@ID", vm.ID);
         }
 
         internal static void FinDocHeader_DB2VM(SqlDataReader reader, FinanceDocumentUIViewModel vm)
@@ -1179,7 +1223,7 @@ namespace achihapi.Controllers
         #endregion
 
         #region Finance document Item
-        internal static string getFinDocItemInsertString()
+        internal static string GetFinDocItemInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_document_item]
                             ([DOCID]
@@ -1203,7 +1247,7 @@ namespace achihapi.Controllers
                             ,@DESP)";
         }
 
-        internal static void bindFinDocItemParameter(SqlCommand cmd2, FinanceDocumentItemViewModel ivm, Int32 nNewDocID)
+        internal static void BindFinDocItemInsertParameter(SqlCommand cmd2, FinanceDocumentItemViewModel ivm, Int32 nNewDocID)
         {
             cmd2.Parameters.AddWithValue("@DOCID", nNewDocID);
             cmd2.Parameters.AddWithValue("@ITEMID", ivm.ItemID);
@@ -1888,6 +1932,94 @@ namespace achihapi.Controllers
         }
         #endregion
 
+        #region Order header
+        internal static string GetFinOrderInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_fin_order]
+                               ([HID]            
+                               ,[NAME]
+                               ,[VALID_FROM]
+                               ,[VALID_TO]
+                               ,[COMMENT]
+                               ,[CREATEDBY]
+                               ,[CREATEDAT] )
+                         VALUES
+                               (@HID
+                               ,@NAME
+                               ,@VALID_FROM
+                               ,@VALID_TO
+                               ,@COMMENT
+                               ,@CREATEDBY
+                               ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+        }
+        internal static void BindFinOrderInsertParameter(SqlCommand cmd, FinanceOrderViewModel vm, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@HID", vm.HID);
+            cmd.Parameters.AddWithValue("@NAME", vm.Name);
+            cmd.Parameters.AddWithValue("@VALID_FROM", vm.ValidFrom);
+            cmd.Parameters.AddWithValue("@VALID_TO", vm.ValidTo);
+            cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
+            cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
+        }
+        internal static string GetFinOrderUpdateString()
+        {
+            return @"UPDATE[dbo].[t_fin_order]
+                        SET[NAME] = @NAME
+                            ,[VALID_FROM] = @VALID_FROM
+                            ,[VALID_TO] = @VALID_TO
+                            ,[COMMENT] = @COMMENT
+                            ,[UPDATEDBY] = @UPDATEDBY
+                            ,[UPDATEDAT] = @UPDATEDAT
+                         WHERE [HID] = @HID AND [ID] = @ID";
+        }
+        internal static void BindFinOrderUpdateParameter(SqlCommand cmd, FinanceOrderViewModel vm, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@NAME", vm.Name);
+            cmd.Parameters.AddWithValue("@VALID_FROM", vm.ValidFrom);
+            cmd.Parameters.AddWithValue("@VALID_TO", vm.ValidTo);
+            cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
+            cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@UPDATEDAT", vm.CreatedAt);
+            cmd.Parameters.AddWithValue("@HID", vm.HID);
+            cmd.Parameters.AddWithValue("@ID", vm.ID);
+        }
+        #endregion
+
+        #region Order - S. Rule
+        internal static string GetFinOrderSRuleInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_fin_order_srule]
+                                    ([ORDID]
+                                    ,[RULEID]
+                                    ,[CONTROLCENTERID]
+                                    ,[PRECENT]
+                                    ,[COMMENT])
+                                VALUES
+                                    (@ORDID
+                                    ,@RULEID
+                                    ,@CONTROLCENTERID
+                                    ,@PRECENT
+                                    ,@COMMENT)";
+        }
+        internal static void BindFinOrderSRuleInsertParameter(SqlCommand cmd2, FinanceOrderSRuleUIViewModel suivm, Int32 ordid)
+        {
+            cmd2.Parameters.AddWithValue("@ORDID", ordid);
+            cmd2.Parameters.AddWithValue("@RULEID", suivm.RuleID);
+            cmd2.Parameters.AddWithValue("@CONTROLCENTERID", suivm.ControlCenterID);
+            cmd2.Parameters.AddWithValue("@PRECENT", suivm.Precent);
+            cmd2.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(suivm.Comment) ? String.Empty : suivm.Comment);
+        }
+        internal static string GetFinOrderSRuleDeleteString()
+        {
+            return @"DELETE FROM[dbo].[t_fin_order_srule] WHERE[ORDID] = @ID";
+        }
+        internal static void BindFinOrderSRuleDeleteParameter(SqlCommand cmd, Int32 ordid)
+        {
+            cmd.Parameters.AddWithValue("@ID", ordid);
+        }
+        #endregion
+
         #region Lib book category
         internal static string getLibBookCategoryQueryString()
         {
@@ -1965,13 +2097,36 @@ namespace achihapi.Controllers
                             ,@Term)";
         }
 
-        internal static void BindTagInsertParameter(SqlCommand cmd2, Int32 hid, HIHTagTypeEnum tagType, Int32 nTagID, Int32 nTagSubID, String term)
+        internal static void BindTagInsertParameter(SqlCommand cmd2, Int32 hid, HIHTagTypeEnum tagType, Int32 nTagID, String term, Int32? nTagSubID = null)
         {
             cmd2.Parameters.AddWithValue("@HID", hid);
             cmd2.Parameters.AddWithValue("@TagType", tagType);
             cmd2.Parameters.AddWithValue("@TagID", nTagID);
-            cmd2.Parameters.AddWithValue("@TagSubID", nTagSubID);
+            if (nTagSubID.HasValue)
+                cmd2.Parameters.AddWithValue("@TagSubID", nTagSubID.Value);
+            else
+                cmd2.Parameters.AddWithValue("@TagSubID", DBNull.Value);
             cmd2.Parameters.AddWithValue("@Term", term);
+        }
+
+        internal static string GetTagDeleteString(Boolean incSub = false)
+        {
+            String strSql = @"DELETE FROM [dbo].[t_tag]
+                    WHERE [HID] = @HID AND [TagType] = @TagType AND [TagID] = @TagID ";
+
+            if (incSub)
+                return strSql + @" AND [TagSubID] = @TagSubID";
+
+            return strSql;
+        }
+
+        internal static void BindTagDeleteParameter(SqlCommand cmd2, Int32 hid, HIHTagTypeEnum tagType, Int32 nTagID, Int32? nTagSubID = null)
+        {
+            cmd2.Parameters.AddWithValue("@HID", hid);
+            cmd2.Parameters.AddWithValue("@TagType", tagType);
+            cmd2.Parameters.AddWithValue("@TagID", nTagID);
+            if (nTagSubID.HasValue)
+                cmd2.Parameters.AddWithValue("@TagSubID", nTagSubID.Value);
         }
 
         internal static void GetTagTerms()

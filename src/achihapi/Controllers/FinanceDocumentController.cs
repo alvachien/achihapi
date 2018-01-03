@@ -236,26 +236,13 @@ namespace achihapi.Controllers
                 return BadRequest("No Home ID inputted");
 
             // Do the basic check!
-            // Header check!
-            if (String.IsNullOrEmpty(vm.Desp))
-                return BadRequest("No Desp in the header");
-            if (vm.DocType == 0)
-                return BadRequest("Doc type is must!");
-
-            // Check the items
-            if (vm.Items.Count <= 0)
-                return BadRequest("No item has been assigned yet");
-
-            foreach (var item in vm.Items)
+            try
             {
-                if (item.AccountID == 0 || item.TranAmount == 0 || item.TranType == 0)
-                    return BadRequest("Item must have account or tran. amount or tran. type"); ;
-                if (item.ControlCenterID == 0 && item.OrderID == 0)
-                    return BadRequest("Must input control object");
-                if (item.ControlCenterID > 0 && item.OrderID > 0)
-                    return BadRequest("Either control center or order shall be inputted, not both");
-                if (String.IsNullOrEmpty(item.Desp))
-                    return BadRequest("Desp is a must for an item");
+                BasicChecks(vm);
+            }
+            catch (Exception exp)
+            {
+                return BadRequest(exp.Message);
             }
 
             // Update the database
@@ -276,232 +263,19 @@ namespace achihapi.Controllers
                 // Do the validation
                 try
                 {
-                    String strCheckString = @"SELECT TOP (1) [BASECURR] FROM [dbo].[t_homedef] WHERE [ID] = @hid;";
-                    SqlCommand cmdCheck = new SqlCommand(strCheckString, conn);
-                    cmdCheck.Parameters.AddWithValue("@hid", vm.HID);
-                    SqlDataReader reader = await cmdCheck.ExecuteReaderAsync();
-                    if (!reader.HasRows)
-                        return BadRequest("No home found");
-
-                    // Basic currency
-                    string basecurr = String.Empty;
-                    while (reader.Read())
-                    {
-                        basecurr = reader.GetString(0);
-                        break;
-                    }
-                    if (String.IsNullOrEmpty(basecurr))
-                        return BadRequest("No base currency defined!");
-                    reader.Dispose();
-                    reader = null;
-                    cmdCheck.Dispose();
-                    cmdCheck = null;
-
-                    // Currency
-                    strCheckString = @"SELECT TOP (1) CURR from t_fin_currency WHERE curr = @curr;";
-                    cmdCheck = new SqlCommand(strCheckString, conn);
-                    cmdCheck.Parameters.AddWithValue("@curr", vm.TranCurr);
-                    reader = await cmdCheck.ExecuteReaderAsync();
-                    if (!reader.HasRows)
-                        return BadRequest("No currency found");
-                    reader.Dispose();
-                    reader = null;
-                    cmdCheck.Dispose();
-                    cmdCheck = null;
-
-                    if (String.CompareOrdinal(vm.TranCurr, basecurr) != 0)
-                    {
-                        if (vm.ExgRate == 0)
-                        {
-                            return BadRequest("No exchange rate info provided!");
-                        }
-                    }
-
-                    // Second currency
-                    if (!String.IsNullOrEmpty(vm.TranCurr2))
-                    {
-                        strCheckString = @"SELECT TOP (1) CURR from t_fin_currency WHERE curr = @curr;";
-                        cmdCheck = new SqlCommand(strCheckString, conn);
-                        cmdCheck.Parameters.AddWithValue("@curr", vm.TranCurr2);
-                        reader = await cmdCheck.ExecuteReaderAsync();
-                        if (!reader.HasRows)
-                            return BadRequest("No currency found");
-                        reader.Dispose();
-                        reader = null;
-                        cmdCheck.Dispose();
-                        cmdCheck = null;
-
-                        if (String.CompareOrdinal(vm.TranCurr2, basecurr) != 0)
-                        {
-                            if (vm.ExgRate2 == 0)
-                            {
-                                return BadRequest("No exchange rate info provided!");
-                            }
-                        }
-                    }
-
-                    // Doc type
-                    strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_doc_type] WHERE [ID] = @ID"; // @"SELECT TOP (1) [ID] FROM [t_fin_doc_type] WHERE [HID] = @HID AND [ID] = @ID";
-                    cmdCheck = new SqlCommand(strCheckString, conn);
-                    //cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
-                    cmdCheck.Parameters.AddWithValue("@ID", vm.DocType);
-                    reader = await cmdCheck.ExecuteReaderAsync();
-                    if (!reader.HasRows)
-                        return BadRequest("No currency found");
-                    reader.Dispose();
-                    reader = null;
-                    cmdCheck.Dispose();
-                    cmdCheck = null;
-
-                    Decimal totalamount = 0;
-                    foreach(var item in vm.Items)
-                    {
-                        // Account
-                        strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_account] WHERE [HID] = @HID AND [ID] = @ID";
-                        cmdCheck = new SqlCommand(strCheckString, conn);
-                        cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
-                        cmdCheck.Parameters.AddWithValue("@ID", item.AccountID);
-                        reader = await cmdCheck.ExecuteReaderAsync();
-                        if (!reader.HasRows)
-                            return BadRequest("No account found");
-                        reader.Dispose();
-                        reader = null;
-                        cmdCheck.Dispose();
-                        cmdCheck = null;
-
-                        // Transaction type
-                        strCheckString = @"SELECT TOP (1) [ID], [EXPENSE] FROM [t_fin_tran_type] WHERE [ID] = @ID";//@"SELECT TOP (1) [ID], [EXPENSE] FROM [t_fin_tran_type] WHERE [HID] = @HID AND [ID] = @ID";
-                        cmdCheck = new SqlCommand(strCheckString, conn);
-                        //cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
-                        cmdCheck.Parameters.AddWithValue("@ID", item.TranType);
-                        reader = await cmdCheck.ExecuteReaderAsync();
-                        if (!reader.HasRows)
-                            return BadRequest("No tran. type found");
-
-                        Boolean isexp = false;
-                        while (reader.Read())
-                        {
-                            isexp = reader.GetBoolean(1);
-                            break;
-                        }
-                        reader.Dispose();
-                        reader = null;
-                        cmdCheck.Dispose();
-                        cmdCheck = null;
-
-                        // Control center
-                        if (item.ControlCenterID > 0)
-                        {
-                            strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_controlcenter] WHERE [HID] = @HID AND [ID] = @ID";
-                            cmdCheck = new SqlCommand(strCheckString, conn);
-                            cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
-                            cmdCheck.Parameters.AddWithValue("@ID", item.ControlCenterID);
-                            reader = await cmdCheck.ExecuteReaderAsync();
-                            if (!reader.HasRows)
-                                return BadRequest("No control center found");
-                            reader.Dispose();
-                            reader = null;
-                            cmdCheck.Dispose();
-                            cmdCheck = null;
-                        }
-
-                        // Order
-                        if (item.OrderID > 0)
-                        {
-                            strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_order] WHERE [HID] = @HID AND [ID] = @ID";
-                            cmdCheck = new SqlCommand(strCheckString, conn);
-                            cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
-                            cmdCheck.Parameters.AddWithValue("@ID", item.OrderID);
-                            reader = await cmdCheck.ExecuteReaderAsync();
-                            if (!reader.HasRows)
-                                return BadRequest("No order found");
-                            reader.Dispose();
-                            reader = null;
-                            cmdCheck.Dispose();
-                            cmdCheck = null;
-                        }
-
-                        // Item amount
-                        Decimal itemAmt = 0;
-                        if (item.UseCurr2)
-                        {
-                            if (isexp)
-                            {
-                                if (vm.ExgRate2 > 0)
-                                {
-                                    itemAmt = -1 * item.TranAmount * vm.ExgRate2 / 100;
-                                }
-                                else
-                                {
-                                    itemAmt = -1 * item.TranAmount;
-                                }
-                            }
-                            else
-                            {
-                                if (vm.ExgRate2 > 0)
-                                {
-                                    itemAmt = item.TranAmount * vm.ExgRate2 / 100;
-                                }
-                                else
-                                {
-                                    itemAmt = item.TranAmount;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (isexp)
-                            {
-                                if (vm.ExgRate > 0)
-                                {
-                                    itemAmt = -1 * item.TranAmount * vm.ExgRate / 100;
-                                }
-                                else
-                                {
-                                    itemAmt = -1 * item.TranAmount;
-                                }
-                            }
-                            else
-                            {
-                                if (vm.ExgRate > 0)
-                                {
-                                    itemAmt = item.TranAmount * vm.ExgRate / 100;
-                                }
-                                else
-                                {
-                                    itemAmt = item.TranAmount;
-                                }
-                            }
-                        }
-
-                        if (itemAmt == 0)
-                        {
-                            return BadRequest("Amount is not correct");
-                        }
-
-                        totalamount += itemAmt;
-                    }
-
-                    if (vm.DocType == FinanceDocTypeViewModel.DocType_Transfer || vm.DocType == FinanceDocTypeViewModel.DocType_CurrExchange)
-                    {
-                        if (totalamount != 0)
-                        {
-                            return BadRequest("Amount must be zero");
-                        }
-                    }
+                    await BasicValidationAsync(vm, conn);
                 }
                 catch (Exception exp)
                 {
                     return BadRequest(exp.Message);
                 }
 
-
                 SqlTransaction tran = conn.BeginTransaction();
 
                 SqlCommand cmd = null;
 
                 // Now go ahead for the creating
-                queryString = SqlUtility.getFinDocHeaderInsertString();
+                queryString = SqlUtility.GetFinDocHeaderInsertString();
 
                 try
                 {
@@ -510,7 +284,7 @@ namespace achihapi.Controllers
                         Transaction = tran
                     };
 
-                    SqlUtility.bindFinDocHeaderParameter(cmd, vm, usrName);
+                    SqlUtility.BindFinDocHeaderInsertParameter(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -520,13 +294,13 @@ namespace achihapi.Controllers
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
-                        queryString = SqlUtility.getFinDocItemInsertString();
+                        queryString = SqlUtility.GetFinDocItemInsertString();
 
                         SqlCommand cmd2 = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        SqlUtility.bindFinDocItemParameter(cmd2, ivm, nNewDocID);
+                        SqlUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
 
                         await cmd2.ExecuteNonQueryAsync();
 
@@ -543,7 +317,7 @@ namespace achihapi.Controllers
 
                                 cmd2 = new SqlCommand(queryString, conn, tran);
 
-                                SqlUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, ivm.ItemID, term);
+                                SqlUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
 
                                 await cmd2.ExecuteNonQueryAsync();
 
@@ -590,16 +364,166 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+
             return new JsonResult(vm, setting);
         }
 
         // PUT api/financedocument/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(int id, [FromBody]string value)
+        public async Task<IActionResult> Put(int id, [FromBody]FinanceDocumentUIViewModel vm)
         {
-            return BadRequest();
+            if (vm == null || vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment
+                    || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
+                    || vm.DocType == FinanceDocTypeViewModel.DocType_AssetSoldOut
+                    || vm.DocType == FinanceDocTypeViewModel.DocType_Loan)
+            {
+                return BadRequest("No data is inputted or for Advancepay/Loan/Asset");
+            }
+            if (vm.HID <= 0)
+                return BadRequest("No Home ID inputted");
+            if (vm.ID <= 0)
+                return BadRequest("No Doc ID inputted");
+
+            // Do the basic check!
+            try
+            {
+                BasicChecks(vm);
+            }
+            catch(Exception exp)
+            {
+                return BadRequest(exp.Message);
+            }
+
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Do the validation
+                try
+                {
+                    await BasicValidationAsync(vm, conn);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                SqlTransaction tran = conn.BeginTransaction();
+
+                SqlCommand cmd = null;
+
+                // Now go ahead for the updating
+                queryString = SqlUtility.GetFinDocHeaderUpdateString();
+
+                try
+                {
+                    cmd = new SqlCommand(queryString, conn)
+                    {
+                        Transaction = tran
+                    };
+
+                    // Step 1, Update Header
+                    SqlUtility.BindFinDocHeaderUpdateParameter(cmd, vm, usrName);
+                    await cmd.ExecuteNonQueryAsync();
+
+                    // Step 2, Delete all items
+                    queryString = @"DELETE FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + id.ToString();
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // Step 3 , Re-create the items
+                    foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
+                    {
+                        queryString = SqlUtility.GetFinDocItemInsertString();
+
+                        SqlCommand cmd2 = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
+                        SqlUtility.BindFinDocItemInsertParameter(cmd2, ivm, vm.ID);
+
+                        await cmd2.ExecuteNonQueryAsync();
+
+                        cmd2.Dispose();
+                        cmd2 = null;
+
+                        // Delete tag if exist
+                        queryString = SqlUtility.GetTagDeleteString(true);
+                        cmd2 = new SqlCommand(queryString, conn, tran);
+                        SqlUtility.BindTagDeleteParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, vm.ID, ivm.ItemID);
+                        await cmd2.ExecuteNonQueryAsync();
+                        cmd2.Dispose();
+                        cmd2 = null;
+
+                        // Tags
+                        if (ivm.TagTerms.Count > 0)
+                        {
+                            // Create tags
+                            foreach (var term in ivm.TagTerms)
+                            {
+                                queryString = SqlUtility.GetTagInsertString();
+
+                                cmd2 = new SqlCommand(queryString, conn, tran);
+                                SqlUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, vm.ID, term, ivm.ItemID);
+
+                                await cmd2.ExecuteNonQueryAsync();
+
+                                cmd2.Dispose();
+                                cmd2 = null;
+                            }
+                        }
+                    }
+
+                    tran.Commit();
+                }
+                catch (Exception exp)
+                {
+#if DEBUG
+                    System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
+                    bError = true;
+                    strErrMsg = exp.Message;
+                    if (tran != null)
+                        tran.Rollback();
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+
+            return new JsonResult(vm, setting);
         }
 
         // DELETE api/financedocument/5
@@ -830,5 +754,251 @@ namespace achihapi.Controllers
             return Ok();
         }
 
+        // Checks
+        private void BasicChecks(FinanceDocumentUIViewModel vm)
+        {
+            // Header check!
+            if (String.IsNullOrEmpty(vm.Desp))
+                throw new Exception("No Desp in the header");
+            if (vm.DocType == 0)
+                throw new Exception("Doc type is must!");
+
+            // Check the items
+            if (vm.Items.Count <= 0)
+                throw new Exception("No item has been assigned yet");
+
+            foreach (var item in vm.Items)
+            {
+                if (item.AccountID == 0 || item.TranAmount == 0 || item.TranType == 0)
+                    throw new Exception("Item must have account or tran. amount or tran. type"); ;
+                if (item.ControlCenterID == 0 && item.OrderID == 0)
+                    throw new Exception("Must input control object");
+                if (item.ControlCenterID > 0 && item.OrderID > 0)
+                    throw new Exception("Either control center or order shall be inputted, not both");
+                if (String.IsNullOrEmpty(item.Desp))
+                    throw new Exception("Desp is a must for an item");
+            }
+
+        }
+
+        private async Task BasicValidationAsync(FinanceDocumentUIViewModel vm, SqlConnection conn)
+        {
+            String strCheckString = @"SELECT TOP (1) [BASECURR] FROM [dbo].[t_homedef] WHERE [ID] = @hid;";
+            SqlCommand cmdCheck = new SqlCommand(strCheckString, conn);
+            cmdCheck.Parameters.AddWithValue("@hid", vm.HID);
+
+            SqlDataReader reader = await cmdCheck.ExecuteReaderAsync();
+            if (!reader.HasRows)
+                throw new Exception("No home found");
+
+            // Basic currency
+            string basecurr = String.Empty;
+            while (reader.Read())
+            {
+                basecurr = reader.GetString(0);
+                break;
+            }
+            if (String.IsNullOrEmpty(basecurr))
+                throw new Exception("No base currency defined!");
+
+            reader.Dispose();
+            reader = null;
+            cmdCheck.Dispose();
+            cmdCheck = null;
+
+            // Currency
+            strCheckString = @"SELECT TOP (1) CURR from t_fin_currency WHERE curr = @curr;";
+            cmdCheck = new SqlCommand(strCheckString, conn);
+            cmdCheck.Parameters.AddWithValue("@curr", vm.TranCurr);
+            reader = await cmdCheck.ExecuteReaderAsync();
+            if (!reader.HasRows)
+                throw new Exception("No currency found");
+            reader.Dispose();
+            reader = null;
+            cmdCheck.Dispose();
+            cmdCheck = null;
+
+            if (String.CompareOrdinal(vm.TranCurr, basecurr) != 0)
+            {
+                if (vm.ExgRate == 0)
+                {
+                    throw new Exception("No exchange rate info provided!");
+                }
+            }
+
+            // Second currency
+            if (!String.IsNullOrEmpty(vm.TranCurr2))
+            {
+                strCheckString = @"SELECT TOP (1) CURR from t_fin_currency WHERE curr = @curr;";
+                cmdCheck = new SqlCommand(strCheckString, conn);
+                cmdCheck.Parameters.AddWithValue("@curr", vm.TranCurr2);
+                reader = await cmdCheck.ExecuteReaderAsync();
+                if (!reader.HasRows)
+                    throw new Exception("No currency found");
+
+                reader.Dispose();
+                reader = null;
+                cmdCheck.Dispose();
+                cmdCheck = null;
+
+                if (String.CompareOrdinal(vm.TranCurr2, basecurr) != 0)
+                {
+                    if (vm.ExgRate2 == 0)
+                    {
+                        throw new Exception("No exchange rate info provided!");
+                    }
+                }
+            }
+
+            // Doc type
+            strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_doc_type] WHERE [ID] = @ID"; // @"SELECT TOP (1) [ID] FROM [t_fin_doc_type] WHERE [HID] = @HID AND [ID] = @ID";
+            cmdCheck = new SqlCommand(strCheckString, conn);
+            //cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
+            cmdCheck.Parameters.AddWithValue("@ID", vm.DocType);
+            reader = await cmdCheck.ExecuteReaderAsync();
+            if (!reader.HasRows)
+                throw new Exception("No currency found");
+            reader.Dispose();
+            reader = null;
+            cmdCheck.Dispose();
+            cmdCheck = null;
+
+            Decimal totalamount = 0;
+            foreach (var item in vm.Items)
+            {
+                // Account
+                strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_account] WHERE [HID] = @HID AND [ID] = @ID";
+                cmdCheck = new SqlCommand(strCheckString, conn);
+                cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
+                cmdCheck.Parameters.AddWithValue("@ID", item.AccountID);
+                reader = await cmdCheck.ExecuteReaderAsync();
+                if (!reader.HasRows)
+                    throw new Exception("No account found");
+                reader.Dispose();
+                reader = null;
+                cmdCheck.Dispose();
+                cmdCheck = null;
+
+                // Transaction type
+                strCheckString = @"SELECT TOP (1) [ID], [EXPENSE] FROM [t_fin_tran_type] WHERE [ID] = @ID";//@"SELECT TOP (1) [ID], [EXPENSE] FROM [t_fin_tran_type] WHERE [HID] = @HID AND [ID] = @ID";
+                cmdCheck = new SqlCommand(strCheckString, conn);
+                //cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
+                cmdCheck.Parameters.AddWithValue("@ID", item.TranType);
+                reader = await cmdCheck.ExecuteReaderAsync();
+                if (!reader.HasRows)
+                    throw new Exception("No tran. type found");
+
+                Boolean isexp = false;
+                while (reader.Read())
+                {
+                    isexp = reader.GetBoolean(1);
+                    break;
+                }
+                reader.Dispose();
+                reader = null;
+                cmdCheck.Dispose();
+                cmdCheck = null;
+
+                // Control center
+                if (item.ControlCenterID > 0)
+                {
+                    strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_controlcenter] WHERE [HID] = @HID AND [ID] = @ID";
+                    cmdCheck = new SqlCommand(strCheckString, conn);
+                    cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
+                    cmdCheck.Parameters.AddWithValue("@ID", item.ControlCenterID);
+                    reader = await cmdCheck.ExecuteReaderAsync();
+                    if (!reader.HasRows)
+                        throw new Exception("No control center found");
+                    reader.Dispose();
+                    reader = null;
+                    cmdCheck.Dispose();
+                    cmdCheck = null;
+                }
+
+                // Order
+                if (item.OrderID > 0)
+                {
+                    strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_order] WHERE [HID] = @HID AND [ID] = @ID";
+                    cmdCheck = new SqlCommand(strCheckString, conn);
+                    cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
+                    cmdCheck.Parameters.AddWithValue("@ID", item.OrderID);
+                    reader = await cmdCheck.ExecuteReaderAsync();
+                    if (!reader.HasRows)
+                        throw new Exception("No order found");
+                    reader.Dispose();
+                    reader = null;
+                    cmdCheck.Dispose();
+                    cmdCheck = null;
+                }
+
+                // Item amount
+                Decimal itemAmt = 0;
+                if (item.UseCurr2)
+                {
+                    if (isexp)
+                    {
+                        if (vm.ExgRate2 > 0)
+                        {
+                            itemAmt = -1 * item.TranAmount * vm.ExgRate2 / 100;
+                        }
+                        else
+                        {
+                            itemAmt = -1 * item.TranAmount;
+                        }
+                    }
+                    else
+                    {
+                        if (vm.ExgRate2 > 0)
+                        {
+                            itemAmt = item.TranAmount * vm.ExgRate2 / 100;
+                        }
+                        else
+                        {
+                            itemAmt = item.TranAmount;
+                        }
+                    }
+                }
+                else
+                {
+                    if (isexp)
+                    {
+                        if (vm.ExgRate > 0)
+                        {
+                            itemAmt = -1 * item.TranAmount * vm.ExgRate / 100;
+                        }
+                        else
+                        {
+                            itemAmt = -1 * item.TranAmount;
+                        }
+                    }
+                    else
+                    {
+                        if (vm.ExgRate > 0)
+                        {
+                            itemAmt = item.TranAmount * vm.ExgRate / 100;
+                        }
+                        else
+                        {
+                            itemAmt = item.TranAmount;
+                        }
+                    }
+                }
+
+                if (itemAmt == 0)
+                {
+                    throw new Exception("Amount is not correct");
+                }
+
+                totalamount += itemAmt;
+            }
+
+            if (vm.DocType == FinanceDocTypeViewModel.DocType_Transfer || vm.DocType == FinanceDocTypeViewModel.DocType_CurrExchange)
+            {
+                if (totalamount != 0)
+                {
+                    throw new Exception("Amount must be zero");
+                }
+            }
+        }
     }
 }

@@ -103,11 +103,11 @@ namespace achihapi.Controllers
 
         // GET: api/FinanceADPTmpDoc/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        public IActionResult Get(int id)
         {
             return BadRequest();
         }
-        
+
         // POST: api/FinanceADPTmpDoc
         [HttpPost]
         [Authorize]
@@ -232,7 +232,7 @@ namespace achihapi.Controllers
                 vmFIDOC.Items.Add(vmItem);
 
                 // Now go ahead for the creating
-                queryString = SqlUtility.getFinDocHeaderInsertString();
+                queryString = SqlUtility.GetFinDocHeaderInsertString();
 
                 try
                 {
@@ -242,7 +242,7 @@ namespace achihapi.Controllers
                         Transaction = tran
                     };
 
-                    SqlUtility.bindFinDocHeaderParameter(cmd, vmFIDOC, usrName);
+                    SqlUtility.BindFinDocHeaderInsertParameter(cmd, vmFIDOC, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -253,13 +253,13 @@ namespace achihapi.Controllers
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vmFIDOC.Items)
                     {
-                        queryString = SqlUtility.getFinDocItemInsertString();
+                        queryString = SqlUtility.GetFinDocItemInsertString();
 
                         SqlCommand cmd2 = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        SqlUtility.bindFinDocItemParameter(cmd2, ivm, nNewDocID);
+                        SqlUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
 
                         await cmd2.ExecuteNonQueryAsync();
                     }
@@ -326,11 +326,11 @@ namespace achihapi.Controllers
 
         // PUT: api/FinanceADPTmpDoc/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody]FinanceTmpDocDPViewModel vm)
+        public IActionResult Put(int id, [FromBody]FinanceTmpDocDPViewModel vm)
         {
             return BadRequest();
         }
-        
+
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
