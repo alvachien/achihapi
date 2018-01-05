@@ -1,21 +1,20 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System.Data;
 using System.Data.SqlClient;
 using achihapi.ViewModels;
 
 namespace achihapi.Controllers
-{
+{    
     [Produces("application/json")]
-    [Route("api/FinanceReportTranType")]
-    public class FinanceReportTranTypeController : Controller
+    [Route("api/FinanceReportTrend")]
+    public class FinanceReportTrendController : Controller
     {
-        // GET: api/FinanceReportTranType
+        // GET: api/FinanceReportTrend
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, DateTime? dtbgn = null, DateTime? dtend = null)
@@ -28,7 +27,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            List<FinanceReportTranTypeViewModel> listVm = new List<FinanceReportTranTypeViewModel>();
+            List<FinanceReportTrendBaseViewModel> listVm = new List<FinanceReportTrendBaseViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -36,19 +35,16 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT [HID]
-                              ,[TRANDATE]
-                              ,[TRANTYPE]
-                              ,[NAME]
-                              ,[EXPENSE]
-                              ,[tranamount]
-                      FROM [dbo].[v_fin_report_trantype] WHERE [HID] = @hid ";
+                queryString = @"SELECT YEAR(TRANDATE) AS TRANYEAR, MONTH(TRANDATE) AS TRANMONTH, EXPENSE, SUM(TRANAMOUNT) AS TOTALAMTS 
+                    FROM v_fin_report_trantype WHERE [HID] = @hid ";
                 if (dtbgn.HasValue)
-                    queryString += " AND [TRANDATE] >= @dtbgn";
+                    queryString += " AND [TRANDATE] >= @dtbgn ";
                 if (dtend.HasValue)
-                    queryString += " AND [TRANDATE] <= @dtend";
+                    queryString += " AND [TRANDATE] <= @dtend ";
+                queryString += @" GROUP BY YEAR(TRANDATE), MONTH(TRANDATE), EXPENSE";
 
                 await conn.OpenAsync();
+
                 // Check Home assignment with current user
                 try
                 {
@@ -71,23 +67,13 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        FinanceReportTranTypeViewModel avm = new FinanceReportTranTypeViewModel
+                        FinanceReportTrendBaseViewModel avm = new FinanceReportTrendBaseViewModel
                         {
-                            TranDate = reader.GetDateTime(1),
-                            TranType = reader.GetInt32(2)
+                            Year = reader.GetInt32(0),
+                            Month = reader.GetInt32(1),
+                            Expense = reader.GetBoolean(2),
+                            TranAmount = reader.GetDecimal(3)
                         };
-                        if (reader.IsDBNull(3))
-                            avm.Name = String.Empty;
-                        else
-                            avm.Name = reader.GetString(3);
-                        if (reader.IsDBNull(4))
-                            avm.ExpenseFlag = false;
-                        else
-                            avm.ExpenseFlag = reader.GetBoolean(4);
-                        if (reader.IsDBNull(5))
-                            avm.TranAmount = 0;
-                        else
-                            avm.TranAmount = Math.Round(reader.GetDecimal(5), 2);
                         listVm.Add(avm);
                     }
                 }
@@ -115,7 +101,7 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-
+            
             return new JsonResult(listVm, setting);
         }
     }
