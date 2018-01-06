@@ -17,7 +17,7 @@ namespace achihapi.Controllers
         // GET: api/FinanceReportTrend
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, DateTime? dtbgn = null, DateTime? dtend = null)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean exctran = false, DateTime? dtbgn = null, DateTime? dtend = null)
         {
             if (hid <= 0)
                 return BadRequest("No HID inputted");
@@ -35,14 +35,6 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT YEAR(TRANDATE) AS TRANYEAR, MONTH(TRANDATE) AS TRANMONTH, EXPENSE, SUM(TRANAMOUNT) AS TOTALAMTS 
-                    FROM v_fin_report_trantype WHERE [HID] = @hid ";
-                if (dtbgn.HasValue)
-                    queryString += " AND [TRANDATE] >= @dtbgn ";
-                if (dtend.HasValue)
-                    queryString += " AND [TRANDATE] <= @dtend ";
-                queryString += @" GROUP BY YEAR(TRANDATE), MONTH(TRANDATE), EXPENSE";
-
                 await conn.OpenAsync();
 
                 // Check Home assignment with current user
@@ -54,6 +46,17 @@ namespace achihapi.Controllers
                 {
                     return BadRequest(exp.Message);
                 }
+
+                queryString = @"SELECT YEAR(TRANDATE) AS TRANYEAR, MONTH(TRANDATE) AS TRANMONTH, EXPENSE, SUM(TRANAMOUNT) AS TOTALAMTS 
+                    FROM v_fin_report_trantype WHERE [HID] = @hid ";
+                // Exclude transfer
+                if (exctran)
+                    queryString += " AND [TRANTYPE] !=  " + FinanceTranTypeViewModel.TranType_TransferIn.ToString() +  " AND [TRANTYPE] != " + FinanceTranTypeViewModel.TranType_TransferOut.ToString();
+                if (dtbgn.HasValue)
+                    queryString += " AND [TRANDATE] >= @dtbgn ";
+                if (dtend.HasValue)
+                    queryString += " AND [TRANDATE] <= @dtend ";
+                queryString += @" GROUP BY YEAR(TRANDATE), MONTH(TRANDATE), EXPENSE";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@hid", hid);
