@@ -145,7 +145,9 @@ namespace achihapi.ViewModels
     {
         LearnQuestionBank = 1,
 
-        FinanceDocumentItem = 10
+        FinanceDocumentItem = 10,
+
+        EventItem       = 20
     }
 
     internal enum HIHQuestionBankType : Byte

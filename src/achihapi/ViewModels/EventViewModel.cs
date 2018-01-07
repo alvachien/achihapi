@@ -13,14 +13,14 @@ namespace achihapi.ViewModels
         [StringLength(50)]
         public String Name { get; set; }
         [Required]
-        public DateTime StartTimePoint { get; set; }
-        [Required]
-        public DateTime EndTimePoint { get; set; }
+        public DateTime StartTimePoint { get; set; }        
+        public DateTime? EndTimePoint { get; set; }
+        public DateTime? CompleteTimePoint { get; set; }
         public String Content { get; set; }
         public Boolean IsPublic { get; set; }
         [StringLength(40)]
-        public String Owner { get; set; }
-        public Int32? RefID { get; set; }
+        public String Assignee { get; set; }
+        public Int32? RefRecurrID { get; set; }
 
         public String Tags { get; set; }
     }

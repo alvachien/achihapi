@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using achihapi.ViewModels;
@@ -95,7 +93,7 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+            
             return new JsonResult(listVm, setting);
         }
 
@@ -110,9 +108,9 @@ namespace achihapi.Controllers
             if (!reader.IsDBNull(5))
                 vm.IsPublic = reader.GetBoolean(5);
             if (!reader.IsDBNull(6))
-                vm.Owner = reader.GetString(6);
+                vm.Assignee = reader.GetString(6);
             if (!reader.IsDBNull(7))
-                vm.RefID = reader.GetInt32(7);
+                vm.RefRecurrID = reader.GetInt32(7);
             if (!reader.IsDBNull(8))
                 vm.CreatedBy = reader.GetString(8);
             if (!reader.IsDBNull(9))
@@ -197,7 +195,7 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+            
             return new JsonResult(vm, setting);
         }
 
@@ -289,14 +287,14 @@ namespace achihapi.Controllers
                     else
                         cmd.Parameters.AddWithValue("@CONTENT", vm.Content);
                     cmd.Parameters.AddWithValue("@ISPUBLIC", vm.IsPublic);
-                    if (vm.Owner == null)
+                    if (vm.Assignee == null)
                         cmd.Parameters.AddWithValue("@OWNER", DBNull.Value);
                     else
-                        cmd.Parameters.AddWithValue("@OWNER", vm.Owner);
-                    if (vm.RefID == null)
+                        cmd.Parameters.AddWithValue("@OWNER", vm.Assignee);
+                    if (vm.RefRecurrID == null)
                         cmd.Parameters.AddWithValue("REFID", DBNull.Value);
                     else
-                        cmd.Parameters.AddWithValue("REFID", vm.RefID);
+                        cmd.Parameters.AddWithValue("REFID", vm.RefRecurrID);
                     cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
                     cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
@@ -337,7 +335,7 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+            
             return new JsonResult(vm, setting);
         }
 

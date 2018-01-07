@@ -1463,6 +1463,50 @@ GO
 ALTER TABLE [dbo].[t_learn_ensent_word] CHECK CONSTRAINT [FK_t_learn_ensent_word_sent]
 GO
 
+-- Updated at 2018.1.7
+/****** Object:  Table [dbo].[t_event]    Script Date: 2017-05-04 5:54:17 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[t_event](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[Name] [nvarchar](50) NOT NULL,
+	[StartTime] [datetime] NOT NULL,
+	[EndTime] [datetime] NULL,
+	[CompleteTime] [datetime] NULL,
+	[Content] [nvarchar](max) NULL,
+	[IsPublic] [bit] NOT NULL,
+	[Assignee] [nvarchar](40) NULL,
+	[RefRecurID] [int] NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_event] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+ CONSTRAINT [UX_t_event_name] UNIQUE NONCLUSTERED 
+(
+	[HID] ASC,
+	[Name] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_StartTime]  DEFAULT (getdate()) FOR [StartTime]
+GO
+ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
+GO
+ALTER TABLE [dbo].[t_event]  WITH CHECK ADD  CONSTRAINT [FK_t_event_t_hid] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[t_event] CHECK CONSTRAINT [FK_t_event_t_hid]
+GO
+
 ---------------------------------
 -- TODO...
 
@@ -1609,50 +1653,6 @@ GO
 
 --GO
 
---/****** Object:  Table [dbo].[t_event]    Script Date: 2017-05-04 5:54:17 PM ******/
---SET ANSI_NULLS ON
---GO
---SET QUOTED_IDENTIFIER ON
---GO
---CREATE TABLE [dbo].[t_event](
---	[HID] [int] NOT NULL,
---	[ID] [int] IDENTITY(1,1) NOT NULL,
---	[Name] [nvarchar](50) NOT NULL,
---	[StartTime] [datetime] NOT NULL,
---	[EndTime] [datetime] NOT NULL,
---	[Content] [nvarchar](max) NULL,
---	[IsPublic] [bit] NOT NULL,
---	[Owner] [nvarchar](40) NULL,
---	[RefID] [int] NULL,
---	[CREATEDBY] [nvarchar](40) NULL,
---	[CREATEDAT] [date] NULL,
---	[UPDATEDBY] [nvarchar](40) NULL,
---	[UPDATEDAT] [date] NULL,
--- CONSTRAINT [PK_t_event] PRIMARY KEY CLUSTERED 
---(
---	[HID] ASC,
---	[ID] ASC
---)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
--- CONSTRAINT [UX_t_event_name] UNIQUE NONCLUSTERED 
---(
---	[HID] ASC,
---	[Name] ASC
---)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
---) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-
---ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_StartTime]  DEFAULT (getdate()) FOR [StartTime]
---GO
---ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_EndTime]  DEFAULT (getdate()) FOR [EndTime]
---GO
---ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
---GO
---ALTER TABLE [dbo].[t_event]  WITH CHECK ADD  CONSTRAINT [FK_t_event_t_hid] FOREIGN KEY([HID])
---REFERENCES [dbo].[t_homedef] ([ID])
---ON UPDATE CASCADE
---ON DELETE CASCADE
---GO
---ALTER TABLE [dbo].[t_event] CHECK CONSTRAINT [FK_t_event_t_hid]
---GO
 
 --/****** Object:  Index [IUX_t_tag_NAME]    Script Date: 2016-10-27 3:31:27 PM ******/
 --CREATE UNIQUE NONCLUSTERED INDEX [IUX_t_tag_NAME] ON [dbo].[t_tag]
@@ -1692,15 +1692,6 @@ GO
 --ON DELETE CASCADE
 --GO
 --ALTER TABLE [dbo].[t_learn_planpat] CHECK CONSTRAINT [FK_t_learn_planpat_plan]
---GO
-
---ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_StartTime]  DEFAULT (getdate()) FOR [StartTime]
---GO
-
---ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_EndTime]  DEFAULT (getdate()) FOR [EndTime]
---GO
-
---ALTER TABLE [dbo].[t_event] ADD  CONSTRAINT [DF_t_event_IsPublic]  DEFAULT ((1)) FOR [IsPublic]
 --GO
 
 --/****** Object:  Table [dbo].[TodoItem]    Script Date: 7/19/2016 11:50:38 AM ******/
