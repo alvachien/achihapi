@@ -246,29 +246,47 @@ namespace achihapi.Controllers
         #endregion
 
         #region Home message
-        internal static string getHomeMsgQueryString(String urName, Int32 hid)
+        internal static string getHomeMsgQueryString(String urName, Int32 hid, Boolean sentbox)
         {
             return @"SELECT [ID]
-                      ,[HID]
+                      ,[t_homemsg].[HID]
                       ,[USERTO]
+	                  ,mem2.[DISPLAYAS] AS [USERTO_DISPLAYAS]
                       ,[SENDDATE]
                       ,[USERFROM]
+	                  ,mem1.[DISPLAYAS] AS [USERFROM_DISPLAYAS]
                       ,[TITLE]
                       ,[CONTENT]
                       ,[READFLAG]
-                  FROM [dbo].[t_homemsg] WHERE [HID] = " + hid.ToString()  + " AND [USERTO] = N'" + urName + "'";
+                  FROM [dbo].[t_homemsg]
+                  INNER JOIN [dbo].[t_homemem] as mem1
+	                ON [t_homemsg].[HID] = mem1.[HID]
+	                AND [t_homemsg].USERFROM = mem1.[USER]
+                  INNER JOIN [dbo].[t_homemem] as mem2
+	                ON [t_homemsg].[HID] = mem2.[HID]
+	                AND [t_homemsg].USERTO = mem2.[USER] WHERE [t_homemsg].[HID] = "
+                  + hid.ToString()  + (sentbox? (" AND [t_homemsg].[USERFROM] = N'" + urName + "'" ) : (" AND [t_homemsg].[USERTO] = N'" + urName + "'" ));
         }
 
         internal static void HomeMsg_DB2VM(SqlDataReader reader, HomeMsgViewModel vm)
         {
             Int32 idx = 0;
+
             try
             {
                 vm.ID = reader.GetInt32(idx++);
                 vm.HID = reader.GetInt32(idx++);
                 vm.UserTo = reader.GetString(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.UserTo_DisplayAs = reader.GetString(idx++);
+                else
+                    ++idx;
                 vm.SendDate = reader.GetDateTime(idx++);
                 vm.UserFrom = reader.GetString(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.UserFrom_DisplayAs = reader.GetString(idx++);
+                else
+                    ++idx;
                 vm.Title = reader.GetString(idx++);
                 if (!reader.IsDBNull(idx))
                     vm.Content = reader.GetString(idx++);

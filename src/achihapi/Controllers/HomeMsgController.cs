@@ -15,7 +15,7 @@ namespace achihapi.Controllers
     {
         // GET: api/HomeMsg
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean sentbox = false, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<HomeMsgViewModel> listVm = new BaseListViewModel<HomeMsgViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -32,7 +32,7 @@ namespace achihapi.Controllers
                 if (String.IsNullOrEmpty(usrName))
                     return BadRequest();
 
-                queryString = this.getQueryString(true, top, skip, hid, usrName);
+                queryString = this.getQueryString(true, top, skip, hid, sentbox, usrName);
 
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -187,16 +187,19 @@ namespace achihapi.Controllers
         }
 
         #region Implementation methods
-        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32 hid, String usrName)
+        private string getQueryString(Boolean bListMode, Int32? nTop, Int32? nSkip, Int32 hid, Boolean sentbox, String usrName)
         {
 
             String strSQL = "";
             if (bListMode)
             {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_homemsg] WHERE [HID] = " + hid.ToString() + " AND [USERTO] = N'" + usrName + "'; ";
+                if (sentbox)
+                    strSQL += @"SELECT count(*) FROM [dbo].[t_homemsg] WHERE [HID] = " + hid.ToString() + " AND [USERFROM] = N'" + usrName + "'; ";
+                else
+                    strSQL += @"SELECT count(*) FROM [dbo].[t_homemsg] WHERE [HID] = " + hid.ToString() + " AND [USERTO] = N'" + usrName + "'; ";
             }
 
-            strSQL += SqlUtility.getHomeMsgQueryString(usrName, hid);
+            strSQL += SqlUtility.getHomeMsgQueryString(usrName, hid, sentbox);
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
@@ -207,6 +210,7 @@ namespace achihapi.Controllers
             {
                 strSQL += @" AND [t_homemsg].[USERTO] = " + usrName;
             }
+
 #if DEBUG
             System.Diagnostics.Debug.WriteLine("HomeMsgController, SQL generated: " + strSQL);
 #endif

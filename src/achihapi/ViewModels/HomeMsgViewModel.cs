@@ -14,11 +14,13 @@ namespace achihapi.ViewModels
         [Required]
         [MaxLength(50)]
         public String UserTo { get; set; }
+        public String UserTo_DisplayAs { get; set; }
         [Required]
         public DateTime SendDate { get; set; }
         [Required]
         [MaxLength(50)]
         public String UserFrom { get; set; }
+        public String UserFrom_DisplayAs { get; set; }
         [Required]
         [MaxLength(20)]
         public String Title { get; set; }

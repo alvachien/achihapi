@@ -25,13 +25,15 @@ namespace achihapi.Controllers
             {
                 queryString = @"SELECT count(*) FROM [dbo].[t_event];
                     SELECT [ID]
+                          ,[HID]
                           ,[Name]
                           ,[StartTime]
                           ,[EndTime]
+                          ,[CompleteTime]
                           ,[Content]
                           ,[IsPublic]
-                          ,[Owner]
-                          ,[RefID]
+                          ,[Assignee]
+                          ,[RefRecurID]
                           ,[CREATEDBY]
                           ,[CREATEDAT]
                           ,[UPDATEDBY]
@@ -135,17 +137,19 @@ namespace achihapi.Controllers
             try
             {
                 queryString = @"SELECT [ID]
-                          ,[Name]
-                          ,[StartTime]
-                          ,[EndTime]
-                          ,[Content]
-                          ,[IsPublic]
-                          ,[Owner]
-                          ,[RefID]
-                          ,[CREATEDBY]
-                          ,[CREATEDAT]
-                          ,[UPDATEDBY]
-                          ,[UPDATEDAT]
+                              ,[HID]
+                              ,[Name]
+                              ,[StartTime]
+                              ,[EndTime]
+                              ,[CompleteTime]
+                              ,[Content]
+                              ,[IsPublic]
+                              ,[Assignee]
+                              ,[RefRecurID]
+                              ,[CREATEDBY]
+                              ,[CREATEDAT]
+                              ,[UPDATEDBY]
+                              ,[UPDATEDAT]
                       FROM [dbo].[t_event] WHERE [ID] = " + id.ToString();
 
                 await conn.OpenAsync();
