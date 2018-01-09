@@ -9,12 +9,21 @@ using Microsoft.AspNetCore.Authorization;
 namespace achihapi.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class EventController : Controller
     {
         // GET: api/event
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
+            if (hid <= 0)
+                return BadRequest("HID is missing");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             BaseListViewModel<EventViewModel> listVm = new BaseListViewModel<EventViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -23,26 +32,20 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT count(*) FROM [dbo].[t_event];
-                    SELECT [ID]
-                          ,[HID]
-                          ,[Name]
-                          ,[StartTime]
-                          ,[EndTime]
-                          ,[CompleteTime]
-                          ,[Content]
-                          ,[IsPublic]
-                          ,[Assignee]
-                          ,[RefRecurID]
-                          ,[CREATEDBY]
-                          ,[CREATEDAT]
-                          ,[UPDATEDBY]
-                          ,[UPDATEDAT]
-                      FROM [dbo].[t_event]
-                        ORDER BY (SELECT NULL)
-                        OFFSET " + skip.ToString() + " ROWS FETCH NEXT " + top.ToString() + " ROWS ONLY;";
-
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                queryString = SqlUtility.Event_GetNormalEventQueryString(true, usrName, hid, skip, top);
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
@@ -62,7 +65,7 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             EventViewModel vm = new EventViewModel();
-                            onDB2VM(reader, vm);
+                            SqlUtility.Event_DB2VM(reader, vm, true);
                             listVm.Add(vm);
                         }
                     }
@@ -84,6 +87,7 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
@@ -99,82 +103,58 @@ namespace achihapi.Controllers
             return new JsonResult(listVm, setting);
         }
 
-        private void onDB2VM(SqlDataReader reader, EventViewModel vm)
-        {
-            vm.ID = reader.GetInt32(0);
-            vm.Name = reader.GetString(1);
-            vm.StartTimePoint = reader.GetDateTime(2);
-            vm.EndTimePoint = reader.GetDateTime(3);
-            if (!reader.IsDBNull(4))
-                vm.Content = reader.GetString(4);
-            if (!reader.IsDBNull(5))
-                vm.IsPublic = reader.GetBoolean(5);
-            if (!reader.IsDBNull(6))
-                vm.Assignee = reader.GetString(6);
-            if (!reader.IsDBNull(7))
-                vm.RefRecurrID = reader.GetInt32(7);
-            if (!reader.IsDBNull(8))
-                vm.CreatedBy = reader.GetString(8);
-            if (!reader.IsDBNull(9))
-                vm.CreatedAt = reader.GetDateTime(9);
-            if (!reader.IsDBNull(10))
-                vm.UpdatedBy = reader.GetString(10);
-            if (!reader.IsDBNull(11))
-                vm.UpdatedAt = reader.GetDateTime(11);
-        }
-
         // GET api/event/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
         {
+            if (hid <= 0)
+                return BadRequest("HID is missing");
+            if (id <= 0)
+                return BadRequest("Invalid ID");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
             EventViewModel vm = new EventViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
-            Boolean bNotFound = false;
 
             try
             {
-                queryString = @"SELECT [ID]
-                              ,[HID]
-                              ,[Name]
-                              ,[StartTime]
-                              ,[EndTime]
-                              ,[CompleteTime]
-                              ,[Content]
-                              ,[IsPublic]
-                              ,[Assignee]
-                              ,[RefRecurID]
-                              ,[CREATEDBY]
-                              ,[CREATEDAT]
-                              ,[UPDATEDBY]
-                              ,[UPDATEDAT]
-                      FROM [dbo].[t_event] WHERE [ID] = " + id.ToString();
-
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                queryString = SqlUtility.Event_GetNormalEventQueryString(false, usrName, hid, null, null, id);
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
+
                 if (reader.HasRows)
                 {
                     while (reader.Read())
                     {
-                        onDB2VM(reader, vm);
-                        break; // Should only one result!!!
+                        SqlUtility.Event_DB2VM(reader, vm, false);
                     }
-
-                    reader.NextResult();
-                }
-                else
-                {
-                    bNotFound = true;
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                bError = true;
             }
             finally
             {
@@ -182,24 +162,19 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bNotFound)
-            {
-                return NotFound();
-            }
-            else if (bError)
-            {
+            if (bError)
                 return StatusCode(500, strErrMsg);
-            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            
+
             return new JsonResult(vm, setting);
         }
 
@@ -209,16 +184,14 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Post([FromBody]EventViewModel vm)
         {
             if (vm == null)
-            {
                 return BadRequest("No data is inputted");
-            }
+            if (vm.HID <= 0)
+                return BadRequest("Home not defined");
 
             if (vm.Name != null)
                 vm.Name = vm.Name.Trim();
             if (String.IsNullOrEmpty(vm.Name))
-            {
                 return BadRequest("Name is a must!");
-            }
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -232,6 +205,8 @@ namespace achihapi.Controllers
             String usrName = String.Empty;
             if (usr != null)
                 usrName = usr.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User is not recognized");
 
             try
             {
@@ -239,6 +214,16 @@ namespace achihapi.Controllers
                             FROM [dbo].[t_event] WHERE [Name] = N'" + vm.Name + "'";
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -260,47 +245,10 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Now go ahead for the creating
-                    queryString = @"INSERT INTO [dbo].[t_event]
-                               ([Name]
-                               ,[StartTime]
-                               ,[EndTime]
-                               ,[Content]
-                               ,[IsPublic]
-                               ,[Owner]
-                               ,[RefID]
-                               ,[CREATEDBY]
-                               ,[CREATEDAT])
-                         VALUES
-                               (@NAME
-                               ,@STARTTIME
-                               ,@ENDTIME
-                               ,@CONTENT
-                               ,@ISPUBLIC
-                               ,@OWNER
-                               ,@REFID
-                               ,@CREATEDBY
-                               ,@CREATEDAT
-                               ); SELECT @Identity = SCOPE_IDENTITY();";
+                    queryString =SqlUtility.Event_GetNormalEventInsertString();
 
                     cmd = new SqlCommand(queryString, conn);
-                    cmd.Parameters.AddWithValue("@NAME", vm.Name);
-                    cmd.Parameters.AddWithValue("@STARTTIME", vm.StartTimePoint);
-                    cmd.Parameters.AddWithValue("@ENDTIME", vm.EndTimePoint);
-                    if (String.IsNullOrEmpty(vm.Content))
-                        cmd.Parameters.AddWithValue("@CONTENT", DBNull.Value);
-                    else
-                        cmd.Parameters.AddWithValue("@CONTENT", vm.Content);
-                    cmd.Parameters.AddWithValue("@ISPUBLIC", vm.IsPublic);
-                    if (vm.Assignee == null)
-                        cmd.Parameters.AddWithValue("@OWNER", DBNull.Value);
-                    else
-                        cmd.Parameters.AddWithValue("@OWNER", vm.Assignee);
-                    if (vm.RefRecurrID == null)
-                        cmd.Parameters.AddWithValue("REFID", DBNull.Value);
-                    else
-                        cmd.Parameters.AddWithValue("REFID", vm.RefRecurrID);
-                    cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
-                    cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
+                    SqlUtility.Event_BindNormalEventInsertParameters(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -347,6 +295,7 @@ namespace achihapi.Controllers
         [HttpPut("{id}")]
         public void Put(int id, [FromBody]string value)
         {
+            //return BadRequest();
             //String queryString = @"UPDATE [dbo].[t_event]
             //       SET [Name] = <Name, nvarchar(50),>
             //          ,[StartTime] = <StartTime, datetime,>
@@ -366,6 +315,7 @@ namespace achihapi.Controllers
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
+            //return BadRequest();
             //String queryString = @"DELETE FROM [dbo].[t_event]
             //    WHERE <Search Conditions,,>";
         }

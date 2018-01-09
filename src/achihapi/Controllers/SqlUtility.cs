@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
+using System.Text;
 
 namespace achihapi.Controllers
 {
@@ -2096,6 +2097,150 @@ namespace achihapi.Controllers
                 System.Diagnostics.Debug.WriteLine(String.Format("Error occurred: ID {0}, index {1}, {2}", vm.ID, idx, exp.Message));
                 throw exp;
             }
+        }
+        #endregion
+
+        #region Normal Event
+        internal static string Event_GetNormalEventQueryString(Boolean listmode, String usrid, Int32? hid = null, Int32? skip = null, Int32? top = null, Int32? id = null)
+        {
+            if (String.IsNullOrEmpty(usrid)
+                || (listmode && !hid.HasValue)
+                || (!listmode && !id.HasValue))
+                throw new Exception("Invalid input!");
+
+            StringBuilder sb = new StringBuilder();
+            if (listmode)
+                sb.AppendLine(@"SELECT count(*) FROM[dbo].[t_event] WHERE[HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrid + "' ");
+
+            sb.Append(@"; SELECT [ID]
+                          ,[HID]
+                          ,[Name]
+                          ,[StartTime]
+                          ,[EndTime]
+                          ,[CompleteTime]");
+            if (!listmode)
+                sb.Append(@",[Content]");
+            sb.Append(@",[IsPublic]
+                        ,[Assignee]
+                        ,[RefRecurID]
+                        ,[CREATEDBY]
+                        ,[CREATEDAT]
+                        ,[UPDATEDBY]
+                        ,[UPDATEDAT]
+                      FROM [dbo].[t_event] ");
+
+            if (listmode)
+            {
+                sb.Append(" WHERE [HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrid + "' ");
+                if (skip.HasValue && top.HasValue)
+                    sb.Append(@" ORDER BY (SELECT NULL)
+                        OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
+            }
+            else
+                sb.Append(" WHERE [ID] = " + id.Value.ToString());
+
+            return sb.ToString();
+        }
+        internal static void Event_DB2VM(SqlDataReader reader, EventViewModel vm, Boolean listmode)
+        {
+            Int32 idx = 0;
+            vm.ID = reader.GetInt32(idx++);
+            vm.HID = reader.GetInt32(idx++);
+            vm.Name = reader.GetString(idx++);
+            vm.StartTimePoint = reader.GetDateTime(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.EndTimePoint = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CompleteTimePoint = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!listmode)
+                vm.Content = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.IsPublic = reader.GetBoolean(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.Assignee = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.RefRecurrID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+        }
+
+        internal static string Event_GetNormalEventInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_event]
+                       ([HID]
+                       ,[Name]
+                       ,[StartTime]
+                       ,[EndTime]
+                       ,[CompleteTime]
+                       ,[Content]
+                       ,[IsPublic]
+                       ,[Assignee]
+                       ,[RefRecurID]
+                       ,[CREATEDBY]
+                       ,[CREATEDAT])
+                 VALUES
+                       (@HID
+                       ,@Name
+                       ,@StartTime
+                       ,@EndTime
+                       ,@CompleteTime
+                       ,@Content
+                       ,@IsPublic
+                       ,@Assignee
+                       ,@RefRecurID
+                       ,@CREATEDBY
+                       ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+        }
+        internal static void Event_BindNormalEventInsertParameters(SqlCommand cmd, EventViewModel vm, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@HID", vm.HID);
+            cmd.Parameters.AddWithValue("@Name", vm.Name);
+            cmd.Parameters.AddWithValue("@StartTime", vm.StartTimePoint);
+            if (vm.EndTimePoint.HasValue)
+                cmd.Parameters.AddWithValue("@EndTime", vm.EndTimePoint.Value);
+            else
+                cmd.Parameters.AddWithValue("@EndTime", DBNull.Value);
+            if (vm.CompleteTimePoint.HasValue)
+                cmd.Parameters.AddWithValue("@CompleteTime", vm.CompleteTimePoint.Value);
+            else
+                cmd.Parameters.AddWithValue("@CompleteTime", DBNull.Value);
+            cmd.Parameters.AddWithValue("@Content", vm.Content);
+            cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
+            if (!String.IsNullOrEmpty(vm.Assignee))
+                cmd.Parameters.AddWithValue("@Assignee", vm.Assignee);
+            else
+                cmd.Parameters.AddWithValue("@Assignee", DBNull.Value);
+            if (vm.RefRecurrID.HasValue)
+                cmd.Parameters.AddWithValue("@RefRecurID", vm.RefRecurrID.Value);
+            else
+                cmd.Parameters.AddWithValue("@RefRecurID", DBNull.Value);
+            cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
+
         }
         #endregion
 

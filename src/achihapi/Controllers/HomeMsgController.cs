@@ -35,6 +35,17 @@ namespace achihapi.Controllers
                 queryString = this.getQueryString(true, top, skip, hid, sentbox, usrName);
 
                 await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
