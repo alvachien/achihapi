@@ -54,7 +54,7 @@ namespace achihapi.Controllers
                 }
                 catch (Exception exp)
                 {
-                    return BadRequest(exp.Message);
+                    throw exp; // Re-throw
                 }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
@@ -304,17 +304,18 @@ namespace achihapi.Controllers
                 }
                 catch (Exception exp)
                 {
-#if DEBUG
-                    System.Diagnostics.Debug.WriteLine(exp.Message);
-#endif
                     if (tran != null)
                         tran.Rollback();
-                    bError = true;
+
+                    throw exp; // Re-throw the exception
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
+
                 bError = true;
                 strErrMsg = exp.Message;
             }
@@ -324,6 +325,7 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 

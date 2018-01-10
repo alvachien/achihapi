@@ -222,7 +222,7 @@ namespace achihapi.Controllers
                 }
                 catch (Exception exp)
                 {
-                    return BadRequest(exp.Message);
+                    throw exp; // Re-throw
                 }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);

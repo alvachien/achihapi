@@ -268,12 +268,10 @@ namespace achihapi.Controllers
                 }
                 catch (Exception exp)
                 {
-#if DEBUG
-                    System.Diagnostics.Debug.WriteLine(exp.Message);
-#endif
                     if (tran != null)
                         tran.Rollback();
-                    bError = true;
+
+                    throw exp; // Re-throw
                 }
             }
             catch (Exception exp)
