@@ -2242,6 +2242,11 @@ namespace achihapi.Controllers
             cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
 
         }
+
+        internal static string Event_GetNormalEventUpdateString()
+        {
+            return @"";
+        }
         #endregion
 
         #region Tag
