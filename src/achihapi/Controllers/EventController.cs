@@ -294,7 +294,7 @@ namespace achihapi.Controllers
         [HttpPut("{id}")]        
         public async Task<IActionResult> Put(int id, [FromBody]EventViewModel vm)
         {
-            if (vm == null)
+            if (vm == null || id <= 0 || id != vm.ID)
                 return BadRequest("No data is inputted");
             if (vm.HID <= 0)
                 return BadRequest("Home not defined");
@@ -307,9 +307,7 @@ namespace achihapi.Controllers
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
-            Boolean bDuplicatedEntry = false;
-            Int32 nDuplicatedID = -1;
-            Int32 nNewID = -1;
+            Boolean bNonExistEntry = false;
             Boolean bError = false;
             String strErrMsg = "";
             var usr = User.FindFirst(c => c.Type == "sub");
@@ -321,8 +319,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT [ID]
-                            FROM [dbo].[t_event] WHERE [Name] = N'" + vm.Name + "'";
+                queryString = @"SELECT [ID] FROM [dbo].[t_event] WHERE [ID] = " + vm.ID.ToString();
 
                 await conn.OpenAsync();
 
@@ -338,14 +335,9 @@ namespace achihapi.Controllers
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
+                if (!reader.HasRows)
                 {
-                    bDuplicatedEntry = true;
-                    while (reader.Read())
-                    {
-                        nDuplicatedID = reader.GetInt32(0);
-                        break;
-                    }
+                    bNonExistEntry = true;
                 }
                 else
                 {
@@ -356,15 +348,12 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Now go ahead for the creating
-                    queryString = SqlUtility.Event_GetNormalEventInsertString();
+                    queryString = SqlUtility.Event_GetNormalEventUpdateString();
 
                     cmd = new SqlCommand(queryString, conn);
-                    SqlUtility.Event_BindNormalEventInsertParameters(cmd, vm, usrName);
-                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                    idparam.Direction = ParameterDirection.Output;
+                    SqlUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
 
                     Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                    nNewID = (Int32)idparam.Value;
                 }
             }
             catch (Exception exp)
@@ -382,9 +371,9 @@ namespace achihapi.Controllers
                 }
             }
 
-            if (bDuplicatedEntry)
+            if (bNonExistEntry)
             {
-                return BadRequest("Object with name already exists: " + nDuplicatedID.ToString());
+                return BadRequest("Object with ID doesnot exist: " + id.ToString());
             }
 
             if (bError)
@@ -392,7 +381,6 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            vm.ID = nNewID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
                 DateFormatString = HIHAPIConstants.DateFormatPattern,

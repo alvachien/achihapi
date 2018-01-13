@@ -2245,7 +2245,44 @@ namespace achihapi.Controllers
 
         internal static string Event_GetNormalEventUpdateString()
         {
-            return @"";
+            return @"UPDATE [dbo].[t_event]
+                       SET [Name] = @Name
+                          ,[StartTime] = @StartTime
+                          ,[EndTime] = @EndTime
+                          ,[CompleteTime] = @CompleteTime
+                          ,[Content] = @Content
+                          ,[IsPublic] = @IsPublic
+                          ,[Assignee] = @Assignee
+                          ,[RefRecurID] = @RefRecurID
+                          ,[UPDATEDBY] = @UPDATEDBY
+                          ,[UPDATEDAT] = @UPDATEDAT
+                     WHERE [ID] = @ID";
+        }
+        internal static void Event_BindNormalEventUpdateParameters(SqlCommand cmd, EventViewModel vm, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@Name", vm.Name);
+            cmd.Parameters.AddWithValue("@StartTime", vm.StartTimePoint);
+            if (vm.EndTimePoint.HasValue)
+                cmd.Parameters.AddWithValue("@EndTime", vm.EndTimePoint.Value);
+            else
+                cmd.Parameters.AddWithValue("@EndTime", DBNull.Value);
+            if (vm.CompleteTimePoint.HasValue)
+                cmd.Parameters.AddWithValue("@CompleteTime", vm.CompleteTimePoint.Value);
+            else
+                cmd.Parameters.AddWithValue("@CompleteTime", DBNull.Value);
+            cmd.Parameters.AddWithValue("@Content", vm.Content);
+            cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
+            if (!String.IsNullOrEmpty(vm.Assignee))
+                cmd.Parameters.AddWithValue("@Assignee", vm.Assignee);
+            else
+                cmd.Parameters.AddWithValue("@Assignee", DBNull.Value);
+            if (vm.RefRecurrID.HasValue)
+                cmd.Parameters.AddWithValue("@RefRecurID", vm.RefRecurrID.Value);
+            else
+                cmd.Parameters.AddWithValue("@RefRecurID", DBNull.Value);
+            cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+            cmd.Parameters.AddWithValue("@ID", vm.ID);
         }
         #endregion
 
