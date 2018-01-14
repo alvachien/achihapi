@@ -1760,9 +1760,9 @@ namespace achihapi.Controllers
         #endregion
 
         #region Finance Document item - Account View
-        internal static String getFinDocItemAccountView(Int32 nAcntID)
+        internal static String getFinDocItemAccountView(Int32 nAcntID, Int32? top = null, Int32? skip = null)
         {
-            return @"WITH A2 AS (
+            String strRst = @"WITH A2 AS (
                     SELECT
 	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
 	                      ,[DOCID]
@@ -1806,7 +1806,11 @@ namespace achihapi.Controllers
                           ,[ORDERID]
                           ,[ORDERNAME]
                           ,[DESP]
-                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1";
+                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1 ";
+            if (skip.HasValue && top.HasValue)
+                strRst += " ORDER BY (SELECT NULL) OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
+
+            return strRst;
         }
 
         internal static void FinDocItemWithBalanceList_DB2VM(SqlDataReader reader, FinanceDocumentItemWithBalanceUIViewModel avm)
@@ -1850,9 +1854,9 @@ namespace achihapi.Controllers
         #endregion
 
         #region Finance Document item - Control center View
-        internal static String getFinDocItemControlCenterView(Int32 nCCID)
+        internal static String getFinDocItemControlCenterView(Int32 nCCID, Int32? top = null, Int32? skip = null)
         {
-            return @"WITH A2 AS (
+            String strRst = @"WITH A2 AS (
                     SELECT
 	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
 	                      ,[DOCID]
@@ -1896,14 +1900,18 @@ namespace achihapi.Controllers
                           ,[ORDERID]
                           ,[ORDERNAME]
                           ,[DESP]
-                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1";
+                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1 ";
+            if (skip.HasValue && top.HasValue)
+                strRst += " ORDER BY (SELECT NULL) OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
+
+            return strRst;
         }
         #endregion
 
         #region Finance Document item - Control center View
-        internal static String getFinDocItemOrderView(Int32 nOrderID)
+        internal static String getFinDocItemOrderView(Int32 nOrderID, Int32? top = null, Int32? skip = null)
         {
-            return @"WITH A2 AS (
+            String strRst = @"WITH A2 AS (
                     SELECT
 	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
 	                      ,[DOCID]
@@ -1947,7 +1955,11 @@ namespace achihapi.Controllers
                           ,[ORDERID]
                           ,[ORDERNAME]
                           ,[DESP]
-                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1";
+                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1 ";
+            if (skip.HasValue && top.HasValue)
+                strRst += " ORDER BY (SELECT NULL) OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
+
+            return strRst;
         }
         #endregion
 

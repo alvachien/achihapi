@@ -5,6 +5,7 @@ using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace achihapi.Controllers
 {
@@ -348,6 +349,120 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Now go ahead for the creating
+                    queryString = SqlUtility.Event_GetNormalEventUpdateString();
+
+                    cmd = new SqlCommand(queryString, conn);
+                    SqlUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
+
+                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
+            }
+
+            if (bNonExistEntry)
+            {
+                return BadRequest("Object with ID doesnot exist: " + id.ToString());
+            }
+
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
+
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+
+            return new JsonResult(vm, setting);
+        }
+
+        // PATCH api/event/5
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Patch(int id, [FromQuery]int hid, [FromBody]JsonPatchDocument<EventViewModel> patch)
+        {
+            if (patch == null || id <= 0)
+                return BadRequest("No data is inputted");
+            if (hid <= 0)
+                return BadRequest("No home is inputted");
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bNonExistEntry = false;
+            Boolean bError = false;
+            String strErrMsg = "";
+            var usr = User.FindFirst(c => c.Type == "sub");
+            String usrName = String.Empty;
+            if (usr != null)
+                usrName = usr.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User is not recognized");
+            EventViewModel vm = new EventViewModel();
+
+            try
+            {
+                queryString = SqlUtility.Event_GetNormalEventQueryString(false, usrName, null, null, null, id);
+
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    throw exp; // Re-throw
+                }
+
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (!reader.HasRows)
+                {
+                    bNonExistEntry = true;
+                }
+                else
+                {
+                    while(reader.Read())
+                    {
+                        SqlUtility.Event_DB2VM(reader, vm, false);
+                    }
+
+                    reader.Dispose();
+                    reader = null;
+
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // Now go ahead for the update                    
+                    //var patched = vm.Copy();
+                    patch.ApplyTo(vm, ModelState);
+                    if (!ModelState.IsValid)
+                    {
+                        return new BadRequestObjectResult(ModelState);
+                    }
+
+                    //var model = new
+                    //{
+                    //    original = vm,
+                    //    patched = vm
+                    //};
+
                     queryString = SqlUtility.Event_GetNormalEventUpdateString();
 
                     cmd = new SqlCommand(queryString, conn);

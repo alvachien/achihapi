@@ -16,7 +16,7 @@ namespace achihapi.Controllers
         // GET: api/financedocumentitems
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32? acntid = null, Int32? ccid = null, Int32? ordid = null)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32? top = null, Int32? skip = null, String sort = null, Int32? acntid = null, Int32? ccid = null, Int32? ordid = null)
         {
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
@@ -36,17 +36,17 @@ namespace achihapi.Controllers
                 && !ccid.HasValue
                 && !ordid.HasValue)
             {
-                return BadRequest("No inputs!");
+                return BadRequest("Choose one of source: Account, Control Center or order!");
             }
 
             try
             {
                 if (acntid.HasValue)
-                    queryString = SqlUtility.getFinDocItemAccountView(acntid.Value);
+                    queryString = SqlUtility.getFinDocItemAccountView(acntid.Value, top, skip);
                 else if (ccid.HasValue)
-                    queryString = SqlUtility.getFinDocItemControlCenterView(ccid.Value);
+                    queryString = SqlUtility.getFinDocItemControlCenterView(ccid.Value, top, skip);
                 else if (ordid.HasValue)
-                    queryString = SqlUtility.getFinDocItemOrderView(ordid.Value);
+                    queryString = SqlUtility.getFinDocItemOrderView(ordid.Value, top, skip);
 
                 await conn.OpenAsync();
 
