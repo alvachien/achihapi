@@ -84,6 +84,8 @@ CREATE TABLE [dbo].[t_homemsg](
 	[TITLE] [nvarchar](20) NOT NULL,
 	[CONTENT] [nvarchar](50) NULL,
 	[READFLAG] [bit] NOT NULL,
+	[SEND_DEL] [bit] NULL,
+	[REV_DEL] [bit] NULL,
  CONSTRAINT [PK_t_homemsg] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
@@ -95,6 +97,12 @@ ALTER TABLE [dbo].[t_homemsg] ADD  CONSTRAINT [DF_t_homemsg_SENDDATE]  DEFAULT (
 GO
 
 ALTER TABLE [dbo].[t_homemsg] ADD  CONSTRAINT [DF_t_homemsg_READFLAG]  DEFAULT ((0)) FOR [READFLAG]
+GO
+
+ALTER TABLE [dbo].[t_homemsg] ADD  CONSTRAINT [DF_t_homemsg_SEND_DEL]  DEFAULT ((0)) FOR [SEND_DEL]
+GO
+
+ALTER TABLE [dbo].[t_homemsg] ADD  CONSTRAINT [DF_t_homemsg_REV_DEL]  DEFAULT ((0)) FOR [REV_DEL]
 GO
 
 ALTER TABLE [dbo].[t_homemsg]  WITH CHECK ADD  CONSTRAINT [FK_t_homemsg_HID] FOREIGN KEY([HID])

@@ -5,6 +5,7 @@ using System.Data;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.ViewModels;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace achihapi.Controllers
 {
@@ -188,6 +189,110 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Put(int id, [FromBody]string value)
         {
             return BadRequest();
+        }
+
+        // PATCH api/HomeMsg/5
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Patch(int id, [FromQuery]int hid, [FromBody]JsonPatchDocument<HomeMsgViewModel> patch)
+        {
+            if (patch == null || id <= 0)
+                return BadRequest("No data is inputted");
+            if (hid <= 0)
+                return BadRequest("No home is inputted");
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bNonExistEntry = false;
+            Boolean bError = false;
+            String strErrMsg = "";
+            var usr = User.FindFirst(c => c.Type == "sub");
+            String usrName = String.Empty;
+            if (usr != null)
+                usrName = usr.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User is not recognized");
+            HomeMsgViewModel vm = new HomeMsgViewModel();
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    throw exp; // Re-throw
+                }
+
+                // Optimization logic for Mark as complete
+                if (patch.Operations.Count == 1 && patch.Operations[0].path == "/readFlag")
+                {
+                    // Only update the complete time
+                    queryString = SqlUtility.HomeMsg_GetMarkAsReadUpdateString();
+                    SqlCommand cmdupdate = new SqlCommand(queryString, conn);
+                    SqlUtility.HomeMsg_BindMarkAsReadUpdateParameters(cmdupdate, Boolean.Parse((string)patch.Operations[0].value), id, hid);
+
+                    await cmdupdate.ExecuteNonQueryAsync();
+                }
+                else if (patch.Operations.Count == 1 && patch.Operations[0].path == "/receiverDeletion")
+                {
+                    // Only update the complete time
+                    queryString = SqlUtility.HomeMsg_GetReceiverDeletionUpdateString();
+                    SqlCommand cmdupdate = new SqlCommand(queryString, conn);
+                    SqlUtility.HomeMsg_BindReceiverDeletionUpdateParameters(cmdupdate, Boolean.Parse((string)patch.Operations[0].value), id, hid);
+
+                    await cmdupdate.ExecuteNonQueryAsync();
+                }
+                else if (patch.Operations.Count == 1 && patch.Operations[0].path == "/senderDeletion")
+                {
+                    // Only update the complete time
+                    queryString = SqlUtility.HomeMsg_GetSenderDeletionUpdateString();
+                    SqlCommand cmdupdate = new SqlCommand(queryString, conn);
+                    SqlUtility.HomeMsg_BindSenderDeletioUpdateParameters(cmdupdate, Boolean.Parse((string)patch.Operations[0].value), id, hid);
+
+                    await cmdupdate.ExecuteNonQueryAsync();
+                }
+                else
+                {
+                    return BadRequest("Non support patch mode!");
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
+            }
+
+            if (bNonExistEntry)
+            {
+                return BadRequest("Object with ID doesnot exist: " + id.ToString());
+            }
+
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
+
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+
+            return new JsonResult(vm, setting);
         }
 
         // DELETE: api/ApiWithActions/5

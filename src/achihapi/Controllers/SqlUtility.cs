@@ -263,8 +263,10 @@ namespace achihapi.Controllers
                   INNER JOIN [dbo].[t_homemem] as mem1
 	                ON [t_homemsg].[HID] = mem1.[HID]
 	                AND [t_homemsg].USERFROM = mem1.[USER]
+                    AND [t_homemsg].[SEND_DEL] IS NULL
                   INNER JOIN [dbo].[t_homemem] as mem2
 	                ON [t_homemsg].[HID] = mem2.[HID]
+                    AND [t_homemsg].[REV_DEL] IS NULL 
 	                AND [t_homemsg].USERTO = mem2.[USER] WHERE [t_homemsg].[HID] = "
                   + hid.ToString()  + (sentbox? (" AND [t_homemsg].[USERFROM] = N'" + urName + "'" ) : (" AND [t_homemsg].[USERTO] = N'" + urName + "'" ));
         }
@@ -300,6 +302,43 @@ namespace achihapi.Controllers
                 System.Diagnostics.Debug.WriteLine(String.Format("Error occurred: HID {0}, index {1}, {2}", vm.HID, idx, exp.Message));
                 throw exp;
             }
+        }
+
+        internal static string HomeMsg_GetMarkAsReadUpdateString()
+        {
+            return @"UPDATE [dbo].[t_homemsg]
+                       SET [READFLAG] = @readflag
+                     WHERE [ID] = @id AND [HID] = @hid";
+        }
+        internal static void HomeMsg_BindMarkAsReadUpdateParameters(SqlCommand cmd, Boolean readFlag, Int32 id, Int32 hid)
+        {
+            cmd.Parameters.AddWithValue("@readflag", readFlag);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@hid", hid);
+        }
+        internal static string HomeMsg_GetSenderDeletionUpdateString()
+        {
+            return @"UPDATE [dbo].[t_homemsg]
+                       SET [SEND_DEL] = @senddel
+                     WHERE [ID] = @id AND [HID] = @hid";
+        }
+        internal static void HomeMsg_BindSenderDeletioUpdateParameters(SqlCommand cmd, Boolean delflag, Int32 id, Int32 hid)
+        {
+            cmd.Parameters.AddWithValue("@senddel", delflag);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@hid", hid);
+        }
+        internal static string HomeMsg_GetReceiverDeletionUpdateString()
+        {
+            return @"UPDATE [dbo].[t_homemsg]
+                       SET [REV_DEL] = @revdel
+                     WHERE [ID] = @id AND [HID] = @hid";
+        }
+        internal static void HomeMsg_BindReceiverDeletionUpdateParameters(SqlCommand cmd, Boolean delflag, Int32 id, Int32 hid)
+        {
+            cmd.Parameters.AddWithValue("@revdel", delflag);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@hid", hid);
         }
         #endregion
 
@@ -2295,6 +2334,21 @@ namespace achihapi.Controllers
             cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
             cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
             cmd.Parameters.AddWithValue("@ID", vm.ID);
+        }
+        internal static string Event_GetNormalEventMarkAsCompleteString()
+        {
+            return @"UPDATE [dbo].[t_event]
+                       SET [CompleteTime] = @CompleteTime
+                          ,[UPDATEDBY] = @UPDATEDBY
+                          ,[UPDATEDAT] = @UPDATEDAT
+                     WHERE [ID] = @ID";
+        }
+        internal static void Event_BindNormalEventMarkAsCompleteParameters(SqlCommand cmd, DateTime dtComplete, String usrName, Int32 id)
+        {
+            cmd.Parameters.AddWithValue("@CompleteTime", dtComplete);
+            cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+            cmd.Parameters.AddWithValue("@ID", id);
         }
         #endregion
 

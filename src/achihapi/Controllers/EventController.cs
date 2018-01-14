@@ -430,45 +430,58 @@ namespace achihapi.Controllers
                     throw exp; // Re-throw
                 }
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (!reader.HasRows)
+                // Optimization logic for Mark as complete
+                if (patch.Operations.Count == 1 && patch.Operations[0].path == "/completeTimePoint")
                 {
-                    bNonExistEntry = true;
+                    // Only update the complete time
+                    queryString = SqlUtility.Event_GetNormalEventMarkAsCompleteString();
+                    SqlCommand cmdupdate = new SqlCommand(queryString, conn);
+                    SqlUtility.Event_BindNormalEventMarkAsCompleteParameters(cmdupdate, DateTime.Parse((string)patch.Operations[0].value), usrName, id);
+
+                    await cmdupdate.ExecuteNonQueryAsync();
                 }
                 else
                 {
-                    while(reader.Read())
+                    SqlCommand cmd = new SqlCommand(queryString, conn);
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    if (!reader.HasRows)
                     {
-                        SqlUtility.Event_DB2VM(reader, vm, false);
+                        bNonExistEntry = true;
                     }
-
-                    reader.Dispose();
-                    reader = null;
-
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Now go ahead for the update                    
-                    //var patched = vm.Copy();
-                    patch.ApplyTo(vm, ModelState);
-                    if (!ModelState.IsValid)
+                    else
                     {
-                        return new BadRequestObjectResult(ModelState);
+                        while (reader.Read())
+                        {
+                            SqlUtility.Event_DB2VM(reader, vm, false);
+                        }
+
+                        reader.Dispose();
+                        reader = null;
+
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Now go ahead for the update
+                        //var patched = vm.Copy();
+                        patch.ApplyTo(vm, ModelState);
+                        if (!ModelState.IsValid)
+                        {
+                            return new BadRequestObjectResult(ModelState);
+                        }
+
+                        //var model = new
+                        //{
+                        //    original = vm,
+                        //    patched = vm
+                        //};
+
+                        queryString = SqlUtility.Event_GetNormalEventUpdateString();
+
+                        cmd = new SqlCommand(queryString, conn);
+                        SqlUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
+
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
                     }
-
-                    //var model = new
-                    //{
-                    //    original = vm,
-                    //    patched = vm
-                    //};
-
-                    queryString = SqlUtility.Event_GetNormalEventUpdateString();
-
-                    cmd = new SqlCommand(queryString, conn);
-                    SqlUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
-
-                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception exp)

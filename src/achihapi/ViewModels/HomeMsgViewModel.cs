@@ -28,5 +28,7 @@ namespace achihapi.ViewModels
         public String Content { get; set; }
         [Required]
         public Boolean ReadFlag { get; set; }
+        public Boolean? ReceiverDeletion { get; set; }
+        public Boolean? SenderDeletion { get; set; }
     }
 }
