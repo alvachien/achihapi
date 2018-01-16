@@ -234,7 +234,7 @@ namespace achihapi.Controllers
                     // Only update the complete time
                     queryString = SqlUtility.HomeMsg_GetMarkAsReadUpdateString();
                     SqlCommand cmdupdate = new SqlCommand(queryString, conn);
-                    SqlUtility.HomeMsg_BindMarkAsReadUpdateParameters(cmdupdate, Boolean.Parse((string)patch.Operations[0].value), id, hid);
+                    SqlUtility.HomeMsg_BindMarkAsReadUpdateParameters(cmdupdate, (Boolean)patch.Operations[0].value, id, hid);
 
                     await cmdupdate.ExecuteNonQueryAsync();
                 }
@@ -243,7 +243,7 @@ namespace achihapi.Controllers
                     // Only update the complete time
                     queryString = SqlUtility.HomeMsg_GetReceiverDeletionUpdateString();
                     SqlCommand cmdupdate = new SqlCommand(queryString, conn);
-                    SqlUtility.HomeMsg_BindReceiverDeletionUpdateParameters(cmdupdate, Boolean.Parse((string)patch.Operations[0].value), id, hid);
+                    SqlUtility.HomeMsg_BindReceiverDeletionUpdateParameters(cmdupdate, (Boolean)patch.Operations[0].value, id, hid);
 
                     await cmdupdate.ExecuteNonQueryAsync();
                 }
@@ -252,7 +252,7 @@ namespace achihapi.Controllers
                     // Only update the complete time
                     queryString = SqlUtility.HomeMsg_GetSenderDeletionUpdateString();
                     SqlCommand cmdupdate = new SqlCommand(queryString, conn);
-                    SqlUtility.HomeMsg_BindSenderDeletioUpdateParameters(cmdupdate, Boolean.Parse((string)patch.Operations[0].value), id, hid);
+                    SqlUtility.HomeMsg_BindSenderDeletioUpdateParameters(cmdupdate, (Boolean)patch.Operations[0].value, id, hid);
 
                     await cmdupdate.ExecuteNonQueryAsync();
                 }
