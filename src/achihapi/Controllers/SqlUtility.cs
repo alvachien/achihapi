@@ -2366,6 +2366,277 @@ namespace achihapi.Controllers
             cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
             cmd.Parameters.AddWithValue("@ID", id);
         }
+
+        internal static string Event_GetNormalEventDeletionString()
+        {
+            return @"DELETE FROM [dbo].[t_event]
+                WHERE <Search Conditions,,>";
+        }
+        #endregion
+
+        #region Recur Event
+        internal static string Event_GetRecurEventQueryString(Boolean listmode, String usrid, Int32? hid = null, Int32? skip = null, Int32? top = null, Int32? id = null)
+        {
+            if (String.IsNullOrEmpty(usrid)
+                || (listmode && !hid.HasValue)
+                || (!listmode && !id.HasValue))
+                throw new Exception("Invalid input!");
+
+            StringBuilder sb = new StringBuilder();
+            if (listmode)
+                sb.AppendLine(@"SELECT count(*) FROM[dbo].[t_event] WHERE[HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrid + "' ");
+            /* SELECT [ID]
+              ,[HID]
+              ,[STARTDATE]
+              ,[ENDDATE]
+              ,[RPTTYPE]
+              ,[NAME]
+              ,[CONTENT]
+              ,[ISPUBLIC]
+              ,[ASSIGNEE]
+              ,[CREATEDBY]
+              ,[CREATEDAT]
+              ,[UPDATEDBY]
+              ,[UPDATEDAT]
+          FROM [dbo].[t_event_recur] */
+
+            sb.Append(@"; SELECT [ID]
+                          ,[HID]
+                          ,[Name]
+                          ,[StartTime]
+                          ,[EndTime]
+                          ,[CompleteTime]");
+            if (!listmode)
+                sb.Append(@",[Content]");
+            sb.Append(@",[IsPublic]
+                        ,[Assignee]
+                        ,[RefRecurID]
+                        ,[CREATEDBY]
+                        ,[CREATEDAT]
+                        ,[UPDATEDBY]
+                        ,[UPDATEDAT]
+                      FROM [dbo].[t_event] ");
+
+            if (listmode)
+            {
+                sb.Append(" WHERE [HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrid + "' ");
+                if (skip.HasValue && top.HasValue)
+                    sb.Append(@" ORDER BY (SELECT NULL)
+                        OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
+            }
+            else
+                sb.Append(" WHERE [ID] = " + id.Value.ToString());
+
+            return sb.ToString();
+        }
+        internal static void Event_RecurDB2VM(SqlDataReader reader, EventViewModel vm, Boolean listmode)
+        {
+            Int32 idx = 0;
+            vm.ID = reader.GetInt32(idx++);
+            vm.HID = reader.GetInt32(idx++);
+            vm.Name = reader.GetString(idx++);
+            vm.StartTimePoint = reader.GetDateTime(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.EndTimePoint = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CompleteTimePoint = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!listmode)
+                vm.Content = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.IsPublic = reader.GetBoolean(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.Assignee = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.RefRecurrID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+        }
+
+        internal static string Event_GetRecurEventInsertString()
+        {
+            /* 
+             INSERT INTO [dbo].[t_event_recur]
+                   ([HID]
+                   ,[STARTDATE]
+                   ,[ENDDATE]
+                   ,[RPTTYPE]
+                   ,[NAME]
+                   ,[CONTENT]
+                   ,[ISPUBLIC]
+                   ,[ASSIGNEE]
+                   ,[CREATEDBY]
+                   ,[CREATEDAT]
+                   ,[UPDATEDBY]
+                   ,[UPDATEDAT])
+             VALUES
+                   (<HID, int,>
+                   ,<STARTDATE, date,>
+                   ,<ENDDATE, date,>
+                   ,<RPTTYPE, tinyint,>
+                   ,<NAME, nvarchar(50),>
+                   ,<CONTENT, nvarchar(max),>
+                   ,<ISPUBLIC, bit,>
+                   ,<ASSIGNEE, nvarchar(40),>
+                   ,<CREATEDBY, nvarchar(40),>
+                   ,<CREATEDAT, date,>
+                   ,<UPDATEDBY, nvarchar(40),>
+                   ,<UPDATEDAT, date,>)
+             */
+            return @"INSERT INTO [dbo].[t_event]
+                       ([HID]
+                       ,[Name]
+                       ,[StartTime]
+                       ,[EndTime]
+                       ,[CompleteTime]
+                       ,[Content]
+                       ,[IsPublic]
+                       ,[Assignee]
+                       ,[RefRecurID]
+                       ,[CREATEDBY]
+                       ,[CREATEDAT])
+                 VALUES
+                       (@HID
+                       ,@Name
+                       ,@StartTime
+                       ,@EndTime
+                       ,@CompleteTime
+                       ,@Content
+                       ,@IsPublic
+                       ,@Assignee
+                       ,@RefRecurID
+                       ,@CREATEDBY
+                       ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+        }
+        internal static void Event_BindRecurEventInsertParameters(SqlCommand cmd, EventViewModel vm, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@HID", vm.HID);
+            cmd.Parameters.AddWithValue("@Name", vm.Name);
+            cmd.Parameters.AddWithValue("@StartTime", vm.StartTimePoint);
+            if (vm.EndTimePoint.HasValue)
+                cmd.Parameters.AddWithValue("@EndTime", vm.EndTimePoint.Value);
+            else
+                cmd.Parameters.AddWithValue("@EndTime", DBNull.Value);
+            if (vm.CompleteTimePoint.HasValue)
+                cmd.Parameters.AddWithValue("@CompleteTime", vm.CompleteTimePoint.Value);
+            else
+                cmd.Parameters.AddWithValue("@CompleteTime", DBNull.Value);
+            cmd.Parameters.AddWithValue("@Content", vm.Content);
+            cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
+            if (!String.IsNullOrEmpty(vm.Assignee))
+                cmd.Parameters.AddWithValue("@Assignee", vm.Assignee);
+            else
+                cmd.Parameters.AddWithValue("@Assignee", DBNull.Value);
+            if (vm.RefRecurrID.HasValue)
+                cmd.Parameters.AddWithValue("@RefRecurID", vm.RefRecurrID.Value);
+            else
+                cmd.Parameters.AddWithValue("@RefRecurID", DBNull.Value);
+            cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
+
+        }
+
+        internal static string Event_GetRecurEventUpdateString()
+        {
+            /*
+             UPDATE [dbo].[t_event_recur]
+               SET [HID] = <HID, int,>
+                  ,[STARTDATE] = <STARTDATE, date,>
+                  ,[ENDDATE] = <ENDDATE, date,>
+                  ,[RPTTYPE] = <RPTTYPE, tinyint,>
+                  ,[NAME] = <NAME, nvarchar(50),>
+                  ,[CONTENT] = <CONTENT, nvarchar(max),>
+                  ,[ISPUBLIC] = <ISPUBLIC, bit,>
+                  ,[ASSIGNEE] = <ASSIGNEE, nvarchar(40),>
+                  ,[CREATEDBY] = <CREATEDBY, nvarchar(40),>
+                  ,[CREATEDAT] = <CREATEDAT, date,>
+                  ,[UPDATEDBY] = <UPDATEDBY, nvarchar(40),>
+                  ,[UPDATEDAT] = <UPDATEDAT, date,>
+             WHERE <Search Conditions,,>
+             */
+            return @"UPDATE [dbo].[t_event]
+                       SET [Name] = @Name
+                          ,[StartTime] = @StartTime
+                          ,[EndTime] = @EndTime
+                          ,[CompleteTime] = @CompleteTime
+                          ,[Content] = @Content
+                          ,[IsPublic] = @IsPublic
+                          ,[Assignee] = @Assignee
+                          ,[RefRecurID] = @RefRecurID
+                          ,[UPDATEDBY] = @UPDATEDBY
+                          ,[UPDATEDAT] = @UPDATEDAT
+                     WHERE [ID] = @ID";
+        }
+        internal static void Event_BindRecurEventUpdateParameters(SqlCommand cmd, EventViewModel vm, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@Name", vm.Name);
+            cmd.Parameters.AddWithValue("@StartTime", vm.StartTimePoint);
+            if (vm.EndTimePoint.HasValue)
+                cmd.Parameters.AddWithValue("@EndTime", vm.EndTimePoint.Value);
+            else
+                cmd.Parameters.AddWithValue("@EndTime", DBNull.Value);
+            if (vm.CompleteTimePoint.HasValue)
+                cmd.Parameters.AddWithValue("@CompleteTime", vm.CompleteTimePoint.Value);
+            else
+                cmd.Parameters.AddWithValue("@CompleteTime", DBNull.Value);
+            cmd.Parameters.AddWithValue("@Content", vm.Content);
+            cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
+            if (!String.IsNullOrEmpty(vm.Assignee))
+                cmd.Parameters.AddWithValue("@Assignee", vm.Assignee);
+            else
+                cmd.Parameters.AddWithValue("@Assignee", DBNull.Value);
+            if (vm.RefRecurrID.HasValue)
+                cmd.Parameters.AddWithValue("@RefRecurID", vm.RefRecurrID.Value);
+            else
+                cmd.Parameters.AddWithValue("@RefRecurID", DBNull.Value);
+            cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+            cmd.Parameters.AddWithValue("@ID", vm.ID);
+        }
+        internal static string Event_GetRecurEventMarkAsCompleteString()
+        {
+            return @"UPDATE [dbo].[t_event]
+                       SET [CompleteTime] = @CompleteTime
+                          ,[UPDATEDBY] = @UPDATEDBY
+                          ,[UPDATEDAT] = @UPDATEDAT
+                     WHERE [ID] = @ID";
+        }
+        internal static void Event_BindRecurEventMarkAsCompleteParameters(SqlCommand cmd, DateTime dtComplete, String usrName, Int32 id)
+        {
+            cmd.Parameters.AddWithValue("@CompleteTime", dtComplete);
+            cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+            cmd.Parameters.AddWithValue("@ID", id);
+        }
+
+        internal static string Event_GetRecurEventDeletionString()
+        {
+            return @"DELETE FROM [dbo].[t_event_recur]
+                          WHERE <Search Conditions,,>";
+        }
         #endregion
 
         #region Tag

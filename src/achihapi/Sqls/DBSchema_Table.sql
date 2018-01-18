@@ -1515,6 +1515,47 @@ GO
 ALTER TABLE [dbo].[t_event] CHECK CONSTRAINT [FK_t_event_t_hid]
 GO
 
+-- Updatged at 2018.1.18
+/****** Object:  Table [dbo].[t_event_recur]    Script Date: 2018-01-18 2:52:44 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_event_recur](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[STARTDATE] [date] NOT NULL,
+	[ENDDATE] [date] NOT NULL,
+	[RPTTYPE] [tinyint] NOT NULL,
+	[NAME] [nvarchar](50) NOT NULL,
+	[CONTENT] [nvarchar](max) NULL,
+	[ISPUBLIC] [bit] NULL,
+	[ASSIGNEE] [nvarchar](40) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_event_recur] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_event_recur] ADD  CONSTRAINT [DF_t_event_recur_ISPUBLIC]  DEFAULT ((0)) FOR [ISPUBLIC]
+GO
+
+ALTER TABLE [dbo].[t_event_recur]  WITH CHECK ADD  CONSTRAINT [FK_t_event_recur_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_event_recur] CHECK CONSTRAINT [FK_t_event_recur_HID]
+GO
+
 ---------------------------------
 -- TODO...
 

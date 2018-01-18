@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.JsonPatch;
 
 namespace achihapi.Controllers
 {
+    [Produces("application/json")]
     [Route("api/[controller]")]
     [Authorize]
     public class EventController : Controller

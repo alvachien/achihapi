@@ -24,4 +24,22 @@ namespace achihapi.ViewModels
 
         public String Tags { get; set; }
     }
+
+    public class RecurEventViewModel: BaseViewModel
+    {
+        public Int32 ID { get; set; }
+        public Int32 HID { get; set; }
+        [StringLength(50)]
+        public String Name { get; set; }
+        [Required]
+        public DateTime StartTimePoint { get; set; }
+        [Required]
+        public DateTime EndTimePoint { get; set; }
+        public String Content { get; set; }
+        public Boolean IsPublic { get; set; }
+        [StringLength(40)]
+        public String Assignee { get; set; }
+
+        public String Tags { get; set; }
+    }
 }
