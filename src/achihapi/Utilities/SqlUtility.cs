@@ -7,7 +7,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Text;
 
-namespace achihapi.Controllers
+namespace achihapi.Utilities
 {
     internal class SqlUtility
     {
@@ -2384,42 +2384,27 @@ namespace achihapi.Controllers
 
             StringBuilder sb = new StringBuilder();
             if (listmode)
-                sb.AppendLine(@"SELECT count(*) FROM[dbo].[t_event] WHERE[HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrid + "' ");
-            /* SELECT [ID]
-              ,[HID]
-              ,[STARTDATE]
-              ,[ENDDATE]
-              ,[RPTTYPE]
-              ,[NAME]
-              ,[CONTENT]
-              ,[ISPUBLIC]
-              ,[ASSIGNEE]
-              ,[CREATEDBY]
-              ,[CREATEDAT]
-              ,[UPDATEDBY]
-              ,[UPDATEDAT]
-          FROM [dbo].[t_event_recur] */
+                sb.AppendLine(@"SELECT count(*) FROM[dbo].[t_event] WHERE[HID] = " + hid.ToString());
 
             sb.Append(@"; SELECT [ID]
                           ,[HID]
-                          ,[Name]
-                          ,[StartTime]
-                          ,[EndTime]
-                          ,[CompleteTime]");
+                          ,[STARTDATE]
+                          ,[ENDDATE]
+                          ,[RPTTYPE]
+                          ,[NAME]");
             if (!listmode)
                 sb.Append(@",[Content]");
-            sb.Append(@",[IsPublic]
-                        ,[Assignee]
-                        ,[RefRecurID]
-                        ,[CREATEDBY]
-                        ,[CREATEDAT]
-                        ,[UPDATEDBY]
-                        ,[UPDATEDAT]
-                      FROM [dbo].[t_event] ");
+            sb.Append(@",[ISPUBLIC]
+                          ,[ASSIGNEE]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                      FROM [dbo].[t_event_recur] ");
 
             if (listmode)
             {
-                sb.Append(" WHERE [HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrid + "' ");
+                sb.Append(" WHERE [HID] = " + hid.ToString());
                 if (skip.HasValue && top.HasValue)
                     sb.Append(@" ORDER BY (SELECT NULL)
                         OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
@@ -2429,21 +2414,18 @@ namespace achihapi.Controllers
 
             return sb.ToString();
         }
-        internal static void Event_RecurDB2VM(SqlDataReader reader, EventViewModel vm, Boolean listmode)
+        internal static void Event_RecurDB2VM(SqlDataReader reader, RecurEventViewModel vm, Boolean listmode)
         {
             Int32 idx = 0;
             vm.ID = reader.GetInt32(idx++);
             vm.HID = reader.GetInt32(idx++);
-            vm.Name = reader.GetString(idx++);
             vm.StartTimePoint = reader.GetDateTime(idx++);
             if (!reader.IsDBNull(idx))
                 vm.EndTimePoint = reader.GetDateTime(idx++);
             else
                 ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.CompleteTimePoint = reader.GetDateTime(idx++);
-            else
-                ++idx;
+            vm.RptType = (RepeatFrequency)reader.GetByte(idx++);
+            vm.Name = reader.GetString(idx++);
             if (!listmode)
                 vm.Content = reader.GetString(idx++);
             if (!reader.IsDBNull(idx))
@@ -2452,10 +2434,6 @@ namespace achihapi.Controllers
                 ++idx;
             if (!reader.IsDBNull(idx))
                 vm.Assignee = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.RefRecurrID = reader.GetInt32(idx++);
             else
                 ++idx;
             if (!reader.IsDBNull(idx))

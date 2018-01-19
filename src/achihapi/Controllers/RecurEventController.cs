@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.JsonPatch;
-using System.Data;
 using System.Data.SqlClient;
 using achihapi.ViewModels;
+using achihapi.Utilities;
 
 namespace achihapi.Controllers
 {
@@ -69,8 +65,8 @@ namespace achihapi.Controllers
                     {
                         while (reader.Read())
                         {
-                            EventViewModel vm = new EventViewModel();
-                            SqlUtility.Event_DB2VM(reader, vm, true);
+                            RecurEventViewModel vm = new RecurEventViewModel();
+                            SqlUtility.Event_RecurDB2VM(reader, vm, true);
                             listVm.Add(vm);
                         }
                     }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using achihapi.ViewModels;
 
-namespace achihapi.Controllers
+namespace achihapi.Utilities
 {
     public class FinanceCalcUtility
     {

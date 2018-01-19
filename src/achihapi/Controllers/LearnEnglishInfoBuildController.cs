@@ -1,17 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.IO;
-using System.Diagnostics;
-using System.Threading;
 using System.Text.RegularExpressions;
 using achihapi.ViewModels;
+using achihapi.Utilities;
 
 namespace achihapi.Controllers
 {

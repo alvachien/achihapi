@@ -35,6 +35,7 @@ namespace achihapi.ViewModels
         public DateTime StartTimePoint { get; set; }
         [Required]
         public DateTime EndTimePoint { get; set; }
+        public RepeatFrequency RptType { get; set; }
         public String Content { get; set; }
         public Boolean IsPublic { get; set; }
         [StringLength(40)]
