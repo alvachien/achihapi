@@ -2384,7 +2384,7 @@ namespace achihapi.Utilities
 
             StringBuilder sb = new StringBuilder();
             if (listmode)
-                sb.AppendLine(@"SELECT count(*) FROM[dbo].[t_event] WHERE[HID] = " + hid.ToString());
+                sb.AppendLine(@"SELECT count(*) FROM[dbo].[t_event_recur] WHERE[HID] = " + hid.ToString());
 
             sb.Append(@"; SELECT [ID]
                           ,[HID]
