@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using achihapi.ViewModels;
 
 namespace achihapi.Utilities
@@ -150,13 +148,13 @@ namespace achihapi.Utilities
             if (String.IsNullOrEmpty(datInput.Desp))
                 throw new Exception("Invalid desp");
 
-            var tspans = datInput.EndDate.Date - datInput.StartDate.Date;
-            var tdays = (Int32)tspans.Days;
-
             switch (datInput.RptType)
             {
                 case RepeatFrequency.Day:
                     {
+                        var tspans = datInput.EndDate.Date - datInput.StartDate.Date;
+                        var tdays = (Int32)tspans.Days;
+
                         var tamt = Math.Round(datInput.TotalAmount / tdays, 2);
                         for(int i = 0; i < tdays; i++)
                         {
@@ -172,16 +170,19 @@ namespace achihapi.Utilities
 
                 case RepeatFrequency.Fortnight:
                     {
-                        var nitems = tdays / 14;
-                        var tamt = Math.Round(datInput.TotalAmount / nitems, 2);
+                        var tspans = datInput.EndDate.Date - datInput.StartDate.Date;
+                        var tdays = (Int32)tspans.Days;
 
-                        for (int i = 0; i < nitems; i++)
+                        var tfortnights = tdays / 14;
+                        var tamt = Math.Round(datInput.TotalAmount / tfortnights, 2);
+
+                        for (int i = 0; i < tfortnights; i++)
                         {
                             listResults.Add(new ADPGenerateResult
                             {
-                                TranDate = datInput.StartDate.AddDays(i),
+                                TranDate = datInput.StartDate.AddDays(i * 14),
                                 TranAmount = tamt,
-                                Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nitems.ToString()
+                                Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + tfortnights.ToString()
                             });
                         }
                     }
@@ -189,47 +190,102 @@ namespace achihapi.Utilities
 
                 case RepeatFrequency.HalfYear:
                     {
+                        var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
+                        var nhalfyear = nmonths / 6;
+                        var tamt = Math.Round(datInput.TotalAmount / nhalfyear, 2);
 
+                        for (int i = 0; i < nhalfyear; i++)
+                        {
+                            listResults.Add(new ADPGenerateResult
+                            {
+                                TranDate = datInput.StartDate.AddMonths(i * 6),
+                                TranAmount = tamt,
+                                Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nhalfyear.ToString()
+                            });
+                        }
                     }
                     break;
 
                 case RepeatFrequency.Month:
                     {
-                        var nmonths = tdays / 30;
+                        var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
+
+                        var tamt = Math.Round(datInput.TotalAmount / nmonths, 2);
+
+                        for (int i = 0; i < nmonths; i++)
+                        {
+                            listResults.Add(new ADPGenerateResult
+                            {
+                                TranDate = datInput.StartDate.AddMonths(i),
+                                TranAmount = tamt,
+                                Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nmonths.ToString()
+                            });
+                        }
                     }
                     break;
 
                 case RepeatFrequency.Quarter:
                     {
+                        var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
+                        var nquarters = nmonths / 3;
+                        var tamt = Math.Round(datInput.TotalAmount / nquarters, 2);
 
+                        for (int i = 0; i < nquarters; i++)
+                        {
+                            listResults.Add(new ADPGenerateResult
+                            {
+                                TranDate = datInput.StartDate.AddMonths(i * 3),
+                                TranAmount = tamt,
+                                Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nquarters.ToString()
+                            });
+                        }
                     }
                     break;
 
                 case RepeatFrequency.Week:
                     {
+                        var tspans = datInput.EndDate.Date - datInput.StartDate.Date;
+                        var tdays = (Int32)tspans.Days;
 
+                        var tweeks = tdays / 7;
+                        var tamt = Math.Round(datInput.TotalAmount / tweeks, 2);
+
+                        for (int i = 0; i < tweeks; i++)
+                        {
+                            listResults.Add(new ADPGenerateResult
+                            {
+                                TranDate = datInput.StartDate.AddDays(i * 7),
+                                TranAmount = tamt,
+                                Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + tweeks.ToString()
+                            });
+                        }
                     }
                     break;
 
                 case RepeatFrequency.Year:
                     {
+                        var nyears = datInput.EndDate.Year - datInput.StartDate.Year;
 
+                        var tamt = Math.Round(datInput.TotalAmount / nyears, 2);
+
+                        for (int i = 0; i < nyears; i++)
+                        {
+                            listResults.Add(new ADPGenerateResult
+                            {
+                                TranDate = datInput.StartDate.AddYears(i),
+                                TranAmount = tamt,
+                                Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nyears.ToString()
+                            });
+                        }
                     }
                     break;
 
                 case RepeatFrequency.Manual:
                     {
-
+                        // TBD.
                     }
                     break;
             }
-
-            return listResults;
-        }
-
-        public static List<EventGenerationResultViewModel> GenerateEvents(EventGenerationInputViewModel datInput)
-        {
-            List<EventGenerationResultViewModel> listResults = new List<EventGenerationResultViewModel>();
 
             return listResults;
         }

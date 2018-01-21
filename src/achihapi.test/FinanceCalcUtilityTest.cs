@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using achihapi.ViewModels;
 using achihapi.Controllers;
+using achihapi.Utilities;
 
 namespace achihapi.test
 {
@@ -337,7 +338,7 @@ namespace achihapi.test
         }
 
         [TestMethod]
-        public void ADPTmpTest_InputCheck()
+        public void ADPTmpGenerateTest_InputCheck()
         {
             // Scenario 0. No input
             List<ADPGenerateResult> results = null;
@@ -412,39 +413,237 @@ namespace achihapi.test
         }
 
         [TestMethod]
-        public void ADPTmpTest_Day()
+        public void ADPTmpGenerateTest_Day()
         {
             List<ADPGenerateResult> results = null;
+            var startdate = DateTime.Today;
+
             ADPGenerateViewModel vm = new ADPGenerateViewModel
             {
-                StartDate = DateTime.Now.Date,
-                EndDate = DateTime.Now.AddDays(10),
+                StartDate = startdate,
+                EndDate = startdate.AddDays(10),
+                RptType = RepeatFrequency.Day,
                 TotalAmount = 10000,
                 Desp = "Test_Day"
             };
 
             results = FinanceCalcUtility.GenerateAdvancePaymentTmps(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach(var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartDate.AddDays(i++), rst.TranDate);
+                // Amount
+                Assert.AreEqual(1000, rst.TranAmount);
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Desp);
+            }
         }
 
         [TestMethod]
-        public void ADPTmpTest_Week()
+        public void ADPTmpGenerateTest_Week()
         {
             List<ADPGenerateResult> results = null;
+            var startdate = DateTime.Today;
 
+            ADPGenerateViewModel vm = new ADPGenerateViewModel
+            {
+                StartDate = startdate.Date,
+                EndDate = startdate.AddDays(70),
+                RptType = RepeatFrequency.Week,
+                TotalAmount = 10000,
+                Desp = "Test_Week"
+            };
+
+            results = FinanceCalcUtility.GenerateAdvancePaymentTmps(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartDate.AddDays(i), rst.TranDate);
+                i += 7;
+
+                // Amount
+                Assert.AreEqual(1000, rst.TranAmount);
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Desp);
+            }
         }
 
         [TestMethod]
-        public void ADPTmpTest_Month()
+        public void ADPTmpGenerateTest_Fortnight()
         {
             List<ADPGenerateResult> results = null;
+            var startdate = DateTime.Today;
 
+            ADPGenerateViewModel vm = new ADPGenerateViewModel
+            {
+                StartDate = startdate.Date,
+                EndDate = startdate.AddDays(140),
+                RptType = RepeatFrequency.Fortnight,
+                TotalAmount = 10000,
+                Desp = "Test_Fortnight"
+            };
+
+            results = FinanceCalcUtility.GenerateAdvancePaymentTmps(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartDate.AddDays(i), rst.TranDate);
+                i += 14;
+
+                // Amount
+                Assert.AreEqual(1000, rst.TranAmount);
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Desp);
+            }
         }
 
         [TestMethod]
-        public void ADPTmpTest_Year()
+        public void ADPTmpGenerateTest_Month()
         {
             List<ADPGenerateResult> results = null;
+            var startdate = DateTime.Today;
 
+            ADPGenerateViewModel vm = new ADPGenerateViewModel
+            {
+                StartDate = startdate.Date,
+                EndDate = startdate.AddMonths(10),
+                RptType = RepeatFrequency.Month,
+                TotalAmount = 10000,
+                Desp = "Test_Month"
+            };
+
+            results = FinanceCalcUtility.GenerateAdvancePaymentTmps(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartDate.AddMonths(i++), rst.TranDate);
+
+                // Amount
+                Assert.AreEqual(1000, rst.TranAmount);
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Desp);
+            }
+        }
+
+        [TestMethod]
+        public void ADPTmpGenerateTest_Quarter()
+        {
+            List<ADPGenerateResult> results = null;
+            var startdate = DateTime.Today;
+
+            ADPGenerateViewModel vm = new ADPGenerateViewModel
+            {
+                StartDate = startdate.Date,
+                EndDate = startdate.AddMonths(30),
+                RptType = RepeatFrequency.Quarter,
+                TotalAmount = 10000,
+                Desp = "Test_Quarter"
+            };
+
+            results = FinanceCalcUtility.GenerateAdvancePaymentTmps(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartDate.AddMonths(i), rst.TranDate);
+                i += 3;
+
+                // Amount
+                Assert.AreEqual(1000, rst.TranAmount);
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Desp);
+            }
+        }
+
+        [TestMethod]
+        public void ADPTmpGenerateTest_HalfYear()
+        {
+            List<ADPGenerateResult> results = null;
+            var startdate = DateTime.Today;
+
+            ADPGenerateViewModel vm = new ADPGenerateViewModel
+            {
+                StartDate = startdate.Date,
+                EndDate = startdate.AddMonths(60),
+                RptType = RepeatFrequency.HalfYear,
+                TotalAmount = 10000,
+                Desp = "Test_HalfYear"
+            };
+
+            results = FinanceCalcUtility.GenerateAdvancePaymentTmps(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartDate.AddMonths(i), rst.TranDate);
+                i += 6;
+
+                // Amount
+                Assert.AreEqual(1000, rst.TranAmount);
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Desp);
+            }
+        }
+
+        [TestMethod]
+        public void ADPTmpGenerateTest_Year()
+        {
+            List<ADPGenerateResult> results = null;
+            var startdate = DateTime.Today;
+
+            ADPGenerateViewModel vm = new ADPGenerateViewModel
+            {
+                StartDate = startdate.Date,
+                EndDate = startdate.AddYears(10),
+                RptType = RepeatFrequency.Year,
+                TotalAmount = 10000,
+                Desp = "Test_Year"
+            };
+
+            results = FinanceCalcUtility.GenerateAdvancePaymentTmps(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartDate.AddYears(i++), rst.TranDate);
+
+                // Amount
+                Assert.AreEqual(1000, rst.TranAmount);
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Desp);
+            }
         }
     }
 }
