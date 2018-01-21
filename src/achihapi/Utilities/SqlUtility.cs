@@ -2456,8 +2456,7 @@ namespace achihapi.Utilities
 
         internal static string Event_GetRecurEventInsertString()
         {
-            /* 
-             INSERT INTO [dbo].[t_event_recur]
+            return @"INSERT INTO [dbo].[t_event_recur]
                    ([HID]
                    ,[STARTDATE]
                    ,[ENDDATE]
@@ -2467,71 +2466,33 @@ namespace achihapi.Utilities
                    ,[ISPUBLIC]
                    ,[ASSIGNEE]
                    ,[CREATEDBY]
-                   ,[CREATEDAT]
-                   ,[UPDATEDBY]
-                   ,[UPDATEDAT])
-             VALUES
-                   (<HID, int,>
-                   ,<STARTDATE, date,>
-                   ,<ENDDATE, date,>
-                   ,<RPTTYPE, tinyint,>
-                   ,<NAME, nvarchar(50),>
-                   ,<CONTENT, nvarchar(max),>
-                   ,<ISPUBLIC, bit,>
-                   ,<ASSIGNEE, nvarchar(40),>
-                   ,<CREATEDBY, nvarchar(40),>
-                   ,<CREATEDAT, date,>
-                   ,<UPDATEDBY, nvarchar(40),>
-                   ,<UPDATEDAT, date,>)
-             */
-            return @"INSERT INTO [dbo].[t_event]
-                       ([HID]
-                       ,[Name]
-                       ,[StartTime]
-                       ,[EndTime]
-                       ,[CompleteTime]
-                       ,[Content]
-                       ,[IsPublic]
-                       ,[Assignee]
-                       ,[RefRecurID]
-                       ,[CREATEDBY]
-                       ,[CREATEDAT])
+                   ,[CREATEDAT])
                  VALUES
-                       (@HID
-                       ,@Name
-                       ,@StartTime
-                       ,@EndTime
-                       ,@CompleteTime
-                       ,@Content
-                       ,@IsPublic
-                       ,@Assignee
-                       ,@RefRecurID
-                       ,@CREATEDBY
-                       ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+                    (@HID
+                    ,@StartTime
+                    ,@EndTime
+                    ,@RptType
+                    ,@Name
+                    ,@Content
+                    ,@IsPublic
+                    ,@Assignee
+                    ,@RefRecurID
+                    ,@CREATEDBY
+                    ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
         }
-        internal static void Event_BindRecurEventInsertParameters(SqlCommand cmd, EventViewModel vm, String usrName)
+        internal static void Event_BindRecurEventInsertParameters(SqlCommand cmd, RecurEventViewModel vm, String usrName)
         {
             cmd.Parameters.AddWithValue("@HID", vm.HID);
-            cmd.Parameters.AddWithValue("@Name", vm.Name);
             cmd.Parameters.AddWithValue("@StartTime", vm.StartTimePoint);
-            if (vm.EndTimePoint.HasValue)
-                cmd.Parameters.AddWithValue("@EndTime", vm.EndTimePoint.Value);
-            else
-                cmd.Parameters.AddWithValue("@EndTime", DBNull.Value);
-            if (vm.CompleteTimePoint.HasValue)
-                cmd.Parameters.AddWithValue("@CompleteTime", vm.CompleteTimePoint.Value);
-            else
-                cmd.Parameters.AddWithValue("@CompleteTime", DBNull.Value);
+            cmd.Parameters.AddWithValue("@EndTime", vm.EndTimePoint);
+            cmd.Parameters.AddWithValue("@RptType", vm.RptType);
+            cmd.Parameters.AddWithValue("@Name", vm.Name);
             cmd.Parameters.AddWithValue("@Content", vm.Content);
             cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
             if (!String.IsNullOrEmpty(vm.Assignee))
                 cmd.Parameters.AddWithValue("@Assignee", vm.Assignee);
             else
                 cmd.Parameters.AddWithValue("@Assignee", DBNull.Value);
-            if (vm.RefRecurrID.HasValue)
-                cmd.Parameters.AddWithValue("@RefRecurID", vm.RefRecurrID.Value);
-            else
-                cmd.Parameters.AddWithValue("@RefRecurID", DBNull.Value);
             cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
             cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
 
@@ -2539,77 +2500,34 @@ namespace achihapi.Utilities
 
         internal static string Event_GetRecurEventUpdateString()
         {
-            /*
-             UPDATE [dbo].[t_event_recur]
-               SET [HID] = <HID, int,>
-                  ,[STARTDATE] = <STARTDATE, date,>
-                  ,[ENDDATE] = <ENDDATE, date,>
-                  ,[RPTTYPE] = <RPTTYPE, tinyint,>
-                  ,[NAME] = <NAME, nvarchar(50),>
-                  ,[CONTENT] = <CONTENT, nvarchar(max),>
-                  ,[ISPUBLIC] = <ISPUBLIC, bit,>
-                  ,[ASSIGNEE] = <ASSIGNEE, nvarchar(40),>
-                  ,[CREATEDBY] = <CREATEDBY, nvarchar(40),>
-                  ,[CREATEDAT] = <CREATEDAT, date,>
-                  ,[UPDATEDBY] = <UPDATEDBY, nvarchar(40),>
-                  ,[UPDATEDAT] = <UPDATEDAT, date,>
-             WHERE <Search Conditions,,>
-             */
-            return @"UPDATE [dbo].[t_event]
-                       SET [Name] = @Name
+            return @"UPDATE [dbo].[t_event_recur]
+                       SET [RPTTYPE] = @RptType
                           ,[StartTime] = @StartTime
                           ,[EndTime] = @EndTime
-                          ,[CompleteTime] = @CompleteTime
+                          ,[Name] = @Name
                           ,[Content] = @Content
                           ,[IsPublic] = @IsPublic
                           ,[Assignee] = @Assignee
-                          ,[RefRecurID] = @RefRecurID
                           ,[UPDATEDBY] = @UPDATEDBY
                           ,[UPDATEDAT] = @UPDATEDAT
                      WHERE [ID] = @ID";
         }
-        internal static void Event_BindRecurEventUpdateParameters(SqlCommand cmd, EventViewModel vm, String usrName)
+        internal static void Event_BindRecurEventUpdateParameters(SqlCommand cmd, RecurEventViewModel vm, String usrName)
         {
-            cmd.Parameters.AddWithValue("@Name", vm.Name);
+            cmd.Parameters.AddWithValue("@RptType", vm.RptType);
             cmd.Parameters.AddWithValue("@StartTime", vm.StartTimePoint);
-            if (vm.EndTimePoint.HasValue)
-                cmd.Parameters.AddWithValue("@EndTime", vm.EndTimePoint.Value);
-            else
-                cmd.Parameters.AddWithValue("@EndTime", DBNull.Value);
-            if (vm.CompleteTimePoint.HasValue)
-                cmd.Parameters.AddWithValue("@CompleteTime", vm.CompleteTimePoint.Value);
-            else
-                cmd.Parameters.AddWithValue("@CompleteTime", DBNull.Value);
+            cmd.Parameters.AddWithValue("@EndTime", vm.EndTimePoint);
+            cmd.Parameters.AddWithValue("@Name", vm.Name);
             cmd.Parameters.AddWithValue("@Content", vm.Content);
             cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
             if (!String.IsNullOrEmpty(vm.Assignee))
                 cmd.Parameters.AddWithValue("@Assignee", vm.Assignee);
             else
                 cmd.Parameters.AddWithValue("@Assignee", DBNull.Value);
-            if (vm.RefRecurrID.HasValue)
-                cmd.Parameters.AddWithValue("@RefRecurID", vm.RefRecurrID.Value);
-            else
-                cmd.Parameters.AddWithValue("@RefRecurID", DBNull.Value);
             cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
             cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
             cmd.Parameters.AddWithValue("@ID", vm.ID);
         }
-        internal static string Event_GetRecurEventMarkAsCompleteString()
-        {
-            return @"UPDATE [dbo].[t_event]
-                       SET [CompleteTime] = @CompleteTime
-                          ,[UPDATEDBY] = @UPDATEDBY
-                          ,[UPDATEDAT] = @UPDATEDAT
-                     WHERE [ID] = @ID";
-        }
-        internal static void Event_BindRecurEventMarkAsCompleteParameters(SqlCommand cmd, DateTime dtComplete, String usrName, Int32 id)
-        {
-            cmd.Parameters.AddWithValue("@CompleteTime", dtComplete);
-            cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
-            cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
-            cmd.Parameters.AddWithValue("@ID", id);
-        }
-
         internal static string Event_GetRecurEventDeletionString()
         {
             return @"DELETE FROM [dbo].[t_event_recur]

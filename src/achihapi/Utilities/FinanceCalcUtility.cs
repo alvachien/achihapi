@@ -226,5 +226,12 @@ namespace achihapi.Utilities
 
             return listResults;
         }
+
+        public static List<EventGenerationResultViewModel> GenerateEvents(EventGenerationInputViewModel datInput)
+        {
+            List<EventGenerationResultViewModel> listResults = new List<EventGenerationResultViewModel>();
+
+            return listResults;
+        }
     }
 }

@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace achihapi.ViewModels
 {
-    public class EventViewModel : BaseViewModel
+    public sealed class EventViewModel : BaseViewModel
     {
         public Int32 ID { get; set; }
         public Int32 HID { get; set; }
@@ -25,7 +25,7 @@ namespace achihapi.ViewModels
         public String Tags { get; set; }
     }
 
-    public class RecurEventViewModel: BaseViewModel
+    public sealed class RecurEventViewModel: BaseViewModel
     {
         public Int32 ID { get; set; }
         public Int32 HID { get; set; }
@@ -42,5 +42,20 @@ namespace achihapi.ViewModels
         public String Assignee { get; set; }
 
         public String Tags { get; set; }
+    }
+
+    public sealed class EventGenerationInputViewModel
+    {
+        public DateTime StartTimePoint { get; set; }
+        public DateTime EndTimePoint { get; set; }
+        public RepeatFrequency RptType { get; set; }
+        public String Name { get; set; }
+    }
+
+    public sealed class EventGenerationResultViewModel
+    {
+        public DateTime StartTimePoint { get; set; }
+        public DateTime EndTimePoint { get; set; }
+        public String Name { get; set; }
     }
 }

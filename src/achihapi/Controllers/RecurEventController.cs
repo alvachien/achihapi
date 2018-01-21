@@ -182,7 +182,7 @@ namespace achihapi.Controllers
 
         // POST: api/RecurEvent
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody]EventViewModel vm)
+        public async Task<IActionResult> Post([FromBody]RecurEventViewModel vm)
         {
             if (vm == null)
                 return BadRequest("No data is inputted");
@@ -246,10 +246,10 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Now go ahead for the creating
-                    queryString = SqlUtility.Event_GetNormalEventInsertString();
+                    queryString = SqlUtility.Event_GetRecurEventInsertString();
 
                     cmd = new SqlCommand(queryString, conn);
-                    SqlUtility.Event_BindNormalEventInsertParameters(cmd, vm, usrName);
+                    SqlUtility.Event_BindRecurEventInsertParameters(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
