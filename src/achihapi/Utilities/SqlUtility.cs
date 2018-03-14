@@ -2177,7 +2177,7 @@ namespace achihapi.Utilities
 
             StringBuilder sb = new StringBuilder();
             if (listmode)
-                sb.AppendLine(@"SELECT count(*) FROM[dbo].[t_event] WHERE[HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrid + "' ");
+                sb.AppendLine(@"SELECT count(*) FROM [dbo].[t_event] WHERE[HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrid + "' ");
 
             sb.Append(@"; SELECT [ID]
                           ,[HID]
@@ -2384,7 +2384,7 @@ namespace achihapi.Utilities
 
             StringBuilder sb = new StringBuilder();
             if (listmode)
-                sb.AppendLine(@"SELECT count(*) FROM[dbo].[t_event_recur] WHERE[HID] = " + hid.ToString());
+                sb.AppendLine(@"SELECT count(*) FROM [dbo].[t_event_recur] WHERE[HID] = " + hid.ToString());
 
             sb.Append(@"; SELECT [ID]
                           ,[HID]
@@ -2532,6 +2532,48 @@ namespace achihapi.Utilities
         {
             return @"DELETE FROM [dbo].[t_event_recur]
                           WHERE <Search Conditions,,>";
+        }
+        #endregion
+
+        #region Event habit
+        internal static string Event_GetEventHabitQueryString(Boolean listmode, String usrid, Int32? hid = null, Int32? skip = null, Int32? top = null, Int32? id = null)
+        {
+            if (String.IsNullOrEmpty(usrid)
+                || (listmode && !hid.HasValue)
+                || (!listmode && !id.HasValue))
+                throw new Exception("Invalid input!");
+
+            StringBuilder sb = new StringBuilder();
+            if (listmode)
+                sb.AppendLine(@"SELECT count(*) FROM [dbo].[t_event_habit] WHERE[HID] = " + hid.ToString());
+
+            sb.Append(@"; SELECT [ID]
+                          ,[HID]
+                          ,[STARTDATE]
+                          ,[ENDDATE]
+                          ,[RPTTYPE]
+                          ,[NAME]");
+            if (!listmode)
+                sb.Append(@",[Content]");
+            sb.Append(@",[ISPUBLIC]
+                          ,[ASSIGNEE]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                      FROM [dbo].[t_event_habit] ");
+
+            if (listmode)
+            {
+                sb.Append(" WHERE [HID] = " + hid.ToString());
+                if (skip.HasValue && top.HasValue)
+                    sb.Append(@" ORDER BY (SELECT NULL)
+                        OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
+            }
+            else
+                sb.Append(" WHERE [ID] = " + id.Value.ToString());
+
+            return sb.ToString();
         }
         #endregion
 

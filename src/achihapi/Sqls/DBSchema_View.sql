@@ -675,3 +675,22 @@ select taba.ID, taba.HID, taba.[Type], taba.Question, tabb.SUBITEM, tabb.DETAIL,
 	left outer join t_learn_qtn_bank_sub tabb
 		on taba.ID = tabb.QTNID
 GO
+
+-- Updated at 2018.3.14
+/****** Object:  View [dbo].[v_event_habitdetail]    Script Date: 2018-03-14 6:58:39 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_event_habitdetail]
+AS
+SELECT t_event_habit.ID, t_event_habit.HID, t_event_habit.Name, t_event_habit.StartDate, t_event_habit.EndDate, t_event_habit.RPTTYPE, t_event_habit.IsPublic, 
+	t_event_habit.Count, t_event_habit.Assignee, t_event_habit_detail.ID AS DetailID, t_event_habit_detail.StartDate AS DetailStartDate, 
+	t_event_habit_detail.EndDate AS DetailEndDate, t_event_habit.CREATEDBY, 
+    t_event_habit.CREATEDAT, t_event_habit.UPDATEDBY, t_event_habit.UPDATEDAT
+FROM  t_event_habit LEFT OUTER JOIN
+		t_event_habit_detail ON t_event_habit.ID = t_event_habit_detail.HabitID
+GO
+

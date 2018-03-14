@@ -20,9 +20,93 @@ namespace achihapi.Controllers
     {
         // GET: api/EventHabit
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
-            return new string[] { "value1", "value2" };
+            if (hid <= 0)
+                return BadRequest("HID is missing");
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            BaseListViewModel<EventViewModel> listVm = new BaseListViewModel<EventViewModel>();
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                queryString = SqlUtility.Event_GetNormalEventQueryString(true, usrName, hid, skip, top);
+
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                Int32 nRstBatch = 0;
+                while (reader.HasRows)
+                {
+                    if (nRstBatch == 0)
+                    {
+                        while (reader.Read())
+                        {
+                            listVm.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        while (reader.Read())
+                        {
+                            EventViewModel vm = new EventViewModel();
+                            SqlUtility.Event_DB2VM(reader, vm, true);
+                            listVm.Add(vm);
+                        }
+                    }
+
+                    ++nRstBatch;
+
+                    reader.NextResult();
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                strErrMsg = exp.Message;
+                bError = true;
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                    conn = null;
+                }
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+
+            return new JsonResult(listVm, setting);
         }
 
         // GET: api/EventHabit/5
@@ -38,8 +122,6 @@ namespace achihapi.Controllers
         {
             if (vm == null)
                 return BadRequest("No data is inputted");
-            if (vm.HID <= 0)
-                return BadRequest("Home not defined");
 
             if (vm.Name != null)
                 vm.Name = vm.Name.Trim();
@@ -56,6 +138,9 @@ namespace achihapi.Controllers
                 var listRst = EventUtility.GenerateHabitDetails(datInput);
                 return Json(listRst);
             }
+
+            if (vm.HID <= 0)
+                return BadRequest("Home not defined");
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
