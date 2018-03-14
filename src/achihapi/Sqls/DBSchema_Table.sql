@@ -1556,6 +1556,105 @@ GO
 ALTER TABLE [dbo].[t_event_recur] CHECK CONSTRAINT [FK_t_event_recur_HID]
 GO
 
+-- Updated at 2018.3.13
+/****** Object:  Table [dbo].[t_event_habit]    Script Date: 2018-03-13 2:00:44 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_event_habit](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[Name] [nvarchar](50) NOT NULL,
+	[StartDate] [date] NOT NULL,
+	[EndDate] [date] NOT NULL,
+	[RPTTYPE] [tinyint] NOT NULL,
+	[IsPublic] [bit] NOT NULL,
+	[Count] [int] NOT NULL,
+	[Assignee] [nvarchar](40) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_event_habit] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_event_habit]  WITH CHECK ADD  CONSTRAINT [FK_t_event_habit_t_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_event_habit] CHECK CONSTRAINT [FK_t_event_habit_t_HID]
+GO
+
+/****** Object:  Table [dbo].[t_event_habit_detail]    Script Date: 2018-03-13 2:01:27 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_event_habit_detail](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HabitID] [int] NOT NULL,
+	[StartDate] [date] NOT NULL,
+	[EndDate] [date] NOT NULL,
+ CONSTRAINT [PK_t_event_habit_detail] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_event_habit_detail]  WITH CHECK ADD  CONSTRAINT [FK_t_event_habit_HabitID] FOREIGN KEY([HabitID])
+REFERENCES [dbo].[t_event_habit] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_event_habit_detail] CHECK CONSTRAINT [FK_t_event_habit_HabitID]
+GO
+
+/****** Object:  Table [dbo].[t_event_habit_checkin]    Script Date: 2018-03-13 2:01:43 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_event_habit_checkin](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[TranDate] [datetime] NOT NULL,
+	[HabitID] [int] NOT NULL,
+	[Score] [int] NULL,
+	[Comment] [nvarchar](50) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_event_habit_checkin] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_event_habit_checkin]  WITH CHECK ADD  CONSTRAINT [FK_t_event_habit_checkin_HabitID] FOREIGN KEY([HabitID])
+REFERENCES [dbo].[t_event_habit] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_event_habit_checkin] CHECK CONSTRAINT [FK_t_event_habit_checkin_HabitID]
+GO
+
 ---------------------------------
 -- TODO...
 
