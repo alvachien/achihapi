@@ -6,6 +6,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace achihapi.ViewModels
 {
+    public enum EventTypeEnum: Byte
+    {
+        Normal = 1,
+        HabitStyle = 2  // Not specify a fix date
+    }
+
     public sealed class EventViewModel : BaseViewModel
     {
         public Int32 ID { get; set; }
