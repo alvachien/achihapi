@@ -270,5 +270,219 @@ namespace achihapi.test
                 Assert.AreNotEqual(String.Empty, rst.Name);
             }
         }
+
+        [TestMethod]
+        public void HabitEventGenerateTest_Day()
+        {
+            List<EventGenerationResultViewModel> results = null;
+            var startdate = DateTime.Today;
+
+            EventGenerationInputViewModel vm = new EventGenerationInputViewModel
+            {
+                StartTimePoint = startdate,
+                EndTimePoint = startdate.AddDays(10),
+                RptType = RepeatFrequency.Day,
+                Name = "Test_Day"
+            };
+
+            results = EventUtility.GenerateHabitDetails(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartTimePoint.AddDays(i++), rst.StartTimePoint);
+                Assert.AreEqual(vm.StartTimePoint.AddDays(i), rst.EndTimePoint);
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Name);
+            }
+        }
+
+        [TestMethod]
+        public void HabitEventGenerateTest_Week()
+        {
+            List<EventGenerationResultViewModel> results = null;
+            var startdate = DateTime.Today;
+
+            EventGenerationInputViewModel vm = new EventGenerationInputViewModel
+            {
+                StartTimePoint = startdate,
+                EndTimePoint = startdate.AddDays(70),
+                RptType = RepeatFrequency.Week,
+                Name = "Test_Week"
+            };
+
+            results = EventUtility.GenerateHabitDetails(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartTimePoint.AddDays(i * 7), rst.StartTimePoint);
+                Assert.AreEqual(vm.StartTimePoint.AddDays((i + 1) * 7), rst.EndTimePoint);
+                i++;
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Name);
+            }
+        }
+
+        [TestMethod]
+        public void HabitEventGenerateTest_Fortnight()
+        {
+            List<EventGenerationResultViewModel> results = null;
+            var startdate = DateTime.Today;
+
+            EventGenerationInputViewModel vm = new EventGenerationInputViewModel
+            {
+                StartTimePoint = startdate,
+                EndTimePoint = startdate.AddDays(140),
+                RptType = RepeatFrequency.Fortnight,
+                Name = "Test_Fortnight"
+            };
+
+            results = EventUtility.GenerateHabitDetails(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartTimePoint.AddDays(i * 14), rst.StartTimePoint);
+                Assert.AreEqual(vm.StartTimePoint.AddDays((i + 1) * 14), rst.EndTimePoint);
+                i++;
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Name);
+            }
+        }
+
+        [TestMethod]
+        public void HabitEventGenerateTest_Month()
+        {
+            List<EventGenerationResultViewModel> results = null;
+            var startdate = DateTime.Today;
+
+            EventGenerationInputViewModel vm = new EventGenerationInputViewModel
+            {
+                StartTimePoint = startdate,
+                EndTimePoint = startdate.AddMonths(10),
+                RptType = RepeatFrequency.Month,
+                Name = "Test_Month"
+            };
+
+            results = EventUtility.GenerateHabitDetails(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartTimePoint.AddMonths(i++), rst.StartTimePoint);
+                Assert.AreEqual(vm.StartTimePoint.AddMonths(i), rst.EndTimePoint);
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Name);
+            }
+        }
+
+        [TestMethod]
+        public void HabitEventGenerateTest_Quarter()
+        {
+            List<EventGenerationResultViewModel> results = null;
+            var startdate = DateTime.Today;
+
+            EventGenerationInputViewModel vm = new EventGenerationInputViewModel
+            {
+                StartTimePoint = startdate,
+                EndTimePoint = startdate.AddMonths(30),
+                RptType = RepeatFrequency.Quarter,
+                Name = "Test_Quarter"
+            };
+
+            results = EventUtility.GenerateHabitDetails(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartTimePoint.AddMonths(i * 3), rst.StartTimePoint);
+                Assert.AreEqual(vm.StartTimePoint.AddMonths((i + 1) * 3), rst.EndTimePoint);
+                i++;
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Name);
+            }
+        }
+
+        [TestMethod]
+        public void HabitEventGenerateTest_HalfYear()
+        {
+            List<EventGenerationResultViewModel> results = null;
+            var startdate = DateTime.Today;
+
+            EventGenerationInputViewModel vm = new EventGenerationInputViewModel
+            {
+                StartTimePoint = startdate,
+                EndTimePoint = startdate.AddMonths(60),
+                RptType = RepeatFrequency.HalfYear,
+                Name = "Test_HalfYear"
+            };
+
+            results = EventUtility.GenerateHabitDetails(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartTimePoint.AddMonths(i * 6), rst.StartTimePoint);
+                Assert.AreEqual(vm.StartTimePoint.AddMonths((i + 1) * 6), rst.EndTimePoint);
+                i++;
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Name);
+            }
+        }
+
+        [TestMethod]
+        public void HabitEventGenerateTest_Year()
+        {
+            List<EventGenerationResultViewModel> results = null;
+            var startdate = DateTime.Today;
+
+            EventGenerationInputViewModel vm = new EventGenerationInputViewModel
+            {
+                StartTimePoint = startdate,
+                EndTimePoint = startdate.AddYears(10),
+                RptType = RepeatFrequency.Year,
+                Name = "Test_Year"
+            };
+
+            results = EventUtility.GenerateHabitDetails(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 10);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartTimePoint.AddYears(i++), rst.StartTimePoint);
+                Assert.AreEqual(vm.StartTimePoint.AddYears(i), rst.EndTimePoint);
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Name);
+            }
+        }
     }
 }

@@ -168,6 +168,7 @@ namespace achihapi.Utilities
                             listResults.Add(new EventGenerationResultViewModel
                             {
                                 StartTimePoint = datInput.StartTimePoint.AddDays(i),
+                                EndTimePoint = datInput.StartTimePoint.AddDays(i + 1),
                                 Name = datInput.Name + " | " + (i + 1).ToString() + " / " + tdays.ToString()
                             });
                         }
@@ -186,6 +187,7 @@ namespace achihapi.Utilities
                             listResults.Add(new EventGenerationResultViewModel
                             {
                                 StartTimePoint = datInput.StartTimePoint.AddDays(i * 14),
+                                EndTimePoint = datInput.StartTimePoint.AddDays((i + 1) * 14),
                                 Name = datInput.Name + " | " + (i + 1).ToString() + " / " + tfortnights.ToString()
                             });
                         }
@@ -202,6 +204,7 @@ namespace achihapi.Utilities
                             listResults.Add(new EventGenerationResultViewModel
                             {
                                 StartTimePoint = datInput.StartTimePoint.AddMonths(i * 6),
+                                EndTimePoint = datInput.StartTimePoint.AddMonths((i + 1) * 6),
                                 Name = datInput.Name + " | " + (i + 1).ToString() + " / " + nhalfyear.ToString()
                             });
                         }
@@ -217,6 +220,7 @@ namespace achihapi.Utilities
                             listResults.Add(new EventGenerationResultViewModel
                             {
                                 StartTimePoint = datInput.StartTimePoint.AddMonths(i),
+                                EndTimePoint = datInput.StartTimePoint.AddMonths(i + 1),
                                 Name = datInput.Name + " | " + (i + 1).ToString() + " / " + nmonths.ToString()
                             });
                         }
@@ -233,6 +237,7 @@ namespace achihapi.Utilities
                             listResults.Add(new EventGenerationResultViewModel
                             {
                                 StartTimePoint = datInput.StartTimePoint.AddMonths(i * 3),
+                                EndTimePoint = datInput.StartTimePoint.AddMonths((i + 1) * 3),
                                 Name = datInput.Name + " | " + (i + 1).ToString() + " / " + nquarters.ToString()
                             });
                         }
@@ -251,6 +256,7 @@ namespace achihapi.Utilities
                             listResults.Add(new EventGenerationResultViewModel
                             {
                                 StartTimePoint = datInput.StartTimePoint.AddDays(i * 7),
+                                EndTimePoint = datInput.StartTimePoint.AddDays((i + 1) * 7),
                                 Name = datInput.Name + " | " + (i + 1).ToString() + " / " + tweeks.ToString()
                             });
                         }
@@ -266,6 +272,7 @@ namespace achihapi.Utilities
                             listResults.Add(new EventGenerationResultViewModel
                             {
                                 StartTimePoint = datInput.StartTimePoint.AddYears(i),
+                                EndTimePoint = datInput.StartTimePoint.AddYears(i + 1),
                                 Name = datInput.Name + " | " + (i + 1).ToString() + " / " + nyears.ToString()
                             });
                         }
