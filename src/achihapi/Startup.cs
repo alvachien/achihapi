@@ -26,11 +26,13 @@ namespace achihapi
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IHostingEnvironment env, IConfiguration config)
         {
-            Configuration = configuration;
+            HostingEnvironment = env;
+            Configuration = config;
         }
 
+        public IHostingEnvironment HostingEnvironment { get; }
         public IConfiguration Configuration { get; }
 
         internal static String DBConnectionString { get; private set; }
@@ -40,14 +42,20 @@ namespace achihapi
             services.AddCors();
 
             // Add framework services.
-            services.AddMvcCore()
-                .AddAuthorization()
-                .AddJsonFormatters()
-                .AddAuthorization();
+            if (HostingEnvironment.EnvironmentName == "Test")
+            {
+                services.AddMvcCore()
+                    .AddJsonFormatters();
+            }
+            else
+            {
+                services.AddMvcCore()
+                    .AddAuthorization()
+                    .AddJsonFormatters();
 
-            services.AddAuthentication("Bearer")
-                .AddIdentityServerAuthentication(options =>
-                {
+                services.AddAuthentication("Bearer")
+                    .AddIdentityServerAuthentication(options =>
+                    {
 #if DEBUG
                     options.Authority = "http://localhost:41016";
 #else
@@ -58,8 +66,9 @@ namespace achihapi
 #endif
 #endif
                     options.RequireHttpsMetadata = false;
-                    options.ApiName = "api.hihapi";
-                });
+                        options.ApiName = "api.hihapi";
+                    });
+            }
 
             // DB connection string
 #if DEBUG
@@ -75,7 +84,13 @@ namespace achihapi
 
         public void Configure(IApplicationBuilder app)
         {
-            app.UseAuthentication();
+            if (HostingEnvironment.EnvironmentName == "Test")
+            {
+            }
+            else
+            {
+                app.UseAuthentication();
+            }
 
             app.UseCors(builder =>
 #if DEBUG
