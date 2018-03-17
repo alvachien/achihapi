@@ -72,13 +72,26 @@ namespace achihapi.test.Controllers
         }
 
         [TestMethod]
-        public async Task Post_WithGene()
+        public async Task Post_InvalidCase()
         {
             var vm = new EventHabitViewModel();
             var response = await _client.PostAsJsonAsync("/api/EventHabit", vm);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task Post_GenerateMode()
+        {
+            var vm = new EventHabitViewModel();
+            vm.Name = "Test";
+            
+            var response = await _client.PostAsJsonAsync("/api/EventHabit?geneMode=true", vm);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(true, response.IsSuccessStatusCode);
         }
     }
 }
