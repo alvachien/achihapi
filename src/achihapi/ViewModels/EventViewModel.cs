@@ -85,6 +85,7 @@ namespace achihapi.ViewModels
         public DateTime EndDate { get; set; }
         public RepeatFrequency RptType { get; set; }
         public Int32 Count { get; set; }
+        public String Content { get; set; }
         public Boolean IsPublic { get; set; }
         [StringLength(40)]
         public String Assignee { get; set; }

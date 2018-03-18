@@ -30,7 +30,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            BaseListViewModel<EventViewModel> listVm = new BaseListViewModel<EventViewModel>();
+            BaseListViewModel<EventHabitViewModel> listVm = new BaseListViewModel<EventHabitViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -50,7 +50,7 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                queryString = SqlUtility.Event_GetNormalEventQueryString(true, usrName, hid, skip, top);
+                queryString = SqlUtility.Event_GetEventHabitQueryString(true, usrName, hid, skip, top);
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -70,8 +70,9 @@ namespace achihapi.Controllers
                     {
                         while (reader.Read())
                         {
-                            EventViewModel vm = new EventViewModel();
-                            SqlUtility.Event_DB2VM(reader, vm, true);
+                            EventHabitViewModel vm = new EventHabitViewModel();
+                            EventHabitDetail detail = new EventHabitDetail();
+                            SqlUtility.Event_HabitDB2VM(reader, vm, detail, true);
                             listVm.Add(vm);
                         }
                     }

@@ -2546,22 +2546,25 @@ namespace achihapi.Utilities
             StringBuilder sb = new StringBuilder();
             if (listmode)
                 sb.AppendLine(@"SELECT count(*) FROM [dbo].[t_event_habit] WHERE[HID] = " + hid.ToString());
-
             sb.Append(@"; SELECT [ID]
                           ,[HID]
-                          ,[STARTDATE]
-                          ,[ENDDATE]
+                          ,[Name]
+                          ,[StartDate]
+                          ,[EndDate]
                           ,[RPTTYPE]
-                          ,[NAME]");
+                          ,[IsPublic]");
             if (!listmode)
                 sb.Append(@",[Content]");
-            sb.Append(@",[ISPUBLIC]
-                          ,[ASSIGNEE]
-                          ,[CREATEDBY]
-                          ,[CREATEDAT]
-                          ,[UPDATEDBY]
-                          ,[UPDATEDAT]
-                      FROM [dbo].[t_event_habit] ");
+            sb.Append(@",[Count]
+                        ,[Assignee]
+                        ,[DetailID]
+                        ,[DetailStartDate]
+                        ,[DetailEndDate]
+                        ,[CREATEDBY]
+                        ,[CREATEDAT]
+                        ,[UPDATEDBY]
+                        ,[UPDATEDAT]
+                      FROM [dbo].[v_event_habitdetail] ");
 
             if (listmode)
             {
@@ -2574,6 +2577,53 @@ namespace achihapi.Utilities
                 sb.Append(" WHERE [ID] = " + id.Value.ToString());
 
             return sb.ToString();
+        }
+        internal static void Event_HabitDB2VM(SqlDataReader reader, EventHabitViewModel vm, EventHabitDetail detail, Boolean listMode)
+        {
+            Int32 idx = 0;
+            vm.ID = reader.GetInt32(idx++);
+            vm.HID = reader.GetInt32(idx++);
+            vm.Name = reader.GetString(idx++);
+            //vm.StartTimePoint = reader.GetDateTime(idx++);
+            //if (!reader.IsDBNull(idx))
+            //    vm.EndTimePoint = reader.GetDateTime(idx++);
+            //else
+            //    ++idx;
+            //if (!reader.IsDBNull(idx))
+            //    vm.CompleteTimePoint = reader.GetDateTime(idx++);
+            //else
+            //    ++idx;
+            //if (!listmode)
+            //    vm.Content = reader.GetString(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.IsPublic = reader.GetBoolean(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.Assignee = reader.GetString(idx++);
+            else
+                ++idx;
+            //if (!reader.IsDBNull(idx))
+            //    vm.RefRecurrID = reader.GetInt32(idx++);
+            //else
+            //    ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+
         }
         #endregion
 
