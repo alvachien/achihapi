@@ -686,7 +686,8 @@ GO
 
 CREATE VIEW [dbo].[v_event_habitdetail]
 AS
-SELECT t_event_habit.ID, t_event_habit.HID, t_event_habit.Name, t_event_habit.StartDate, t_event_habit.EndDate, t_event_habit.RPTTYPE, t_event_habit.IsPublic, 
+SELECT t_event_habit.ID, t_event_habit.HID, t_event_habit.Name, t_event_habit.StartDate, t_event_habit.EndDate, t_event_habit.RPTTYPE, 
+	t_event_habit.IsPublic, t_event_habit.Content,
 	t_event_habit.Count, t_event_habit.Assignee, t_event_habit_detail.ID AS DetailID, t_event_habit_detail.StartDate AS DetailStartDate, 
 	t_event_habit_detail.EndDate AS DetailEndDate, t_event_habit.CREATEDBY, 
     t_event_habit.CREATEDAT, t_event_habit.UPDATEDBY, t_event_habit.UPDATEDAT

@@ -1572,6 +1572,7 @@ CREATE TABLE [dbo].[t_event_habit](
 	[EndDate] [date] NOT NULL,
 	[RPTTYPE] [tinyint] NOT NULL,
 	[IsPublic] [bit] NOT NULL,
+	[CONTENT] [nvarchar](max) NULL,
 	[Count] [int] NOT NULL,
 	[Assignee] [nvarchar](40) NULL,
 	[CREATEDBY] [nvarchar](40) NULL,
