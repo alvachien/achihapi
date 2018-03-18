@@ -1,12 +1,12 @@
 # achihapi
-Web API for [HIH] (https://github.com/alvachien/achihui.git), built on ASP.NET Core.
+Web API for [HIH](https://github.com/alvachien/achihui.git), built on ASP.NET Core.
 
 ## Install
 To install this Web API to your own server, please follow the steps below.
 
 
 ### Step 1. Clone or Download
-You can clone this [repository] (https://github.com/alvachien/achihapi.git) or download it.
+You can clone this [repository](https://github.com/alvachien/achihapi.git) or download it.
 
 
 ### Step 2. Setup your own database.
