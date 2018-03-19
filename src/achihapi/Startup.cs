@@ -30,19 +30,22 @@ namespace achihapi
         {
             HostingEnvironment = env;
             Configuration = config;
+
+            UnitTestMode = HostingEnvironment.EnvironmentName == "Test";
         }
 
         public IHostingEnvironment HostingEnvironment { get; }
         public IConfiguration Configuration { get; }
 
         internal static String DBConnectionString { get; private set; }
+        internal static Boolean UnitTestMode { get; private set; }
 
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
 
             // Add framework services.
-            if (HostingEnvironment.EnvironmentName == "Test")
+            if (UnitTestMode)
             {
                 services.AddMvcCore()
                     .AddJsonFormatters();
@@ -84,7 +87,7 @@ namespace achihapi
 
         public void Configure(IApplicationBuilder app)
         {
-            if (HostingEnvironment.EnvironmentName == "Test")
+            if (UnitTestMode)
             {
             }
             else

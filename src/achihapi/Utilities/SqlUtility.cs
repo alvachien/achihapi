@@ -2580,33 +2580,39 @@ namespace achihapi.Utilities
         }
         internal static void Event_HabitDB2VM(SqlDataReader reader, EventHabitViewModel vm, EventHabitDetail detail, Boolean listMode)
         {
+            System.Diagnostics.Debug.Assert(vm != null);
+            System.Diagnostics.Debug.Assert(detail != null);
+
             Int32 idx = 0;
             vm.ID = reader.GetInt32(idx++);
             vm.HID = reader.GetInt32(idx++);
             vm.Name = reader.GetString(idx++);
-            //vm.StartTimePoint = reader.GetDateTime(idx++);
-            //if (!reader.IsDBNull(idx))
-            //    vm.EndTimePoint = reader.GetDateTime(idx++);
-            //else
-            //    ++idx;
-            //if (!reader.IsDBNull(idx))
-            //    vm.CompleteTimePoint = reader.GetDateTime(idx++);
-            //else
-            //    ++idx;
-            //if (!listmode)
-            //    vm.Content = reader.GetString(idx++);
+            vm.StartDate = reader.GetDateTime(idx++);
+            vm.EndDate = reader.GetDateTime(idx++);
+            vm.RptType = (RepeatFrequency)reader.GetByte(idx++);
             if (!reader.IsDBNull(idx))
                 vm.IsPublic = reader.GetBoolean(idx++);
             else
                 ++idx;
+            if (!listMode)
+                vm.Content = reader.GetString(idx++);
+            vm.Count = reader.GetInt32(idx++);
             if (!reader.IsDBNull(idx))
                 vm.Assignee = reader.GetString(idx++);
             else
                 ++idx;
-            //if (!reader.IsDBNull(idx))
-            //    vm.RefRecurrID = reader.GetInt32(idx++);
-            //else
-            //    ++idx;
+            if (!reader.IsDBNull(idx))
+                detail.ID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                detail.StartDate = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                detail.EndDate = reader.GetDateTime(idx++);
+            else
+                ++idx;
             if (!reader.IsDBNull(idx))
                 vm.CreatedBy = reader.GetString(idx++);
             else
@@ -2623,7 +2629,6 @@ namespace achihapi.Utilities
                 vm.UpdatedAt = reader.GetDateTime(idx++);
             else
                 ++idx;
-
         }
         #endregion
 

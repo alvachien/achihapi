@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Net.Http;
@@ -72,7 +73,7 @@ namespace achihapi.test.Controllers
         }
 
         [TestMethod]
-        public async Task Post_InvalidCase()
+        public async Task Post_InvalidCase1()
         {
             var vm = new EventHabitViewModel();
             var response = await _client.PostAsJsonAsync("/api/EventHabit", vm);
@@ -82,16 +83,93 @@ namespace achihapi.test.Controllers
         }
 
         [TestMethod]
+        public async Task Post_InvalidCase2_Count()
+        {
+            var vm = new EventHabitViewModel();
+            vm.Name = "Test";
+            vm.StartDate = DateTime.Today;
+            vm.EndDate = DateTime.Today.AddYears(1);
+            vm.RptType = RepeatFrequency.Month;
+            vm.Content = "Test";            
+
+            var response = await _client.PostAsJsonAsync("/api/EventHabit", vm);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.AreEqual(false, response.IsSuccessStatusCode);
+
+            var result = await response.Content.ReadAsStringAsync();
+            Assert.IsNotNull(result);
+            Assert.AreNotEqual(0, result.Length);
+            StringAssert.Equals("Count is must", result);
+        }
+
+        [TestMethod]
+        public async Task Post_InvalidCase3_DateRange()
+        {
+            var vm = new EventHabitViewModel();
+            vm.Name = "Test";
+            vm.StartDate = DateTime.Today;
+            vm.EndDate = DateTime.Today.AddYears(-1);
+            vm.RptType = RepeatFrequency.Month;
+            vm.Content = "Test";
+
+            var response = await _client.PostAsJsonAsync("/api/EventHabit", vm);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.AreEqual(false, response.IsSuccessStatusCode);
+
+            var result = await response.Content.ReadAsStringAsync();
+            Assert.IsNotNull(result);
+            Assert.AreNotEqual(0, result.Length);
+            StringAssert.Equals("Date range is invaid", result);
+        }
+
+        [TestMethod]
         public async Task Post_GenerateMode()
         {
             var vm = new EventHabitViewModel();
             vm.Name = "Test";
-            
+            vm.StartDate = DateTime.Today;
+            vm.EndDate = DateTime.Today.AddYears(1);
+            vm.RptType = RepeatFrequency.Month;
+
             var response = await _client.PostAsJsonAsync("/api/EventHabit?geneMode=true", vm);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             Assert.AreEqual(true, response.IsSuccessStatusCode);
+
+            Assert.IsNotNull(response.Content);
+            var results = await response.Content.ReadAsJsonAsync<List<EventGenerationResultViewModel>>();
+            Assert.IsNotNull(results);
+            Assert.AreNotEqual(0, results.Count);
+            Assert.AreEqual(12, results.Count);
+        }
+
+        [TestMethod]
+        public async Task Post_CreateModeSucceed()
+        {
+            var vm = new EventHabitViewModel();
+            vm.Name = "Test";
+            vm.StartDate = DateTime.Today;
+            vm.EndDate = DateTime.Today.AddYears(1);
+            vm.RptType = RepeatFrequency.Month;
+            vm.Content = "Test";
+            vm.Count = 1;
+
+            var response = await _client.PostAsJsonAsync("/api/EventHabit", vm);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(true, response.IsSuccessStatusCode);
+
+            Assert.IsNotNull(response.Content);
+            var result = await response.Content.ReadAsJsonAsync<EventHabitViewModel>();
+            Assert.IsNotNull(result);
+            Assert.AreNotEqual(0, result.Details.Count);
+            Assert.AreEqual(12, result.Details.Count);
         }
     }
 }

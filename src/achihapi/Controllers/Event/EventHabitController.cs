@@ -68,12 +68,22 @@ namespace achihapi.Controllers
                     }
                     else
                     {
+                        Dictionary<Int32, EventHabitViewModel> dictVM = new Dictionary<int, EventHabitViewModel>();
                         while (reader.Read())
                         {
                             EventHabitViewModel vm = new EventHabitViewModel();
                             EventHabitDetail detail = new EventHabitDetail();
                             SqlUtility.Event_HabitDB2VM(reader, vm, detail, true);
-                            listVm.Add(vm);
+                            if (dictVM.ContainsKey(vm.ID))
+                            {
+                                dictVM[vm.ID].Details.Add(detail);
+                            }
+                            else
+                            {
+                                vm.Details.Add(detail);
+                                listVm.Add(vm);
+                                dictVM.Add(vm.ID, vm);
+                            }
                         }
                     }
 
@@ -114,6 +124,7 @@ namespace achihapi.Controllers
         [HttpGet("{id}")]
         public string Get(int id)
         {
+            // TBD.
             return "value";
         }
 
@@ -138,6 +149,39 @@ namespace achihapi.Controllers
                 datInput.RptType = vm.RptType;
                 var listRst = EventUtility.GenerateHabitDetails(datInput);
                 return Json(listRst);
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Model status is invalid");
+            }
+            if (vm.EndDate <= vm.StartDate)
+            {
+                return BadRequest("Date range is invaid");
+            }
+            if (vm.Count <= 0)
+            {
+                return BadRequest("Count is must");
+            }
+
+            Boolean unitMode = Startup.UnitTestMode;            
+
+            if (unitMode)
+            {
+                var results = EventUtility.GenerateHabitDetails(new EventGenerationInputViewModel() {
+                    StartTimePoint = vm.StartDate,
+                    EndTimePoint = vm.EndDate,
+                    RptType = vm.RptType,
+                    Name = vm.Name
+                });
+                foreach(var result in results)
+                {
+                    EventHabitDetail detail = new EventHabitDetail();
+                    detail.StartDate = result.StartTimePoint;
+                    detail.EndDate = result.EndTimePoint;
+                    vm.Details.Add(detail);
+                }
+                return Json(vm);
             }
 
             if (vm.HID <= 0)
