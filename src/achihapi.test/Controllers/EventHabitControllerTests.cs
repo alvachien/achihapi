@@ -18,23 +18,34 @@ using achihapi.Controllers;
 using achihapi.test;
 using achihapi.ViewModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using System.Data;
+using System.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 
 namespace achihapi.test.Controllers
 {
     [TestClass]
     public class EventHabitControllerTests
     {
-        private HttpClient _client;
-        private TestServer _server;
+        private static HttpClient _client;
+        private static TestServer _server;
+        private static String _contentRoot;
+        private static String _connString;
 
-        [TestInitialize]
-        public void TestInitialize()
+        [ClassInitialize]
+        public static void TestInitialize(TestContext testContext)
         {
             var startupAssembly = typeof(achihapi.Startup).GetTypeInfo().Assembly;
-            var contentRoot = TestFixture<achihapi.Startup>.GetProjectPath("src", startupAssembly);
+            _contentRoot = TestFixture<achihapi.Startup>.GetProjectPath("src", startupAssembly);
+            var jsonfile = new FileInfo(Path.Combine(_contentRoot, "appsettings.json"));
+            var config = new ConfigurationBuilder()
+                .AddJsonFile(jsonfile.FullName)
+                .Build();
+            _connString = config["ConnectionStrings:UnitTestConnection"];
 
             var builder = new WebHostBuilder()
-                .UseContentRoot(contentRoot)
+                .UseConfiguration(config)
+                .UseContentRoot(_contentRoot)
                 .UseEnvironment("Test")
                 .ConfigureServices(InitializeServices)
                 .UseStartup(typeof(achihapi.Startup));
@@ -45,20 +56,31 @@ namespace achihapi.test.Controllers
             _client.BaseAddress = new Uri("http://localhost");
         }
 
-        [TestCleanup]
-        public void TestCleanup()
+        [ClassCleanup]
+        public static void TestCleanup()
         {
             if (_client != null)
                 _client.Dispose();
             if (_server != null)
                 _server.Dispose();
+
+            // Clean the table.
+            using (SqlConnection conn = new SqlConnection(_connString))
+            {
+                conn.Open();
+
+                String sqlCmd = @"DELETE FROM [dbo].[t_event_habit] WHERE [ID] > 0;";
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                cmd.ExecuteNonQuery();
+                cmd.Dispose();
+            }
         }
 
         public EventHabitControllerTests()
         {
         }
 
-        protected virtual void InitializeServices(IServiceCollection services)
+        protected static void InitializeServices(IServiceCollection services)
         {
             var startupAssembly = typeof(achihapi.Startup).GetTypeInfo().Assembly;
 
@@ -68,6 +90,7 @@ namespace achihapi.test.Controllers
             manager.ApplicationParts.Add(new AssemblyPart(startupAssembly));
             manager.FeatureProviders.Add(new ControllerFeatureProvider());
             manager.FeatureProviders.Add(new ViewComponentFeatureProvider());
+            
 
             services.AddSingleton(manager);
         }
@@ -110,7 +133,7 @@ namespace achihapi.test.Controllers
             var vm = new EventHabitViewModel();
             vm.Name = "Test";
             vm.StartDate = DateTime.Today;
-            vm.EndDate = DateTime.Today.AddYears(-1);
+            vm.EndDate = DateTime.Today.AddDays(-1);
             vm.RptType = RepeatFrequency.Month;
             vm.Content = "Test";
 
@@ -157,10 +180,15 @@ namespace achihapi.test.Controllers
             vm.EndDate = DateTime.Today.AddYears(1);
             vm.RptType = RepeatFrequency.Month;
             vm.Content = "Test";
-            vm.Count = 1;
+            vm.Count = 5;
+            vm.HID = 1;
 
             var response = await _client.PostAsJsonAsync("/api/EventHabit", vm);
-
+            if (!response.IsSuccessStatusCode)
+            {
+                var errmsg = await response.Content.ReadAsStringAsync();                
+                System.Diagnostics.Debug.WriteLine(errmsg);
+            }
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             Assert.AreEqual(true, response.IsSuccessStatusCode);
@@ -170,6 +198,20 @@ namespace achihapi.test.Controllers
             Assert.IsNotNull(result);
             Assert.AreNotEqual(0, result.Details.Count);
             Assert.AreEqual(12, result.Details.Count);
+
+            // Check the table
+            using (SqlConnection conn = new SqlConnection(_connString))
+            {
+                conn.Open();
+
+                String sqlCmd = @"SELECT * FROM [dbo].[t_event_habit] WHERE [ID] = " + result.ID.ToString();
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                Assert.AreEqual(true, reader.HasRows);
+
+                reader.Close();
+                cmd.Dispose();
+            }
         }
     }
 }

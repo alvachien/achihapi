@@ -2307,7 +2307,6 @@ namespace achihapi.Utilities
                 cmd.Parameters.AddWithValue("@RefRecurID", DBNull.Value);
             cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
             cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
-
         }
 
         internal static string Event_GetNormalEventUpdateString()
@@ -2629,6 +2628,70 @@ namespace achihapi.Utilities
                 vm.UpdatedAt = reader.GetDateTime(idx++);
             else
                 ++idx;
+        }
+        internal static string Event_GetEventHabitInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_event_habit]
+                   ([HID]
+                   ,[Name]
+                   ,[StartDate]
+                   ,[EndDate]
+                   ,[RPTTYPE]
+                   ,[IsPublic]
+                   ,[CONTENT]
+                   ,[Count]
+                   ,[Assignee]
+                   ,[CREATEDBY]
+                   ,[CREATEDAT])
+             VALUES
+                   (@HID
+                   ,@Name
+                   ,@StartDate
+                   ,@EndDate
+                   ,@RPTTYPE
+                   ,@IsPublic
+                   ,@CONTENT
+                   ,@Count
+                   ,@Assignee
+                   ,@CREATEDBY
+                   ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+        }
+        internal static void Event_BindEventHabitInsertParameters(SqlCommand cmd, EventHabitViewModel vm, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@HID", vm.HID);
+            cmd.Parameters.AddWithValue("@Name", vm.Name);
+            cmd.Parameters.AddWithValue("@StartDate", vm.StartDate);
+            cmd.Parameters.AddWithValue("@EndDate", vm.EndDate);
+            cmd.Parameters.AddWithValue("@RPTTYPE", vm.RptType);
+            cmd.Parameters.AddWithValue("@IsPublic", vm.IsPublic);
+            if (!String.IsNullOrEmpty(vm.Content))
+                cmd.Parameters.AddWithValue("@CONTENT", vm.Content);
+            else
+                cmd.Parameters.AddWithValue("@CONTENT", DBNull.Value);
+            cmd.Parameters.AddWithValue("@Count", vm.Count);
+            if (!String.IsNullOrEmpty(vm.Assignee))
+                cmd.Parameters.AddWithValue("@Assignee", vm.Assignee);
+            else
+                cmd.Parameters.AddWithValue("@Assignee", DBNull.Value);
+            cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
+        }
+        internal static string Event_GetEventHabitDetailInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_event_habit_detail]
+                       ([HabitID]
+                       ,[StartDate]
+                       ,[EndDate])
+                 VALUES
+                       (@HabitID
+                       ,@StartDate
+                       ,@EndDate)";
+        }
+        internal static void Event_BindEventHabitDetailInsertParameter(SqlCommand cmd, EventHabitDetail detailvm)
+        {
+            cmd.Parameters.AddWithValue("@HabitID", detailvm.HabitID);
+            cmd.Parameters.AddWithValue("@StartDate", detailvm.StartDate);
+            cmd.Parameters.AddWithValue("@EndDate", detailvm.EndDate);
         }
         #endregion
 

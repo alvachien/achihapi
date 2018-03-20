@@ -140,17 +140,25 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(vm.Name))
                 return BadRequest("Name is a must!");
 
-            if (geneMode)
+            // Check the details' generation
+            EventGenerationInputViewModel datInput = new EventGenerationInputViewModel();
+            datInput.StartTimePoint = vm.StartDate;
+            datInput.EndTimePoint = vm.EndDate;
+            datInput.Name = vm.Name;
+            datInput.RptType = vm.RptType;
+            var listDetails = EventUtility.GenerateHabitDetails(datInput);
+            if (listDetails.Count <= 0)
             {
-                EventGenerationInputViewModel datInput = new EventGenerationInputViewModel();
-                datInput.StartTimePoint = vm.StartDate;
-                datInput.EndTimePoint = vm.EndDate;
-                datInput.Name = vm.Name;
-                datInput.RptType = vm.RptType;
-                var listRst = EventUtility.GenerateHabitDetails(datInput);
-                return Json(listRst);
+                return BadRequest("Failed to generate the details");
             }
 
+            // For generation mode, just return the results
+            if (geneMode)
+            {
+                return Json(listDetails);
+            }
+
+            // For non-generation mode, go ahead for creating
             if (!ModelState.IsValid)
             {
                 return BadRequest("Model status is invalid");
@@ -166,28 +174,6 @@ namespace achihapi.Controllers
 
             Boolean unitMode = Startup.UnitTestMode;            
 
-            if (unitMode)
-            {
-                var results = EventUtility.GenerateHabitDetails(new EventGenerationInputViewModel() {
-                    StartTimePoint = vm.StartDate,
-                    EndTimePoint = vm.EndDate,
-                    RptType = vm.RptType,
-                    Name = vm.Name
-                });
-                foreach(var result in results)
-                {
-                    EventHabitDetail detail = new EventHabitDetail();
-                    detail.StartDate = result.StartTimePoint;
-                    detail.EndDate = result.EndTimePoint;
-                    vm.Details.Add(detail);
-                }
-                return Json(vm);
-            }
-
-            if (vm.HID <= 0)
-                return BadRequest("Home not defined");
-
-            // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bDuplicatedEntry = false;
@@ -195,17 +181,26 @@ namespace achihapi.Controllers
             Int32 nNewID = -1;
             Boolean bError = false;
             String strErrMsg = "";
-            var usr = User.FindFirst(c => c.Type == "sub");
             String usrName = String.Empty;
-            if (usr != null)
-                usrName = usr.Value;
-            if (String.IsNullOrEmpty(usrName))
-                return BadRequest("User is not recognized");
+
+            if (unitMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usr = User.FindFirst(c => c.Type == "sub");
+                if (usr != null)
+                    usrName = usr.Value;
+                if (String.IsNullOrEmpty(usrName))
+                    return BadRequest("User is not recognized");
+            }
+
+            SqlCommand cmd = null;
+            SqlTransaction tran = null;
 
             try
             {
                 queryString = @"SELECT [ID]
-                            FROM [dbo].[t_event] WHERE [Name] = N'" + vm.Name + "'";
+                            FROM [dbo].[t_event_habit] WHERE [Name] = N'" + vm.Name + "'";
 
                 await conn.OpenAsync();
 
@@ -219,7 +214,7 @@ namespace achihapi.Controllers
                     throw exp; // Re-throw
                 }
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
                 {
@@ -239,25 +234,63 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Now go ahead for the creating
-                    queryString = SqlUtility.Event_GetNormalEventInsertString();
+                    queryString = SqlUtility.Event_GetEventHabitInsertString();
+                    tran = conn.BeginTransaction();
 
                     cmd = new SqlCommand(queryString, conn);
-                    //SqlUtility.Event_BindNormalEventInsertParameters(cmd, vm, usrName);
+                    cmd.Transaction = tran;
+                    SqlUtility.Event_BindEventHabitInsertParameters(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
                     Int32 nRst = await cmd.ExecuteNonQueryAsync();
                     nNewID = (Int32)idparam.Value;
+
+                    // Then go to the details.
+                    foreach(var detail in listDetails)
+                    {
+                        EventHabitDetail detailVM = new EventHabitDetail();
+                        detailVM.HabitID = nNewID;
+                        detailVM.StartDate = detail.StartTimePoint;
+                        detailVM.EndDate = detail.EndTimePoint;
+
+                        queryString = SqlUtility.Event_GetEventHabitDetailInsertString();
+
+                        cmd.Dispose();
+                        cmd = null;
+                        cmd = new SqlCommand(queryString, conn, tran);
+                        SqlUtility.Event_BindEventHabitDetailInsertParameter(cmd, detailVM);
+                        await cmd.ExecuteNonQueryAsync();
+
+                        vm.Details.Add(detailVM);
+                    }
+
+                    tran.Commit();
                 }
             }
             catch (Exception exp)
             {
+                if (tran != null)
+                {
+                    tran.Rollback();                    
+                }
+
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 bError = true;
                 strErrMsg = exp.Message;
             }
             finally
             {
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
                 if (conn != null)
                 {
                     conn.Close();

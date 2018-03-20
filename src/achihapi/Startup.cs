@@ -76,6 +76,8 @@ namespace achihapi
             // DB connection string
 #if DEBUG
             DBConnectionString = Configuration["ConnectionStrings:DebugConnection"];
+            if (UnitTestMode)
+                DBConnectionString = Configuration["ConnectionStrings:UnitTestConnection"];
 #else
 #if USE_ALIYUN
             DBConnectionString = Configuration["ConnectionStrings:AliyunConnection"];
