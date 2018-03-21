@@ -25,8 +25,14 @@ namespace achihapi.Controllers
             if (hid <= 0)
                 return BadRequest("HID is missing");
 
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
@@ -122,10 +128,79 @@ namespace achihapi.Controllers
 
         // GET: api/EventHabit/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
         {
-            // TBD.
-            return "value";
+            if (hid <= 0)
+                return BadRequest("HID is missing");
+
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            EventHabitViewModel vm = new EventHabitViewModel();
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                queryString = SqlUtility.Event_GetEventHabitQueryString(false, usrName, hid, null, null, id);
+
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    EventHabitDetail detail = new EventHabitDetail();
+                    SqlUtility.Event_HabitDB2VM(reader, vm, detail, false);
+                    vm.Details.Add(detail);
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                strErrMsg = exp.Message;
+                bError = true;
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                    conn = null;
+                }
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+
+            return new JsonResult(vm, setting);
         }
 
         // POST: api/EventHabit
@@ -146,7 +221,16 @@ namespace achihapi.Controllers
             datInput.EndTimePoint = vm.EndDate;
             datInput.Name = vm.Name;
             datInput.RptType = vm.RptType;
-            var listDetails = EventUtility.GenerateHabitDetails(datInput);
+
+            List<EventGenerationResultViewModel> listDetails = null;
+            try
+            {
+                listDetails = EventUtility.GenerateHabitDetails(datInput);
+            }
+            catch(Exception exp)
+            {
+                return BadRequest(exp.Message);
+            }
             if (listDetails.Count <= 0)
             {
                 return BadRequest("Failed to generate the details");
@@ -163,16 +247,12 @@ namespace achihapi.Controllers
             {
                 return BadRequest("Model status is invalid");
             }
-            if (vm.EndDate <= vm.StartDate)
-            {
-                return BadRequest("Date range is invaid");
-            }
             if (vm.Count <= 0)
             {
                 return BadRequest("Count is must");
             }
 
-            Boolean unitMode = Startup.UnitTestMode;            
+            Boolean unitMode = Startup.UnitTestMode;
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
@@ -326,8 +406,67 @@ namespace achihapi.Controllers
         
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id, [FromQuery]Int32 hid = 0)
         {
+            if (hid <= 0)
+                return BadRequest("HID is missing");
+
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            EventHabitViewModel vm = new EventHabitViewModel();
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                queryString = SqlUtility.Event_GetEventHabitDeleteString();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlUtility.Event_BindEventHabitDeleteParameters(cmd, id, hid);
+                await cmd.ExecuteNonQueryAsync();
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                strErrMsg = exp.Message;
+                bError = true;
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                    conn = null;
+                }
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return Ok();
         }
     }
 }

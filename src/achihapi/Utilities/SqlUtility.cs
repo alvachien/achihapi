@@ -2693,6 +2693,15 @@ namespace achihapi.Utilities
             cmd.Parameters.AddWithValue("@StartDate", detailvm.StartDate);
             cmd.Parameters.AddWithValue("@EndDate", detailvm.EndDate);
         }
+        internal static string Event_GetEventHabitDeleteString()
+        {
+            return @"DELETE FROM [dbo].[t_event_habit] WHERE [ID] = @id AND [HID] = @hid;";
+        }
+        internal static void Event_BindEventHabitDeleteParameters(SqlCommand cmd, Int32 id, Int32 hid)
+        {
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@hid", hid);
+        }
         #endregion
 
         #region Tag
