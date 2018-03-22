@@ -2556,10 +2556,11 @@ namespace achihapi.Utilities
                 sb.Append(@",[Content]");
             sb.Append(@",[Count]
                         ,[Assignee]
-                        ,[DetailID]
-                        ,[DetailStartDate]
-                        ,[DetailEndDate]
-                        ,[CREATEDBY]
+                        ,[DetailID]");
+            if (!listmode)
+                sb.Append(@",[DetailStartDate]
+                        ,[DetailEndDate]");
+            sb.Append(@",[CREATEDBY]
                         ,[CREATEDAT]
                         ,[UPDATEDBY]
                         ,[UPDATEDAT]
@@ -2604,14 +2605,17 @@ namespace achihapi.Utilities
                 detail.ID = reader.GetInt32(idx++);
             else
                 ++idx;
-            if (!reader.IsDBNull(idx))
-                detail.StartDate = reader.GetDateTime(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                detail.EndDate = reader.GetDateTime(idx++);
-            else
-                ++idx;
+            if (!listMode)
+            {
+                if (!reader.IsDBNull(idx))
+                    detail.StartDate = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    detail.EndDate = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+            }
             if (!reader.IsDBNull(idx))
                 vm.CreatedBy = reader.GetString(idx++);
             else
