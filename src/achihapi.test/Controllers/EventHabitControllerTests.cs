@@ -183,7 +183,7 @@ namespace achihapi.test.Controllers
             vm.RptType = RepeatFrequency.Month;
             vm.Content = "Test";
             vm.Count = 5;
-            vm.HID = 1;
+            vm.HID = SqlScriptHelper.HID_Tester;
 
             var response = await _client.PostAsJsonAsync(_apiurl, vm);
             if (!response.IsSuccessStatusCode)
@@ -258,7 +258,7 @@ namespace achihapi.test.Controllers
             vm.RptType = RepeatFrequency.Week;
             vm.Content = "Test";
             vm.Count = 5;
-            vm.HID = 1;
+            vm.HID = SqlScriptHelper.HID_Tester;
 
             var response = await _client.PostAsJsonAsync(_apiurl, vm);
             if (!response.IsSuccessStatusCode)
@@ -313,7 +313,7 @@ namespace achihapi.test.Controllers
             vm.RptType = RepeatFrequency.Fortnight;
             vm.Content = "Test";
             vm.Count = 5;
-            vm.HID = 1;
+            vm.HID = SqlScriptHelper.HID_Tester;
 
             var response = await _client.PostAsJsonAsync(_apiurl, vm);
             if (!response.IsSuccessStatusCode)

@@ -15,5 +15,7 @@ namespace achihapi.test
         internal const string EventHabitController_Cleanup = @"DELETE FROM[dbo].[t_event_habit] WHERE [ID] > 0; 
                     DBCC CHECKIDENT('t_event_habit', RESEED, 1); 
                     DBCC CHECKIDENT('t_event_habit_detail', RESEED, 1);";
+
+        internal const Int32 HID_Tester = 1;
     }
 }

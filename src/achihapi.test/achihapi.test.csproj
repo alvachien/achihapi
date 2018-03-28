@@ -4,6 +4,16 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
+
+    <Version>1.2.0</Version>
+
+    <Authors>Alva Chien</Authors>
+
+    <Product>H.I.H.</Product>
+
+    <Description>Home Info. Hub</Description>
+
+    <Copyright>(C) Copyright by Alva Chien</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

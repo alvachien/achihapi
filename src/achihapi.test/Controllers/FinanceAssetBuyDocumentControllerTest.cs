@@ -120,5 +120,22 @@ namespace achihapi.test.Controllers
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
+
+        [TestMethod]
+        public async Task Post_InvalidCase2_InvalidInput()
+        {
+            var vm = new FinanceAssetDocumentUIViewModel();
+            vm.HID = SqlScriptHelper.HID_Tester;
+            vm.DocType = FinanceDocTypeViewModel.DocType_AssetBuyIn;
+            vm.TranCurr = "CNY";
+            vm.AccountVM = new FinanceAccountViewModel();
+            vm.AccountVM.Name = "InvalidTest_InvalidInput";
+            vm.AccountVM.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+            vm.AccountVM.ExtraInfo_AS.Name = "InvalidTest_InvalidInput";
+            var response = await _client.PostAsJsonAsync(_apiurl, vm);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
     }
 }
