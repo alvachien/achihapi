@@ -23,10 +23,17 @@ namespace achihapi.Controllers
         {
             if (hid <= 0)
                 return BadRequest("No HID inputted");
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
-                return BadRequest("User info cannot fetch");
+                return BadRequest("User cannot recognize");
 
             List<FinanceTmpDocLoanViewModel> listVm = new List<FinanceTmpDocLoanViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -129,16 +136,20 @@ namespace achihapi.Controllers
             String queryString = String.Empty;
             Boolean bError = false;
             String strErrMsg = String.Empty;
-            String usrName = String.Empty;
             FinanceTmpDocLoanViewModel vmTmpDoc = new FinanceTmpDocLoanViewModel();
             HomeDefViewModel vmHome = new HomeDefViewModel();
             FinanceDocumentUIViewModel vmFIDOC = new FinanceDocumentUIViewModel();
 
-            var usr = User.FindFirst(c => c.Type == "sub");
-            if (usr != null)
-                usrName = usr.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
-                return BadRequest();
+                return BadRequest("User cannot recognize");
 
             try
             {

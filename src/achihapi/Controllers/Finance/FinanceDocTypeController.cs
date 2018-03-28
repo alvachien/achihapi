@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.ViewModels;
 using System.Data.SqlClient;
+using achihapi.Utilities;
 
 namespace achihapi.Controllers
 {
@@ -23,8 +24,14 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
 
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 

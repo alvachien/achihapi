@@ -7,6 +7,7 @@ using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
+using achihapi.Utilities;
 
 namespace achihapi.Controllers
 {
@@ -21,8 +22,14 @@ namespace achihapi.Controllers
             if (hid <= 0)
                 return BadRequest("No Home inputted");
 
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
@@ -119,8 +126,14 @@ namespace achihapi.Controllers
             if (hid <= 0)
                 return BadRequest("No Home inputted");
 
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
@@ -200,8 +213,15 @@ namespace achihapi.Controllers
         {
             if (vm == null)
                 return BadRequest("No data is inputted");
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
@@ -340,8 +360,14 @@ namespace achihapi.Controllers
             if (vm.ID != id)
                 return BadRequest("Data inconsistency!");
 
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
@@ -464,8 +490,14 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Delete(int id, [FromQuery] Int32 hid = 0)
         {
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 

@@ -22,8 +22,14 @@ namespace achihapi.Controllers
             if (hid <= 0)
                 return BadRequest("HID is missing");
 
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
@@ -115,8 +121,14 @@ namespace achihapi.Controllers
             if (id <= 0)
                 return BadRequest("Invalid ID");
 
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
@@ -203,12 +215,17 @@ namespace achihapi.Controllers
             Int32 nNewID = -1;
             Boolean bError = false;
             String strErrMsg = "";
-            var usr = User.FindFirst(c => c.Type == "sub");
+
             String usrName = String.Empty;
-            if (usr != null)
-                usrName = usr.Value;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
-                return BadRequest("User is not recognized");
+                return BadRequest("User cannot recognize");
 
             try
             {
@@ -313,12 +330,17 @@ namespace achihapi.Controllers
             Boolean bNonExistEntry = false;
             Boolean bError = false;
             String strErrMsg = "";
-            var usr = User.FindFirst(c => c.Type == "sub");
+
             String usrName = String.Empty;
-            if (usr != null)
-                usrName = usr.Value;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
-                return BadRequest("User is not recognized");
+                return BadRequest("User cannot recognize");
 
             try
             {
@@ -408,12 +430,17 @@ namespace achihapi.Controllers
             Boolean bNonExistEntry = false;
             Boolean bError = false;
             String strErrMsg = "";
-            var usr = User.FindFirst(c => c.Type == "sub");
+
             String usrName = String.Empty;
-            if (usr != null)
-                usrName = usr.Value;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
-                return BadRequest("User is not recognized");
+                return BadRequest("User cannot recognize");
             EventViewModel vm = new EventViewModel();
 
             try

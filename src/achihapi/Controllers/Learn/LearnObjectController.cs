@@ -7,6 +7,7 @@ using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
+using achihapi.Utilities;
 
 namespace achihapi.Controllers
 {
@@ -21,8 +22,14 @@ namespace achihapi.Controllers
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
 
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
@@ -194,8 +201,14 @@ namespace achihapi.Controllers
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
 
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
@@ -276,8 +289,14 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]LearnObjectViewModel vm)
         {
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
@@ -410,8 +429,14 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody]LearnObjectViewModel vm)
         {
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
@@ -503,8 +528,14 @@ namespace achihapi.Controllers
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
 
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 

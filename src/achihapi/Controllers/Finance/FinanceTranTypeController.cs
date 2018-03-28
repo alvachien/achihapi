@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using achihapi.ViewModels;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
+using achihapi.Utilities;
 
 namespace achihapi.Controllers
 {
@@ -17,8 +18,14 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
-            var usrObj = HIHAPIUtility.GetUserClaim(this);
-            var usrName = usrObj.Value;
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 

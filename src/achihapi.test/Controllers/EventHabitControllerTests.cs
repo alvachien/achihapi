@@ -71,7 +71,7 @@ namespace achihapi.test.Controllers
             {
                 conn.Open();
 
-                String sqlCmd = @"DELETE FROM [dbo].[t_event_habit] WHERE [ID] > 0; DBCC CHECKIDENT ('t_event_habit', RESEED, 1); DBCC CHECKIDENT ('t_event_habit_detail', RESEED, 1);";
+                String sqlCmd = SqlScriptHelper.EventHabitController_Cleanup;
                 SqlCommand cmd = new SqlCommand(sqlCmd, conn);
                 cmd.ExecuteNonQuery();
 
