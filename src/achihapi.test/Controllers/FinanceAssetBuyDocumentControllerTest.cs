@@ -55,14 +55,14 @@ namespace achihapi.test.Controllers
             // Buildup the database
             using (SqlConnection conn = new SqlConnection(_connString))
             {
-                // TBD.
-                //conn.Open();
+                conn.Open();
 
-                //String sqlCmd = @"DELETE FROM [dbo].[t_fin_account] WHERE [ID] > 0; DBCC CHECKIDENT ('t_fin_account', RESEED, 1); DBCC CHECKIDENT ('t_fin_document', RESEED, 1);";
-                //SqlCommand cmd = new SqlCommand(sqlCmd, conn);
-                //cmd.ExecuteNonQuery();
+                String sqlCmd = SqlScriptHelper.FinanceAssetBuyDocument_Init;
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                cmd.ExecuteNonQuery();
 
-                //cmd.Dispose();
+                cmd.Dispose();
+                conn.Close();
             }
 
             _server = new TestServer(builder);
@@ -82,14 +82,14 @@ namespace achihapi.test.Controllers
             // Clean the table.
             using (SqlConnection conn = new SqlConnection(_connString))
             {
-                // TBD.
-                //conn.Open();
+                conn.Open();
 
-                //String sqlCmd = @"DELETE FROM [dbo].[t_fin_account] WHERE [ID] > 0; DBCC CHECKIDENT ('t_fin_account', RESEED, 1); DBCC CHECKIDENT ('t_fin_document', RESEED, 1);";
-                //SqlCommand cmd = new SqlCommand(sqlCmd, conn);
-                //cmd.ExecuteNonQuery();
+                String sqlCmd = SqlScriptHelper.FinanceAssetBuyDocument_Cleanup;
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                cmd.ExecuteNonQuery();
 
-                //cmd.Dispose();
+                cmd.Dispose();
+                conn.Close();
             }
         }
 
@@ -127,15 +127,189 @@ namespace achihapi.test.Controllers
             var vm = new FinanceAssetDocumentUIViewModel();
             vm.HID = SqlScriptHelper.HID_Tester;
             vm.DocType = FinanceDocTypeViewModel.DocType_AssetBuyIn;
-            vm.TranCurr = "CNY";
+            vm.TranCurr = SqlScriptHelper.UnitTest_Currency;
             vm.AccountVM = new FinanceAccountViewModel();
             vm.AccountVM.Name = "InvalidTest_InvalidInput";
             vm.AccountVM.ExtraInfo_AS = new FinanceAccountExtASViewModel();
             vm.AccountVM.ExtraInfo_AS.Name = "InvalidTest_InvalidInput";
+            vm.AccountVM.ExtraInfo_AS.CategoryID = 1;
+            var ditem = new FinanceDocumentItemUIViewModel();
+            ditem.AccountID = SqlScriptHelper.FinanceAssetBuy_AccountID;
+            ditem.Desp = "Buy asset";
+            ditem.ItemID = 1;
+            ditem.TranAmount = 2000;
+            ditem.ControlCenterID = SqlScriptHelper.FinanceAssetBuy_CCID;
+            vm.Items.Add(ditem);
+
             var response = await _client.PostAsJsonAsync(_apiurl, vm);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode); // Invalid input data in items! => TranType
+        }
+
+        [TestMethod]
+        public async Task Post_CreateMode_ItemWithCC()
+        {
+            var vm = new FinanceAssetDocumentUIViewModel();
+            vm.HID = SqlScriptHelper.HID_Tester;
+            vm.DocType = FinanceDocTypeViewModel.DocType_AssetBuyIn;
+            vm.TranCurr = SqlScriptHelper.UnitTest_Currency;
+            vm.Desp = "Buy asset test";
+            vm.TranDate = DateTime.Today;
+            vm.CreatedBy = "Tester";
+            vm.CreatedAt = DateTime.Now;
+            vm.AccountVM = new FinanceAccountViewModel();
+            vm.AccountVM.HID = SqlScriptHelper.HID_Tester;
+            vm.AccountVM.Name = "Create_ItemWithCC";
+            vm.AccountVM.CtgyID = FinanceAccountCtgyViewModel.AccountCategory_Asset;
+            vm.AccountVM.Comment = vm.AccountVM.Name;
+            vm.AccountVM.CreatedBy = "Tester";
+            vm.AccountVM.CreatedAt = DateTime.Now;
+            vm.AccountVM.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+            vm.AccountVM.ExtraInfo_AS.Name = "Create_ItemWithCC";
+            vm.AccountVM.ExtraInfo_AS.CategoryID = 1;
+            var ditem = new FinanceDocumentItemUIViewModel();
+            ditem.AccountID = SqlScriptHelper.FinanceAssetBuy_AccountID;
+            ditem.Desp = "Buy asset";
+            ditem.ItemID = 1;
+            ditem.TranAmount = 2000;
+            ditem.TranType = SqlScriptHelper.FinanceAssetBuy_TranType;
+            ditem.ControlCenterID = SqlScriptHelper.FinanceAssetBuy_CCID;
+            vm.Items.Add(ditem);
+
+            var response = await _client.PostAsJsonAsync(_apiurl, vm);
+            var nvm = await response.Content.ReadAsJsonAsync<FinanceAssetDocumentUIViewModel>();
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.IsNotNull(nvm);
+
+            // Check the table
+            var nDocID = nvm.ID;
+            using (SqlConnection conn = new SqlConnection(_connString))
+            {
+                conn.Open();
+
+                // Document
+                String sqlCmd = @"SELECT * FROM [dbo].[t_fin_document] WHERE [ID] = " + nDocID.ToString();
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                Assert.AreEqual(true, reader.HasRows);
+
+                reader.Close();
+                cmd.Dispose();
+
+                // Account
+                sqlCmd = @"SELECT * FROM [dbo].[t_fin_account] WHERE [ID] = " + nvm.AccountVM.ID.ToString();
+                cmd = new SqlCommand(sqlCmd, conn);
+                reader = await cmd.ExecuteReaderAsync();
+                Assert.AreEqual(true, reader.HasRows);
+                reader.Close();
+                cmd.Dispose();
+
+                // Account ext - asset
+                sqlCmd = @"SELECT * FROM [dbo].[t_fin_account_ext_as] WHERE [ACCOUNTID] = " + nvm.AccountVM.ID.ToString();
+                cmd = new SqlCommand(sqlCmd, conn);
+                reader = await cmd.ExecuteReaderAsync();
+                Assert.AreEqual(true, reader.HasRows);
+
+                conn.Close();
+            }
+        }
+
+        [TestMethod]
+        public async Task Post_CreateAndRead_ItemWithCC()
+        {
+            var vm = new FinanceAssetDocumentUIViewModel();
+            vm.HID = SqlScriptHelper.HID_Tester;
+            vm.DocType = FinanceDocTypeViewModel.DocType_AssetBuyIn;
+            vm.TranCurr = SqlScriptHelper.UnitTest_Currency;
+            vm.Desp = "Buy asset test 2";
+            vm.TranDate = DateTime.Today;
+            vm.CreatedBy = "Tester";
+            vm.CreatedAt = DateTime.Now;
+            vm.AccountVM = new FinanceAccountViewModel();
+            vm.AccountVM.HID = SqlScriptHelper.HID_Tester;
+            vm.AccountVM.Name = "Create_ItemWithCC 2";
+            vm.AccountVM.CtgyID = FinanceAccountCtgyViewModel.AccountCategory_Asset;
+            vm.AccountVM.Comment = vm.AccountVM.Name;
+            vm.AccountVM.CreatedBy = "Tester";
+            vm.AccountVM.CreatedAt = DateTime.Now;
+            vm.AccountVM.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+            vm.AccountVM.ExtraInfo_AS.Name = "Create_ItemWithCC 2";
+            vm.AccountVM.ExtraInfo_AS.CategoryID = 1;
+            var ditem = new FinanceDocumentItemUIViewModel();
+            ditem.AccountID = SqlScriptHelper.FinanceAssetBuy_AccountID;
+            ditem.Desp = "Buy asset 2";
+            ditem.ItemID = 1;
+            ditem.TranAmount = 5000;
+            ditem.TranType = SqlScriptHelper.FinanceAssetBuy_TranType;
+            ditem.ControlCenterID = SqlScriptHelper.FinanceAssetBuy_CCID;
+            vm.Items.Add(ditem);
+
+            var response = await _client.PostAsJsonAsync(_apiurl, vm);
+            var nvm = await response.Content.ReadAsJsonAsync<FinanceAssetDocumentUIViewModel>();
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.IsNotNull(nvm);
+
+            // Check the table
+            var nDocID = nvm.ID;
+            using (SqlConnection conn = new SqlConnection(_connString))
+            {
+                conn.Open();
+
+                // Document
+                String sqlCmd = @"SELECT * FROM [dbo].[t_fin_document] WHERE [ID] = " + nDocID.ToString();
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                Assert.AreEqual(true, reader.HasRows);
+
+                reader.Close();
+                cmd.Dispose();
+
+                // Account
+                sqlCmd = @"SELECT * FROM [dbo].[t_fin_account] WHERE [ID] = " + nvm.AccountVM.ID.ToString();
+                cmd = new SqlCommand(sqlCmd, conn);
+                reader = await cmd.ExecuteReaderAsync();
+                Assert.AreEqual(true, reader.HasRows);
+
+                reader.Close();
+                cmd.Dispose();
+
+                // Account ext - asset
+                sqlCmd = @"SELECT * FROM [dbo].[t_fin_account_ext_as] WHERE [ACCOUNTID] = " + nvm.AccountVM.ID.ToString();
+                cmd = new SqlCommand(sqlCmd, conn);
+                reader = await cmd.ExecuteReaderAsync();
+                Assert.AreEqual(true, reader.HasRows);
+
+                reader.Close();
+                cmd.Dispose();
+
+                conn.Close();
+            }
+
+            // Now do the reading
+            response = await _client.GetAsync(_apiurl + "/" + nDocID.ToString() + "?hid=" + UnitTestUtility.UnitTestHomeID.ToString());
+            if (!response.IsSuccessStatusCode)
+            {
+                var errmsg = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine(errmsg);
+            }
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(true, response.IsSuccessStatusCode);
+
+            Assert.IsNotNull(response.Content);
+            var result2 = await response.Content.ReadAsJsonAsync<FinanceAssetDocumentUIViewModel>();
+            Assert.IsNotNull(result2);
+            Assert.AreEqual(nDocID, result2.ID);
+            Assert.AreEqual(UnitTestUtility.UnitTestHomeID, result2.HID);
+            Assert.IsNotNull(result2.AccountVM);
+            Assert.IsNotNull(result2.AccountVM.ExtraInfo_AS);
+            Assert.AreEqual(nvm.AccountVM.ID, result2.AccountVM.ID);            
         }
     }
 }

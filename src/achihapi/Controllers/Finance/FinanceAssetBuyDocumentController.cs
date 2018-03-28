@@ -169,6 +169,10 @@ namespace achihapi.Controllers
                 if (di.TranAmount == 0 || di.AccountID <= 0 || di.TranType <= 0)
                     return BadRequest("Invalid input data in items!");
             }
+            if (vm.AccountVM.CtgyID != FinanceAccountCtgyViewModel.AccountCategory_Asset)
+            {
+                return BadRequest("Invalid account category");
+            }
 
             if (vm.HID <= 0)
                 return BadRequest("Not HID inputted");

@@ -76,6 +76,7 @@ namespace achihapi.test.Controllers
                 cmd.ExecuteNonQuery();
 
                 cmd.Dispose();
+                conn.Close();
             }
         }
 
@@ -226,6 +227,8 @@ namespace achihapi.test.Controllers
                 }
 
                 Assert.AreEqual(12, cntdetail);
+
+                conn.Close();
             }
 
             // Do the read
@@ -300,6 +303,8 @@ namespace achihapi.test.Controllers
                 }
 
                 Assert.AreEqual(2, cntdetail);
+
+                conn.Close();
             }
         }
 
@@ -345,6 +350,8 @@ namespace achihapi.test.Controllers
 
                 reader.Close();
                 cmd.Dispose();
+
+                conn.Close();
             }
 
             response = await _client.DeleteAsync(_apiurl + "/" + nEvtID.ToString() + "?hid=" + UnitTestUtility.UnitTestHomeID.ToString());
@@ -369,6 +376,8 @@ namespace achihapi.test.Controllers
 
                 reader.Close();
                 cmd.Dispose();
+
+                conn.Close();
             }
         }
     }
