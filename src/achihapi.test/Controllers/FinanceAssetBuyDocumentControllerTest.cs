@@ -23,6 +23,7 @@ using System.Data;
 using System.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.JsonPatch.Operations;
 
 namespace achihapi.test.Controllers
 {
@@ -459,9 +460,7 @@ namespace achihapi.test.Controllers
 
             // Now do the patch
             var patchData = new JsonPatchDocument<FinanceAssetDocumentUIViewModel>();
-            //patchData.Replace("/tranDate", DateTime.Today.AddDays(7));
-            //patchData.Replace()
-            //var operData = new OperationAbortedException<>
+            patchData.Operations.Add(new Operation<FinanceAssetDocumentUIViewModel>("replace", "/tranDate", null, DateTime.Today.AddDays(7)));
             response = await _client.PatchAsJsonAsync(_apiurl + "/" + nDocID.ToString() + "?hid=" + UnitTestUtility.UnitTestHomeID.ToString(), patchData);
             if (!response.IsSuccessStatusCode)
             {

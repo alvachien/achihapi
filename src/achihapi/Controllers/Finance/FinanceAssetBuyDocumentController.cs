@@ -354,20 +354,21 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
+            Boolean bNonExistEntry = false;
 
             // Check the inputs.
             // Allowed to change:
             //  1. Header: Transaction date, Desp;
             //  2. Item: Transaction amount, Desp, Control Center ID, Order ID,
-            foreach(var oper in patch.Operations)
+            foreach (var oper in patch.Operations)
             {
                 switch(oper.path)
                 {
-                    case "/transactionDate":
+                    case "/tranDate":
                         break;
 
                     default:
-                        break;
+                        return BadRequest("Unsupport field found");
                 }
             }
 
@@ -400,8 +401,62 @@ namespace achihapi.Controllers
                 }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (!reader.HasRows)
+                {
+                    bNonExistEntry = true;
+                }
+                else
+                {
+                    var vm = new FinanceAssetDocumentUIViewModel();
+
+                    // Header
+                    while (reader.Read())
+                    {
+                        SqlUtility.FinDocHeader_DB2VM(reader, vm);
+                    }
+                    reader.NextResult();
+
+                    // Items
+                    while (reader.Read())
+                    {
+                        FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
+                        SqlUtility.FinDocItem_DB2VM(reader, itemvm);
+
+                        vm.Items.Add(itemvm);
+                    }
+                    reader.NextResult();
+
+                    // Account
+                    while (reader.Read())
+                    {
+                        FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
+                        Int32 aidx = 0;
+                        aidx = SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+
+                        vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+                        SqlUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
+
+                        vm.AccountVM = vmAccount;
+                    }
+                    reader.NextResult();
+
+                    reader.Dispose();
+                    reader = null;
+
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // Now go ahead for the update
+                    //var patched = vm.Copy();
+                    patch.ApplyTo(vm, ModelState);
+                    if (!ModelState.IsValid)
+                    {
+                        return new BadRequestObjectResult(ModelState);
+                    }
+                }
             }
-            catch(Exception exp)
+            catch (Exception exp)
             {
 
             }
