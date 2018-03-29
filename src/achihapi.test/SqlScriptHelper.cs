@@ -38,6 +38,7 @@ namespace achihapi.test
 
         internal const Int32 FinanceAssetBuy_AccountID = 1;
         internal const Int32 FinanceAssetBuy_CCID = 1;
+        internal const Int32 FinanceAssetBuy_OrderID = 1;
         internal const Int32 FinanceAssetBuy_TranType = 49;
         internal const string UnitTest_Currency = "CNY";
         internal const Int32 HID_Tester = 1;

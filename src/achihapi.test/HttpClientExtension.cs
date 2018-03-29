@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace achihapi.test
 {
@@ -24,7 +25,7 @@ namespace achihapi.test
             return JsonConvert.DeserializeObject<T>(dataAsString);
         }
 
-        public async static Task<HttpResponseMessage> PatchJsonAsync<T>(this HttpClient client, string requestUri, T data)
+        public async static Task<HttpResponseMessage> PatchAsJsonAsync<T>(this HttpClient client, string requestUri, T data)
         {
             var method = new HttpMethod("PATCH");
             var dataAsString = JsonConvert.SerializeObject(data);
