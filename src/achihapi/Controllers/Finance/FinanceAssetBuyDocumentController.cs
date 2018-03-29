@@ -6,6 +6,7 @@ using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
 using achihapi.Utilities;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace achihapi.Controllers
 {
@@ -160,22 +161,19 @@ namespace achihapi.Controllers
                 || vm.Items.Count <= 0)
                 return BadRequest("No data is inputted");
 
+            if (vm.HID <= 0)
+                return BadRequest("Not HID inputted");
+
             // Do basic checks
             if (String.IsNullOrEmpty(vm.TranCurr) || String.IsNullOrEmpty(vm.AccountVM.Name)
+                || vm.AccountVM.CtgyID != FinanceAccountCtgyViewModel.AccountCategory_Asset
                 || String.IsNullOrEmpty(vm.AccountVM.ExtraInfo_AS.Name))
                 return BadRequest("Invalid input data");
             foreach(var di in vm.Items)
             {
-                if (di.TranAmount == 0 || di.AccountID <= 0 || di.TranType <= 0)
+                if (di.TranAmount == 0 || di.AccountID <= 0 || di.TranType <= 0 || (di.ControlCenterID <= 0 && di.OrderID <= 0))
                     return BadRequest("Invalid input data in items!");
             }
-            if (vm.AccountVM.CtgyID != FinanceAccountCtgyViewModel.AccountCategory_Asset)
-            {
-                return BadRequest("Invalid account category");
-            }
-
-            if (vm.HID <= 0)
-                return BadRequest("Not HID inputted");
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -340,6 +338,79 @@ namespace achihapi.Controllers
         public IActionResult Put(int id, [FromBody]string value)
         {
             return BadRequest();
+        }
+
+        // PATCH: 
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Patch(int id, [FromQuery]int hid, [FromBody]JsonPatchDocument<FinanceAssetDocumentUIViewModel> patch)
+        {
+            if (patch == null || id <= 0 || patch.Operations.Count <= 0)
+                return BadRequest("No data is inputted");
+            if (hid <= 0)
+                return BadRequest("No home is inputted");
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            // Check the inputs.
+            // Allowed to change:
+            //  1. Header: Transaction date, Desp;
+            //  2. Item: Transaction amount, Desp, Control Center ID, Order ID,
+            foreach(var oper in patch.Operations)
+            {
+                switch(oper.path)
+                {
+                    case "/transactionDate":
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            // User name
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            try
+            {
+                queryString = SqlUtility.getFinanceDocAssetQueryString(id, true, hid);
+
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+            }
+            catch(Exception exp)
+            {
+
+            }
+            finally
+            {
+
+            }
+
+            return Ok();
         }
 
         // DELETE: api/ApiWithActions/5

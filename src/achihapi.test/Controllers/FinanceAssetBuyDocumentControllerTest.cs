@@ -309,7 +309,8 @@ namespace achihapi.test.Controllers
             Assert.AreEqual(UnitTestUtility.UnitTestHomeID, result2.HID);
             Assert.IsNotNull(result2.AccountVM);
             Assert.IsNotNull(result2.AccountVM.ExtraInfo_AS);
-            Assert.AreEqual(nvm.AccountVM.ID, result2.AccountVM.ID);            
+            Assert.AreEqual(nvm.AccountVM.ID, result2.AccountVM.ID);
+            Assert.AreEqual(nvm.AccountVM.ExtraInfo_AS.RefDocForBuy, result2.ID);
         }
     }
 }

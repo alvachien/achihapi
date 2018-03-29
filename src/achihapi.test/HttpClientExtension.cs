@@ -1,5 +1,7 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -20,6 +22,21 @@ namespace achihapi.test
         {
             var dataAsString = await content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<T>(dataAsString);
+        }
+
+        public async static Task<HttpResponseMessage> PatchJsonAsync<T>(this HttpClient client, string requestUri, T data)
+        {
+            var method = new HttpMethod("PATCH");
+            var dataAsString = JsonConvert.SerializeObject(data);
+            var content = new StringContent(dataAsString);
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var request = new HttpRequestMessage(method, requestUri)
+            {
+                Content = content
+            };
+
+            return await client.SendAsync(request);
         }
 
         public async static Task<HttpResponseMessage> PatchAsync(this HttpClient client, string requestUri, HttpContent content)
