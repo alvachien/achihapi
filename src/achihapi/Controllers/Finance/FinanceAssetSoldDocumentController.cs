@@ -6,6 +6,7 @@ using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
 using achihapi.Utilities;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace achihapi.Controllers
 {
@@ -158,6 +159,18 @@ namespace achihapi.Controllers
             }
             if (vm.HID <= 0)
                 return BadRequest("Not HID inputted");
+
+            // Do basic checks
+            if (String.IsNullOrEmpty(vm.TranCurr) 
+                || vm.AccountVM.ID <= 0
+                || vm.AccountVM.CtgyID != FinanceAccountCtgyViewModel.AccountCategory_Asset)
+                return BadRequest("Invalid input data");
+
+            foreach (var di in vm.Items)
+            {
+                if (di.TranAmount == 0 || di.AccountID <= 0 || di.TranType <= 0 || (di.ControlCenterID <= 0 && di.OrderID <= 0))
+                    return BadRequest("Invalid input data in items!");
+            }
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -320,8 +333,175 @@ namespace achihapi.Controllers
         {
             return BadRequest();
         }
-        
-        // DELETE: api/ApiWithActions/5
+
+        // PATCH: 
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Patch(int id, [FromQuery]int hid, [FromBody]JsonPatchDocument<FinanceAssetDocumentUIViewModel> patch)
+        {
+            if (patch == null || id <= 0 || patch.Operations.Count <= 0)
+                return BadRequest("No data is inputted");
+            if (hid <= 0)
+                return BadRequest("No home is inputted");
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+            Boolean headTranDateUpdate = false;
+            DateTime? headTranDate = null;
+            Boolean headDespUpdate = false;
+            String headDesp = null;
+
+            // Check the inputs.
+            // Allowed to change:
+            //  1. Header: Transaction date, Desp;
+            //  2. Item: Transaction amount, Desp, Control Center ID, Order ID,
+            foreach (var oper in patch.Operations)
+            {
+                switch (oper.path)
+                {
+                    case "/tranDate":
+                        headTranDateUpdate = true;
+                        headTranDate = (DateTime)oper.value;
+                        break;
+
+                    case "/desp":
+                        headDespUpdate = true;
+                        headDesp = (String)oper.value;
+                        break;
+
+                    default:
+                        return BadRequest("Unsupport field found");
+                }
+            }
+
+            // User name
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            try
+            {
+                queryString = SqlUtility.GetFinDocHeaderExistCheckString(id);
+
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (!reader.HasRows)
+                {
+                    throw new Exception("Doc ID not exist");
+                }
+                else
+                {
+                    reader.Close();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    //var vm = new FinanceAssetDocumentUIViewModel();
+
+                    //// Header
+                    //while (reader.Read())
+                    //{
+                    //    SqlUtility.FinDocHeader_DB2VM(reader, vm);
+                    //}
+                    //reader.NextResult();
+
+                    //// Items
+                    //while (reader.Read())
+                    //{
+                    //    FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
+                    //    SqlUtility.FinDocItem_DB2VM(reader, itemvm);
+
+                    //    vm.Items.Add(itemvm);
+                    //}
+                    //reader.NextResult();
+
+                    //// Account
+                    //while (reader.Read())
+                    //{
+                    //    FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
+                    //    Int32 aidx = 0;
+                    //    aidx = SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+
+                    //    vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+                    //    SqlUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
+
+                    //    vm.AccountVM = vmAccount;
+                    //}
+                    //reader.NextResult();
+
+                    //reader.Dispose();
+                    //reader = null;
+
+                    //cmd.Dispose();
+                    //cmd = null;
+
+                    //// Now go ahead for the update
+                    ////var patched = vm.Copy();
+                    //patch.ApplyTo(vm, ModelState);
+                    //if (!ModelState.IsValid)
+                    //{
+                    //    return new BadRequestObjectResult(ModelState);
+                    //}
+
+                    // Optimized logic go ahead
+                    if (headTranDateUpdate || headDespUpdate)
+                    {
+                        queryString = SqlUtility.GetFinDocHeader_PatchString(headTranDateUpdate, headDespUpdate);
+                        cmd = new SqlCommand(queryString, conn);
+                        if (headTranDateUpdate)
+                            cmd.Parameters.AddWithValue("@TRANDATE", headTranDate);
+                        if (headDespUpdate)
+                            cmd.Parameters.AddWithValue("@DESP", headDesp);
+                        cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+                        cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                        cmd.Parameters.AddWithValue("@ID", id);
+
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return Ok();
+        }
+
+        // DELETE: api/FinanceAssetSoldDocument/5
         [HttpDelete("{id}")]
         [Authorize]
         public async Task<IActionResult> Delete(int id)

@@ -392,23 +392,23 @@ namespace achihapi.test.Controllers
             vm.HID = SqlScriptHelper.HID_Tester;
             vm.DocType = FinanceDocTypeViewModel.DocType_AssetBuyIn;
             vm.TranCurr = SqlScriptHelper.UnitTest_Currency;
-            vm.Desp = "Buy asset test 2";
+            vm.Desp = "Buy asset test 3";
             vm.TranDate = DateTime.Today;
             vm.CreatedBy = "Tester";
             vm.CreatedAt = DateTime.Now;
             vm.AccountVM = new FinanceAccountViewModel();
             vm.AccountVM.HID = SqlScriptHelper.HID_Tester;
-            vm.AccountVM.Name = "Create_ItemWithCC 2";
+            vm.AccountVM.Name = "Create_ItemWithCC 3";
             vm.AccountVM.CtgyID = FinanceAccountCtgyViewModel.AccountCategory_Asset;
             vm.AccountVM.Comment = vm.AccountVM.Name;
             vm.AccountVM.CreatedBy = "Tester";
             vm.AccountVM.CreatedAt = DateTime.Now;
             vm.AccountVM.ExtraInfo_AS = new FinanceAccountExtASViewModel();
-            vm.AccountVM.ExtraInfo_AS.Name = "Create_ItemWithCC 2";
+            vm.AccountVM.ExtraInfo_AS.Name = "Create_ItemWithCC 3";
             vm.AccountVM.ExtraInfo_AS.CategoryID = 1;
             var ditem = new FinanceDocumentItemUIViewModel();
             ditem.AccountID = SqlScriptHelper.FinanceAssetBuy_AccountID;
-            ditem.Desp = "Buy asset 2";
+            ditem.Desp = "Buy asset 3";
             ditem.ItemID = 1;
             ditem.TranAmount = 5000;
             ditem.TranType = SqlScriptHelper.FinanceAssetBuy_TranType;
@@ -459,8 +459,9 @@ namespace achihapi.test.Controllers
             }
 
             // Now do the patch
+            var nTranDate = DateTime.Today.AddDays(7);
             var patchData = new JsonPatchDocument<FinanceAssetDocumentUIViewModel>();
-            patchData.Operations.Add(new Operation<FinanceAssetDocumentUIViewModel>("replace", "/tranDate", null, DateTime.Today.AddDays(7)));
+            patchData.Operations.Add(new Operation<FinanceAssetDocumentUIViewModel>("replace", "/tranDate", null, nTranDate));
             response = await _client.PatchAsJsonAsync(_apiurl + "/" + nDocID.ToString() + "?hid=" + UnitTestUtility.UnitTestHomeID.ToString(), patchData);
             if (!response.IsSuccessStatusCode)
             {
@@ -472,15 +473,29 @@ namespace achihapi.test.Controllers
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             Assert.AreEqual(true, response.IsSuccessStatusCode);
 
-            Assert.IsNotNull(response.Content);
-            var result2 = await response.Content.ReadAsJsonAsync<FinanceAssetDocumentUIViewModel>();
-            Assert.IsNotNull(result2);
-            Assert.AreEqual(nDocID, result2.ID);
-            Assert.AreEqual(UnitTestUtility.UnitTestHomeID, result2.HID);
-            Assert.IsNotNull(result2.AccountVM);
-            Assert.IsNotNull(result2.AccountVM.ExtraInfo_AS);
-            Assert.AreEqual(nvm.AccountVM.ID, result2.AccountVM.ID);
-            Assert.AreEqual(nvm.AccountVM.ExtraInfo_AS.RefDocForBuy, result2.ID);
+            // Check in the DB directly
+            using (SqlConnection conn = new SqlConnection(_connString))
+            {
+                conn.Open();
+
+                // Document
+                String sqlCmd = @"SELECT [TRANDATE], [UPDATEDAT] FROM [dbo].[t_fin_document] WHERE [ID] = " + nDocID.ToString();
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                Assert.AreEqual(true, reader.HasRows);
+                while(reader.Read())
+                {
+                    var ndate = reader.GetDateTime(0);
+                    Assert.AreEqual(ndate.Date, nTranDate.Date);
+                    ndate = reader.GetDateTime(1);
+                    Assert.AreEqual(ndate.Date, DateTime.Today.Date);
+                }
+
+                reader.Close();
+                cmd.Dispose();
+
+                conn.Close();
+            }
         }
     }
 }

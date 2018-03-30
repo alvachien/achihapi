@@ -1173,6 +1173,27 @@ namespace achihapi.Utilities
                      WHERE [ID] = @ID";
         }
 
+        internal static string GetFinDocHeaderExistCheckString(Int32 id)
+        {
+            return @"SELECT [ID] FROM [t_fin_document] WHERE [ID] = " + id.ToString();
+        }
+
+        internal static string GetFinDocHeader_PatchString(Boolean? tranDate, Boolean? desp)
+        {
+            if (!tranDate.HasValue && !desp.HasValue)
+                throw new Exception("Invalid caller");
+
+            List<String> listStr = new List<string>();
+            if (tranDate.HasValue && tranDate.Value)
+                listStr.Add("[TRANDATE] = @TRANDATE");
+            if (desp.HasValue && desp.Value)
+                listStr.Add("[DESP] = @DESP");
+            var result = String.Join(", ", listStr.ToArray());
+            return @"UPDATE [dbo].[t_fin_document] SET "
+                    + result
+                    + ", [UPDATEDAT] = @UPDATEDAT, [UPDATEDBY] = @UPDATEDBY WHERE [ID] = @ID";
+        }
+
         internal static void BindFinDocHeaderInsertParameter(SqlCommand cmd, FinanceDocumentViewModel vm, String usrName)
         {
             cmd.Parameters.AddWithValue("@HID", vm.HID);

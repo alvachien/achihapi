@@ -354,7 +354,10 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
-            Boolean bNonExistEntry = false;
+            Boolean headTranDateUpdate = false;
+            DateTime? headTranDate = null;
+            Boolean headDespUpdate = false;
+            String headDesp = null;
 
             // Check the inputs.
             // Allowed to change:
@@ -365,6 +368,13 @@ namespace achihapi.Controllers
                 switch(oper.path)
                 {
                     case "/tranDate":
+                        headTranDateUpdate = true;
+                        headTranDate = (DateTime)oper.value;
+                        break;
+
+                    case "/desp":
+                        headDespUpdate = true;
+                        headDesp = (String) oper.value;
                         break;
 
                     default:
@@ -386,7 +396,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.getFinanceDocAssetQueryString(id, true, hid);
+                queryString = SqlUtility.GetFinDocHeaderExistCheckString(id);
 
                 await conn.OpenAsync();
 
@@ -404,66 +414,95 @@ namespace achihapi.Controllers
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (!reader.HasRows)
                 {
-                    bNonExistEntry = true;
+                    throw new Exception("Doc ID not exist");
                 }
                 else
                 {
-                    var vm = new FinanceAssetDocumentUIViewModel();
-
-                    // Header
-                    while (reader.Read())
-                    {
-                        SqlUtility.FinDocHeader_DB2VM(reader, vm);
-                    }
-                    reader.NextResult();
-
-                    // Items
-                    while (reader.Read())
-                    {
-                        FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                        SqlUtility.FinDocItem_DB2VM(reader, itemvm);
-
-                        vm.Items.Add(itemvm);
-                    }
-                    reader.NextResult();
-
-                    // Account
-                    while (reader.Read())
-                    {
-                        FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
-                        Int32 aidx = 0;
-                        aidx = SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
-
-                        vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
-                        SqlUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
-
-                        vm.AccountVM = vmAccount;
-                    }
-                    reader.NextResult();
-
-                    reader.Dispose();
-                    reader = null;
-
+                    reader.Close();
                     cmd.Dispose();
                     cmd = null;
 
-                    // Now go ahead for the update
-                    //var patched = vm.Copy();
-                    patch.ApplyTo(vm, ModelState);
-                    if (!ModelState.IsValid)
+                    //var vm = new FinanceAssetDocumentUIViewModel();
+
+                    //// Header
+                    //while (reader.Read())
+                    //{
+                    //    SqlUtility.FinDocHeader_DB2VM(reader, vm);
+                    //}
+                    //reader.NextResult();
+
+                    //// Items
+                    //while (reader.Read())
+                    //{
+                    //    FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
+                    //    SqlUtility.FinDocItem_DB2VM(reader, itemvm);
+
+                    //    vm.Items.Add(itemvm);
+                    //}
+                    //reader.NextResult();
+
+                    //// Account
+                    //while (reader.Read())
+                    //{
+                    //    FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
+                    //    Int32 aidx = 0;
+                    //    aidx = SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+
+                    //    vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+                    //    SqlUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
+
+                    //    vm.AccountVM = vmAccount;
+                    //}
+                    //reader.NextResult();
+
+                    //reader.Dispose();
+                    //reader = null;
+
+                    //cmd.Dispose();
+                    //cmd = null;
+
+                    //// Now go ahead for the update
+                    ////var patched = vm.Copy();
+                    //patch.ApplyTo(vm, ModelState);
+                    //if (!ModelState.IsValid)
+                    //{
+                    //    return new BadRequestObjectResult(ModelState);
+                    //}
+
+                    // Optimized logic go ahead
+                    if (headTranDateUpdate || headDespUpdate)
                     {
-                        return new BadRequestObjectResult(ModelState);
+                        queryString = SqlUtility.GetFinDocHeader_PatchString(headTranDateUpdate, headDespUpdate);
+                        cmd = new SqlCommand(queryString, conn);
+                        if (headTranDateUpdate)
+                            cmd.Parameters.AddWithValue("@TRANDATE", headTranDate);
+                        if (headDespUpdate)
+                            cmd.Parameters.AddWithValue("@DESP", headDesp);
+                        cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+                        cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                        cmd.Parameters.AddWithValue("@ID", id);
+
+                        await cmd.ExecuteNonQueryAsync();
                     }
                 }
             }
             catch (Exception exp)
             {
-
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
             }
             finally
             {
-
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
             }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
 
             return Ok();
         }

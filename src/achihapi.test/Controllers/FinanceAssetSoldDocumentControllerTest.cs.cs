@@ -33,6 +33,7 @@ namespace achihapi.test.Controllers
         private static String _contentRoot;
         private static String _connString;
         private const string _apiurl = "/api/FinanceAssetSoldDocument";
+        private const string _buyapiurl = "/api/FinanceAssetBuyDocument";
 
         [ClassInitialize]
         public static void TestInitialize(TestContext testContext)
@@ -52,6 +53,19 @@ namespace achihapi.test.Controllers
                 .ConfigureServices(InitializeServices)
                 .UseStartup(typeof(achihapi.Startup));
 
+            // Buildup the database
+            using (SqlConnection conn = new SqlConnection(_connString))
+            {
+                conn.Open();
+
+                String sqlCmd = SqlScriptHelper.FinanceAssetSoldDocument_Init;
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                cmd.ExecuteNonQuery();
+
+                cmd.Dispose();
+                conn.Close();
+            }
+
             _server = new TestServer(builder);
 
             _client = _server.CreateClient();
@@ -69,14 +83,14 @@ namespace achihapi.test.Controllers
             // Clean the table.
             using (SqlConnection conn = new SqlConnection(_connString))
             {
-                // TBD.
-                //conn.Open();
+                conn.Open();
 
-                //String sqlCmd = @"DELETE FROM [dbo].[t_event_habit] WHERE [ID] > 0; DBCC CHECKIDENT ('t_event_habit', RESEED, 1); DBCC CHECKIDENT ('t_event_habit_detail', RESEED, 1);";
-                //SqlCommand cmd = new SqlCommand(sqlCmd, conn);
-                //cmd.ExecuteNonQuery();
+                String sqlCmd = SqlScriptHelper.FinanceAssetSoldDocument_Cleanup;
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                cmd.ExecuteNonQuery();
 
-                //cmd.Dispose();
+                cmd.Dispose();
+                conn.Close();
             }
         }
 
@@ -106,6 +120,104 @@ namespace achihapi.test.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task Post_InvalidCase2_InvalidInput()
+        {
+            var vm = new FinanceAssetDocumentUIViewModel();
+            vm.HID = SqlScriptHelper.HID_Tester;
+            vm.DocType = FinanceDocTypeViewModel.DocType_AssetSoldOut;
+            vm.TranCurr = SqlScriptHelper.UnitTest_Currency;
+            vm.AccountVM = new FinanceAccountViewModel();
+            vm.AccountVM.Name = "InvalidTest_InvalidInput";
+            vm.AccountVM.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+            vm.AccountVM.ExtraInfo_AS.Name = "InvalidTest_InvalidInput";
+            vm.AccountVM.ExtraInfo_AS.CategoryID = 1;
+            var ditem = new FinanceDocumentItemUIViewModel();
+            ditem.AccountID = SqlScriptHelper.FinanceAssetBuy_AccountID;
+            ditem.Desp = "Sold asset";
+            ditem.ItemID = 1;
+            ditem.TranAmount = 2000;
+            ditem.ControlCenterID = SqlScriptHelper.FinanceAssetBuy_CCID;
+            vm.Items.Add(ditem);
+
+            var response = await _client.PostAsJsonAsync(_apiurl, vm);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode); // Invalid input data in items! => TranType
+        }
+
+        [TestMethod]
+        public async Task Post_CreateMode_ItemWithCC()
+        {
+            var vm = new FinanceAssetDocumentUIViewModel();
+            vm.HID = SqlScriptHelper.HID_Tester;
+            vm.DocType = FinanceDocTypeViewModel.DocType_AssetBuyIn;
+            vm.TranCurr = SqlScriptHelper.UnitTest_Currency;
+            vm.Desp = "Buy asset test";
+            vm.TranDate = DateTime.Today;
+            vm.CreatedBy = "Tester";
+            vm.CreatedAt = DateTime.Now;
+            vm.AccountVM = new FinanceAccountViewModel();
+            vm.AccountVM.HID = SqlScriptHelper.HID_Tester;
+            vm.AccountVM.Name = "Create_ItemWithCC";
+            vm.AccountVM.CtgyID = FinanceAccountCtgyViewModel.AccountCategory_Asset;
+            vm.AccountVM.Comment = vm.AccountVM.Name;
+            vm.AccountVM.CreatedBy = "Tester";
+            vm.AccountVM.CreatedAt = DateTime.Now;
+            vm.AccountVM.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+            vm.AccountVM.ExtraInfo_AS.Name = "Create_ItemWithCC";
+            vm.AccountVM.ExtraInfo_AS.CategoryID = 1;
+            var ditem = new FinanceDocumentItemUIViewModel();
+            ditem.AccountID = SqlScriptHelper.FinanceAssetSold_AccountID;
+            ditem.Desp = "Buy asset";
+            ditem.ItemID = 1;
+            ditem.TranAmount = 2000;
+            ditem.TranType = SqlScriptHelper.FinanceAssetBuy_TranType;
+            ditem.ControlCenterID = SqlScriptHelper.FinanceAssetSold_CCID;
+            vm.Items.Add(ditem);
+
+            var response = await _client.PostAsJsonAsync(_buyapiurl, vm);
+            var nvm = await response.Content.ReadAsJsonAsync<FinanceAssetDocumentUIViewModel>();
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.IsNotNull(nvm);
+
+            // Now do the sold out
+            var nDocID = nvm.ID;
+            var nAcntID = nvm.AccountVM.ID;
+
+            var vm2 = new FinanceAssetDocumentUIViewModel();
+            vm2.HID = SqlScriptHelper.HID_Tester;
+            vm2.DocType = FinanceDocTypeViewModel.DocType_AssetSoldOut;
+            vm2.TranCurr = SqlScriptHelper.UnitTest_Currency;
+            vm2.Desp = "Sold asset test";
+            vm2.TranDate = DateTime.Today;
+            vm2.CreatedBy = "Tester";
+            vm2.CreatedAt = DateTime.Now;
+            vm2.AccountVM = new FinanceAccountViewModel();
+            vm2.AccountVM.ID = nAcntID;
+            vm2.AccountVM.HID = SqlScriptHelper.HID_Tester;
+            vm2.AccountVM.Name = "Create_ItemWithCC";
+            vm2.AccountVM.CtgyID = FinanceAccountCtgyViewModel.AccountCategory_Asset;
+            vm2.AccountVM.Comment = vm.AccountVM.Name;
+            var ditem2 = new FinanceDocumentItemUIViewModel();
+            ditem2.AccountID = SqlScriptHelper.FinanceAssetSold_AccountID;
+            ditem2.Desp = "Sold asset";
+            ditem2.ItemID = 1;
+            ditem2.TranAmount = 1000;
+            ditem2.TranType = SqlScriptHelper.FinanceAssetSold_TranType;
+            ditem2.ControlCenterID = SqlScriptHelper.FinanceAssetSold_CCID;
+            vm2.Items.Add(ditem2);
+
+            response = await _client.PostAsJsonAsync(_apiurl, vm2);
+            nvm = await response.Content.ReadAsJsonAsync<FinanceAssetDocumentUIViewModel>();
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.IsNotNull(nvm);
         }
     }
 }
