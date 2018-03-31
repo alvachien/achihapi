@@ -109,15 +109,93 @@ namespace achihapi.test.Controllers
         }
 
         [TestMethod]
-        public async Task Create_InvalidCase1_InvalidInput()
+        public async Task Create_InvalidCase2_InvalidCategory()
         {
             var vm = new FinanceAccountViewModel();
             vm.HID = SqlScriptHelper.HID_Tester;
-            
+            vm.CtgyID = FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment;
+
             var response = await _client.PostAsJsonAsync(_apiurl, vm);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task Create_InvalidCase3_WithoutName()
+        {
+            var vm = new FinanceAccountViewModel();
+            vm.HID = SqlScriptHelper.HID_Tester;
+            vm.CtgyID = 1;
+
+            var response = await _client.PostAsJsonAsync(_apiurl, vm);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task Create_NormalAccount1()
+        {
+            var vm = new FinanceAccountViewModel();
+            vm.HID = SqlScriptHelper.HID_Tester;
+            vm.CtgyID = 1; // Cash
+            vm.Name = "Test Create Normal 1";
+            vm.Owner = "Tester";
+            vm.Status = FinanceAccountStatus.Normal;
+
+            var response = await _client.PostAsJsonAsync(_apiurl, vm);
+            var nvm = await response.Content.ReadAsJsonAsync<FinanceAccountUIViewModel>();
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.IsNotNull(nvm);
+            Assert.IsTrue(nvm.ID > 0);
+
+            // Check in the database
+            using (SqlConnection conn = new SqlConnection(_connString))
+            {
+                conn.Open();
+
+                // Document
+                String sqlCmd = @"SELECT * FROM [dbo].[t_fin_account] WHERE [ID] = " + nvm.ID.ToString();
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                Assert.AreEqual(true, reader.HasRows);
+
+                reader.Close();
+                cmd.Dispose();
+
+                conn.Close();
+            }
+        }
+
+        [TestMethod]
+        public async Task CreateAndRead_NormalAccount()
+        {
+            var vm = new FinanceAccountViewModel();
+            vm.HID = SqlScriptHelper.HID_Tester;
+            vm.CtgyID = 1; // Cash
+            vm.Name = "Test Create and Read Normal";
+            vm.Owner = "Tester";
+            vm.Status = FinanceAccountStatus.Normal;
+
+            var response = await _client.PostAsJsonAsync(_apiurl, vm);
+            var nvm = await response.Content.ReadAsJsonAsync<FinanceAccountUIViewModel>();
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.IsNotNull(nvm);
+            Assert.IsTrue(nvm.ID > 0);
+
+            // Check in the database
+            response = await _client.GetAsync(_apiurl + "/" + nvm.ID.ToString() + "?hid=" + UnitTestUtility.UnitTestHomeID.ToString());
+            var nvm2 = await response.Content.ReadAsJsonAsync<FinanceAccountUIViewModel>();
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.IsNotNull(nvm2);
+            Assert.AreEqual(nvm.ID, nvm2.ID);
         }
     }
 }

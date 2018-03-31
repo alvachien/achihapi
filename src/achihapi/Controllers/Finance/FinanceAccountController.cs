@@ -32,11 +32,16 @@ namespace achihapi.Controllers
                 String scopeFilter = String.Empty;
                 try
                 {
-                    var usrObj = HIHAPIUtility.GetUserClaim(this);
-                    usrName = usrObj.Value;
-                    //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
+                    if (Startup.UnitTestMode)
+                        usrName = UnitTestUtility.UnitTestUser;
+                    else
+                    {
+                        var usrObj = HIHAPIUtility.GetUserClaim(this);
+                        usrName = usrObj.Value;
+                        //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-                    //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                        //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                    }
                 }
                 catch
                 {
@@ -145,11 +150,16 @@ namespace achihapi.Controllers
                 String scopeFilter = String.Empty;
                 try
                 {
-                    var usrObj = HIHAPIUtility.GetUserClaim(this);
-                    usrName = usrObj.Value;
-                    //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
+                    if (Startup.UnitTestMode)
+                        usrName = UnitTestUtility.UnitTestUser;
+                    else
+                    {
+                        var usrObj = HIHAPIUtility.GetUserClaim(this);
+                        usrName = usrObj.Value;
+                        //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-                    //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                        //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                    }
                 }
                 catch
                 {
@@ -237,21 +247,26 @@ namespace achihapi.Controllers
             String usrName = "";
             try
             {
-                var usrObj = HIHAPIUtility.GetUserClaim(this);
-                usrName = usrObj.Value;
-                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
+                if (Startup.UnitTestMode)
+                    usrName = UnitTestUtility.UnitTestUser;
+                else
+                {
+                    var usrObj = HIHAPIUtility.GetUserClaim(this);
+                    usrName = usrObj.Value;
+                    //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-                //if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
-                //{
-                //    return StatusCode(401, "Current user has no authority to create account!");
-                //}
-                //else if(String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
-                //{
-                //    if (String.CompareOrdinal(vm.Owner, usrName) != 0)
-                //    {
-                //        return StatusCode(401, "Current user can only create account with owner.");
-                //    }
-                //}
+                    //if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                    //{
+                    //    return StatusCode(401, "Current user has no authority to create account!");
+                    //}
+                    //else if(String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                    //{
+                    //    if (String.CompareOrdinal(vm.Owner, usrName) != 0)
+                    //    {
+                    //        return StatusCode(401, "Current user can only create account with owner.");
+                    //    }
+                    //}
+                }
             }
             catch
             {
@@ -391,21 +406,26 @@ namespace achihapi.Controllers
             String usrName = "";
             try
             {
-                var usrObj = HIHAPIUtility.GetUserClaim(this);
-                usrName = usrObj.Value;
-                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
+                if (Startup.UnitTestMode)
+                    usrName = UnitTestUtility.UnitTestUser;
+                else
+                {
+                    var usrObj = HIHAPIUtility.GetUserClaim(this);
+                    usrName = usrObj.Value;
+                    //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
 
-                //if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
-                //{
-                //    return StatusCode(401, "Current user has no authority to change account!");
-                //}
-                //else if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
-                //{
-                //    if (String.CompareOrdinal(vm.Owner, usrName) != 0)
-                //    {
-                //        return StatusCode(401, "Current user can only modify account with owner.");
-                //    }
-                //}
+                    //if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                    //{
+                    //    return StatusCode(401, "Current user has no authority to change account!");
+                    //}
+                    //else if (String.CompareOrdinal(scopeObj.Value, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+                    //{
+                    //    if (String.CompareOrdinal(vm.Owner, usrName) != 0)
+                    //    {
+                    //        return StatusCode(401, "Current user can only modify account with owner.");
+                    //    }
+                    //}
+                }
             }
             catch
             {
@@ -515,15 +535,20 @@ namespace achihapi.Controllers
             String scopeValue = "";
             try
             {
-                var usrObj = HIHAPIUtility.GetUserClaim(this);
-                usrName = usrObj.Value;
-                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
-                //scopeValue = scopeObj.Value;
+                if (Startup.UnitTestMode)
+                    usrName = UnitTestUtility.UnitTestUser;
+                else
+                {
+                    var usrObj = HIHAPIUtility.GetUserClaim(this);
+                    usrName = usrObj.Value;
+                    //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
+                    //scopeValue = scopeObj.Value;
 
-                //if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
-                //{
-                //    return StatusCode(401, "Current user has no authority to create account!");
-                //}
+                    //if (String.CompareOrdinal(scopeValue, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+                    //{
+                    //    return StatusCode(401, "Current user has no authority to create account!");
+                    //}
+                }
             }
             catch
             {
