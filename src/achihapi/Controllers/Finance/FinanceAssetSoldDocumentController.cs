@@ -162,8 +162,7 @@ namespace achihapi.Controllers
 
             // Do basic checks
             if (String.IsNullOrEmpty(vm.TranCurr) 
-                || vm.AccountVM.ID <= 0
-                || vm.AccountVM.CtgyID != FinanceAccountCtgyViewModel.AccountCategory_Asset)
+                || vm.AccountVM.ID <= 0)
                 return BadRequest("Invalid input data");
 
             foreach (var di in vm.Items)
@@ -260,8 +259,8 @@ namespace achihapi.Controllers
                         }
                     }
 
-                    // Third, update the Account
-                    queryString = SqlUtility.GetFinanceAccountHeaderUpdateString();
+                    // Third, update the Account's status
+                    queryString = SqlUtility.GetFinanceAccountStatusUpdateString();
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
@@ -269,19 +268,19 @@ namespace achihapi.Controllers
 
                     // Close this account
                     vm.AccountVM.Status = (Byte)FinanceAccountStatus.Closed;
-                    SqlUtility.BindFinAccountUpdateParameter(cmd, vm.AccountVM, usrName);
+                    SqlUtility.BindFinAccountStatusUpdateParameter(cmd, vm.AccountVM, usrName);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
 
-                    // Fourth, Update the Asset account part
-                    queryString = SqlUtility.GetFinanceAccountAssetUpdateString();
-                    vm.AccountVM.ExtraInfo_AS.RefDocForSold = nNewDocID;
+                    // Fourth, Update the Asset account part for sold doc
+                    queryString = SqlUtility.GetFinanceAccountAssetUpdateSoldDocString();
+                    //vm.AccountVM.ExtraInfo_AS.RefDocForSold = nNewDocID;
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
-                    SqlUtility.BindFinAccountAssetUpdateParameter(cmd, vm.AccountVM.ExtraInfo_AS);
+                    SqlUtility.BindFinAccountAssetUpdateSoldDocParameter(cmd, nNewDocID, vm.AccountVM.ID);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;

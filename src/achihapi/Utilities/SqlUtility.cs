@@ -600,6 +600,24 @@ namespace achihapi.Utilities
                          WHERE [ID] = @ID AND [HID] = @HID";
         }
 
+        internal static string GetFinanceAccountStatusUpdateString()
+        {
+            return @"UPDATE [dbo].[t_fin_account]
+                           SET [STATUS] = @STATUS
+                              ,[UPDATEDBY] = @UPDATEDBY
+                              ,[UPDATEDAT] = @UPDATEDAT
+                         WHERE [ID] = @ID AND [HID] = @HID";
+        }
+
+        internal static void BindFinAccountStatusUpdateParameter(SqlCommand cmd, FinanceAccountViewModel vm, String usrName)
+        {
+            cmd.Parameters.AddWithValue("@STATUS", vm.Status);
+            cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+            cmd.Parameters.AddWithValue("@ID", vm.ID);
+            cmd.Parameters.AddWithValue("@HID", vm.HID);
+        }
+
         internal static void BindFinAccountInsertParameter(SqlCommand cmd, FinanceAccountViewModel vm, String usrName)
         {
             cmd.Parameters.AddWithValue("@HID", vm.HID);
@@ -861,6 +879,13 @@ namespace achihapi.Utilities
                      WHERE [ACCOUNTID] = @ACCOUNTID";
         }
 
+        internal static string GetFinanceAccountAssetUpdateSoldDocString()
+        {
+            return @"UPDATE [dbo].[t_fin_account_ext_as]
+                       SET [REFDOC_SOLD] = @REFDOC_SOLD
+                     WHERE [ACCOUNTID] = @ACCOUNTID";
+        }
+
         internal static void BindFinAccountAssetInsertParameter(SqlCommand cmd, FinanceAccountExtASViewModel vm)
         {
             cmd.Parameters.AddWithValue("@ACCOUNTID", vm.AccountID);
@@ -869,6 +894,11 @@ namespace achihapi.Utilities
             cmd.Parameters.AddWithValue("@REFDOC_BUY", vm.RefDocForBuy);
             cmd.Parameters.AddWithValue("@COMMENT",
                 String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
+        }
+        internal static void BindFinAccountAssetUpdateSoldDocParameter(SqlCommand cmd, Int32 rdoc, Int32 nacntid)
+        {
+            cmd.Parameters.AddWithValue("@REFDOC_SOLD", rdoc);
+            cmd.Parameters.AddWithValue("@ACCOUNTID", nacntid);
         }
 
         internal static void BindFinAccountAssetUpdateParameter(SqlCommand cmd, FinanceAccountExtASViewModel vm)

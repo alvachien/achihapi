@@ -200,9 +200,6 @@ namespace achihapi.test.Controllers
             vm2.AccountVM = new FinanceAccountViewModel();
             vm2.AccountVM.ID = nAcntID;
             vm2.AccountVM.HID = SqlScriptHelper.HID_Tester;
-            vm2.AccountVM.Name = "Create_ItemWithCC";
-            vm2.AccountVM.CtgyID = FinanceAccountCtgyViewModel.AccountCategory_Asset;
-            vm2.AccountVM.Comment = vm.AccountVM.Name;
             var ditem2 = new FinanceDocumentItemUIViewModel();
             ditem2.AccountID = SqlScriptHelper.FinanceAssetSold_AccountID;
             ditem2.Desp = "Sold asset";
