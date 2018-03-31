@@ -668,7 +668,7 @@ namespace achihapi.Utilities
             else
                 ++idx;
             if (!reader.IsDBNull(idx))
-                vm.Status = reader.GetByte(idx++);
+                vm.Status = (FinanceAccountStatus)reader.GetByte(idx++);
             else
                 ++idx;
             if (!reader.IsDBNull(idx))

@@ -162,6 +162,7 @@ namespace achihapi.test.Controllers
             vm.AccountVM = new FinanceAccountViewModel();
             vm.AccountVM.HID = SqlScriptHelper.HID_Tester;
             vm.AccountVM.Name = "Create_ItemWithCC";
+            vm.AccountVM.Status = FinanceAccountStatus.Normal;
             vm.AccountVM.CtgyID = FinanceAccountCtgyViewModel.AccountCategory_Asset;
             vm.AccountVM.Comment = vm.AccountVM.Name;
             vm.AccountVM.CreatedBy = "Tester";
@@ -186,7 +187,7 @@ namespace achihapi.test.Controllers
             Assert.IsNotNull(nvm);
 
             // Now do the sold out
-            var nDocID = nvm.ID;
+            var nBuyDocID = nvm.ID;
             var nAcntID = nvm.AccountVM.ID;
 
             var vm2 = new FinanceAssetDocumentUIViewModel();
@@ -211,10 +212,49 @@ namespace achihapi.test.Controllers
 
             response = await _client.PostAsJsonAsync(_apiurl, vm2);
             nvm = await response.Content.ReadAsJsonAsync<FinanceAssetDocumentUIViewModel>();
+            var nSoldDocID = nvm.ID;
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             Assert.IsNotNull(nvm);
+
+            // Check in the database
+            using (SqlConnection conn = new SqlConnection(_connString))
+            {
+                conn.Open();
+
+                // Account
+                String sqlCmd = @"SELECT [STATUS], [UPDATEDAT] FROM [dbo].[t_fin_account] WHERE [ID] = " + nAcntID.ToString();
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                Assert.AreEqual(true, reader.HasRows);
+                while (reader.Read())
+                {
+                    var nstatus = reader.GetByte(0);
+                    Assert.AreEqual(nstatus, (byte)FinanceAccountStatus.Closed);
+                }
+
+                reader.Close();
+                cmd.Dispose();
+
+                // Documents on account
+                sqlCmd = @"SELECT [REFDOC_BUY], [REFDOC_SOLD] FROM [dbo].[t_fin_account_ext_as] WHERE [ACCOUNTID] = " + nAcntID.ToString();
+                cmd = new SqlCommand(sqlCmd, conn);
+                reader = await cmd.ExecuteReaderAsync();
+                Assert.AreEqual(true, reader.HasRows);
+                while (reader.Read())
+                {
+                    var docid = reader.GetInt32(0);
+                    Assert.AreEqual(docid, nBuyDocID);
+                    docid = reader.GetInt32(1);
+                    Assert.AreEqual(docid, nSoldDocID);
+                }
+
+                reader.Close();
+                cmd.Dispose();
+
+                conn.Close();
+            }
         }
     }
 }

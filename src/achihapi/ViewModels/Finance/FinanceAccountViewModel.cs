@@ -26,7 +26,7 @@ namespace achihapi.ViewModels
         public String Comment { get; set; }
         [StringLength(40)]
         public String Owner { get; set; }
-        public Byte Status { get; set; }
+        public FinanceAccountStatus Status { get; set; }
 
         // Ext ADP
         public FinanceAccountExtDPViewModel ExtraInfo_ADP { get; set; }

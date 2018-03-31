@@ -163,6 +163,7 @@ namespace achihapi.test.Controllers
             vm.AccountVM = new FinanceAccountViewModel();
             vm.AccountVM.HID = SqlScriptHelper.HID_Tester;
             vm.AccountVM.Name = "Create_ItemWithCC";
+            vm.AccountVM.Status = FinanceAccountStatus.Normal;
             vm.AccountVM.CtgyID = FinanceAccountCtgyViewModel.AccountCategory_Asset;
             vm.AccountVM.Comment = vm.AccountVM.Name;
             vm.AccountVM.CreatedBy = "Tester";
@@ -233,6 +234,7 @@ namespace achihapi.test.Controllers
             vm.AccountVM = new FinanceAccountViewModel();
             vm.AccountVM.HID = SqlScriptHelper.HID_Tester;
             vm.AccountVM.Name = "Create_ItemWithCC";
+            vm.AccountVM.Status = FinanceAccountStatus.Normal;
             vm.AccountVM.CtgyID = FinanceAccountCtgyViewModel.AccountCategory_Asset;
             vm.AccountVM.Comment = vm.AccountVM.Name;
             vm.AccountVM.CreatedBy = "Tester";
@@ -303,6 +305,7 @@ namespace achihapi.test.Controllers
             vm.AccountVM = new FinanceAccountViewModel();
             vm.AccountVM.HID = SqlScriptHelper.HID_Tester;
             vm.AccountVM.Name = "Create_ItemWithCC 2";
+            vm.AccountVM.Status = FinanceAccountStatus.Normal;
             vm.AccountVM.CtgyID = FinanceAccountCtgyViewModel.AccountCategory_Asset;
             vm.AccountVM.Comment = vm.AccountVM.Name;
             vm.AccountVM.CreatedBy = "Tester";
@@ -399,6 +402,7 @@ namespace achihapi.test.Controllers
             vm.AccountVM = new FinanceAccountViewModel();
             vm.AccountVM.HID = SqlScriptHelper.HID_Tester;
             vm.AccountVM.Name = "Create_ItemWithCC 3";
+            vm.AccountVM.Status = FinanceAccountStatus.Normal;
             vm.AccountVM.CtgyID = FinanceAccountCtgyViewModel.AccountCategory_Asset;
             vm.AccountVM.Comment = vm.AccountVM.Name;
             vm.AccountVM.CreatedBy = "Tester";
