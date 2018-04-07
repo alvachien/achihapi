@@ -104,9 +104,13 @@ namespace achihapi.ViewModels
     public sealed class EventHabitCheckInViewModel: BaseViewModel
     {
         public Int32 ID { get; set; }
+        [Required]
         public Int32 HID { get; set; }
+        [Required]
         public DateTime TranDate { get; set; }
+        [Required]
         public Int32 HabitID { get; set; }
+        [Required]
         public Int32 Score { get; set; }
         [StringLength(50)]
         public String Comment { get; set; }

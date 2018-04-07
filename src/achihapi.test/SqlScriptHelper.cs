@@ -52,9 +52,15 @@ namespace achihapi.test
             DELETE FROM [dbo].[t_fin_order] WHERE [ID] > 0;  DBCC CHECKIDENT('t_fin_order', RESEED, 1);
             ";
 
-        internal const string EventHabitController_Cleanup = @"DELETE FROM[dbo].[t_event_habit] WHERE [ID] > 0; 
+        internal const string EventHabitController_Cleanup = @"DELETE FROM [dbo].[t_event_habit] WHERE [ID] > 0; 
             DBCC CHECKIDENT('t_event_habit', RESEED, 1); 
             DBCC CHECKIDENT('t_event_habit_detail', RESEED, 1);";
+
+        internal const string EventHabitCheckInController_Cleanup = @"DELETE FROM [dbo].[t_event_habit] WHERE [ID] > 0; 
+            DELETE FROM [dbo].[t_event_habit_checkin] WHERE [ID] > 0;
+            DBCC CHECKIDENT('t_event_habit', RESEED, 1); 
+            DBCC CHECKIDENT('t_event_habit_detail', RESEED, 1);
+            DBCC CHECKIDENT('t_event_habit_checkin', RESEED, 1);";
 
         internal const string FinanceAccount_Cleanup = @"
             DELETE FROM [dbo].[t_fin_account] WHERE [ID] > 0;  DBCC CHECKIDENT('t_fin_account', RESEED, 1);
@@ -69,7 +75,6 @@ namespace achihapi.test
         internal const Int32 FinanceAssetSold_OrderID = 11;
         internal const Int32 FinanceAssetSold_TranType = 10;
         internal const string UnitTest_Currency = "CNY";
-        internal const Int32 HID_Tester = 1;
-        
+        internal const Int32 HID_Tester = 1;        
     }
 }

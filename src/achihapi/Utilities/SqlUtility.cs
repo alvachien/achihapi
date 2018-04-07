@@ -2757,6 +2757,37 @@ namespace achihapi.Utilities
             cmd.Parameters.AddWithValue("@id", id);
             cmd.Parameters.AddWithValue("@hid", hid);
         }
+
+        internal static string Event_GetEventHabitCheckInInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_event_habit_checkin]
+                   ([TranDate]
+                   ,[HabitID]
+                   ,[Score]
+                   ,[Comment]
+                   ,[CREATEDBY]
+                   ,[CREATEDAT])
+             VALUES
+                   (@tranDate
+                   ,@habitID
+                   ,@score
+                   ,@comment
+                   ,@CREATEDBY
+                   ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+        }
+        internal static void Event_BindEventHabitCheckInInsertParameters(SqlCommand cmd, EventHabitCheckInViewModel civm, String usrName)
+        {
+            System.Diagnostics.Debug.Assert(civm != null);
+            cmd.Parameters.AddWithValue("@tranDate", civm.TranDate);
+            cmd.Parameters.AddWithValue("@habitID", civm.HabitID);
+            cmd.Parameters.AddWithValue("@score", civm.Score);
+            if (String.IsNullOrEmpty(civm.Comment))
+                cmd.Parameters.AddWithValue("@comment", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@comment", civm.Comment);
+            cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+            cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
+        }
         #endregion
 
         #region Tag
