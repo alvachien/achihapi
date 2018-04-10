@@ -105,7 +105,7 @@ namespace achihapi.test.Controllers
             var response = await _client.PostAsJsonAsync(_apiurl, vm);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.InternalServerError, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.AreEqual(false, response.IsSuccessStatusCode);
         }
 
@@ -147,6 +147,22 @@ namespace achihapi.test.Controllers
             var result2 = await response.Content.ReadAsJsonAsync<EventHabitCheckInViewModel>();
             Assert.IsNotNull(response.Content);
             Assert.IsTrue(result2.ID > 0);
+
+            // Do the reading again
+            response = await _client.GetAsync("/api/EventHabit/" + result.ID.ToString() + "?hid=" + SqlScriptHelper.HID_Tester.ToString());
+            if (!response.IsSuccessStatusCode)
+            {
+                var errmsg = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine(errmsg);
+            }
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            var result3 = await response.Content.ReadAsJsonAsync<EventHabitViewModel>();
+            Assert.IsNotNull(response.Content);
+            Assert.IsNotNull(result3);
+            Assert.AreEqual(1, result3.CheckInLogs.Count);
+            Assert.AreEqual(80, result3.CheckInLogs[0].Score);
         }
     }
 }

@@ -94,10 +94,12 @@ namespace achihapi.ViewModels
         public String Tags { get; set; }
 
         public List<EventHabitDetail> Details { get; private set; }
+        public List<EventHabitCheckInViewModel> CheckInLogs { get; private set; }
 
         public EventHabitViewModel()
         {
-            this.Details = new List<EventHabitDetail>();
+            Details = new List<EventHabitDetail>();
+            CheckInLogs = new List<EventHabitCheckInViewModel>();
         }
     }
 

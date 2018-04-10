@@ -2625,7 +2625,12 @@ namespace achihapi.Utilities
                         OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
             }
             else
-                sb.Append(" WHERE [ID] = " + id.Value.ToString());
+            {
+                sb.Append(" WHERE [ID] = " + id.Value.ToString() + ";");
+                // Checkin history
+                sb.Append(@"SELECT [ID],[TranDate],[Score],[Comment],[CREATEDBY],[CREATEDAT],[UPDATEDBY],[UPDATEDAT] FROM [t_event_habit_checkin] WHERE [HabitID] = " + id.Value.ToString());
+            }
+                
 
             return sb.ToString();
         }

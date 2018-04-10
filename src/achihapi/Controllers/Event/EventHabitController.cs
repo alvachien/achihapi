@@ -168,11 +168,35 @@ namespace achihapi.Controllers
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
+
+                // Detail
                 while (reader.Read())
                 {
                     EventHabitDetail detail = new EventHabitDetail();
                     SqlUtility.Event_HabitDB2VM(reader, vm, detail, false);
                     vm.Details.Add(detail);
+                }
+                reader.NextResult();
+
+                // Checkin
+                while(reader.Read())
+                {
+                    EventHabitCheckInViewModel civm = new EventHabitCheckInViewModel();
+                    civm.ID = reader.GetInt32(0);
+                    civm.TranDate = reader.GetDateTime(1);
+                    if (!reader.IsDBNull(2))
+                        civm.Score = reader.GetInt32(2);
+                    if (!reader.IsDBNull(3))
+                        civm.Comment = reader.GetString(3);
+                    if (!reader.IsDBNull(4))
+                        civm.CreatedBy = reader.GetString(4);
+                    if (!reader.IsDBNull(5))
+                        civm.CreatedAt = reader.GetDateTime(5);
+                    if (!reader.IsDBNull(6))
+                        civm.UpdatedBy = reader.GetString(6);
+                    if (!reader.IsDBNull(7))
+                        civm.UpdatedAt = reader.GetDateTime(7);
+                    vm.CheckInLogs.Add(civm);
                 }
             }
             catch (Exception exp)
