@@ -17,7 +17,7 @@ namespace achihapi.Controllers
         // GET: api/learnobject
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0, Boolean bIncContent = false)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0, Int32? ctgyid = null, Boolean bIncContent = false)
         {
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
@@ -41,7 +41,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(bIncContent, true, top, skip, null, hid);
+                queryString = this.getQueryString(bIncContent, ctgyid, true, top, skip, null, hid);
 
                 await conn.OpenAsync();
 
@@ -112,7 +112,7 @@ namespace achihapi.Controllers
             return new JsonResult(listVm, setting);
         }
 
-        private string getQueryString(Boolean bIncContent, Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32 hid)
+        private string getQueryString(Boolean bIncContent, Int32? nCtgyID, Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32 hid)
         {
             String strSQL = "";
             if (bListMode)
@@ -137,6 +137,7 @@ namespace achihapi.Controllers
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
                 strSQL += @" WHERE [t_learn_obj].[HID] = " + hid.ToString() 
+                       + (nCtgyID.HasValue ? (" AND [CATEGORY] = " + nCtgyID.Value.ToString()) : "" )
                        + @" ORDER BY (SELECT NULL) OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
             }
             else if (!bListMode && nSearchID.HasValue)
@@ -221,7 +222,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(true, false, null, null, id, hid);
+                queryString = this.getQueryString(true, null, false, null, null, id, hid);
 
                 await conn.OpenAsync();
 
