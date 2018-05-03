@@ -1436,10 +1436,76 @@ namespace achihapi.Utilities
             else
                 ++idx;
         }
-        #endregion
 
-        #region Finance Template Doc - ADP
-        internal static string getFinanceDocADPListQueryString()
+        internal static String getFinDocItemSearchView(String strWhere, Int32? top = null, Int32? skip = null)
+        {
+            String strRst = @"SELECT [DOCID],
+                    [ITEMID],
+		            [HID],
+		            [TRANDATE],
+		            [DOCDESP],
+                    [ACCOUNTID],
+                    [TRANTYPE],
+		            [TRANTYPENAME],
+		            [TRANTYPE_EXP],
+		            [USECURR2],
+                    [TRANCURR],
+                    [TRANAMOUNT_ORG],
+                    [TRANAMOUNT],
+                    [TRANAMOUNT_LC],
+                    [CONTROLCENTERID],
+                    [ORDERID],
+                   ,[DESP]
+                    FROM [dbo].[V_FIN_DOCUMENT_ITEM] "
+                    + (String.IsNullOrEmpty(strWhere) ? "" : (" WHERE " + strWhere));
+            if (skip.HasValue && top.HasValue)
+                strRst += " ORDER BY (SELECT NULL) OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
+
+            return strRst;
+        }
+        internal static void FinDocItem_SearchView2VM(SqlDataReader reader, FinanceDocItemSearchResultViewModel itemvm)
+        {
+            Int32 idx = 0;
+
+            itemvm.DocID = reader.GetInt32(idx++);
+            itemvm.ItemID = reader.GetInt32(idx++);
+            itemvm.TranDate = reader.GetDateTime(idx++);
+            if (!reader.IsDBNull(idx))
+                itemvm.DocDesp = reader.GetString(idx++);
+            else
+                ++idx;
+            itemvm.AccountID = reader.GetInt32(idx++);
+            itemvm.TranType = reader.GetInt32(idx++);
+            if (!reader.IsDBNull(idx))
+                itemvm.TranTypeName = reader.GetString(idx++);
+            else
+                ++idx;
+            itemvm.TranType_Exp = reader.GetBoolean(idx++);
+            if (!reader.IsDBNull(idx))
+                itemvm.UseCurr2 = reader.GetBoolean(idx++);
+            else
+                ++idx;
+            itemvm.TranCurr = reader.GetString(idx++);
+            itemvm.TranAmount_Org = reader.GetDecimal(idx++);
+            itemvm.TranAmount = reader.GetDecimal(idx++);
+            itemvm.TranAmount_LC = reader.GetDecimal(idx++);
+            if (!reader.IsDBNull(idx))
+                itemvm.ControlCenterID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                itemvm.OrderID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                itemvm.Desp = reader.GetString(idx++);
+            else
+                ++idx;
+    }
+    #endregion
+
+    #region Finance Template Doc - ADP
+    internal static string getFinanceDocADPListQueryString()
         {
             return @"SELECT [t_fin_tmpdoc_dp].[DOCID]
                           ,[t_fin_tmpdoc_dp].[HID]

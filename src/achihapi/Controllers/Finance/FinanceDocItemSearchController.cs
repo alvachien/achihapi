@@ -19,7 +19,7 @@ namespace achihapi.Controllers
     {
         // GET: api/FinanceDocItemSearch
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, [FromBody]FinanceDocItemSearchFilterViewModel filters)
+        public async Task<IActionResult> Get([FromBody]FinanceDocItemSearchFilterViewModel filters, [FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
@@ -44,7 +44,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            List<FinanceDocumentItemUIViewModel> listVMs = new List<FinanceDocumentItemUIViewModel>();
+            List<FinanceDocItemSearchResultViewModel> listVMs = new List<FinanceDocItemSearchResultViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -52,14 +52,15 @@ namespace achihapi.Controllers
 
             try
             {
-                String subqueries = "";
+                String subqueries = " HID = " + hid.ToString() + " ";
                 for(Int32 i = 0; i < filters.FieldList.Count; i ++)
                 {
                     subqueries += filters.FieldList[i].GenerateSql();
                     if (i != filters.FieldList.Count - 1)
                         subqueries += " AND ";
                 }
-                
+                queryString = SqlUtility.getFinDocItemSearchView(subqueries, top, skip);
+
                 await conn.OpenAsync();
 
                 // Check Home assignment with current user
@@ -81,8 +82,8 @@ namespace achihapi.Controllers
                     {
                         while (reader.Read())
                         {
-                            FinanceDocumentItemViewModel avm = new FinanceDocumentItemViewModel();
-                            SqlUtility.FinDocItemWithBalanceList_DB2VM(reader, avm);
+                            FinanceDocItemSearchResultViewModel avm = new FinanceDocItemSearchResultViewModel();
+                            SqlUtility.FinDocItem_SearchView2VM(reader, avm);
 
                             listVMs.Add(avm);
                         }

@@ -68,7 +68,7 @@ namespace achihapi.ViewModels
             if (!this.IsValid())
                 return String.Empty;
 
-            String strRst = "";
+            String strRst = " ";
             switch (this.Operator)
             {
                 case GeneralFilterOperatorEnum.Equal:
