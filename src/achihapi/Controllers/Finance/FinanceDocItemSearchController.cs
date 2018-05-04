@@ -52,7 +52,7 @@ namespace achihapi.Controllers
 
             try
             {
-                String subqueries = " HID = " + hid.ToString() + " ";
+                String subqueries = " HID = " + hid.ToString() + " AND ";
                 for(Int32 i = 0; i < filters.FieldList.Count; i ++)
                 {
                     subqueries += filters.FieldList[i].GenerateSql();

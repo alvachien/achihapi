@@ -52,6 +52,19 @@ namespace achihapi.test.Controllers
                 .ConfigureServices(InitializeServices)
                 .UseStartup(typeof(achihapi.Startup));
 
+            // Buildup the database
+            using (SqlConnection conn = new SqlConnection(_connString))
+            {
+                conn.Open();
+
+                String sqlCmd = SqlScriptHelper.FinanceDocItemSearch_Init;
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                cmd.ExecuteNonQuery();
+
+                cmd.Dispose();
+                conn.Close();
+            }
+
             _server = new TestServer(builder);
 
             _client = _server.CreateClient();
@@ -71,7 +84,7 @@ namespace achihapi.test.Controllers
             {
                 conn.Open();
 
-                String sqlCmd = SqlScriptHelper.EventHabitController_Cleanup;
+                String sqlCmd = SqlScriptHelper.FinanceDocItemSearch_Cleanup;
                 SqlCommand cmd = new SqlCommand(sqlCmd, conn);
                 cmd.ExecuteNonQuery();
 
