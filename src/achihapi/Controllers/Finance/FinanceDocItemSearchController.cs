@@ -18,8 +18,8 @@ namespace achihapi.Controllers
     public class FinanceDocItemSearchController : Controller
     {
         // GET: api/FinanceDocItemSearch
-        [HttpGet]
-        public async Task<IActionResult> Get([FromBody]FinanceDocItemSearchFilterViewModel filters, [FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
+        [HttpPost]
+        public async Task<IActionResult> Search([FromBody]FinanceDocItemSearchFilterViewModel filters, [FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
             if (hid <= 0)
                 return BadRequest("No Home Inputted");

@@ -112,7 +112,7 @@ namespace achihapi.test.Controllers
         }
 
         [TestMethod]
-        public async Task Post_InvalidCase1()
+        public async Task Get_InvalidCase1()
         {
             var response = await _client.GetAsync(_apiurl + "/hid=" + UnitTestUtility.UnitTestHomeID.ToString());
 

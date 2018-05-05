@@ -1441,7 +1441,6 @@ namespace achihapi.Utilities
         {
             String strRst = @"SELECT [DOCID],
                     [ITEMID],
-		            [HID],
 		            [TRANDATE],
 		            [DOCDESP],
                     [ACCOUNTID],
@@ -1455,7 +1454,7 @@ namespace achihapi.Utilities
                     [TRANAMOUNT_LC],
                     [CONTROLCENTERID],
                     [ORDERID],
-                   ,[DESP]
+                    [DESP]
                     FROM [dbo].[V_FIN_DOCUMENT_ITEM] "
                     + (String.IsNullOrEmpty(strWhere) ? "" : (" WHERE " + strWhere));
             if (skip.HasValue && top.HasValue)

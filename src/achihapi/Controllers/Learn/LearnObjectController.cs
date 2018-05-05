@@ -137,7 +137,7 @@ namespace achihapi.Controllers
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
                 strSQL += @" WHERE [t_learn_obj].[HID] = " + hid.ToString() 
-                       + (nCtgyID.HasValue ? (" AND [CATEGORY] = " + nCtgyID.Value.ToString()) : "" )
+                       + (nCtgyID.HasValue ? (" AND [t_learn_obj].[CATEGORY] = " + nCtgyID.Value.ToString()) : "" )
                        + @" ORDER BY (SELECT NULL) OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
             }
             else if (!bListMode && nSearchID.HasValue)

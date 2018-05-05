@@ -16,16 +16,25 @@ namespace achihapi.ViewModels
         LessEqual   = 7,
     }
 
+    public enum GeneralFilterValueEnum
+    {
+        Number = 1,
+        String = 2,
+        Date   = 3
+    }
+
     public class GeneralFilterItem
     {
         public string FieldName { get; set; }
         public GeneralFilterOperatorEnum Operator { get; set; }
         public string LowValue { get; set; }
         public string HighValue { get; set; }
+        public GeneralFilterValueEnum ValueType { get; set; }
 
         public GeneralFilterItem()
         {
             this.Operator = GeneralFilterOperatorEnum.Equal;
+            this.ValueType = GeneralFilterValueEnum.String; // Default is string
         }
 
         public Boolean IsValid()
@@ -73,43 +82,141 @@ namespace achihapi.ViewModels
             {
                 case GeneralFilterOperatorEnum.Equal:
                     {
-                        strRst = FieldName + " = " + LowValue;
+                        switch(this.ValueType)
+                        {
+                            case GeneralFilterValueEnum.Number:
+                                strRst = FieldName + " = " + LowValue;
+                                break;
+
+                            case GeneralFilterValueEnum.Date:
+                                strRst = FieldName + " = " + LowValue;
+                                break;
+
+                            case GeneralFilterValueEnum.String:
+                            default:
+                                strRst = FieldName + " = N'" + LowValue + "' ";
+                                break;
+                        }
                     }
                     break;
 
                 case GeneralFilterOperatorEnum.NotEqual:
                     {
-                        strRst = FieldName + " <> " + LowValue;
+                        switch (this.ValueType)
+                        {
+                            case GeneralFilterValueEnum.Number:
+                                strRst = FieldName + " <> " + LowValue;
+                                break;
+
+                            case GeneralFilterValueEnum.Date:
+                                strRst = FieldName + " <> " + LowValue;
+                                break;
+
+                            case GeneralFilterValueEnum.String:
+                            default:
+                                strRst = FieldName + " <> N'" + LowValue + "' ";
+                                break;
+                        }
                     }
                     break;
 
                 case GeneralFilterOperatorEnum.LargerEqual:
                     {
-                        strRst = FieldName + " >= " + LowValue;
+                        switch (this.ValueType)
+                        {
+                            case GeneralFilterValueEnum.Number:
+                                strRst = FieldName + " >= " + LowValue;
+                                break;
+
+                            case GeneralFilterValueEnum.Date:
+                                strRst = FieldName + " >= " + LowValue;
+                                break;
+
+                            case GeneralFilterValueEnum.String:
+                            default:
+                                strRst = FieldName + " >= N'" + LowValue + "' ";
+                                break;
+                        }
                     }
                     break;
 
                 case GeneralFilterOperatorEnum.LargerThan:
                     {
-                        strRst = FieldName + " > " + LowValue;
+                        switch (this.ValueType)
+                        {
+                            case GeneralFilterValueEnum.Number:
+                                strRst = FieldName + " > " + LowValue;
+                                break;
+
+                            case GeneralFilterValueEnum.Date:
+                                strRst = FieldName + " > " + LowValue;
+                                break;
+
+                            case GeneralFilterValueEnum.String:
+                            default:
+                                strRst = FieldName + " > N'" + LowValue + "' ";
+                                break;
+                        }
                     }
                     break;
 
                 case GeneralFilterOperatorEnum.LessEqual:
                     {
-                        strRst = FieldName + " <= " + LowValue;
+                        switch (this.ValueType)
+                        {
+                            case GeneralFilterValueEnum.Number:
+                                strRst = FieldName + " <= " + LowValue;
+                                break;
+
+                            case GeneralFilterValueEnum.Date:
+                                strRst = FieldName + " <= " + LowValue;
+                                break;
+
+                            case GeneralFilterValueEnum.String:
+                            default:
+                                strRst = FieldName + " <= N'" + LowValue + "' ";
+                                break;
+                        }
                     }
                     break;
 
                 case GeneralFilterOperatorEnum.LessThan:
                     {
-                        strRst = FieldName + " < " + LowValue;
+                        switch (this.ValueType)
+                        {
+                            case GeneralFilterValueEnum.Number:
+                                strRst = FieldName + " < " + LowValue;
+                                break;
+
+                            case GeneralFilterValueEnum.Date:
+                                strRst = FieldName + " < " + LowValue;
+                                break;
+
+                            case GeneralFilterValueEnum.String:
+                            default:
+                                strRst = FieldName + " < N'" + LowValue + "' ";
+                                break;
+                        }
                     }
                     break;
 
                 case GeneralFilterOperatorEnum.Between:
                     {
-                        strRst = FieldName + " >= " + LowValue + " AND " + FieldName + " <= " + HighValue;
+                        switch (this.ValueType)
+                        {
+                            case GeneralFilterValueEnum.Number:
+                                strRst = FieldName + " >= " + LowValue + " AND " + FieldName + " <= " + HighValue;
+                                break;
+
+                            case GeneralFilterValueEnum.Date:
+                                strRst = FieldName + " >= " + LowValue + " AND " + FieldName + " <= " + HighValue;
+                                break;
+
+                            case GeneralFilterValueEnum.String:
+                            default:
+                                strRst = FieldName + " >= N'" + LowValue + "' AND " + FieldName + " <= N'" + HighValue +"' ";
+                                break;
+                        }
                     }
                     break;
 
