@@ -60,6 +60,9 @@ namespace achihapi.Controllers
                         subqueries += " AND ";
                 }
                 queryString = SqlUtility.getFinDocItemSearchView(subqueries, top, skip);
+#if DEBUG
+                System.Diagnostics.Debug.Write(queryString);
+#endif
 
                 await conn.OpenAsync();
 
