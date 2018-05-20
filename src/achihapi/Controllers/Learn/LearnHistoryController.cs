@@ -132,7 +132,7 @@ namespace achihapi.Controllers
                 strSQL += ";";
             }
 
-            strSQL += SqlUtility.getLearnHistoryQueryString(hid, userFilter);
+            strSQL += HIHDBUtility.getLearnHistoryQueryString(hid, userFilter);
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
                 strSQL += @" ORDER BY (SELECT NULL)

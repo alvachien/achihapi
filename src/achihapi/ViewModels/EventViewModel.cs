@@ -31,7 +31,7 @@ namespace achihapi.ViewModels
         public String Tags { get; set; }
     }
 
-    public sealed class RecurEventViewModel: BaseViewModel
+    public class RecurEventViewModel: BaseViewModel
     {
         public Int32 ID { get; set; }
         public Int32 HID { get; set; }
@@ -48,6 +48,14 @@ namespace achihapi.ViewModels
         public String Assignee { get; set; }
 
         public String Tags { get; set; }
+    }
+    public sealed class RecurUIEventViewModel: RecurEventViewModel
+    {
+        public List<EventViewModel> EventList { get; private set; }
+        public RecurUIEventViewModel()
+        {
+            EventList = new List<EventViewModel>();
+        }           
     }
 
     public sealed class EventGenerationInputViewModel

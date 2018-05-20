@@ -17,7 +17,7 @@ namespace achihapi.Controllers
     {
         // GET: api/event
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0, Boolean? skipfinished = null, DateTime? dtbgn = null, DateTime? dtend = null)
         {
             if (hid <= 0)
                 return BadRequest("HID is missing");
@@ -53,7 +53,7 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                queryString = SqlUtility.Event_GetNormalEventQueryString(true, usrName, hid, skip, top);
+                queryString = HIHDBUtility.Event_GetNormalEventQueryString(true, usrName, hid, skip, top, null, skipfinished, dtbgn, dtend);
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -74,7 +74,7 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             EventViewModel vm = new EventViewModel();
-                            SqlUtility.Event_DB2VM(reader, vm, true);
+                            HIHDBUtility.Event_DB2VM(reader, vm, true);
                             listVm.Add(vm);
                         }
                     }
@@ -152,7 +152,7 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                queryString = SqlUtility.Event_GetNormalEventQueryString(false, usrName, hid, null, null, id);
+                queryString = HIHDBUtility.Event_GetNormalEventQueryString(false, usrName, hid, null, null, id);
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -161,7 +161,7 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        SqlUtility.Event_DB2VM(reader, vm, false);
+                        HIHDBUtility.Event_DB2VM(reader, vm, false);
                     }
                 }
             }
@@ -264,10 +264,10 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Now go ahead for the creating
-                    queryString =SqlUtility.Event_GetNormalEventInsertString();
+                    queryString =HIHDBUtility.Event_GetNormalEventInsertString();
 
                     cmd = new SqlCommand(queryString, conn);
-                    SqlUtility.Event_BindNormalEventInsertParameters(cmd, vm, usrName);
+                    HIHDBUtility.Event_BindNormalEventInsertParameters(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -373,10 +373,10 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Now go ahead for the creating
-                    queryString = SqlUtility.Event_GetNormalEventUpdateString();
+                    queryString = HIHDBUtility.Event_GetNormalEventUpdateString();
 
                     cmd = new SqlCommand(queryString, conn);
-                    SqlUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
+                    HIHDBUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
 
                     Int32 nRst = await cmd.ExecuteNonQueryAsync();
                 }
@@ -445,7 +445,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.Event_GetNormalEventQueryString(false, usrName, null, null, null, id);
+                queryString = HIHDBUtility.Event_GetNormalEventQueryString(false, usrName, null, null, null, id);
 
                 await conn.OpenAsync();
 
@@ -463,9 +463,9 @@ namespace achihapi.Controllers
                 if (patch.Operations.Count == 1 && patch.Operations[0].path == "/completeTimePoint")
                 {
                     // Only update the complete time
-                    queryString = SqlUtility.Event_GetNormalEventMarkAsCompleteString();
+                    queryString = HIHDBUtility.Event_GetNormalEventMarkAsCompleteString();
                     SqlCommand cmdupdate = new SqlCommand(queryString, conn);
-                    SqlUtility.Event_BindNormalEventMarkAsCompleteParameters(cmdupdate, DateTime.Parse((string)patch.Operations[0].value), usrName, id);
+                    HIHDBUtility.Event_BindNormalEventMarkAsCompleteParameters(cmdupdate, DateTime.Parse((string)patch.Operations[0].value), usrName, id);
 
                     await cmdupdate.ExecuteNonQueryAsync();
                 }
@@ -481,7 +481,7 @@ namespace achihapi.Controllers
                     {
                         while (reader.Read())
                         {
-                            SqlUtility.Event_DB2VM(reader, vm, false);
+                            HIHDBUtility.Event_DB2VM(reader, vm, false);
                         }
 
                         reader.Dispose();
@@ -504,10 +504,10 @@ namespace achihapi.Controllers
                         //    patched = vm
                         //};
 
-                        queryString = SqlUtility.Event_GetNormalEventUpdateString();
+                        queryString = HIHDBUtility.Event_GetNormalEventUpdateString();
 
                         cmd = new SqlCommand(queryString, conn);
-                        SqlUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
+                        HIHDBUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
 
                         Int32 nRst = await cmd.ExecuteNonQueryAsync();
                     }

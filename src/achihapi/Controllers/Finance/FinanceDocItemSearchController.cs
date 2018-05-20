@@ -59,7 +59,7 @@ namespace achihapi.Controllers
                     if (i != filters.FieldList.Count - 1)
                         subqueries += " AND ";
                 }
-                queryString = SqlUtility.getFinDocItemSearchView(subqueries, top, skip);
+                queryString = HIHDBUtility.getFinDocItemSearchView(subqueries, top, skip);
 #if DEBUG
                 System.Diagnostics.Debug.Write(queryString);
 #endif
@@ -86,7 +86,7 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             FinanceDocItemSearchResultViewModel avm = new FinanceDocItemSearchResultViewModel();
-                            SqlUtility.FinDocItem_SearchView2VM(reader, avm);
+                            HIHDBUtility.FinDocItem_SearchView2VM(reader, avm);
 
                             listVMs.Add(avm);
                         }

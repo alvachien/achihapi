@@ -43,7 +43,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.GetFinanceDocLoanListQueryString() + " WHERE [HID] = @hid ";
+                queryString = HIHDBUtility.GetFinanceDocLoanListQueryString() + " WHERE [HID] = @hid ";
                 if (skipPosted)
                     queryString += " AND [REFDOCID] IS NULL ";
                 if (dtbgn.HasValue)
@@ -77,7 +77,7 @@ namespace achihapi.Controllers
                     while (reader.Read())
                     {
                         FinanceTmpDocLoanViewModel dpvm = new FinanceTmpDocLoanViewModel();
-                        SqlUtility.FinTmpDocLoan_DB2VM(reader, dpvm);
+                        HIHDBUtility.FinTmpDocLoan_DB2VM(reader, dpvm);
                         listVm.Add(dpvm);
                     }
                 }
@@ -158,7 +158,7 @@ namespace achihapi.Controllers
                 // Check: HID, it requires more info than just check, so it implemented it 
                 if (hid != 0)
                 {
-                    String strHIDCheck = SqlUtility.getHomeDefQueryString() + " WHERE [ID]= @hid AND [USER] = @user";
+                    String strHIDCheck = HIHDBUtility.getHomeDefQueryString() + " WHERE [ID]= @hid AND [USER] = @user";
                     SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
                     cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
                     cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
@@ -169,7 +169,7 @@ namespace achihapi.Controllers
                     {
                         while (readHIDCheck.Read())
                         {
-                            SqlUtility.HomeDef_DB2VM(readHIDCheck, vmHome);
+                            HIHDBUtility.HomeDef_DB2VM(readHIDCheck, vmHome);
 
                             // It shall be only one entry if found!
                             break;
@@ -188,7 +188,7 @@ namespace achihapi.Controllers
                 }
 
                 // Check: DocID
-                String checkString = SqlUtility.GetFinanceDocLoanListQueryString() + " WHERE [DOCID] = " + docid.ToString() + " AND [HID] = " + hid.ToString();
+                String checkString = HIHDBUtility.GetFinanceDocLoanListQueryString() + " WHERE [DOCID] = " + docid.ToString() + " AND [HID] = " + hid.ToString();
                 SqlCommand chkcmd = new SqlCommand(checkString, conn);
                 SqlDataReader chkreader = chkcmd.ExecuteReader();
                 if (!chkreader.HasRows)
@@ -199,7 +199,7 @@ namespace achihapi.Controllers
                 {
                     while (chkreader.Read())
                     {
-                        SqlUtility.FinTmpDocLoan_DB2VM(chkreader, vmTmpDoc);
+                        HIHDBUtility.FinTmpDocLoan_DB2VM(chkreader, vmTmpDoc);
 
                         // It shall be only one entry if found!
                         break;
@@ -264,7 +264,7 @@ namespace achihapi.Controllers
                 }
 
                 // Now go ahead for the creating
-                queryString = SqlUtility.GetFinDocHeaderInsertString();
+                queryString = HIHDBUtility.GetFinDocHeaderInsertString();
 
                 try
                 {
@@ -274,7 +274,7 @@ namespace achihapi.Controllers
                         Transaction = tran
                     };
 
-                    SqlUtility.BindFinDocHeaderInsertParameter(cmd, vmFIDOC, usrName);
+                    HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vmFIDOC, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -285,13 +285,13 @@ namespace achihapi.Controllers
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vmFIDOC.Items)
                     {
-                        queryString = SqlUtility.GetFinDocItemInsertString();
+                        queryString = HIHDBUtility.GetFinDocItemInsertString();
 
                         SqlCommand cmd2 = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        SqlUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
+                        HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
 
                         await cmd2.ExecuteNonQueryAsync();
                     }

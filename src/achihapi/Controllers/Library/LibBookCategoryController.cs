@@ -72,7 +72,7 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             LibBookCategoryViewModel vm = new LibBookCategoryViewModel();
-                            SqlUtility.LibBookCategory_DB2VM(reader, vm);
+                            HIHDBUtility.LibBookCategory_DB2VM(reader, vm);
                             listVm.Add(vm);
                         }
                     }
@@ -149,7 +149,7 @@ namespace achihapi.Controllers
                     strSQL += " OR [HID] = " + hid.Value.ToString() + ";";
             }
 
-            strSQL += SqlUtility.getLibBookCategoryQueryString();
+            strSQL += HIHDBUtility.getLibBookCategoryQueryString();
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {

@@ -56,7 +56,7 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                queryString = SqlUtility.Event_GetEventHabitQueryString(true, usrName, hid, skip, top);
+                queryString = HIHDBUtility.Event_GetEventHabitQueryString(true, usrName, hid, skip, top);
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -79,7 +79,7 @@ namespace achihapi.Controllers
                         {
                             EventHabitViewModel vm = new EventHabitViewModel();
                             EventHabitDetail detail = new EventHabitDetail();
-                            SqlUtility.Event_HabitDB2VM(reader, vm, detail, true);
+                            HIHDBUtility.Event_HabitDB2VM(reader, vm, detail, true);
                             if (dictVM.ContainsKey(vm.ID))
                             {
                                 dictVM[vm.ID].Details.Add(detail);
@@ -164,7 +164,7 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                queryString = SqlUtility.Event_GetEventHabitQueryString(false, usrName, hid, null, null, id);
+                queryString = HIHDBUtility.Event_GetEventHabitQueryString(false, usrName, hid, null, null, id);
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -173,7 +173,7 @@ namespace achihapi.Controllers
                 while (reader.Read())
                 {
                     EventHabitDetail detail = new EventHabitDetail();
-                    SqlUtility.Event_HabitDB2VM(reader, vm, detail, false);
+                    HIHDBUtility.Event_HabitDB2VM(reader, vm, detail, false);
                     vm.Details.Add(detail);
                 }
                 reader.NextResult();
@@ -338,12 +338,12 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Now go ahead for the creating
-                    queryString = SqlUtility.Event_GetEventHabitInsertString();
+                    queryString = HIHDBUtility.Event_GetEventHabitInsertString();
                     tran = conn.BeginTransaction();
 
                     cmd = new SqlCommand(queryString, conn);
                     cmd.Transaction = tran;
-                    SqlUtility.Event_BindEventHabitInsertParameters(cmd, vm, usrName);
+                    HIHDBUtility.Event_BindEventHabitInsertParameters(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -358,12 +358,12 @@ namespace achihapi.Controllers
                         detailVM.StartDate = detail.StartTimePoint;
                         detailVM.EndDate = detail.EndTimePoint;
 
-                        queryString = SqlUtility.Event_GetEventHabitDetailInsertString();
+                        queryString = HIHDBUtility.Event_GetEventHabitDetailInsertString();
 
                         cmd.Dispose();
                         cmd = null;
                         cmd = new SqlCommand(queryString, conn, tran);
-                        SqlUtility.Event_BindEventHabitDetailInsertParameter(cmd, detailVM);
+                        HIHDBUtility.Event_BindEventHabitDetailInsertParameter(cmd, detailVM);
                         await cmd.ExecuteNonQueryAsync();
 
                         vm.Details.Add(detailVM);
@@ -466,9 +466,9 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                queryString = SqlUtility.Event_GetEventHabitDeleteString();
+                queryString = HIHDBUtility.Event_GetEventHabitDeleteString();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlUtility.Event_BindEventHabitDeleteParameters(cmd, id, hid);
+                HIHDBUtility.Event_BindEventHabitDeleteParameters(cmd, id, hid);
                 await cmd.ExecuteNonQueryAsync();
             }
             catch (Exception exp)

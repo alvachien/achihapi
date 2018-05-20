@@ -69,7 +69,7 @@ namespace achihapi.Controllers
                             while (reader.Read())
                             {
                                 HomeMsgViewModel vm = new HomeMsgViewModel();
-                                SqlUtility.HomeMsg_DB2VM(reader, vm);
+                                HIHDBUtility.HomeMsg_DB2VM(reader, vm);
                                 listVm.Add(vm);
                             }
                         }
@@ -233,27 +233,27 @@ namespace achihapi.Controllers
                 if (patch.Operations.Count == 1 && patch.Operations[0].path == "/readFlag")
                 {
                     // Only update the complete time
-                    queryString = SqlUtility.HomeMsg_GetMarkAsReadUpdateString();
+                    queryString = HIHDBUtility.HomeMsg_GetMarkAsReadUpdateString();
                     SqlCommand cmdupdate = new SqlCommand(queryString, conn);
-                    SqlUtility.HomeMsg_BindMarkAsReadUpdateParameters(cmdupdate, (Boolean)patch.Operations[0].value, id, hid);
+                    HIHDBUtility.HomeMsg_BindMarkAsReadUpdateParameters(cmdupdate, (Boolean)patch.Operations[0].value, id, hid);
 
                     await cmdupdate.ExecuteNonQueryAsync();
                 }
                 else if (patch.Operations.Count == 1 && patch.Operations[0].path == "/receiverDeletion")
                 {
                     // Only update the complete time
-                    queryString = SqlUtility.HomeMsg_GetReceiverDeletionUpdateString();
+                    queryString = HIHDBUtility.HomeMsg_GetReceiverDeletionUpdateString();
                     SqlCommand cmdupdate = new SqlCommand(queryString, conn);
-                    SqlUtility.HomeMsg_BindReceiverDeletionUpdateParameters(cmdupdate, (Boolean)patch.Operations[0].value, id, hid);
+                    HIHDBUtility.HomeMsg_BindReceiverDeletionUpdateParameters(cmdupdate, (Boolean)patch.Operations[0].value, id, hid);
 
                     await cmdupdate.ExecuteNonQueryAsync();
                 }
                 else if (patch.Operations.Count == 1 && patch.Operations[0].path == "/senderDeletion")
                 {
                     // Only update the complete time
-                    queryString = SqlUtility.HomeMsg_GetSenderDeletionUpdateString();
+                    queryString = HIHDBUtility.HomeMsg_GetSenderDeletionUpdateString();
                     SqlCommand cmdupdate = new SqlCommand(queryString, conn);
-                    SqlUtility.HomeMsg_BindSenderDeletioUpdateParameters(cmdupdate, (Boolean)patch.Operations[0].value, id, hid);
+                    HIHDBUtility.HomeMsg_BindSenderDeletioUpdateParameters(cmdupdate, (Boolean)patch.Operations[0].value, id, hid);
 
                     await cmdupdate.ExecuteNonQueryAsync();
                 }
@@ -316,7 +316,7 @@ namespace achihapi.Controllers
                     strSQL += @"SELECT count(*) FROM [dbo].[t_homemsg] WHERE [HID] = " + hid.ToString() + " AND [USERTO] = N'" + usrName + "'; ";
             }
 
-            strSQL += SqlUtility.getHomeMsgQueryString(usrName, hid, sentbox);
+            strSQL += HIHDBUtility.getHomeMsgQueryString(usrName, hid, sentbox);
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {

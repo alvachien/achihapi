@@ -72,7 +72,7 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             LearnCategoryViewModel vm = new LearnCategoryViewModel();
-                            SqlUtility.LearnCategory_DB2VM(reader, vm);
+                            HIHDBUtility.LearnCategory_DB2VM(reader, vm);
                             listVm.Add(vm);
                         }
                     }
@@ -193,10 +193,10 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Now go ahead for the creating
-                    queryString = SqlUtility.getLearnCategoryInsertString();
+                    queryString = HIHDBUtility.getLearnCategoryInsertString();
 
                     cmd = new SqlCommand(queryString, conn);
-                    SqlUtility.bindLearnCategoryInsertParameter(cmd, vm, usrName);
+                    HIHDBUtility.bindLearnCategoryInsertParameter(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -267,7 +267,7 @@ namespace achihapi.Controllers
                     strSQL += " OR [HID] = " + hid.Value.ToString() + ";";
             }
 
-            strSQL += SqlUtility.getLearnCategoryQueryString();
+            strSQL += HIHDBUtility.getLearnCategoryQueryString();
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {

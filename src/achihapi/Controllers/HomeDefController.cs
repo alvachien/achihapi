@@ -102,7 +102,7 @@ namespace achihapi.Controllers
                             while (reader.Read())
                             {
                                 HomeDefViewModel vm = new HomeDefViewModel();
-                                SqlUtility.HomeDef_DB2VM(reader, vm);
+                                HIHDBUtility.HomeDef_DB2VM(reader, vm);
                                 listVm.Add(vm);
                             }
                         }
@@ -185,7 +185,7 @@ namespace achihapi.Controllers
                     bExist = true;
                     while (reader.Read())
                     {
-                        SqlUtility.HomeDef_DB2VM(reader, vm);
+                        HIHDBUtility.HomeDef_DB2VM(reader, vm);
 
                         // It should return one entry only!
                         // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
@@ -198,7 +198,7 @@ namespace achihapi.Controllers
                     while(reader.Read())
                     {
                         HomeMemViewModel vmMem = new HomeMemViewModel();
-                        SqlUtility.HomeMem_DB2VM(reader, vmMem);
+                        HIHDBUtility.HomeMem_DB2VM(reader, vmMem);
                         vm.Members.Add(vmMem);
                     }
                 }
@@ -287,14 +287,14 @@ namespace achihapi.Controllers
                 conn = new SqlConnection(Startup.DBConnectionString);
                 conn.Open();
                 tran = conn.BeginTransaction();
-                queryString = SqlUtility.getHomeDefInsertString();
+                queryString = HIHDBUtility.getHomeDefInsertString();
                 SqlCommand cmd = new SqlCommand(queryString, conn)
                 {
                     Transaction = tran
                 };
 
                 // Home def.
-                SqlUtility.bindHomeDefInsertParameter(cmd, vm, usrId);
+                HIHDBUtility.bindHomeDefInsertParameter(cmd, vm, usrId);
                 SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                 idparam.Direction = ParameterDirection.Output;
 
@@ -304,7 +304,7 @@ namespace achihapi.Controllers
                 // Home members
                 cmd.Dispose();
                 cmd = null;
-                queryString = SqlUtility.getHomeMemInsertString();
+                queryString = HIHDBUtility.getHomeMemInsertString();
                 cmd = new SqlCommand(queryString, conn)
                 {
                     Transaction = tran
@@ -318,7 +318,7 @@ namespace achihapi.Controllers
                     DisplayAs = vm.CreatorDisplayAs,
                     Relation = (Int16)(HIHHomeMemberRelationship.Self)
                 };
-                SqlUtility.bindHomeMemInsertParameter(cmd, vmMem, usrId);
+                HIHDBUtility.bindHomeMemInsertParameter(cmd, vmMem, usrId);
                 await cmd.ExecuteNonQueryAsync();
 
                 tran.Commit();
@@ -407,10 +407,10 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.getHomeDefUpdateString();
+                queryString = HIHDBUtility.getHomeDefUpdateString();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
 
-                SqlUtility.bindHomeDefUpdateParameter(cmd, vm, usrName);
+                HIHDBUtility.bindHomeDefUpdateParameter(cmd, vm, usrName);
 
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -485,7 +485,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.getHomeDefDeleteString();
+                queryString = HIHDBUtility.getHomeDefDeleteString();
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@ID", id);
 
@@ -527,7 +527,7 @@ namespace achihapi.Controllers
                 strSQL += " ;";
             }
 
-            strSQL += SqlUtility.getHomeDefQueryString(strUserID);
+            strSQL += HIHDBUtility.getHomeDefQueryString(strUserID);
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {
@@ -546,7 +546,7 @@ namespace achihapi.Controllers
                 }
 
                 // Add home member part
-                strSQL += SqlUtility.getHomeMemQueryString(nSearchID);
+                strSQL += HIHDBUtility.getHomeMemQueryString(nSearchID);
             }
 #if DEBUG
             System.Diagnostics.Debug.WriteLine("HomeDefController, SQL generated: " + strSQL);

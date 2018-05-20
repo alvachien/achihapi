@@ -90,7 +90,7 @@ namespace achihapi.Controllers
                             while (reader.Read())
                             {
                                 FinanceAccountUIViewModel vm = new FinanceAccountUIViewModel();
-                                SqlUtility.FinAccount_DB2VM(reader, vm);
+                                HIHDBUtility.FinAccount_DB2VM(reader, vm);
                                 listVm.Add(vm);
                             }
                         }
@@ -191,7 +191,7 @@ namespace achihapi.Controllers
                     bExist = true;
                     while (reader.Read())
                     {
-                        SqlUtility.FinAccount_DB2VM(reader, vmAccount);
+                        HIHDBUtility.FinAccount_DB2VM(reader, vmAccount);
 
                         // It should return one entry only!
                         // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
@@ -331,7 +331,7 @@ namespace achihapi.Controllers
                     SqlTransaction tran = conn.BeginTransaction();
 
                     // Now go ahead for the creating
-                    queryString = SqlUtility.GetFinanceAccountHeaderInsertString();
+                    queryString = HIHDBUtility.GetFinanceAccountHeaderInsertString();
 
                     try
                     {
@@ -340,7 +340,7 @@ namespace achihapi.Controllers
                             Transaction = tran
                         };
 
-                        SqlUtility.BindFinAccountInsertParameter(cmd, vm, usrName);
+                        HIHDBUtility.BindFinAccountInsertParameter(cmd, vm, usrName);
                         SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                         idparam.Direction = ParameterDirection.Output;
 
@@ -678,7 +678,7 @@ namespace achihapi.Controllers
                 strSQL += ";";
             }
 
-            strSQL += SqlUtility.getFinanceAccountQueryString(hid, status, strOwner);
+            strSQL += HIHDBUtility.getFinanceAccountQueryString(hid, status, strOwner);
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {

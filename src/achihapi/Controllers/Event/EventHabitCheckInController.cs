@@ -107,12 +107,12 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Now go ahead for the creating
-                    queryString = SqlUtility.Event_GetEventHabitCheckInInsertString();
+                    queryString = HIHDBUtility.Event_GetEventHabitCheckInInsertString();
                     tran = conn.BeginTransaction();
 
                     cmd = new SqlCommand(queryString, conn);
                     cmd.Transaction = tran;
-                    SqlUtility.Event_BindEventHabitCheckInInsertParameters(cmd, vm, usrName);
+                    HIHDBUtility.Event_BindEventHabitCheckInInsertParameters(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 

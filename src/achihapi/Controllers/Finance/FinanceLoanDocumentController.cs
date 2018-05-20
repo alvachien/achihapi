@@ -53,7 +53,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.GetFinanceDocLoanQueryString(id, hid);
+                queryString = HIHDBUtility.GetFinanceDocLoanQueryString(id, hid);
 
                 await conn.OpenAsync();
 
@@ -73,7 +73,7 @@ namespace achihapi.Controllers
                 // Header
                 while (reader.Read())
                 {
-                    SqlUtility.FinDocHeader_DB2VM(reader, vm);
+                    HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
                 }
                 reader.NextResult();
 
@@ -81,7 +81,7 @@ namespace achihapi.Controllers
                 while (reader.Read())
                 {
                     FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                    SqlUtility.FinDocItem_DB2VM(reader, itemvm);
+                    HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
 
                     vm.Items.Add(itemvm);
                 }
@@ -92,9 +92,9 @@ namespace achihapi.Controllers
                 {
                     FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
                     Int32 aidx = 0;
-                    aidx = SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+                    aidx = HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
                     vmAccount.ExtraInfo_Loan = new FinanceAccountExtLoanViewModel();
-                    SqlUtility.FinAccountLoan_DB2VM(reader, vmAccount.ExtraInfo_Loan, aidx);
+                    HIHDBUtility.FinAccountLoan_DB2VM(reader, vmAccount.ExtraInfo_Loan, aidx);
 
                     vm.AccountVM = vmAccount;
                 }
@@ -104,7 +104,7 @@ namespace achihapi.Controllers
                 while (reader.Read())
                 {
                     FinanceTmpDocLoanViewModel loanvm = new FinanceTmpDocLoanViewModel();
-                    SqlUtility.FinTmpDocLoan_DB2VM(reader, loanvm);
+                    HIHDBUtility.FinTmpDocLoan_DB2VM(reader, loanvm);
                     vm.TmpDocs.Add(loanvm);
                 }
                 reader.NextResult();
@@ -222,13 +222,13 @@ namespace achihapi.Controllers
                 try
                 {
                     // First, create the doc header => nNewDocID
-                    queryString = SqlUtility.GetFinDocHeaderInsertString();
+                    queryString = HIHDBUtility.GetFinDocHeaderInsertString();
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
 
-                    SqlUtility.BindFinDocHeaderInsertParameter(cmd, vm, usrName);
+                    HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -242,12 +242,12 @@ namespace achihapi.Controllers
                     {
                         ivm.TranType = FinanceTranTypeViewModel.TranType_LoanIn; // Todo: switch to check!
 
-                        queryString = SqlUtility.GetFinDocItemInsertString();
+                        queryString = HIHDBUtility.GetFinDocItemInsertString();
                         SqlCommand cmd2 = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        SqlUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
+                        HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
 
                         await cmd2.ExecuteNonQueryAsync();
 
@@ -260,11 +260,11 @@ namespace achihapi.Controllers
                             // Create tags
                             foreach (var term in ivm.TagTerms)
                             {
-                                queryString = SqlUtility.GetTagInsertString();
+                                queryString = HIHDBUtility.GetTagInsertString();
 
                                 cmd2 = new SqlCommand(queryString, conn, tran);
 
-                                SqlUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
+                                HIHDBUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
 
                                 await cmd2.ExecuteNonQueryAsync();
 
@@ -275,13 +275,13 @@ namespace achihapi.Controllers
                     }
 
                     // Third, go to the account creation => nNewAccountID
-                    queryString = SqlUtility.GetFinanceAccountHeaderInsertString();
+                    queryString = HIHDBUtility.GetFinanceAccountHeaderInsertString();
 
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
-                    SqlUtility.BindFinAccountInsertParameter(cmd, vm.AccountVM, usrName);
+                    HIHDBUtility.BindFinAccountInsertParameter(cmd, vm.AccountVM, usrName);
 
                     SqlParameter idparam2 = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam2.Direction = ParameterDirection.Output;
@@ -292,13 +292,13 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Fourth, creat the Loan part
-                    queryString = SqlUtility.GetFinanceAccountLoanInsertString();
+                    queryString = HIHDBUtility.GetFinanceAccountLoanInsertString();
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
 
-                    SqlUtility.BindFinAccountLoanInsertParameter(cmd, vm.AccountVM.ExtraInfo_Loan, nNewDocID, nNewAccountID, usrName);
+                    HIHDBUtility.BindFinAccountLoanInsertParameter(cmd, vm.AccountVM.ExtraInfo_Loan, nNewDocID, nNewAccountID, usrName);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
@@ -306,14 +306,14 @@ namespace achihapi.Controllers
                     // Fifth, create template docs
                     foreach (FinanceTmpDocLoanViewModel avm in vm.TmpDocs)
                     {
-                        queryString = SqlUtility.GetFinanceTmpDocLoanInsertString();
+                        queryString = HIHDBUtility.GetFinanceTmpDocLoanInsertString();
 
                         cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
 
-                        SqlUtility.BindFinTmpDocLoanParameter(cmd, avm, nNewAccountID, usrName);
+                        HIHDBUtility.BindFinTmpDocLoanParameter(cmd, avm, nNewAccountID, usrName);
                         await cmd.ExecuteNonQueryAsync();
 
                         cmd.Dispose();

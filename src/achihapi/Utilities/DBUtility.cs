@@ -9,7 +9,7 @@ using System.Text;
 
 namespace achihapi.Utilities
 {
-    internal class SqlUtility
+    internal class HIHDBUtility
     {
         #region Home define
         internal static string getHomeDefQueryString(String strUserID = null)
@@ -1503,8 +1503,8 @@ namespace achihapi.Utilities
     }
     #endregion
 
-    #region Finance Template Doc - ADP
-    internal static string getFinanceDocADPListQueryString()
+        #region Finance Template Doc - ADP
+        internal static string getFinanceDocADPListQueryString()
         {
             return @"SELECT [t_fin_tmpdoc_dp].[DOCID]
                           ,[t_fin_tmpdoc_dp].[HID]
@@ -2284,7 +2284,8 @@ namespace achihapi.Utilities
         #endregion
 
         #region Normal Event
-        internal static string Event_GetNormalEventQueryString(Boolean listmode, String usrid, Int32? hid = null, Int32? skip = null, Int32? top = null, Int32? id = null)
+        internal static string Event_GetNormalEventQueryString(Boolean listmode, String usrid, Int32? hid = null, Int32? skip = null, Int32? top = null, Int32? id = null, 
+            Boolean? skipfinish = null, DateTime? dtbgn = null, DateTime? dtend = null)
         {
             if (String.IsNullOrEmpty(usrid)
                 || (listmode && !hid.HasValue)
@@ -2293,7 +2294,16 @@ namespace achihapi.Utilities
 
             StringBuilder sb = new StringBuilder();
             if (listmode)
-                sb.AppendLine(@"SELECT count(*) FROM [dbo].[t_event] WHERE[HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrid + "' ");
+            {
+                var sql1 = @"SELECT count(*) FROM [dbo].[t_event] WHERE[HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrid + "' ";
+                if (dtbgn.HasValue)
+                    sql1 += " AND [StartTime] >= '" + dtbgn.Value.ToString("yyyy-MM-dd") + "' ";
+                if (dtend.HasValue)
+                    sql1 += " AND [StartTime] <= '" + dtend.Value.ToString("yyyy-MM-dd") + "' "; 
+                if (skipfinish.HasValue)
+                    sql1 += ( skipfinish.Value ? " AND [CompleteTime] IS NULL " : " [CompleteTime] IS NOT NULL ");
+                sb.AppendLine(sql1);
+            }            
 
             sb.Append(@"; SELECT [ID]
                           ,[HID]
@@ -2315,6 +2325,12 @@ namespace achihapi.Utilities
             if (listmode)
             {
                 sb.Append(" WHERE [HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrid + "' ");
+                if (dtbgn.HasValue)
+                    sb.Append(" AND [StartTime] >= '" + dtbgn.Value.ToString("yyyy-MM-dd") + "' ");
+                if (dtend.HasValue)
+                    sb.Append(" AND [StartTime] <= '" + dtend.Value.ToString("yyyy-MM-dd") + "' ");
+                if (skipfinish.HasValue)
+                    sb.Append(skipfinish.Value ? " AND [CompleteTime] IS NULL " : " [CompleteTime] IS NOT NULL ");
                 if (skip.HasValue && top.HasValue)
                     sb.Append(@" ORDER BY (SELECT NULL)
                         OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
@@ -2323,6 +2339,28 @@ namespace achihapi.Utilities
                 sb.Append(" WHERE [ID] = " + id.Value.ToString());
 
             return sb.ToString();
+        }
+        internal static string Event_GetNormalEventByRecurIDString()
+        {
+            return @"SELECT [ID]
+                          ,[HID]
+                          ,[Name]
+                          ,[StartTime]
+                          ,[EndTime]
+                          ,[CompleteTime] 
+                          ,[IsPublic]
+                          ,[Assignee]
+                          ,[RefRecurID]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                           FROM [dbo].[t_event] WHERE [HID] = @HID AND [RefRecurID] =@RECURID";
+        }
+        internal static void Event_BindNormalEventByRecurIDParameters(SqlCommand cmd, Int32 hid, Int32 recurid)
+        {
+            cmd.Parameters.AddWithValue("@HID", hid);
+            cmd.Parameters.AddWithValue("@RECURID", recurid);
         }
         internal static void Event_DB2VM(SqlDataReader reader, EventViewModel vm, Boolean listmode)
         {
@@ -2371,7 +2409,7 @@ namespace achihapi.Utilities
                 ++idx;
         }
 
-        internal static string Event_GetNormalEventInsertString()
+        internal static string Event_GetNormalEventInsertString(Boolean bNeedID = true)
         {
             return @"INSERT INTO [dbo].[t_event]
                        ([HID]
@@ -2396,7 +2434,7 @@ namespace achihapi.Utilities
                        ,@Assignee
                        ,@RefRecurID
                        ,@CREATEDBY
-                       ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
+                       ,@CREATEDAT); " + ( bNeedID ? " SELECT @Identity = SCOPE_IDENTITY();" : "" );
         }
         internal static void Event_BindNormalEventInsertParameters(SqlCommand cmd, EventViewModel vm, String usrName)
         {
@@ -2484,8 +2522,21 @@ namespace achihapi.Utilities
 
         internal static string Event_GetNormalEventDeletionString()
         {
-            return @"DELETE FROM [dbo].[t_event]
-                WHERE <Search Conditions,,>";
+            return @"DELETE FROM [dbo].[t_event] WHERE [HID] = @HID AND [ID] = @ID";
+        }
+        internal static void Event_BindNormalEventDeletionParameters(SqlCommand cmd, Int32 hid, Int32 id)
+        {
+            cmd.Parameters.AddWithValue("@HID", hid);
+            cmd.Parameters.AddWithValue("@ID", id);
+        }
+        internal static string Event_GetNormalEventForRecurDeletionString()
+        {
+            return @"DELETE FROM [dbo].[t_event] WHERE [HID] = @HID AND [RefRecurID] = @RECURID ";
+        }
+        internal static void Event_BindNormalEventForRecurDeletionParameters(SqlCommand cmd, Int32 hid, Int32 recurID)
+        {
+            cmd.Parameters.AddWithValue("@HID", hid);
+            cmd.Parameters.AddWithValue("@RECURID", recurID);
         }
         #endregion
 
@@ -2591,7 +2642,6 @@ namespace achihapi.Utilities
                     ,@Content
                     ,@IsPublic
                     ,@Assignee
-                    ,@RefRecurID
                     ,@CREATEDBY
                     ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
         }
@@ -2645,8 +2695,12 @@ namespace achihapi.Utilities
         }
         internal static string Event_GetRecurEventDeletionString()
         {
-            return @"DELETE FROM [dbo].[t_event_recur]
-                          WHERE <Search Conditions,,>";
+            return @"DELETE FROM [dbo].[t_event_recur] WHERE [HID]= @hid AND [ID] = @id ";
+        }
+        internal static void Event_BindRecurEventDeletionParameters(SqlCommand cmd, Int32 hid, Int32 id)
+        {
+            cmd.Parameters.AddWithValue("@HID", hid);
+            cmd.Parameters.AddWithValue("@ID", id);
         }
         #endregion
 

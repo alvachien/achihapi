@@ -63,7 +63,7 @@ namespace achihapi.Controllers
                             while (reader.Read())
                             {
                                 HomeMemViewModel vm = new HomeMemViewModel();
-                                SqlUtility.HomeMem_DB2VM(reader, vm);
+                                HIHDBUtility.HomeMem_DB2VM(reader, vm);
                                 listVm.Add(vm);
                             }
                         }
@@ -143,7 +143,7 @@ namespace achihapi.Controllers
                     bExist = true;
                     while (reader.Read())
                     {
-                        SqlUtility.HomeMem_DB2VM(reader, vm);
+                        HIHDBUtility.HomeMem_DB2VM(reader, vm);
 
                         // It should return one entry only!
                         // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
@@ -216,7 +216,7 @@ namespace achihapi.Controllers
                 strSQL += " ;";
             }
 
-            strSQL += SqlUtility.getHomeMemQueryString(hid);
+            strSQL += HIHDBUtility.getHomeMemQueryString(hid);
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {

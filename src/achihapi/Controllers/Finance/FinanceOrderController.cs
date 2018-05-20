@@ -308,7 +308,7 @@ namespace achihapi.Controllers
                     // Now go ahead for the creating
                     SqlTransaction tran = conn.BeginTransaction();
 
-                    queryString = SqlUtility.GetFinOrderInsertString();
+                    queryString = HIHDBUtility.GetFinOrderInsertString();
 
                     try
                     {
@@ -316,7 +316,7 @@ namespace achihapi.Controllers
                         {
                             Transaction = tran
                         };
-                        SqlUtility.BindFinOrderInsertParameter(cmd, vm, usrName);
+                        HIHDBUtility.BindFinOrderInsertParameter(cmd, vm, usrName);
                         SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                         idparam.Direction = ParameterDirection.Output;
 
@@ -329,13 +329,13 @@ namespace achihapi.Controllers
                         // Then, creating the srules
                         foreach (FinanceOrderSRuleUIViewModel suivm in vm.SRuleList)
                         {
-                            queryString = SqlUtility.GetFinOrderSRuleInsertString();
+                            queryString = HIHDBUtility.GetFinOrderSRuleInsertString();
 
                             SqlCommand cmd2 = new SqlCommand(queryString, conn)
                             {
                                 Transaction = tran
                             };
-                            SqlUtility.BindFinOrderSRuleInsertParameter(cmd2, suivm, nNewID);
+                            HIHDBUtility.BindFinOrderSRuleInsertParameter(cmd2, suivm, nNewID);
                             await cmd2.ExecuteNonQueryAsync();
 
                             cmd2.Dispose();
@@ -478,7 +478,7 @@ namespace achihapi.Controllers
                     // Now go ahead for the creating
                     SqlTransaction tran = conn.BeginTransaction();
 
-                    queryString = SqlUtility.GetFinOrderUpdateString();
+                    queryString = HIHDBUtility.GetFinOrderUpdateString();
 
                     try
                     {
@@ -486,7 +486,7 @@ namespace achihapi.Controllers
                         {
                             Transaction = tran
                         };
-                        SqlUtility.BindFinOrderUpdateParameter(cmd, vm, usrName);
+                        HIHDBUtility.BindFinOrderUpdateParameter(cmd, vm, usrName);
 
                         Int32 nRst = await cmd.ExecuteNonQueryAsync();
 
@@ -494,12 +494,12 @@ namespace achihapi.Controllers
                         cmd = null;
 
                         // Then, delete existing srules
-                        queryString = SqlUtility.GetFinOrderSRuleDeleteString();
+                        queryString = HIHDBUtility.GetFinOrderSRuleDeleteString();
                         cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        SqlUtility.BindFinOrderSRuleDeleteParameter(cmd, id);
+                        HIHDBUtility.BindFinOrderSRuleDeleteParameter(cmd, id);
                         await cmd.ExecuteNonQueryAsync();
                         cmd.Dispose();
                         cmd = null;
@@ -507,12 +507,12 @@ namespace achihapi.Controllers
                         // Then, creating the srules
                         foreach (FinanceOrderSRuleUIViewModel suivm in vm.SRuleList)
                         {
-                            queryString = SqlUtility.GetFinOrderSRuleInsertString();
+                            queryString = HIHDBUtility.GetFinOrderSRuleInsertString();
                             SqlCommand cmd2 = new SqlCommand(queryString, conn)
                             {
                                 Transaction = tran
                             };
-                            SqlUtility.BindFinOrderSRuleInsertParameter(cmd2, suivm, vm.ID);
+                            HIHDBUtility.BindFinOrderSRuleInsertParameter(cmd2, suivm, vm.ID);
                             await cmd2.ExecuteNonQueryAsync();
 
                             cmd2.Dispose();

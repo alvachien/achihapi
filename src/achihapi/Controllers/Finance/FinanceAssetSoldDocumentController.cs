@@ -51,7 +51,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.getFinanceDocAssetQueryString(id, false, hid);
+                queryString = HIHDBUtility.getFinanceDocAssetQueryString(id, false, hid);
 
                 await conn.OpenAsync();
 
@@ -71,7 +71,7 @@ namespace achihapi.Controllers
                 // Header
                 while (reader.Read())
                 {
-                    SqlUtility.FinDocHeader_DB2VM(reader, vm);
+                    HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
                 }
                 await reader.NextResultAsync();
 
@@ -79,7 +79,7 @@ namespace achihapi.Controllers
                 while (reader.Read())
                 {
                     FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                    SqlUtility.FinDocItem_DB2VM(reader, itemvm);
+                    HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
 
                     vm.Items.Add(itemvm);
                 }
@@ -90,9 +90,9 @@ namespace achihapi.Controllers
                 {
                     FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
                     Int32 aidx = 0;
-                    aidx = SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+                    aidx = HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
                     vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
-                    SqlUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
+                    HIHDBUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
                     vm.AccountVM = vmAccount;
                 }
                 await reader.NextResultAsync();
@@ -209,13 +209,13 @@ namespace achihapi.Controllers
                 try
                 {
                     // First, craete the doc header => nNewDocID
-                    queryString = SqlUtility.GetFinDocHeaderInsertString();
+                    queryString = HIHDBUtility.GetFinDocHeaderInsertString();
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
 
-                    SqlUtility.BindFinDocHeaderInsertParameter(cmd, vm, usrName);
+                    HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -227,12 +227,12 @@ namespace achihapi.Controllers
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
-                        queryString = SqlUtility.GetFinDocItemInsertString();
+                        queryString = HIHDBUtility.GetFinDocItemInsertString();
                         SqlCommand cmd2 = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        SqlUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
+                        HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
 
                         await cmd2.ExecuteNonQueryAsync();
 
@@ -245,11 +245,11 @@ namespace achihapi.Controllers
                             // Create tags
                             foreach (var term in ivm.TagTerms)
                             {
-                                queryString = SqlUtility.GetTagInsertString();
+                                queryString = HIHDBUtility.GetTagInsertString();
 
                                 cmd2 = new SqlCommand(queryString, conn, tran);
 
-                                SqlUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
+                                HIHDBUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
 
                                 await cmd2.ExecuteNonQueryAsync();
 
@@ -260,7 +260,7 @@ namespace achihapi.Controllers
                     }
 
                     // Third, update the Account's status
-                    queryString = SqlUtility.GetFinanceAccountStatusUpdateString();
+                    queryString = HIHDBUtility.GetFinanceAccountStatusUpdateString();
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
@@ -268,19 +268,19 @@ namespace achihapi.Controllers
 
                     // Close this account
                     vm.AccountVM.Status = FinanceAccountStatus.Closed;
-                    SqlUtility.BindFinAccountStatusUpdateParameter(cmd, vm.AccountVM, usrName);
+                    HIHDBUtility.BindFinAccountStatusUpdateParameter(cmd, vm.AccountVM, usrName);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
 
                     // Fourth, Update the Asset account part for sold doc
-                    queryString = SqlUtility.GetFinanceAccountAssetUpdateSoldDocString();
+                    queryString = HIHDBUtility.GetFinanceAccountAssetUpdateSoldDocString();
                     //vm.AccountVM.ExtraInfo_AS.RefDocForSold = nNewDocID;
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
-                    SqlUtility.BindFinAccountAssetUpdateSoldDocParameter(cmd, nNewDocID, vm.AccountVM.ID);
+                    HIHDBUtility.BindFinAccountAssetUpdateSoldDocParameter(cmd, nNewDocID, vm.AccountVM.ID);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
@@ -389,7 +389,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.GetFinDocHeaderExistCheckString(id);
+                queryString = HIHDBUtility.GetFinDocHeaderExistCheckString(id);
 
                 await conn.OpenAsync();
 
@@ -420,7 +420,7 @@ namespace achihapi.Controllers
                     //// Header
                     //while (reader.Read())
                     //{
-                    //    SqlUtility.FinDocHeader_DB2VM(reader, vm);
+                    //    HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
                     //}
                     //reader.NextResult();
 
@@ -428,7 +428,7 @@ namespace achihapi.Controllers
                     //while (reader.Read())
                     //{
                     //    FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                    //    SqlUtility.FinDocItem_DB2VM(reader, itemvm);
+                    //    HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
 
                     //    vm.Items.Add(itemvm);
                     //}
@@ -439,10 +439,10 @@ namespace achihapi.Controllers
                     //{
                     //    FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
                     //    Int32 aidx = 0;
-                    //    aidx = SqlUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+                    //    aidx = HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
 
                     //    vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
-                    //    SqlUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
+                    //    HIHDBUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
 
                     //    vm.AccountVM = vmAccount;
                     //}
@@ -465,7 +465,7 @@ namespace achihapi.Controllers
                     // Optimized logic go ahead
                     if (headTranDateUpdate || headDespUpdate)
                     {
-                        queryString = SqlUtility.GetFinDocHeader_PatchString(headTranDateUpdate, headDespUpdate);
+                        queryString = HIHDBUtility.GetFinDocHeader_PatchString(headTranDateUpdate, headDespUpdate);
                         cmd = new SqlCommand(queryString, conn);
                         if (headTranDateUpdate)
                             cmd.Parameters.AddWithValue("@TRANDATE", headTranDate);

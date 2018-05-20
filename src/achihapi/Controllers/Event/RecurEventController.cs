@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Data.SqlClient;
@@ -52,7 +53,7 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                queryString = SqlUtility.Event_GetRecurEventQueryString(true, usrName, hid, skip, top);
+                queryString = HIHDBUtility.Event_GetRecurEventQueryString(true, usrName, hid, skip, top);
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -73,7 +74,7 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             RecurEventViewModel vm = new RecurEventViewModel();
-                            SqlUtility.Event_RecurDB2VM(reader, vm, true);
+                            HIHDBUtility.Event_RecurDB2VM(reader, vm, true);
                             listVm.Add(vm);
                         }
                     }
@@ -131,7 +132,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            RecurEventViewModel vm = new RecurEventViewModel();
+            RecurUIEventViewModel vm = new RecurUIEventViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -151,7 +152,7 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                queryString = SqlUtility.Event_GetRecurEventQueryString(false, usrName, hid, null, null, id);
+                queryString = HIHDBUtility.Event_GetRecurEventQueryString(false, usrName, hid, null, null, id);
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -160,7 +161,26 @@ namespace achihapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        SqlUtility.Event_RecurDB2VM(reader, vm, false);
+                        HIHDBUtility.Event_RecurDB2VM(reader, vm, false);
+                    }
+                }
+
+                reader.Close();
+                cmd.Dispose();
+                cmd = null;
+
+                queryString = HIHDBUtility.Event_GetNormalEventByRecurIDString();
+                cmd = new SqlCommand(queryString, conn);
+                HIHDBUtility.Event_BindNormalEventForRecurDeletionParameters(cmd, hid, id);
+                reader = await cmd.ExecuteReaderAsync();
+
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        var vmevent = new EventViewModel();
+                        HIHDBUtility.Event_DB2VM(reader, vmevent, true);
+                        vm.EventList.Add(vmevent);
                     }
                 }
             }
@@ -226,6 +246,17 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
+            // Get the simulate items
+            EventGenerationInputViewModel datInput = new EventGenerationInputViewModel();
+            datInput.Name = vm.Name;
+            datInput.RptType = vm.RptType;
+            datInput.StartTimePoint = vm.StartTimePoint;
+            datInput.EndTimePoint = vm.EndTimePoint;
+            List<EventGenerationResultViewModel> listRsts = EventUtility.GenerateEvents(datInput);
+            if (listRsts.Count <= 0)
+                return BadRequest("Failed to generate recur items");
+
+            SqlTransaction tran = null;
             try
             {
                 queryString = @"SELECT [ID]
@@ -262,16 +293,45 @@ namespace achihapi.Controllers
                     cmd.Dispose();
                     cmd = null;
 
+                    tran = conn.BeginTransaction();
                     // Now go ahead for the creating
-                    queryString = SqlUtility.Event_GetRecurEventInsertString();
+                    queryString = HIHDBUtility.Event_GetRecurEventInsertString();
 
                     cmd = new SqlCommand(queryString, conn);
-                    SqlUtility.Event_BindRecurEventInsertParameters(cmd, vm, usrName);
+                    cmd.Transaction = tran;
+                    HIHDBUtility.Event_BindRecurEventInsertParameters(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
                     Int32 nRst = await cmd.ExecuteNonQueryAsync();
                     nNewID = (Int32)idparam.Value;
+
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // Go for the recur item creation
+                    foreach(var gitem in listRsts)
+                    {
+                        queryString = HIHDBUtility.Event_GetNormalEventInsertString(false);
+                        cmd = new SqlCommand(queryString, conn);
+                        cmd.Transaction = tran;
+                        var vmEvent = new EventViewModel();
+                        vmEvent.EndTimePoint = gitem.EndTimePoint;
+                        vmEvent.StartTimePoint = gitem.StartTimePoint;
+                        vmEvent.RefRecurrID = nNewID;
+                        vmEvent.IsPublic = vm.IsPublic;
+                        vmEvent.Name = gitem.Name;
+                        vmEvent.HID = vm.HID;
+                        vmEvent.Content = vm.Content;
+                        vmEvent.Assignee = vm.Assignee;
+                        HIHDBUtility.Event_BindNormalEventInsertParameters(cmd, vmEvent, usrName);
+                        await cmd.ExecuteNonQueryAsync();
+
+                        cmd.Dispose();
+                        cmd = null;
+                    }
+
+                    tran.Commit();
                 }
             }
             catch (Exception exp)
@@ -279,6 +339,13 @@ namespace achihapi.Controllers
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 bError = true;
                 strErrMsg = exp.Message;
+
+                if (tran != null)
+                {
+                    tran.Rollback();
+                    tran.Dispose();
+                    tran = null;
+                }
             }
             finally
             {
@@ -323,8 +390,91 @@ namespace achihapi.Controllers
 
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id, [FromQuery]Int32 hid = 0)
         {
+            if (hid <= 0)
+                return BadRequest("HID is missing");
+
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            SqlTransaction tran = null;
+            try
+            {
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                // Step 1. Delete events for recur
+                tran = conn.BeginTransaction();
+
+                queryString = HIHDBUtility.Event_GetNormalEventForRecurDeletionString();
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Transaction = tran;
+                HIHDBUtility.Event_BindNormalEventForRecurDeletionParameters(cmd, hid, id);
+                await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
+                cmd = null;
+
+                // Step 2. Delete recur item
+                queryString = HIHDBUtility.Event_GetRecurEventDeletionString();
+                cmd = new SqlCommand(queryString, conn);
+                cmd.Transaction = tran;
+                HIHDBUtility.Event_BindRecurEventDeletionParameters(cmd, hid, id);
+                await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
+                cmd = null;
+
+                tran.Commit();
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                strErrMsg = exp.Message;
+                bError = true;
+
+                if (tran != null)
+                {
+                    tran.Rollback();
+                    tran.Dispose();
+                    tran = null;
+                }
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                    conn = null;
+                }
+            }
+
+            if (bError)
+                return StatusCode(500, strErrMsg);
+
+            return Ok();
         }
     }
 }

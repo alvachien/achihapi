@@ -75,7 +75,7 @@ namespace achihapi.Controllers
 
                 if (listVMs.TotalCount > 0)
                 {
-                    queryString = SqlUtility.getFinanceDocListQueryString();
+                    queryString = HIHDBUtility.getFinanceDocListQueryString();
                     queryString += @" WHERE [HID] = @hid ";
                     if (dtbgn.HasValue)
                         queryString += " AND [TRANDATE] >= @dtbgn ";
@@ -94,7 +94,7 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             FinanceDocumentUIViewModel avm = new FinanceDocumentUIViewModel();
-                            SqlUtility.FinDocList_DB2VM(reader, avm);
+                            HIHDBUtility.FinDocList_DB2VM(reader, avm);
 
                             listVMs.Add(avm);
                         }
@@ -156,7 +156,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = SqlUtility.getFinanceDocQueryString(id, hid);
+                queryString = HIHDBUtility.getFinanceDocQueryString(id, hid);
 
                 await conn.OpenAsync();
 
@@ -176,7 +176,7 @@ namespace achihapi.Controllers
                 // Header
                 while (reader.Read())
                 {
-                    SqlUtility.FinDocHeader_DB2VM(reader, vm);
+                    HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
                 }
                 reader.NextResult();
 
@@ -184,7 +184,7 @@ namespace achihapi.Controllers
                 while (reader.Read())
                 {
                     FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                    SqlUtility.FinDocItem_DB2VM(reader, itemvm);
+                    HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
 
                     vm.Items.Add(itemvm);
                 }
@@ -294,7 +294,7 @@ namespace achihapi.Controllers
                 SqlCommand cmd = null;
 
                 // Now go ahead for the creating
-                queryString = SqlUtility.GetFinDocHeaderInsertString();
+                queryString = HIHDBUtility.GetFinDocHeaderInsertString();
 
                 try
                 {
@@ -303,7 +303,7 @@ namespace achihapi.Controllers
                         Transaction = tran
                     };
 
-                    SqlUtility.BindFinDocHeaderInsertParameter(cmd, vm, usrName);
+                    HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vm, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -313,13 +313,13 @@ namespace achihapi.Controllers
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
-                        queryString = SqlUtility.GetFinDocItemInsertString();
+                        queryString = HIHDBUtility.GetFinDocItemInsertString();
 
                         SqlCommand cmd2 = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        SqlUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
+                        HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
 
                         await cmd2.ExecuteNonQueryAsync();
 
@@ -332,11 +332,11 @@ namespace achihapi.Controllers
                             // Create tags
                             foreach(var term in ivm.TagTerms)
                             {
-                                queryString = SqlUtility.GetTagInsertString();
+                                queryString = HIHDBUtility.GetTagInsertString();
 
                                 cmd2 = new SqlCommand(queryString, conn, tran);
 
-                                SqlUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
+                                HIHDBUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
 
                                 await cmd2.ExecuteNonQueryAsync();
 
@@ -446,7 +446,7 @@ namespace achihapi.Controllers
                 SqlCommand cmd = null;
 
                 // Now go ahead for the updating
-                queryString = SqlUtility.GetFinDocHeaderUpdateString();
+                queryString = HIHDBUtility.GetFinDocHeaderUpdateString();
 
                 try
                 {
@@ -456,7 +456,7 @@ namespace achihapi.Controllers
                     };
 
                     // Step 1, Update Header
-                    SqlUtility.BindFinDocHeaderUpdateParameter(cmd, vm, usrName);
+                    HIHDBUtility.BindFinDocHeaderUpdateParameter(cmd, vm, usrName);
                     await cmd.ExecuteNonQueryAsync();
 
                     // Step 2, Delete all items
@@ -469,13 +469,13 @@ namespace achihapi.Controllers
                     // Step 3 , Re-create the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
-                        queryString = SqlUtility.GetFinDocItemInsertString();
+                        queryString = HIHDBUtility.GetFinDocItemInsertString();
 
                         SqlCommand cmd2 = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        SqlUtility.BindFinDocItemInsertParameter(cmd2, ivm, vm.ID);
+                        HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, vm.ID);
 
                         await cmd2.ExecuteNonQueryAsync();
 
@@ -483,9 +483,9 @@ namespace achihapi.Controllers
                         cmd2 = null;
 
                         // Delete tag if exist
-                        queryString = SqlUtility.GetTagDeleteString(true);
+                        queryString = HIHDBUtility.GetTagDeleteString(true);
                         cmd2 = new SqlCommand(queryString, conn, tran);
-                        SqlUtility.BindTagDeleteParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, vm.ID, ivm.ItemID);
+                        HIHDBUtility.BindTagDeleteParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, vm.ID, ivm.ItemID);
                         await cmd2.ExecuteNonQueryAsync();
                         cmd2.Dispose();
                         cmd2 = null;
@@ -496,10 +496,10 @@ namespace achihapi.Controllers
                             // Create tags
                             foreach (var term in ivm.TagTerms)
                             {
-                                queryString = SqlUtility.GetTagInsertString();
+                                queryString = HIHDBUtility.GetTagInsertString();
 
                                 cmd2 = new SqlCommand(queryString, conn, tran);
-                                SqlUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, vm.ID, term, ivm.ItemID);
+                                HIHDBUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, vm.ID, term, ivm.ItemID);
 
                                 await cmd2.ExecuteNonQueryAsync();
 

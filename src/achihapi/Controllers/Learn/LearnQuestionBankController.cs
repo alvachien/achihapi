@@ -384,10 +384,10 @@ namespace achihapi.Controllers
                 // Tag
                 foreach(var tag in vm.TagTerms)
                 {
-                    queryString = SqlUtility.GetTagInsertString();
+                    queryString = HIHDBUtility.GetTagInsertString();
 
                     cmd = new SqlCommand(queryString, conn, tran);
-                    SqlUtility.BindTagInsertParameter(cmd, vm.HID, HIHTagTypeEnum.LearnQuestionBank, nNewID, tag);
+                    HIHDBUtility.BindTagInsertParameter(cmd, vm.HID, HIHTagTypeEnum.LearnQuestionBank, nNewID, tag);
 
                     await cmd.ExecuteNonQueryAsync();
 
@@ -552,9 +552,9 @@ namespace achihapi.Controllers
                 }
 
                 // Tag
-                queryString = SqlUtility.GetTagDeleteString();
+                queryString = HIHDBUtility.GetTagDeleteString();
                 cmd = new SqlCommand(queryString, conn, tran);
-                SqlUtility.BindTagDeleteParameter(cmd, vm.HID, HIHTagTypeEnum.LearnQuestionBank, id);
+                HIHDBUtility.BindTagDeleteParameter(cmd, vm.HID, HIHTagTypeEnum.LearnQuestionBank, id);
 
                 await cmd.ExecuteNonQueryAsync();
                 cmd.Dispose();
@@ -562,10 +562,10 @@ namespace achihapi.Controllers
 
                 foreach (var tag in vm.TagTerms)
                 {
-                    queryString = SqlUtility.GetTagInsertString();
+                    queryString = HIHDBUtility.GetTagInsertString();
 
                     cmd = new SqlCommand(queryString, conn, tran);
-                    SqlUtility.BindTagInsertParameter(cmd, vm.HID, HIHTagTypeEnum.LearnQuestionBank, id, tag);
+                    HIHDBUtility.BindTagInsertParameter(cmd, vm.HID, HIHTagTypeEnum.LearnQuestionBank, id, tag);
 
                     await cmd.ExecuteNonQueryAsync();
                 }

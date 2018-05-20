@@ -48,11 +48,11 @@ namespace achihapi.Controllers
             try
             {
                 if (acntid.HasValue)
-                    queryString = SqlUtility.getFinDocItemAccountView(acntid.Value, top, skip);
+                    queryString = HIHDBUtility.getFinDocItemAccountView(acntid.Value, top, skip);
                 else if (ccid.HasValue)
-                    queryString = SqlUtility.getFinDocItemControlCenterView(ccid.Value, top, skip);
+                    queryString = HIHDBUtility.getFinDocItemControlCenterView(ccid.Value, top, skip);
                 else if (ordid.HasValue)
-                    queryString = SqlUtility.getFinDocItemOrderView(ordid.Value, top, skip);
+                    queryString = HIHDBUtility.getFinDocItemOrderView(ordid.Value, top, skip);
 
                 await conn.OpenAsync();
 
@@ -76,7 +76,7 @@ namespace achihapi.Controllers
                         while (reader.Read())
                         {
                             FinanceDocumentItemWithBalanceUIViewModel avm = new FinanceDocumentItemWithBalanceUIViewModel();
-                            SqlUtility.FinDocItemWithBalanceList_DB2VM(reader, avm);
+                            HIHDBUtility.FinDocItemWithBalanceList_DB2VM(reader, avm);
 
                             listVMs.Add(avm);
                         }
