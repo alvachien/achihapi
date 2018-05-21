@@ -31,19 +31,18 @@ namespace achihapi.Controllers
             }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
-
-            List<FinanceDocumentItemWithBalanceUIViewModel> listVMs = new List<FinanceDocumentItemWithBalanceUIViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
-            String queryString = "";
-            Boolean bError = false;
-            String strErrMsg = "";
-
             if (!acntid.HasValue
                 && !ccid.HasValue
                 && !ordid.HasValue)
             {
                 return BadRequest("Choose one of source: Account, Control Center or order!");
             }
+
+            FinanceDocumentItemWithBalanceUIListViewModel listVMs = new FinanceDocumentItemWithBalanceUIListViewModel();
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bError = false;
+            String strErrMsg = "";
 
             try
             {
@@ -69,19 +68,28 @@ namespace achihapi.Controllers
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                while (reader.HasRows)
+                // 1. Total amount
+                if (reader.HasRows)
                 {
-                    if (reader.HasRows)
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            FinanceDocumentItemWithBalanceUIViewModel avm = new FinanceDocumentItemWithBalanceUIViewModel();
-                            HIHDBUtility.FinDocItemWithBalanceList_DB2VM(reader, avm);
-
-                            listVMs.Add(avm);
-                        }
+                        listVMs.TotalCount = reader.GetInt32(0);
+                        break;
                     }
+
                     reader.NextResult();
+                }
+
+                // 2. Items
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        FinanceDocumentItemWithBalanceUIViewModel avm = new FinanceDocumentItemWithBalanceUIViewModel();
+                        HIHDBUtility.FinDocItemWithBalanceList_DB2VM(reader, avm);
+
+                        listVMs.Add(avm);
+                    }
                 }
             }
             catch (Exception exp)

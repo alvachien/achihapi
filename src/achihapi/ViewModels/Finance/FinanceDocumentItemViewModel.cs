@@ -40,12 +40,29 @@ namespace achihapi.ViewModels
         public String DocDesp { get; set; }
     }
 
-    public class FinanceDocumentItemWithBalanceUIViewModel : FinanceDocumentItemUIViewModel
+    public sealed class FinanceDocumentItemWithBalanceUIViewModel : FinanceDocumentItemUIViewModel
     {
         public Boolean TranType_Exp { get; set; }
         public String TranCurr { get; set; }
         public Decimal TranAmount_Org { get; set; }
         public Decimal TranAmount_LC { get; set; }
         public Decimal Balance { get; set; }
+    }
+
+    public sealed class FinanceDocumentItemWithBalanceUIListViewModel
+    {
+        // Runtime information
+        public Int32 TotalCount { get; set; }
+        public List<FinanceDocumentItemWithBalanceUIViewModel> ContentList = new List<FinanceDocumentItemWithBalanceUIViewModel>();
+
+        public void Add(FinanceDocumentItemWithBalanceUIViewModel tObj)
+        {
+            this.ContentList.Add(tObj);
+        }
+
+        public List<FinanceDocumentItemWithBalanceUIViewModel>.Enumerator GetEnumerator()
+        {
+            return this.ContentList.GetEnumerator();
+        }
     }
 }

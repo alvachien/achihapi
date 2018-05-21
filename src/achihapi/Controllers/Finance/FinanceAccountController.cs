@@ -68,36 +68,26 @@ namespace achihapi.Controllers
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                Int32 nRstBatch = 0;
-                while (reader.HasRows)
+                // 1. Count
+                if (reader.HasRows)
                 {
-                    if (nRstBatch == 0)
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            listVm.TotalCount = reader.GetInt32(0);
-                            //if (listVm.TotalCount > top)
-                            //{
-                            //    listVm.TotalCount = top;
-                            //}
-                            break;
-                        }
+                        listVm.TotalCount = reader.GetInt32(0);
+                        break;
                     }
-                    else
-                    {
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                FinanceAccountUIViewModel vm = new FinanceAccountUIViewModel();
-                                HIHDBUtility.FinAccount_DB2VM(reader, vm);
-                                listVm.Add(vm);
-                            }
-                        }
-                    }
-                    ++nRstBatch;
+                    await reader.NextResultAsync();
+                }
 
-                    reader.NextResult();
+                // 2. Records
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        FinanceAccountUIViewModel vm = new FinanceAccountUIViewModel();
+                        HIHDBUtility.FinAccount_DB2VM(reader, vm);
+                        listVm.Add(vm);
+                    }
                 }
             }
             catch (Exception exp)

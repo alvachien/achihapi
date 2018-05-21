@@ -1439,7 +1439,9 @@ namespace achihapi.Utilities
 
         internal static String getFinDocItemSearchView(String strWhere, Int32? top = null, Int32? skip = null)
         {
-            String strRst = @"SELECT [DOCID],
+            String strRst = @" SELECT COUNT(*) FROM [dbo].[V_FIN_DOCUMENT_ITEM] "
+                    + (String.IsNullOrEmpty(strWhere) ? "" : (" WHERE " + strWhere))
+                    + @"; SELECT [DOCID],
                     [ITEMID],
 		            [TRANDATE],
 		            [DOCDESP],
@@ -1500,8 +1502,8 @@ namespace achihapi.Utilities
                 itemvm.Desp = reader.GetString(idx++);
             else
                 ++idx;
-    }
-    #endregion
+        }
+        #endregion
 
         #region Finance Template Doc - ADP
         internal static string getFinanceDocADPListQueryString()
@@ -1933,8 +1935,8 @@ namespace achihapi.Utilities
         #region Finance Document item - Account View
         internal static String getFinDocItemAccountView(Int32 nAcntID, Int32? top = null, Int32? skip = null)
         {
-            String strRst = @"WITH A2 AS (
-                    SELECT
+            String strRst = @"SELECT COUNT(*) FROM [dbo].[v_fin_document_item1] WHERE [ACCOUNTID] = " + nAcntID.ToString() 
+                + @"; WITH A2 AS (SELECT
 	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
 	                      ,[DOCID]
                           ,[ITEMID]
@@ -2027,8 +2029,8 @@ namespace achihapi.Utilities
         #region Finance Document item - Control center View
         internal static String getFinDocItemControlCenterView(Int32 nCCID, Int32? top = null, Int32? skip = null)
         {
-            String strRst = @"WITH A2 AS (
-                    SELECT
+            String strRst = @"SELECT COUNT(*) FROM [dbo].[v_fin_document_item1] WHERE [CONTROLCENTERID] = " + nCCID.ToString() 
+                    + @"; WITH A2 AS ( SELECT
 	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
 	                      ,[DOCID]
                           ,[ITEMID]
@@ -2082,8 +2084,8 @@ namespace achihapi.Utilities
         #region Finance Document item - Control center View
         internal static String getFinDocItemOrderView(Int32 nOrderID, Int32? top = null, Int32? skip = null)
         {
-            String strRst = @"WITH A2 AS (
-                    SELECT
+            String strRst = @"SELECT COUNT(*) FROM [dbo].[v_fin_document_item1] WHERE [ORDERID] = " + nOrderID.ToString()  
+                      + @"; WITH A2 AS ( SELECT
 	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
 	                      ,[DOCID]
                           ,[ITEMID]

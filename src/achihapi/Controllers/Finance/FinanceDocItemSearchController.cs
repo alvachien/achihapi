@@ -44,7 +44,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            List<FinanceDocItemSearchResultViewModel> listVMs = new List<FinanceDocItemSearchResultViewModel>();
+            FinanceDocItemSearchResultListViewModel listVMs = new FinanceDocItemSearchResultListViewModel();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -79,19 +79,27 @@ namespace achihapi.Controllers
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                while (reader.HasRows)
+                // 1. Count
+                if (reader.HasRows)
                 {
-                    if (reader.HasRows)
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            FinanceDocItemSearchResultViewModel avm = new FinanceDocItemSearchResultViewModel();
-                            HIHDBUtility.FinDocItem_SearchView2VM(reader, avm);
-
-                            listVMs.Add(avm);
-                        }
+                        listVMs.TotalCount = reader.GetInt32(0);
+                        break;
                     }
                     reader.NextResult();
+                }
+
+                // 2. Items
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        FinanceDocItemSearchResultViewModel avm = new FinanceDocItemSearchResultViewModel();
+                        HIHDBUtility.FinDocItem_SearchView2VM(reader, avm);
+
+                        listVMs.Add(avm);
+                    }
                 }
             }
             catch (Exception exp)

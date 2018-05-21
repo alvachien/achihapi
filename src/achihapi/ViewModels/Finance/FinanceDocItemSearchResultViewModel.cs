@@ -1,9 +1,10 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace achihapi.ViewModels
 {
-    public class FinanceDocItemSearchResultViewModel
+    public sealed class FinanceDocItemSearchResultViewModel
     {
         public Int32 DocID { get; set; }
         [Required]
@@ -28,5 +29,22 @@ namespace achihapi.ViewModels
         public Int32 OrderID { get; set; }
         [StringLength(45)]
         public String Desp { get; set; }
+    }
+
+    public sealed class FinanceDocItemSearchResultListViewModel
+    {
+        // Runtime information
+        public Int32 TotalCount { get; set; }
+        public List<FinanceDocItemSearchResultViewModel> ContentList = new List<FinanceDocItemSearchResultViewModel>();
+
+        public void Add(FinanceDocItemSearchResultViewModel tObj)
+        {
+            this.ContentList.Add(tObj);
+        }
+
+        public List<FinanceDocItemSearchResultViewModel>.Enumerator GetEnumerator()
+        {
+            return this.ContentList.GetEnumerator();
+        }
     }
 }
