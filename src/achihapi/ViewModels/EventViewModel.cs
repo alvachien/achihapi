@@ -125,4 +125,25 @@ namespace achihapi.ViewModels
         [StringLength(50)]
         public String Comment { get; set; }
     }
+
+    // Habit detail with checkin
+    public sealed class EventHabitDetailWithCheckInViewModel
+    {
+        [Required]
+        public Int32 HID { get; set; }
+        [Required]
+        public Int32 HabitID { get; set; }
+        public Int32 ExpectAmount { get; set; }
+        public Int32 CheckInAmount { get; set; }
+        public Int32 AverageScore { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        [Required]
+        [StringLength(50)]
+        public String Name { get; set; }
+        public String Content { get; set; }
+        public Boolean IsPublic { get; set; }
+        [StringLength(40)]
+        public String Assignee { get; set; }
+    }
 }

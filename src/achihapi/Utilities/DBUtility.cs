@@ -2706,6 +2706,46 @@ namespace achihapi.Utilities
         }
         #endregion
 
+        #region Habit Event (with detail, check in statistics)
+        internal static string Event_GetHabitDetailWithCheckInSearchString()
+        {
+            return @"SELECT [HID], [HabitID], [ExpAmount], [CHECKINAMT], [ASCORE], [StartDate], [EndDate], [Name],[Assignee],[IsPublic]
+	                    FROM [v_event_habitdetail_withcheckin] as a
+	                    WHERE (a.CHECKINAMT IS NULL OR a.CHECKINAMT < a.ExpAmount)
+                        AND [HID] = @HID
+	                    AND ( ( a.EndDate >= @STARTDATE AND a.ENDDATE < @ENDDATE) OR ( a.StartDate < @ENDDATE AND a.StartDate >= @STARTDATE ) )";
+                        //ORDER BY (SELECT NULL)
+                        //OFFSET " + skip.ToString() + " ROWS FETCH NEXT " + top.ToString() + " ROWS ONLY";
+        }
+        internal static void Event_BindHabitDetailWithCheckInSearchParameter(SqlCommand cmd, Int32 hid, DateTime startdate, DateTime enddate)
+        {
+            cmd.Parameters.AddWithValue("@HID", hid);
+            cmd.Parameters.AddWithValue("@ENDDATE", enddate);
+            cmd.Parameters.AddWithValue("@STARTDATE", startdate);
+        }
+        internal static void Event_HabitDetailWithCheckInDB2VM(SqlDataReader reader, EventHabitDetailWithCheckInViewModel vm)
+        {
+            vm.HID = reader.GetInt32(0);
+            vm.HabitID = reader.GetInt32(1);
+            vm.ExpectAmount = reader.GetInt32(2);
+            if (!reader.IsDBNull(3))
+                vm.CheckInAmount = reader.GetInt32(3);
+            else
+                vm.CheckInAmount = 0;
+            if (!reader.IsDBNull(4))
+                vm.AverageScore = reader.GetInt32(4);
+            else
+                vm.AverageScore = 0;
+            vm.StartDate = reader.GetDateTime(5);
+            vm.EndDate = reader.GetDateTime(6);
+            vm.Name = reader.GetString(7);
+            if (!reader.IsDBNull(8))
+                vm.Assignee = reader.GetString(8);
+            if (!reader.IsDBNull(9))
+                vm.IsPublic = reader.GetBoolean(9);
+        }
+        #endregion
+
         #region Event habit
         internal static string Event_GetEventHabitQueryString(Boolean listmode, String usrid, Int32? hid = null, Int32? skip = null, Int32? top = null, Int32? id = null)
         {

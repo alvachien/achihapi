@@ -13,13 +13,13 @@ using System.Data;
 namespace achihapi.Controllers
 {
     [Produces("application/json")]
-    [Route("api/RecurEventSearch")]
+    [Route("api/HabitEventDetailWithCheckIn")]
     [Authorize]
-    public class RecurEventSearchController : Controller
+    public class HabitEventDetailWithCheckInController : Controller
     {
         // GET: api/RecurEventSearch
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, DateTime dtbgn, DateTime dtend)
         {
             if (hid <= 0)
                 return BadRequest("HID is missing");
@@ -35,7 +35,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            BaseListViewModel<RecurEventViewModel> listVm = new BaseListViewModel<RecurEventViewModel>();
+            List<EventHabitDetailWithCheckInViewModel> listVm = new List<EventHabitDetailWithCheckInViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
@@ -55,35 +55,16 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
-                queryString = HIHDBUtility.Event_GetRecurEventQueryString(true, usrName, hid, skip, top);
+                queryString = HIHDBUtility.Event_GetHabitDetailWithCheckInSearchString();
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
+                HIHDBUtility.Event_BindHabitDetailWithCheckInSearchParameter(cmd, hid, dtbgn, dtend);
                 SqlDataReader reader = cmd.ExecuteReader();
-
-                Int32 nRstBatch = 0;
-                while (reader.HasRows)
+                while (reader.Read())
                 {
-                    if (nRstBatch == 0)
-                    {
-                        while (reader.Read())
-                        {
-                            listVm.TotalCount = reader.GetInt32(0);
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        while (reader.Read())
-                        {
-                            RecurEventViewModel vm = new RecurEventViewModel();
-                            HIHDBUtility.Event_RecurDB2VM(reader, vm, true);
-                            listVm.Add(vm);
-                        }
-                    }
-
-                    ++nRstBatch;
-
-                    reader.NextResult();
+                    EventHabitDetailWithCheckInViewModel vm = new EventHabitDetailWithCheckInViewModel();
+                    HIHDBUtility.Event_HabitDetailWithCheckInDB2VM(reader, vm);
+                    listVm.Add(vm);
                 }
             }
             catch (Exception exp)

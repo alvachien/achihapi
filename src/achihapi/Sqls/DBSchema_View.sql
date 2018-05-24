@@ -695,3 +695,36 @@ FROM  t_event_habit LEFT OUTER JOIN
 		t_event_habit_detail ON t_event_habit.ID = t_event_habit_detail.HabitID
 GO
 
+-- Updated at 2018.5.24
+/****** Object:  View [dbo].[v_event_habitdetail_checkin_stat]    Script Date: 2018-05-24 6:58:39 PM ******/
+-- It's an internal view
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+create view [dbo].[v_event_habitdetail_checkin_stat]
+as 
+SELECT taba.HabitID, taba.StartDate, taba.EndDate, COUNT(*) AS CHECKINAMT, AVG(tabb.SCORE) AS ASCORE 
+	FROM t_event_habit_detail as taba
+	INNER JOIN t_event_habit_checkin as tabb
+	ON taba.HabitID = tabb.HabitID
+	AND tabb.TranDate >= taba.StartDate
+	AND tabb.TranDate < taba.EndDate
+	GROUP BY taba.HabitID, taba.StartDate, taba.EndDate
+GO
+
+/****** Object:  View [dbo].[v_event_habitdetail_withcheckin]    Script Date: 2018-05-24 6:58:39 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create view [dbo].[v_event_habitdetail_withcheckin]
+as
+SELECT        c.HID, c.ID AS HabitID, c.Count AS ExpAmount, b.CHECKINAMT, b.ASCORE, a.StartDate, a.EndDate, c.[Name], c.Assignee, c.IsPublic
+FROM            dbo.t_event_habit_detail AS a INNER JOIN
+                         dbo.t_event_habit AS c ON a.HabitID = c.ID LEFT OUTER JOIN
+                         dbo.v_event_habitdetail_checkin_stat AS b ON a.HabitID = b.HabitID
+GO
