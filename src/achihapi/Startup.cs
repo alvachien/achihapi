@@ -1,16 +1,4 @@
-﻿#if DEBUG
-#undef RELEASE
-#undef USE_ALIYUN
-#undef USE_AZURE
-#endif
-
-#if RELEASE
-#undef DEBUG
-#define USE_ALIYUN
-#undef USE_AZURE
-#endif
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,9 +6,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace achihapi
 {
@@ -60,15 +45,27 @@ namespace achihapi
                     .AddIdentityServerAuthentication(options =>
                     {
 #if DEBUG
-                    options.Authority = "http://localhost:41016";
+#if USE_SSL
+                        options.Authority = "https://localhost:44397";
+#else
+                        options.Authority = "http://localhost:41016";
+#endif
 #else
 #if USE_AZURE
-                    options.Authority = "http://acidserver.azurewebsites.net";
+#if USE_SSL
+                        options.Authority = "https://acidserver.azurewebsites.net";
+#else
+                        options.Authority = "http://acidserver.azurewebsites.net";
+#endif
 #elif USE_ALIYUN
-                    options.Authority = "http://118.178.58.187:5100";
+#if USE_SSL
+                        options.Authority = "https://118.178.58.187:5100";
+#else
+                        options.Authority = "http://118.178.58.187:5100";
 #endif
 #endif
-                    options.RequireHttpsMetadata = false;
+#endif
+                        options.RequireHttpsMetadata = false;
                         options.ApiName = "api.hihapi";
                     });
             }
@@ -100,19 +97,28 @@ namespace achihapi
             app.UseCors(builder =>
 #if DEBUG
                 builder.WithOrigins(
-                    "http://localhost:29521", // AC HIH
+#if USE_SSL
                     "https://localhost:29521"
+#else
+                    "http://localhost:29521" // AC HIH
+#endif
                     )
 #else
 #if USE_AZURE
                 builder.WithOrigins(
-                    "http://achihui.azurewebsites.net",
-                    "https://achihui.azurewebsites.net"
+#if USE_SSL
+                    "https://achihui.azurewebsites.net"                    
+#else
+                    "http://achihui.azurewebsites.net"
+#endif
                     )
 #elif USE_ALIYUN
                 builder.WithOrigins(
-                    "http://118.178.58.187:5200",
+#if USE_SSL
                     "https://118.178.58.187:5200"
+#else
+                    "http://118.178.58.187:5200"
+#endif
                     )
 #endif
 #endif
