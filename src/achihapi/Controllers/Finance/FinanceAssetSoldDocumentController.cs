@@ -268,7 +268,7 @@ namespace achihapi.Controllers
 
                     // Close this account
                     vm.AccountVM.Status = FinanceAccountStatus.Closed;
-                    HIHDBUtility.BindFinAccountStatusUpdateParameter(cmd, vm.AccountVM, usrName);
+                    HIHDBUtility.BindFinAccountStatusUpdateParameter(cmd, vm.AccountVM.Status, vm.AccountVM.ID, vm.AccountVM.HID, usrName);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;

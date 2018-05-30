@@ -609,13 +609,13 @@ namespace achihapi.Utilities
                          WHERE [ID] = @ID AND [HID] = @HID";
         }
 
-        internal static void BindFinAccountStatusUpdateParameter(SqlCommand cmd, FinanceAccountViewModel vm, String usrName)
+        internal static void BindFinAccountStatusUpdateParameter(SqlCommand cmd, FinanceAccountStatus nstatus, Int32 acntID, Int32 hid, String usrName)
         {
-            cmd.Parameters.AddWithValue("@STATUS", vm.Status);
+            cmd.Parameters.AddWithValue("@STATUS", nstatus);
             cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
             cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
-            cmd.Parameters.AddWithValue("@ID", vm.ID);
-            cmd.Parameters.AddWithValue("@HID", vm.HID);
+            cmd.Parameters.AddWithValue("@ID", acntID);
+            cmd.Parameters.AddWithValue("@HID", hid);
         }
 
         internal static void BindFinAccountInsertParameter(SqlCommand cmd, FinanceAccountViewModel vm, String usrName)

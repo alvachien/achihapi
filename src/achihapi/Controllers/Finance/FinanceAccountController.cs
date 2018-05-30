@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace achihapi.Controllers
 {
@@ -513,6 +514,163 @@ namespace achihapi.Controllers
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
             
+            return new JsonResult(vm, setting);
+        }
+
+        // PATCH api/event/5
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Patch(int id, [FromQuery]int hid, [FromBody]JsonPatchDocument<FinanceAccountUIViewModel> patch)
+        {
+            if (patch == null || id <= 0)
+                return BadRequest("No data is inputted");
+            if (hid <= 0)
+                return BadRequest("No home is inputted");
+
+            // Update the database
+            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            String queryString = "";
+            Boolean bNonExistEntry = false;
+            Boolean bError = false;
+            String strErrMsg = "";
+
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+            //FinanceAccountViewModel vm = new FinanceAccountViewModel();
+            FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
+
+            try
+            {
+                await conn.OpenAsync();
+
+                // Check Home assignment with current user
+                try
+                {
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                }
+                catch (Exception exp)
+                {
+                    throw exp; // Re-throw
+                }
+
+                // Read the account
+                queryString = this.getQueryString(false, null, null, null, id, String.Empty, null);
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {                        
+                        HIHDBUtility.FinAccount_DB2VM(reader, vmAccount);
+
+                        // It should return one entry only!
+                        // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
+
+                        break;
+                    }
+                }
+                else
+                {
+                    bNonExistEntry = true;
+                }
+
+                if (!bNonExistEntry)
+                {
+                    // Optimization logic for Status change
+                    if (patch.Operations.Count == 1 && patch.Operations[0].path == "/status")
+                    {
+                        // Only update the status
+                        queryString = HIHDBUtility.GetFinanceAccountStatusUpdateString();
+                        SqlCommand cmdupdate = new SqlCommand(queryString, conn);
+                        FinanceAccountStatus newstatus = (FinanceAccountStatus)Byte.Parse((string)patch.Operations[0].value);
+                        HIHDBUtility.BindFinAccountStatusUpdateParameter(cmdupdate, newstatus, id, hid, usrName);
+
+                        if (newstatus == FinanceAccountStatus.Closed)
+                        {
+                            // Close account.
+                            if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
+                            {
+                                // It have 
+                            }
+                            else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
+                            {
+
+                            }
+                            else if(vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Loan)
+                            {
+
+                            }
+                            else
+                            {
+                                // Normal case
+                            }
+                        }
+
+                        await cmdupdate.ExecuteNonQueryAsync();
+                    }
+                    else
+                    {
+                        // Now go ahead for the update
+                        //var patched = vm.Copy();
+                        patch.ApplyTo(vmAccount, ModelState);
+                        if (!ModelState.IsValid)
+                        {
+                            return new BadRequestObjectResult(ModelState);
+                        }
+
+                        //var model = new
+                        //{
+                        //    original = vm,
+                        //    patched = vm
+                        //};
+
+                        queryString = HIHDBUtility.Event_GetNormalEventUpdateString();
+
+                        cmd = new SqlCommand(queryString, conn);
+                        HIHDBUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
+
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                bError = true;
+                strErrMsg = exp.Message;
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
+            }
+
+            if (bNonExistEntry)
+            {
+                return BadRequest("Object with ID doesnot exist: " + id.ToString());
+            }
+
+            if (bError)
+            {
+                return StatusCode(500, strErrMsg);
+            }
+
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+
             return new JsonResult(vm, setting);
         }
 
