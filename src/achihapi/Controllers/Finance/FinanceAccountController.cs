@@ -591,13 +591,15 @@ namespace achihapi.Controllers
                         SqlCommand cmdupdate = new SqlCommand(queryString, conn);
                         FinanceAccountStatus newstatus = (FinanceAccountStatus)Byte.Parse((string)patch.Operations[0].value);
                         HIHDBUtility.BindFinAccountStatusUpdateParameter(cmdupdate, newstatus, id, hid, usrName);
+                        await cmdupdate.ExecuteNonQueryAsync();
 
                         if (newstatus == FinanceAccountStatus.Closed)
                         {
                             // Close account.
                             if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
                             {
-                                // It have 
+                                // It have to stop all unposted advance payment
+                                queryString = HIHDBUtility.GetFinanceDocADPDeleteString();
                             }
                             else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
                             {
@@ -613,7 +615,6 @@ namespace achihapi.Controllers
                             }
                         }
 
-                        await cmdupdate.ExecuteNonQueryAsync();
                     }
                     else
                     {
@@ -631,10 +632,10 @@ namespace achihapi.Controllers
                         //    patched = vm
                         //};
 
-                        queryString = HIHDBUtility.Event_GetNormalEventUpdateString();
+                        //queryString = HIHDBUtility.Event_GetNormalEventUpdateString();
 
-                        cmd = new SqlCommand(queryString, conn);
-                        HIHDBUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
+                        //cmd = new SqlCommand(queryString, conn);
+                        //HIHDBUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
 
                         Int32 nRst = await cmd.ExecuteNonQueryAsync();
                     }
@@ -671,7 +672,7 @@ namespace achihapi.Controllers
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
 
-            return new JsonResult(vm, setting);
+            return new JsonResult(vmAccount, setting);
         }
 
         // DELETE api/financeaccount/5

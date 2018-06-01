@@ -1605,6 +1605,12 @@ namespace achihapi.Utilities
             return strSQL;
         }
 
+        internal static string GetFinanceDocADPDeleteString(Int32 hid, Int32 acntid)
+        {
+            String strrst = @"DELETE FROM [t_fin_tmpdoc_dp] WHERE [HID] " + hid.ToString()
+                 + " AND [ACCOUNTID] = " + acntid.ToString();
+            return String.Empty;
+        }
         internal static String getFinanceTmpDocADPInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_tmpdoc_dp]
