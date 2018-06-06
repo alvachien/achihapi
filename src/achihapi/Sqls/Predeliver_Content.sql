@@ -237,6 +237,30 @@ INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALU
 SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 
 
+-- Updated at 2018.6.6
+SET IDENTITY_INSERT [dbo].[t_lib_movie_genre] ON;
+
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (1,NULL,N'Sys.MovGenre.ActAdv',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (2,NULL,N'Sys.MovGenre.Animation',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (3,NULL,N'Sys.MovGenre.Anime',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (4,NULL,N'Sys.MovGenre.Classics',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (5,NULL,N'Sys.MovGenre.Comedy',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (6,NULL,N'Sys.MovGenre.Documentary',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (7,NULL,N'Sys.MovGenre.Drama',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (8,NULL,N'Sys.MovGenre.ExerFit',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (9,NULL,N'Sys.MovGenre.FaithSpirit',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (10,NULL,N'Sys.MovGenre.ForeignLang',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (11,NULL,N'Sys.MovGenre.GayLesbian',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (12,NULL,N'Sys.MovGenre.Horror',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (13,NULL,N'Sys.MovGenre.IndianMv',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (14,NULL,N'Sys.MovGenre.IndieArt',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (15,NULL,N'Sys.MovGenre.KidsFamily',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (16,NULL,N'Sys.MovGenre.MVConcert',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (17,NULL,N'Sys.MovGenre.Romance',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (18,NULL,N'Sys.MovGenre.SciFiction',NULL,NULL);
+INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALUES (19,NULL,N'Sys.MovGenre.Western',NULL,NULL);
+
+SET IDENTITY_INSERT [dbo].[t_lib_movie_genre] OFF;
 
 
 

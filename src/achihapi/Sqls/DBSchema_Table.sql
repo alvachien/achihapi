@@ -1656,6 +1656,47 @@ GO
 ALTER TABLE [dbo].[t_event_habit_checkin] CHECK CONSTRAINT [FK_t_event_habit_checkin_HabitID]
 GO
 
+-- Updated at 2018.6.6
+/****** Object:  Table [dbo].[t_lib_movie_genre]    Script Date: 2018-06-06 7:01:06 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_lib_movie_genre](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NULL,
+	[Name] [nvarchar](50) NOT NULL,
+	[ParID] [int] NULL,
+	[Others] [nvarchar](50) NULL,
+	[CREATEDBY] [nvarchar](40) NULL,
+	[CREATEDAT] [date] NULL,
+	[UPDATEDBY] [nvarchar](40) NULL,
+	[UPDATEDAT] [date] NULL,
+ CONSTRAINT [PK_t_lib_movie_genre] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_lib_movie_genre] ADD  CONSTRAINT [DF_t_lib_movie_genre_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_lib_movie_genre] ADD  CONSTRAINT [DF_t_lib_movie_genre_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT]
+GO
+
+ALTER TABLE [dbo].[t_lib_movie_genre]  WITH CHECK ADD  CONSTRAINT [FK_t_lib_movie_genre_HID] FOREIGN KEY([HID])
+REFERENCES [dbo].[t_homedef] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_lib_movie_genre] CHECK CONSTRAINT [FK_t_lib_movie_genre_HID]
+GO
+
+
 ---------------------------------
 -- TODO...
 
