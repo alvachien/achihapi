@@ -1605,11 +1605,13 @@ namespace achihapi.Utilities
             return strSQL;
         }
 
-        internal static string GetFinanceDocADPDeleteString(Int32 hid, Int32 acntid)
+        internal static string GetFinanceDocADPDeleteString(Int32 hid, Int32 acntid, Boolean? delunpostdoco = null)
         {
-            String strrst = @"DELETE FROM [t_fin_tmpdoc_dp] WHERE [HID] " + hid.ToString()
+            String strrst = @"DELETE FROM [t_fin_tmpdoc_dp] WHERE [HID] = " + hid.ToString()
                  + " AND [ACCOUNTID] = " + acntid.ToString();
-            return String.Empty;
+            if (delunpostdoco.HasValue && delunpostdoco.Value)
+                strrst += " AND [REFDOCID] IS NULL";
+            return strrst;
         }
         internal static String getFinanceTmpDocADPInsertString()
         {
@@ -1716,6 +1718,15 @@ namespace achihapi.Utilities
         #endregion
 
         #region Finance Template Doc - Loan
+        internal static string GetFinanceDocLoanDeleteString(Int32 hid, Int32 acntid, Boolean? delunpostdoco = null)
+        {
+            String strrst = @"DELETE FROM [t_fin_tmpdoc_loan] WHERE [HID] = " + hid.ToString()
+                 + " AND [ACCOUNTID] = " + acntid.ToString();
+            if (delunpostdoco.HasValue && delunpostdoco.Value)
+                strrst += " AND [REFDOCID] IS NULL";
+            return strrst;
+        }
+
         internal static string GetFinanceDocLoanListQueryString()
         {
             return @"SELECT [DOCID]

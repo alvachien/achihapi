@@ -528,6 +528,7 @@ namespace achihapi.Controllers
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlTransaction tran = null;
             String queryString = "";
             Boolean bNonExistEntry = false;
             Boolean bError = false;
@@ -580,6 +581,10 @@ namespace achihapi.Controllers
                 {
                     bNonExistEntry = true;
                 }
+                reader.Close();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
 
                 if (!bNonExistEntry)
                 {
@@ -587,9 +592,13 @@ namespace achihapi.Controllers
                     if (patch.Operations.Count == 1 && patch.Operations[0].path == "/status")
                     {
                         // Only update the status
+                        tran = conn.BeginTransaction();
+
                         queryString = HIHDBUtility.GetFinanceAccountStatusUpdateString();
-                        SqlCommand cmdupdate = new SqlCommand(queryString, conn);
+                        SqlCommand cmdupdate = new SqlCommand(queryString, conn, tran);
+
                         FinanceAccountStatus newstatus = (FinanceAccountStatus)Byte.Parse((string)patch.Operations[0].value);
+                        vmAccount.Status = newstatus;
                         HIHDBUtility.BindFinAccountStatusUpdateParameter(cmdupdate, newstatus, id, hid, usrName);
                         await cmdupdate.ExecuteNonQueryAsync();
 
@@ -599,15 +608,20 @@ namespace achihapi.Controllers
                             if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
                             {
                                 // It have to stop all unposted advance payment
-                                queryString = HIHDBUtility.GetFinanceDocADPDeleteString();
+                                queryString = HIHDBUtility.GetFinanceDocADPDeleteString(hid, vmAccount.ID, true);
+                                SqlCommand cmdTmpDoc = new SqlCommand(queryString, conn, tran);
+                                await cmdTmpDoc.ExecuteNonQueryAsync();
                             }
                             else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
                             {
-
+                                // For asset
                             }
                             else if(vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Loan)
                             {
-
+                                // It have to stop all unposted advance payment
+                                queryString = HIHDBUtility.GetFinanceDocLoanDeleteString(hid, vmAccount.ID, true);
+                                SqlCommand cmdTmpDoc = new SqlCommand(queryString, conn, tran);
+                                await cmdTmpDoc.ExecuteNonQueryAsync();
                             }
                             else
                             {
@@ -615,9 +629,12 @@ namespace achihapi.Controllers
                             }
                         }
 
+                        tran.Commit();
                     }
                     else
                     {
+                        throw new Exception("Not supported yet");
+
                         // Now go ahead for the update
                         //var patched = vm.Copy();
                         patch.ApplyTo(vmAccount, ModelState);
@@ -646,6 +663,11 @@ namespace achihapi.Controllers
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 bError = true;
                 strErrMsg = exp.Message;
+
+                if (tran != null)
+                {
+                    tran.Rollback();
+                }
             }
             finally
             {
@@ -653,6 +675,7 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
