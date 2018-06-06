@@ -1,6 +1,11 @@
 # achihapi
 Web API for [HIH](https://github.com/alvachien/achihui.git), built on ASP.NET Core.
 
+
+## Live example
+This Web API was deployed on Microsoft Azure for testing purpose: https://achihapi.azurewebsites.net
+
+
 ## Install
 To install this Web API to your own server, please follow the steps below.
 
@@ -38,16 +43,17 @@ An example file look like following:
 ```
 
 
-### Step 4. Run this API
-Deploy this Web API to IIS or other server.
+### Step 4. Deployment
+Deploy this Web API to IIS or other HTTP server.
 
 
 ## Tools
-Though I using Visual Studio 2017, the project can be processed by any IDE which supports ASP.NET Core.
+Though the whole project developed and tested with Visual Studio 2017 Community Version, the project can be processed by other IDE which supports ASP.NET Core.
 
 
 ## Unit Test
 This unit test project also included. You can run the unit test to ensure the code run successfully. 
+
 
 # Author
 **Alva Chien (Hongjun Qian) | 钱红俊**
@@ -57,9 +63,7 @@ A programmer, and a certificated Advanced Photographer.
 Contact me:
 
 1. Via mail: alvachien@163.com. Or,
-2. [Check my flickr](http://www.flickr.com/photos/alvachien). Or,
-3. [Visit my website](http://www.alvachien.com)
-
+2. [Check my flickr](http://www.flickr.com/photos/alvachien). 
 
 
 # Licence
