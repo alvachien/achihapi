@@ -270,7 +270,12 @@ namespace achihapi.ViewModels
                 case GeneralFilterOperatorEnum.Like:
                     {
                         if (ValueType == GeneralFilterValueEnum.String)
-                            strRst = FieldName + " LIKE N'" + LowValue + "' "; ;
+                        {
+                            if (LowValue.Contains("%"))
+                                strRst = FieldName + " LIKE N'" + LowValue + "' ";
+                            else
+                                strRst = FieldName + " LIKE N'%" + LowValue + "%' ";
+                        }                            
                     }
                     break;
 
