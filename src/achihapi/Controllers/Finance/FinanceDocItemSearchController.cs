@@ -52,13 +52,7 @@ namespace achihapi.Controllers
 
             try
             {
-                String subqueries = " HID = " + hid.ToString() + " AND ";
-                for(Int32 i = 0; i < filters.FieldList.Count; i ++)
-                {
-                    subqueries += filters.FieldList[i].GenerateSql();
-                    if (i != filters.FieldList.Count - 1)
-                        subqueries += " AND ";
-                }
+                String subqueries = " HID = " + hid.ToString() + " AND " + filters.GetFullWhereClause();
                 queryString = HIHDBUtility.getFinDocItemSearchView(subqueries, top, skip);
 #if DEBUG
                 System.Diagnostics.Debug.Write(queryString);
