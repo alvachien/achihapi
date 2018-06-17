@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace achihapi.ViewModels
 {
-    public sealed class LibBookCategoryViewModel: BaseViewModel
+    public sealed class LibMovieGenreViewModel: BaseViewModel
     {
         public Int32 ID { get; set; }
         public Int32? HID { get; set; }

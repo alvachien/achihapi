@@ -2302,6 +2302,67 @@ namespace achihapi.Utilities
         }
         #endregion
 
+        #region Lib book category
+        internal static string getLibMovieGenreQueryString()
+        {
+            string strSQL = @"SELECT [ID]
+                              ,[HID]
+                              ,[Name]
+                              ,[ParID]
+                              ,[Others]
+                              ,[CREATEDBY]
+                              ,[CREATEDAT]
+                              ,[UPDATEDBY]
+                              ,[UPDATEDAT]
+                          FROM [dbo].[t_lib_movie_genre]";
+            return strSQL;
+        }
+
+        internal static void LibMovieGenre_DB2VM(SqlDataReader reader, LibMovieGenreViewModel vm)
+        {
+            Int32 idx = 0;
+
+            try
+            {
+                vm.ID = reader.GetInt32(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.HID = reader.GetInt32(idx++);
+                else
+                    ++idx;
+                vm.Name = reader.GetString(idx++);
+                if (!reader.IsDBNull(idx))
+                    vm.ParentID = reader.GetInt32(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.Others = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.CreatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedBy = reader.GetString(idx++);
+                else
+                    ++idx;
+                if (!reader.IsDBNull(idx))
+                    vm.UpdatedAt = reader.GetDateTime(idx++);
+                else
+                    ++idx;
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Error occurred: ID {0}, index {1}, {2}", vm.ID, idx, exp.Message));
+                throw exp;
+            }
+        }
+        #endregion
+
         #region Normal Event
         internal static string Event_GetNormalEventQueryString(Boolean listmode, String usrid, Int32? hid = null, Int32? skip = null, Int32? top = null, Int32? id = null, 
             Boolean? skipfinish = null, DateTime? dtbgn = null, DateTime? dtend = null)
