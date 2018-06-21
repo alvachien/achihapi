@@ -27,7 +27,7 @@
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='AzureRelease|AnyCPU'">
-    <DefineConstants>TRACE;RELEASE;NETCOREAPP2</DefineConstants>
+    <DefineConstants>TRACE;RELEASE;NETCOREAPP2_0;USE_AZURE;USE_SSL</DefineConstants>
     <PublishWithAspNetCoreTargetManifest>false</PublishWithAspNetCoreTargetManifest>
   </PropertyGroup>
 
