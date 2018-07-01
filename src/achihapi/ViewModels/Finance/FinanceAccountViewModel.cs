@@ -58,6 +58,7 @@ namespace achihapi.ViewModels
         Manual = 7,
     }
 
+    // Account extra: advance payment
     public sealed class FinanceAccountExtDPViewModel: FinanceAccountExtViewModel
     {
         public Boolean Direct { get; set; }
@@ -73,6 +74,7 @@ namespace achihapi.ViewModels
         public String Comment { get; set; }
     }
 
+    // Account extra: Assert
     public sealed class FinanceAccountExtASViewModel: FinanceAccountExtViewModel
     {
         public Int32 CategoryID { get; set; }
@@ -93,6 +95,7 @@ namespace achihapi.ViewModels
         DueRepayment = 3  // Due repayment
     }
 
+    // Account extra: Loan (Borrow from, or Lend to)
     public sealed class FinanceAccountExtLoanViewModel: FinanceAccountExtViewModel
     {
         [Required]
@@ -105,5 +108,14 @@ namespace achihapi.ViewModels
         public Int32 RefDocID { get; set; }
         [StringLength(100)]
         public String Others { get; set; }
+        public DateTime? EndDate { get; set; }
+        [Required]
+        public Boolean IsLendOut { get; set; }
+
+        public FinanceAccountExtLoanViewModel()
+        {
+            // Default
+            this.IsLendOut = false;
+        }
     }
 }

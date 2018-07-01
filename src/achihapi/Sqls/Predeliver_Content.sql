@@ -262,9 +262,30 @@ INSERT INTO [dbo].[t_lib_movie_genre] ([ID], [HID],[Name],[ParID],[Others]) VALU
 
 SET IDENTITY_INSERT [dbo].[t_lib_movie_genre] OFF;
 
+-- Updated at 2018.6.30
+SET IDENTITY_INSERT dbo.[t_fin_account_ctgy] ON;
+
+DELETE FROM dbo.[t_fin_account_ctgy] WHERE [ID] = 9;
+INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (9,N'Sys.AcntCty.BorrowFrom',0,N'借入款、贷款');
+INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (10,N'Sys.AcntCty.LendTo',1,N'借出款');
+
+SET IDENTITY_INSERT dbo.[t_fin_account_ctgy] OFF;
 
 
+SET IDENTITY_INSERT dbo.[t_fin_doc_type] ON;
+DELETE FROM dbo.[t_fin_doc_type] WHERE [ID] = 9;
+INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (9,N'Sys.DocTy.BorrowFrom', N'借款、贷款等');
+INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (10,N'Sys.DocTy.LendTo', N'借出款');
+SET IDENTITY_INSERT dbo.[t_fin_doc_type] OFF;
 
+UPDATE dbo.[t_fin_tran_type] SET  [NAME] = N'贷款入账', [COMMENT] = N'收到借入款、贷款'
+	WHERE [ID] = 80;
+
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] ON;
+
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (81,N'借出款项',0,10,N'借出款项');
+
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 
 
 

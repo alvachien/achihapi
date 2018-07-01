@@ -1696,6 +1696,18 @@ GO
 ALTER TABLE [dbo].[t_lib_movie_genre] CHECK CONSTRAINT [FK_t_lib_movie_genre_HID]
 GO
 
+-- Updated at 2018.7.1
+IF NOT EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 't_fin_account_ext_loan' AND COLUMN_NAME = 'EndDate')
+BEGIN
+
+	ALTER TABLE [dbo].[t_fin_account_ext_loan] 
+		ADD [EndDate] [date] NULL DEFAULT getdate();
+	ALTER TABLE [dbo].[t_fin_account_ext_loan] 
+		ADD [IsLendOut] [bit] NOT NULL DEFAULT 0;
+
+END
+
 
 ---------------------------------
 -- TODO...

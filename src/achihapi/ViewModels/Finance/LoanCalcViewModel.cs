@@ -13,6 +13,7 @@ namespace achihapi.ViewModels
         public DateTime StartDate { get; set; }
         public Boolean InterestFreeLoan { get; set; }
         public LoanRepaymentMethod RepaymentMethod { get; set; }
+        public DateTime? EndDate { get; set; }
     }
 
     public sealed class LoanCalcResult

@@ -24,9 +24,11 @@ namespace achihapi.test
         {
             LoanCalcViewModel vm = new LoanCalcViewModel
             {
+                RepaymentMethod = LoanRepaymentMethod.DueRepayment,
                 InterestFreeLoan = true,
                 StartDate = new DateTime(2020, 1, 1),
                 TotalAmount = 120000,
+                EndDate = new DateTime(2021, 1, 1),
                 TotalMonths = 12
             };
             List<LoanCalcResult> results = FinanceCalcUtility.LoanCalculate(vm);
@@ -320,14 +322,14 @@ namespace achihapi.test
         }
 
         [TestMethod]
-        public void LoanCalcTest_DueReayment()
+        public void LoanCalcTest_DueRepayment()
         {
             LoanCalcViewModel vm = new LoanCalcViewModel
             {
                 InterestFreeLoan = false,
                 StartDate = new DateTime(2020, 1, 1),
                 TotalAmount = 100000,
-                TotalMonths = 12,
+                EndDate = new DateTime(2021, 1, 1),
                 InterestRate = 0.0435M,
                 RepaymentMethod = LoanRepaymentMethod.DueRepayment
             };

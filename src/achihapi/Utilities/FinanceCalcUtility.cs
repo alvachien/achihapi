@@ -19,8 +19,19 @@ namespace achihapi.Utilities
                 throw new Exception("Interest rate can not be negative");
             if (datInput.TotalAmount <= 0)
                 throw new Exception("Total amount must large than zero!");
-            if (datInput.TotalMonths <= 0)
-                throw new Exception("Total months must large than zero");
+            if (datInput.RepaymentMethod == LoanRepaymentMethod.EqualPrincipal
+                || datInput.RepaymentMethod == LoanRepaymentMethod.EqualPrincipalAndInterset)
+            {
+                if (datInput.TotalMonths <= 0)
+                    throw new Exception("Total months must large than zero");
+            }
+            else if (datInput.RepaymentMethod == LoanRepaymentMethod.DueRepayment)
+            {
+                if (!datInput.EndDate.HasValue)
+                    throw new Exception("End date must input");
+            }
+            else
+                throw new Exception("Not supported method");
             if (datInput.StartDate == null)
                 throw new Exception("Start date is must");
 
@@ -40,17 +51,29 @@ namespace achihapi.Utilities
                 }
                 else
                 {
-                    listResults.Add(new LoanCalcResult
+                    if (datInput.EndDate.HasValue)
                     {
-                        TranDate = datInput.StartDate.AddMonths(datInput.TotalMonths),
-                        TranAmount = datInput.TotalAmount,
-                        InterestAmount = 0
-                    });
+                        listResults.Add(new LoanCalcResult
+                        {
+                            TranDate = datInput.EndDate.Value,
+                            TranAmount = datInput.TotalAmount,
+                            InterestAmount = 0
+                        });
+                    }
+                    else if (datInput.TotalMonths > 0)
+                    {
+                        listResults.Add(new LoanCalcResult
+                        {
+                            TranDate = datInput.StartDate.AddMonths(datInput.TotalMonths),
+                            TranAmount = datInput.TotalAmount,
+                            InterestAmount = 0
+                        });
+                    }
                 }
             }
             else
             {
-                switch(datInput.RepaymentMethod)
+                switch (datInput.RepaymentMethod)
                 {
                     case LoanRepaymentMethod.EqualPrincipalAndInterset:
                         {
@@ -62,7 +85,7 @@ namespace achihapi.Utilities
                             Decimal monthRepay = datInput.TotalAmount * monthRate * (Decimal)Math.Pow((double)(1 + monthRate), datInput.TotalMonths) / d3;
 
                             Decimal totalInterestAmt = 0;
-                            for(int i = 0; i < datInput.TotalMonths; i++)
+                            for (int i = 0; i < datInput.TotalMonths; i++)
                             {
                                 var rst = new LoanCalcResult
                                 {
@@ -112,9 +135,19 @@ namespace achihapi.Utilities
                         }
                         break;
 
-                    case LoanRepaymentMethod.DueRepayment: {
+                    case LoanRepaymentMethod.DueRepayment:
+                        {
                             Decimal monthRate = datInput.InterestRate / 12;
-                            Decimal amtInterest = datInput.TotalAmount * datInput.TotalMonths * monthRate;
+                            Decimal amtInterest = 0;
+                            if (datInput.EndDate.HasValue)
+                            {
+                                TimeSpan ts = datInput.EndDate.Value - datInput.StartDate;
+                                amtInterest = datInput.TotalAmount * (Int32)Math.Round(ts.TotalDays / 30) * monthRate;
+                            }
+                            else if (datInput.TotalAmount > 0)
+                            {
+                                amtInterest = datInput.TotalAmount * datInput.TotalMonths * monthRate;
+                            }
 
                             var rst = new LoanCalcResult
                             {
@@ -156,13 +189,13 @@ namespace achihapi.Utilities
                         var tdays = (Int32)tspans.Days;
 
                         var tamt = Math.Round(datInput.TotalAmount / tdays, 2);
-                        for(int i = 0; i < tdays; i++)
+                        for (int i = 0; i < tdays; i++)
                         {
                             listResults.Add(new ADPGenerateResult
                             {
                                 TranDate = datInput.StartDate.AddDays(i),
                                 TranAmount = tamt,
-                                Desp = datInput.Desp + " | " + (i+1).ToString() + " / " + tdays.ToString()
+                                Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + tdays.ToString()
                             });
                         }
                     }

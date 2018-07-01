@@ -19,9 +19,9 @@ namespace achihapi.Controllers
         // GET: api/FinanceLoanDocument
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean skipPosted = true, DateTime? dtbgn = null, DateTime? dtend = null)
+        public IActionResult Get([FromQuery]Int32 hid, Boolean skipPosted = true, DateTime? dtbgn = null, DateTime? dtend = null)
         {
-            return BadRequest();
+            return Forbid();
         }
 
         // GET: api/FinanceLoanDocument/5

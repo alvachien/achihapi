@@ -754,6 +754,11 @@ namespace achihapi.Utilities
                 vmdp.Others = reader.GetString(idx++);
             else
                 ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.EndDate = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            vmdp.IsLendOut = reader.GetBoolean(idx++);
         }
 
         internal static void FinAccountAsset_DB2VM(SqlDataReader reader, FinanceAccountExtASViewModel vmas, Int32 idx)
@@ -927,7 +932,9 @@ namespace achihapi.Utilities
                    ,[REPAYMETHOD]
                    ,[TOTALMONTH]
                    ,[REFDOCID]
-                   ,[OTHERS])
+                   ,[OTHERS]
+                   ,[ENDDATE]
+                   ,[ISLENDOUT])
              VALUES
                    (@ACCOUNTID
                    ,@STARTDATE
@@ -936,7 +943,9 @@ namespace achihapi.Utilities
                    ,@REPAYMETHOD
                    ,@TOTALMONTH
                    ,@REFDOCID
-                   ,@OTHERS)";
+                   ,@OTHERS
+                   ,@ENDDATE
+                   ,@ISLENDOUT)";
         }
 
         internal static void BindFinAccountLoanInsertParameter(SqlCommand cmd, FinanceAccountExtLoanViewModel vm, Int32 nNewDocID, Int32 nNewAccountID, String usrName)
@@ -962,6 +971,11 @@ namespace achihapi.Utilities
             cmd.Parameters.AddWithValue("@REFDOCID", nNewDocID);
             cmd.Parameters.AddWithValue("@OTHERS",
                 String.IsNullOrEmpty(vm.Others) ? String.Empty : vm.Others);
+            if (vm.EndDate.HasValue)
+                cmd.Parameters.AddWithValue("@ENDDATE", vm.EndDate.Value);
+            else
+                cmd.Parameters.AddWithValue("@ENDDATE", DBNull.Value);
+            cmd.Parameters.AddWithValue("@ISLENDOUT", vm.IsLendOut);
         }
         #endregion
 
@@ -1793,6 +1807,8 @@ namespace achihapi.Utilities
                             ,[t_fin_account_ext_loan].[TOTALMONTH]
                             ,[t_fin_account_ext_loan].[REFDOCID]
                             ,[t_fin_account_ext_loan].[OTHERS]
+                            ,[t_fin_account_ext_loan].[ENDDATE]
+                            ,[t_fin_account_ext_loan].[ISLENDOUT]
                         FROM [dbo].[t_fin_account]
                         LEFT OUTER JOIN [dbo].[t_fin_account_ext_loan]
                             ON [t_fin_account].[ID] = [t_fin_account_ext_loan].[ACCOUNTID]
