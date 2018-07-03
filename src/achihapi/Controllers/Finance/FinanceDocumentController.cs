@@ -240,7 +240,8 @@ namespace achihapi.Controllers
             if (vm == null || vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment
                     || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
                     || vm.DocType == FinanceDocTypeViewModel.DocType_AssetSoldOut
-                    || vm.DocType == FinanceDocTypeViewModel.DocType_Loan)
+                    || vm.DocType == FinanceDocTypeViewModel.DocType_BorrowFrom
+                    || vm.DocType == FinanceDocTypeViewModel.DocType_LendTo)
             {
                 return BadRequest("No data is inputted or for Advancepay/Loan/Asset");
             }
@@ -392,7 +393,8 @@ namespace achihapi.Controllers
             if (vm == null || vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment
                     || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
                     || vm.DocType == FinanceDocTypeViewModel.DocType_AssetSoldOut
-                    || vm.DocType == FinanceDocTypeViewModel.DocType_Loan)
+                    || vm.DocType == FinanceDocTypeViewModel.DocType_BorrowFrom
+                    || vm.DocType == FinanceDocTypeViewModel.DocType_LendTo)
             {
                 return BadRequest("No data is inputted or for Advancepay/Loan/Asset");
             }

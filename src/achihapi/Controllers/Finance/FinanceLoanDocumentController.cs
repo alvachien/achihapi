@@ -166,7 +166,8 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceLoanDocumentUIViewModel vm)
         {
-            if (vm == null || vm.DocType != FinanceDocTypeViewModel.DocType_Loan)
+            if (vm == null || (vm.DocType != FinanceDocTypeViewModel.DocType_BorrowFrom
+                && vm.DocType != FinanceDocTypeViewModel.DocType_LendTo))
             {
                 return BadRequest("No data is inputted");
             }
@@ -240,7 +241,10 @@ namespace achihapi.Controllers
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
-                        ivm.TranType = FinanceTranTypeViewModel.TranType_LoanIn; // Todo: switch to check!
+                        if (vm.DocType == FinanceDocTypeViewModel.DocType_BorrowFrom)
+                            ivm.TranType = FinanceTranTypeViewModel.TranType_BorrowFrom;
+                        else if (vm.DocType == FinanceDocTypeViewModel.DocType_LendTo)
+                            ivm.TranType = FinanceTranTypeViewModel.TranType_LendTo;
 
                         queryString = HIHDBUtility.GetFinDocItemInsertString();
                         SqlCommand cmd2 = new SqlCommand(queryString, conn)

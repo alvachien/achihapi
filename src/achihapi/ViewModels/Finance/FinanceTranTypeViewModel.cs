@@ -19,11 +19,15 @@ namespace achihapi.ViewModels
         public String Comment { get; set; }
 
         // Constants
-        public const Int32 TranType_Opening = 1;
+        public const Int32 TranType_OpeningAsset = 1;
+        public const Int32 TranType_OpeningLiability = 82;
+
         public const Int32 TranType_TransferIn = 37;
         public const Int32 TranType_TransferOut = 60;
 
-        public const Int32 TranType_LoanIn = 80;
+        public const Int32 TranType_BorrowFrom = 80;        
+        public const Int32 TranType_LendTo = 81;
+
         public const Int32 TranType_InterestOut = 55;
     }
 }

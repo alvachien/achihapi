@@ -295,7 +295,10 @@ namespace achihapi.Controllers
                     cmd.Dispose();
                     cmd = null;
 
-                    // Fifth, create template docs
+                    // Fifth, create the openning item to new created ADP account
+                    
+
+                    // Sixth, create template docs
                     foreach (FinanceTmpDocDPViewModel avm in vm.TmpDocs)
                     {
                         queryString = HIHDBUtility.getFinanceTmpDocADPInsertString();

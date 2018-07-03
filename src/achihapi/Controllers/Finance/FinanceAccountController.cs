@@ -230,7 +230,8 @@ namespace achihapi.Controllers
             if (vm == null 
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset
-                || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Loan)
+                || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom
+                || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
             {
                 return BadRequest("No data is inputted or inputted data for Advance payment/Asset/Loan");
             }
@@ -616,7 +617,8 @@ namespace achihapi.Controllers
                             {
                                 // For asset
                             }
-                            else if(vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Loan)
+                            else if(vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom
+                                || vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
                             {
                                 // It have to stop all unposted advance payment
                                 queryString = HIHDBUtility.GetFinanceDocLoanDeleteString(hid, vmAccount.ID, true);

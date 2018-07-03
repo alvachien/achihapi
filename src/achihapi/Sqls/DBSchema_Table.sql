@@ -1708,6 +1708,27 @@ BEGIN
 
 END
 
+/****** Object:  Table [dbo].[t_dbversion]    Script Date: 2018-07-03 8:09:20 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_dbversion](
+	[VersionID] [int] NOT NULL,
+	[ReleasedDate] [datetime] NOT NULL,
+	[AppliedDate] [datetime] NOT NULL,
+ CONSTRAINT [PK_t_dbversion] PRIMARY KEY CLUSTERED 
+(
+	[VersionID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_dbversion] ADD  CONSTRAINT [DF_t_dbversion_AppliedDate]  DEFAULT (getdate()) FOR [AppliedDate]
+GO
+
 
 ---------------------------------
 -- TODO...

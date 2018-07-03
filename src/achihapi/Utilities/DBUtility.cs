@@ -1778,7 +1778,7 @@ namespace achihapi.Utilities
                           ,[CREATEDAT]
                           ,[UPDATEDBY]
                           ,[UPDATEDAT]
-                      FROM [t_fin_document] WHERE [DOCTYPE] = " + FinanceDocTypeViewModel.DocType_Loan.ToString() + " AND [ID] = " + nid.ToString() + @"; 
+                      FROM [t_fin_document] WHERE [ID] = " + nid.ToString() + @"; 
                     SELECT [DOCID]
                           ,[ITEMID]
                           ,[ACCOUNTID]
@@ -1812,9 +1812,10 @@ namespace achihapi.Utilities
                         FROM [dbo].[t_fin_account]
                         LEFT OUTER JOIN [dbo].[t_fin_account_ext_loan]
                             ON [t_fin_account].[ID] = [t_fin_account_ext_loan].[ACCOUNTID]
-                        WHERE [t_fin_account].[CTGYID] = "
-                        + FinanceAccountCtgyViewModel.AccountCategory_Loan.ToString()
-                        + " AND [t_fin_account_ext_loan].[REFDOCID] = " + nid.ToString() + @"; 
+                        WHERE [t_fin_account].[CTGYID] IN ( "
+                        + FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom.ToString()
+                        + ", " + FinanceAccountCtgyViewModel.AccountCategory_LendTo.ToString()
+                        + " ) AND [t_fin_account_ext_loan].[REFDOCID] = " + nid.ToString() + @"; 
                       SELECT [t_fin_tmpdoc_loan].[DOCID]
                           ,[t_fin_tmpdoc_loan].[HID]
                           ,[t_fin_tmpdoc_loan].[REFDOCID]
