@@ -92,7 +92,7 @@ namespace achihapi.Controllers
             String strErrMsg = "";
             DBVersionViewModel vmCurrent = new DBVersionViewModel();
             SqlTransaction tran = null;
-            Int32 reqver = 1; // For current API, version is 1
+            Int32 reqver = 2; // For current API, version is 2
 
             try
             {

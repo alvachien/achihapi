@@ -311,9 +311,20 @@ INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALU
 SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 
 
+-----------------------------------------------------------------------------------------------------------------------------------
+-- Updated at 2017.7.4
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (1,'2018.07.04');
 
 
 
+-----------------------------------------------------------------------------------------------------------------------------------
+-- Updated at 2017.5
+UPDATE dbo.[t_fin_tran_type] SET [PARID] = 24 WHERE [ID] = 82;
+UPDATE dbo.[t_fin_tran_type] SET [PARID] = 10 WHERE [ID] = 1; 
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (84,N'房租收入',0,5,N'房租收入等');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (85,N'房租支出',1,11,N'房租支出等');
+
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (2,'2018.07.05');
 
 
 ---------------------------------
