@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
+using System.Reflection;
+using System.IO;
+using System.Text;
 
 namespace achihapi.Controllers
 {
@@ -81,13 +84,15 @@ namespace achihapi.Controllers
         
         // POST: api/DBVersionCheck
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody]Int32 reqver)
+        public async Task<IActionResult> Post()
         {
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
             DBVersionViewModel vmCurrent = new DBVersionViewModel();
+            SqlTransaction tran = null;
+            Int32 reqver = 1; // For current API, version is 1
 
             try
             {
@@ -114,12 +119,44 @@ namespace achihapi.Controllers
                         break;
                     }
                 }
+                else
+                    vmCurrent.VersionID = 0;
+                reader.Close();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
+
+                if (vmCurrent.VersionID < reqver)
+                {
+                    tran = conn.BeginTransaction();
+
+                    var nver = vmCurrent.VersionID + 1;
+                    while(nver <= reqver)
+                    {
+                        // Update the DB version
+                        await updateDBVersion(conn, tran, nver++);
+                    }
+
+                    tran.Commit();
+                }
+                else if (vmCurrent.VersionID > reqver)
+                {
+                    bError = true;
+                    strErrMsg = "Contact system administrator";
+                }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 bError = true;
                 strErrMsg = exp.Message;
+
+                if (tran != null)
+                {
+                    tran.Rollback();
+                    tran.Dispose();
+                    tran = null;
+                }
             }
             finally
             {
@@ -127,6 +164,7 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
@@ -135,7 +173,7 @@ namespace achihapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            return new JsonResult(vmCurrent);
+            return Ok();
         }
 
         // PUT: api/DBVersionCheck/5
@@ -150,6 +188,33 @@ namespace achihapi.Controllers
         public IActionResult Delete(int id)
         {
             return Forbid();
+        }
+
+        private async Task updateDBVersion(SqlConnection conn, SqlTransaction tran, Int32 nversion)
+        {
+            var sqlfile = "achihapi.Sqls.Delta.v" + nversion.ToString() + ".sql";
+            try
+            {
+                using (var stream = typeof(DBVersionCheckController).GetTypeInfo().Assembly.GetManifestResourceStream(sqlfile))
+                {
+                    using (var reader = new StreamReader(stream, Encoding.UTF8))
+                    {
+                        String strcontent = reader.ReadToEnd();
+
+                        SqlCommand cmd = new SqlCommand(strcontent, conn, tran);
+                        await cmd.ExecuteNonQueryAsync();
+
+                        cmd.Dispose();
+                        cmd = null;
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                System.Diagnostics.Debug.WriteLine(exception.Message);
+                // ApplicationProvider.WriteToLog<EmbeddedResource>().Error(exception.Message);
+                throw new Exception($"Failed to read Embedded Resource {sqlfile}");
+            }
         }
     }
 }
