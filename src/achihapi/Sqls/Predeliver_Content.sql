@@ -316,7 +316,6 @@ SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (1,'2018.07.04');
 
 
-
 -----------------------------------------------------------------------------------------------------------------------------------
 -- Updated at 2017.5
 UPDATE dbo.[t_fin_tran_type] SET [PARID] = 24 WHERE [ID] = 82;
@@ -325,6 +324,15 @@ INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALU
 INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (85,N'房租支出',1,11,N'房租支出等');
 
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (2,'2018.07.05');
+
+-----------------------------------------------------------------------------------------------------------------------------------
+-- Updated at 2017.6
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] ON;
+
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (86,N'偿还借贷款',1,25,N'偿还借贷款');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (87,N'借贷还款收入',0,5,N'借出的款项返还');
+
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 
 
 ---------------------------------
