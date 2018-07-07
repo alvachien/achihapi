@@ -188,7 +188,7 @@ namespace achihapi.Controllers
             // Check the items
             if (vm.Items.Count != 1 || vm.TmpDocs.Count <= 0)
             {
-                return BadRequest("Only one item allowed or no template docs");
+                return BadRequest("Only two items allowed or no template docs");
             }
             if (vm.AccountVM == null || vm.AccountVM.ExtraInfo_Loan == null)
             {
@@ -294,6 +294,29 @@ namespace achihapi.Controllers
                     Int32 nNewAccountID = (Int32)idparam2.Value;
                     cmd.Dispose();
                     cmd = null;
+
+                    // 3a. Create another item to loan document
+                    foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
+                    {
+                        ivm.ItemID = 2;
+                        ivm.AccountID = nNewAccountID;
+                        if (vm.DocType == FinanceDocTypeViewModel.DocType_BorrowFrom)
+                            ivm.TranType = FinanceTranTypeViewModel.TranType_OpeningLiability;
+                        else if (vm.DocType == FinanceDocTypeViewModel.DocType_LendTo)
+                            ivm.TranType = FinanceTranTypeViewModel.TranType_OpeningAsset;
+
+                        queryString = HIHDBUtility.GetFinDocItemInsertString();
+                        SqlCommand cmd2 = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
+                        HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
+
+                        await cmd2.ExecuteNonQueryAsync();
+
+                        cmd2.Dispose();
+                        cmd2 = null;
+                    }
 
                     // Fourth, creat the Loan part
                     queryString = HIHDBUtility.GetFinanceAccountLoanInsertString();
