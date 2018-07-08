@@ -119,17 +119,20 @@ namespace achihapi.Controllers
         // POST: api/FinanceLoanTmpDoc
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Post([FromQuery]Int32 hid, Int32 docid)
+        public async Task<IActionResult> Post([FromQuery]Int32 hid, Int32 docid, [FromBody]FinanceDocumentUIViewModel vmdoc)
         {
-            // The post here is:
-            // 1. Post a normal document with the content from this template doc
-            // 2. Update the template doc with REFDOCID
-
             // Basic check
-            if (hid <= 0 || docid <= 0)
+            if (hid <= 0 || docid <= 0 || vmdoc == null)
             {
                 return BadRequest("No data inputted!");
             }
+
+            // Just stop the logic
+            return Forbid();
+
+            // The post here is:
+            // 1. Post a repayment document with the content from this template doc
+            // 2. Update the template doc with REFDOCID
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
