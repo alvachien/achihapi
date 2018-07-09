@@ -29,24 +29,29 @@ FROM [dbo].[t_fin_tmpdoc_loan]
     INNER JOIN [dbo].[t_fin_account_ext_loan]
     ON ([dbo].[t_fin_tmpdoc_loan].ACCOUNTID = [dbo].[t_fin_account_ext_loan].ACCOUNTID);  
 
--- Process document item
+---- Process posted loan document item
 UPDATE [dbo].[t_fin_document_item]
 SET [dbo].[t_fin_document_item].[TRANTYPE] = CASE [dbo].[t_fin_account_ext_loan].[IsLendOut] WHEN 1 THEN 86 ELSE 87 END
 FROM [dbo].[t_fin_document_item]
-    INNER JOIN [dbo].[t_fin_account_ext_loan]
-    ON ([dbo].[t_fin_document_item].ACCOUNTID = [dbo].[t_fin_account_ext_loan].ACCOUNTID);  
+    INNER JOIN [dbo].[t_fin_tmpdoc_loan]
+    ON ([dbo].[t_fin_document_item].DOCID = [dbo].[t_fin_tmpdoc_loan].REFDOCID);
 
-
-WITH LOANACCOUNT AS (SELECT a.[ACCOUNTID]
-      ,a.[IsLendOut]
-	  ,c.[DOCID]
-	  ,c.TRANAMOUNT
-	  ,c.USECURR2
-	  ,c.CONTROLCENTERID
-	  ,c.ORDERID
-	  ,c.DESP
-  FROM [dbo].[t_fin_account_ext_loan] as a
-	LEFT OUTER JOIN dbo.t_fin_document_item as c ON c.ACCOUNTID = a.ACCOUNTID)
+-- Add un-posted document item
+WITH LOANDOCITEM AS (SELECT 
+	a.[DOCID]
+    ,a.[ACCOUNTID]
+	,a.[TRANTYPE]
+	,a.TRANAMOUNT
+	,a.USECURR2
+	,a.CONTROLCENTERID
+	,a.ORDERID
+	,a.DESP
+	,c.IsLendOut
+FROM [dbo].[t_fin_document_item] as a
+    INNER JOIN [dbo].[t_fin_tmpdoc_loan] as b
+    ON b.DOCID = a.REFDOCID
+	INNER JOIN [dbo].[t_fin_account_ext_loan] as c
+	ON c.ACCOUNTID = b.ACCOUNTID )
 	INSERT INTO [dbo].[t_fin_document_item]
            ([DOCID]
            ,[ITEMID]
@@ -61,13 +66,13 @@ WITH LOANACCOUNT AS (SELECT a.[ACCOUNTID]
            [DOCID]
            ,2
            ,[ACCOUNTID]
-           ,CASE [IsLendOut] WHEN 1 THEN 87 ELSE 86 END
+           ,CASE [IsLendOut] WHEN 1 THEN 1 ELSE 82 END
            ,TRANAMOUNT
            ,USECURR2
            ,CONTROLCENTERID
            ,ORDERID
            ,DESP
-		   FROM LOANACCOUNT;
+		   FROM LOANDOCITEM;
 
 -- Version
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (3,'2018.07.10');
