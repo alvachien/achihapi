@@ -27,7 +27,10 @@ namespace achihapi.ViewModels
 
         public const Int32 TranType_BorrowFrom = 80;        
         public const Int32 TranType_LendTo = 81;
+        public const Int32 TranType_RepaymentOut = 86;
+        public const Int32 TranType_RepaymentIn = 87;
 
         public const Int32 TranType_InterestOut = 55;
+        public const Int32 TranType_InterestIn = 8;
     }
 }

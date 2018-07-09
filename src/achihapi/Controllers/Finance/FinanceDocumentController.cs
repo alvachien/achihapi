@@ -283,7 +283,7 @@ namespace achihapi.Controllers
                 // Do the validation
                 try
                 {
-                    await BasicValidationAsync(vm, conn);
+                    await FinanceDocumentBasicValidationAsync(vm, conn);
                 }
                 catch (Exception exp)
                 {
@@ -436,7 +436,7 @@ namespace achihapi.Controllers
                 // Do the validation
                 try
                 {
-                    await BasicValidationAsync(vm, conn);
+                    await FinanceDocumentBasicValidationAsync(vm, conn);
                 }
                 catch (Exception exp)
                 {
@@ -812,7 +812,7 @@ namespace achihapi.Controllers
 
         }
 
-        private async Task BasicValidationAsync(FinanceDocumentUIViewModel vm, SqlConnection conn)
+        internal static async Task FinanceDocumentBasicValidationAsync(FinanceDocumentUIViewModel vm, SqlConnection conn)
         {
             String strCheckString = @"SELECT TOP (1) [BASECURR] FROM [dbo].[t_homedef] WHERE [ID] = @hid;";
             SqlCommand cmdCheck = new SqlCommand(strCheckString, conn);
@@ -888,7 +888,7 @@ namespace achihapi.Controllers
             cmdCheck.Parameters.AddWithValue("@ID", vm.DocType);
             reader = await cmdCheck.ExecuteReaderAsync();
             if (!reader.HasRows)
-                throw new Exception("No currency found");
+                throw new Exception("Invalid document type");
             reader.Dispose();
             reader = null;
             cmdCheck.Dispose();

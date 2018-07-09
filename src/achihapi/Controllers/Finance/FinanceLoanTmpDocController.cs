@@ -122,26 +122,15 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Post([FromQuery]Int32 hid, Int32 docid, [FromBody]FinanceDocumentUIViewModel vmdoc)
         {
             // Basic check
-            if (hid <= 0 || docid <= 0 || vmdoc == null)
+            if (hid <= 0 || docid <= 0 || vmdoc == null || vmdoc.HID != hid)
             {
                 return BadRequest("No data inputted!");
             }
 
-            // Just stop the logic
-            return Forbid();
-
-            // The post here is:
-            // 1. Post a repayment document with the content from this template doc
-            // 2. Update the template doc with REFDOCID
-
-            // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = String.Empty;
             Boolean bError = false;
             String strErrMsg = String.Empty;
-            FinanceTmpDocLoanViewModel vmTmpDoc = new FinanceTmpDocLoanViewModel();
-            HomeDefViewModel vmHome = new HomeDefViewModel();
-            FinanceDocumentUIViewModel vmFIDOC = new FinanceDocumentUIViewModel();
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -154,40 +143,27 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
+            // The post here is:
+            // 1. Post a repayment document with the content from this template doc
+            // 2. Update the template doc with REFDOCID
+
+            // Update the database
+            FinanceTmpDocLoanViewModel vmTmpDoc = new FinanceTmpDocLoanViewModel();
+            HomeDefViewModel vmHome = new HomeDefViewModel();
+            FinanceAccountExtLoanViewModel vmAccount = new FinanceAccountExtLoanViewModel();
+
             try
             {
                 await conn.OpenAsync();
 
                 // Check: HID, it requires more info than just check, so it implemented it 
-                if (hid != 0)
+                try
                 {
-                    String strHIDCheck = HIHDBUtility.getHomeDefQueryString() + " WHERE [ID]= @hid AND [USER] = @user";
-                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
-                    cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
-                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
-                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
-                    if (!readHIDCheck.HasRows)
-                        return BadRequest("No home found");
-                    else
-                    {
-                        while (readHIDCheck.Read())
-                        {
-                            HIHDBUtility.HomeDef_DB2VM(readHIDCheck, vmHome);
-
-                            // It shall be only one entry if found!
-                            break;
-                        }
-                    }
-
-                    readHIDCheck.Dispose();
-                    readHIDCheck = null;
-                    cmdHIDCheck.Dispose();
-                    cmdHIDCheck = null;
+                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                 }
-
-                if (vmHome == null || String.IsNullOrEmpty(vmHome.BaseCurrency) || vmHome.ID != hid)
+                catch (Exception exp)
                 {
-                    return BadRequest("Home Definition is invalid");
+                    return BadRequest(exp.Message);
                 }
 
                 // Check: DocID
@@ -220,53 +196,37 @@ namespace achihapi.Controllers
                     return BadRequest("Tmp Doc not existed yet or has been posted");
                 }
 
+                // Data validation - basic
+                try
+                {
+                    await FinanceDocumentController.FinanceDocumentBasicValidationAsync(vmdoc, conn);
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
+                // Data validation - loan specific
+                try
+                {
+                    // Check the amount
+                    decimal totalOut = vmdoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentOut).Sum(item2 => item2.TranAmount);
+                    decimal totalIn = vmdoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentIn).Sum(item2 => item2.TranAmount);
+                    decimal totalintOut = vmdoc.Items.Where(item => (item.TranType == FinanceTranTypeViewModel.TranType_InterestOut)).Sum(item2 => item2.TranAmount);
+                    
+                }
+                catch (Exception exp)
+                {
+                    return BadRequest(exp.Message);
+                }
+
                 // Now go ahead for the creating
                 SqlTransaction tran = conn.BeginTransaction();
 
                 SqlCommand cmd = null;
                 Int32 nNewDocID = 0;
-                vmFIDOC.Desp = vmTmpDoc.Desp;
-                vmFIDOC.DocType = FinanceDocTypeViewModel.DocType_Normal;
-                vmFIDOC.HID = hid;
-                //vmFIDOC.TranAmount = vmTmpDoc.TranAmount;
-                vmFIDOC.TranCurr = vmHome.BaseCurrency;
-                vmFIDOC.TranDate = vmTmpDoc.TranDate;
-                vmFIDOC.CreatedAt = DateTime.Now;
 
-                // Tran amount
-                FinanceDocumentItemUIViewModel vmItem = new FinanceDocumentItemUIViewModel
-                {
-                    AccountID = vmTmpDoc.AccountID
-                };
-                if (vmTmpDoc.ControlCenterID.HasValue)
-                    vmItem.ControlCenterID = vmTmpDoc.ControlCenterID.Value;
-                if (vmTmpDoc.OrderID.HasValue)
-                    vmItem.OrderID = vmTmpDoc.OrderID.Value;
-                vmItem.Desp = vmTmpDoc.Desp;
-                vmItem.ItemID = 1;
-                vmItem.TranAmount = vmTmpDoc.TranAmount;
-                vmItem.TranType = vmTmpDoc.TranType;
-                vmFIDOC.Items.Add(vmItem);
-
-                // Interest amount
-                if (vmTmpDoc.InterestAmount.HasValue && vmTmpDoc.InterestAmount.Value > 0)
-                {
-                    vmItem = new FinanceDocumentItemUIViewModel
-                    {
-                        AccountID = vmTmpDoc.AccountID
-                    };
-                    if (vmTmpDoc.ControlCenterID.HasValue)
-                        vmItem.ControlCenterID = vmTmpDoc.ControlCenterID.Value;
-                    if (vmTmpDoc.OrderID.HasValue)
-                        vmItem.OrderID = vmTmpDoc.OrderID.Value;
-                    vmItem.Desp = vmTmpDoc.Desp;
-                    vmItem.ItemID = 2;
-                    vmItem.TranAmount = vmTmpDoc.InterestAmount.Value;
-                    vmItem.TranType = FinanceTranTypeViewModel.TranType_InterestOut; // Interest out
-                    vmFIDOC.Items.Add(vmItem);
-                }
-
-                // Now go ahead for the creating
+                // Now go ahead for creating
                 queryString = HIHDBUtility.GetFinDocHeaderInsertString();
 
                 try
@@ -277,16 +237,16 @@ namespace achihapi.Controllers
                         Transaction = tran
                     };
 
-                    HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vmFIDOC, usrName);
+                    HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vmdoc, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
                     Int32 nRst = await cmd.ExecuteNonQueryAsync();
                     nNewDocID = (Int32)idparam.Value;
-                    vmFIDOC.ID = nNewDocID;
+                    vmdoc.ID = nNewDocID;
 
                     // Then, creating the items
-                    foreach (FinanceDocumentItemUIViewModel ivm in vmFIDOC.Items)
+                    foreach (FinanceDocumentItemUIViewModel ivm in vmdoc.Items)
                     {
                         queryString = HIHDBUtility.GetFinDocItemInsertString();
 
@@ -352,7 +312,7 @@ namespace achihapi.Controllers
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
             
-            return new JsonResult(vmFIDOC, setting);
+            return new JsonResult(vmdoc, setting);
         }
 
         // PUT: api/FinanceLoanTmpDoc/5
@@ -369,6 +329,226 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             return BadRequest();
+        }
+
+        // Validation
+        private async Task DocumentValidationAsync(FinanceDocumentUIViewModel vmDoc, FinanceTmpDocLoanViewModel vmLoan, SqlConnection conn)
+        {
+            String strCheckString = @"SELECT TOP (1) [BASECURR] FROM [dbo].[t_homedef] WHERE [ID] = @hid;";
+            SqlCommand cmdCheck = new SqlCommand(strCheckString, conn);
+            cmdCheck.Parameters.AddWithValue("@hid", vmDoc.HID);
+
+            SqlDataReader reader = await cmdCheck.ExecuteReaderAsync();
+            if (!reader.HasRows)
+                throw new Exception("No home found");
+
+            // Basic currency
+            string basecurr = String.Empty;
+            while (reader.Read())
+            {
+                basecurr = reader.GetString(0);
+                break;
+            }
+            if (String.IsNullOrEmpty(basecurr))
+                throw new Exception("No base currency defined!");
+
+            reader.Dispose();
+            reader = null;
+            cmdCheck.Dispose();
+            cmdCheck = null;
+
+            // Currency
+            strCheckString = @"SELECT TOP (1) CURR from t_fin_currency WHERE curr = @curr;";
+            cmdCheck = new SqlCommand(strCheckString, conn);
+            cmdCheck.Parameters.AddWithValue("@curr", vmDoc.TranCurr);
+            reader = await cmdCheck.ExecuteReaderAsync();
+            if (!reader.HasRows)
+                throw new Exception("No currency found");
+            reader.Dispose();
+            reader = null;
+            cmdCheck.Dispose();
+            cmdCheck = null;
+
+            if (String.CompareOrdinal(vmDoc.TranCurr, basecurr) != 0)
+            {
+                if (vmDoc.ExgRate == 0)
+                {
+                    throw new Exception("No exchange rate info provided!");
+                }
+            }
+
+            // Second currency
+            if (!String.IsNullOrEmpty(vmDoc.TranCurr2))
+            {
+                strCheckString = @"SELECT TOP (1) CURR from t_fin_currency WHERE curr = @curr;";
+                cmdCheck = new SqlCommand(strCheckString, conn);
+                cmdCheck.Parameters.AddWithValue("@curr", vmDoc.TranCurr2);
+                reader = await cmdCheck.ExecuteReaderAsync();
+                if (!reader.HasRows)
+                    throw new Exception("No currency found");
+
+                reader.Dispose();
+                reader = null;
+                cmdCheck.Dispose();
+                cmdCheck = null;
+
+                if (String.CompareOrdinal(vmDoc.TranCurr2, basecurr) != 0)
+                {
+                    if (vmDoc.ExgRate2 == 0)
+                    {
+                        throw new Exception("No exchange rate info provided!");
+                    }
+                }
+            }
+
+            // Doc type
+            strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_doc_type] WHERE [ID] = @ID"; // @"SELECT TOP (1) [ID] FROM [t_fin_doc_type] WHERE [HID] = @HID AND [ID] = @ID";
+            cmdCheck = new SqlCommand(strCheckString, conn);
+            //cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
+            cmdCheck.Parameters.AddWithValue("@ID", vmDoc.DocType);
+            reader = await cmdCheck.ExecuteReaderAsync();
+            if (!reader.HasRows)
+                throw new Exception("Invalid document type");
+            reader.Dispose();
+            reader = null;
+            cmdCheck.Dispose();
+            cmdCheck = null;
+
+            Decimal totalamount = 0;
+            foreach (var item in vmDoc.Items)
+            {
+                // Account
+                strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_account] WHERE [HID] = @HID AND [ID] = @ID";
+                cmdCheck = new SqlCommand(strCheckString, conn);
+                cmdCheck.Parameters.AddWithValue("@HID", vmDoc.HID);
+                cmdCheck.Parameters.AddWithValue("@ID", item.AccountID);
+                reader = await cmdCheck.ExecuteReaderAsync();
+                if (!reader.HasRows)
+                    throw new Exception("No account found");
+                reader.Dispose();
+                reader = null;
+                cmdCheck.Dispose();
+                cmdCheck = null;
+
+                // Transaction type
+                strCheckString = @"SELECT TOP (1) [ID], [EXPENSE] FROM [t_fin_tran_type] WHERE [ID] = @ID";//@"SELECT TOP (1) [ID], [EXPENSE] FROM [t_fin_tran_type] WHERE [HID] = @HID AND [ID] = @ID";
+                cmdCheck = new SqlCommand(strCheckString, conn);
+                cmdCheck.Parameters.AddWithValue("@ID", item.TranType);
+                reader = await cmdCheck.ExecuteReaderAsync();
+                if (!reader.HasRows)
+                    throw new Exception("No tran. type found");
+
+                Boolean isexp = false;
+                while (reader.Read())
+                {
+                    isexp = reader.GetBoolean(1);
+                    break;
+                }
+                reader.Dispose();
+                reader = null;
+                cmdCheck.Dispose();
+                cmdCheck = null;
+
+                // Control center
+                if (item.ControlCenterID > 0)
+                {
+                    strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_controlcenter] WHERE [HID] = @HID AND [ID] = @ID";
+                    cmdCheck = new SqlCommand(strCheckString, conn);
+                    cmdCheck.Parameters.AddWithValue("@HID", vmDoc.HID);
+                    cmdCheck.Parameters.AddWithValue("@ID", item.ControlCenterID);
+                    reader = await cmdCheck.ExecuteReaderAsync();
+                    if (!reader.HasRows)
+                        throw new Exception("No control center found");
+                    reader.Dispose();
+                    reader = null;
+                    cmdCheck.Dispose();
+                    cmdCheck = null;
+                }
+
+                // Order
+                if (item.OrderID > 0)
+                {
+                    strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_order] WHERE [HID] = @HID AND [ID] = @ID";
+                    cmdCheck = new SqlCommand(strCheckString, conn);
+                    cmdCheck.Parameters.AddWithValue("@HID", vmDoc.HID);
+                    cmdCheck.Parameters.AddWithValue("@ID", item.OrderID);
+                    reader = await cmdCheck.ExecuteReaderAsync();
+                    if (!reader.HasRows)
+                        throw new Exception("No order found");
+                    reader.Dispose();
+                    reader = null;
+                    cmdCheck.Dispose();
+                    cmdCheck = null;
+                }
+
+                // Item amount
+                Decimal itemAmt = 0;
+                if (item.UseCurr2)
+                {
+                    if (isexp)
+                    {
+                        if (vmDoc.ExgRate2 > 0)
+                        {
+                            itemAmt = -1 * item.TranAmount * vmDoc.ExgRate2 / 100;
+                        }
+                        else
+                        {
+                            itemAmt = -1 * item.TranAmount;
+                        }
+                    }
+                    else
+                    {
+                        if (vmDoc.ExgRate2 > 0)
+                        {
+                            itemAmt = item.TranAmount * vmDoc.ExgRate2 / 100;
+                        }
+                        else
+                        {
+                            itemAmt = item.TranAmount;
+                        }
+                    }
+                }
+                else
+                {
+                    if (isexp)
+                    {
+                        if (vmDoc.ExgRate > 0)
+                        {
+                            itemAmt = -1 * item.TranAmount * vmDoc.ExgRate / 100;
+                        }
+                        else
+                        {
+                            itemAmt = -1 * item.TranAmount;
+                        }
+                    }
+                    else
+                    {
+                        if (vmDoc.ExgRate > 0)
+                        {
+                            itemAmt = item.TranAmount * vmDoc.ExgRate / 100;
+                        }
+                        else
+                        {
+                            itemAmt = item.TranAmount;
+                        }
+                    }
+                }
+
+                if (itemAmt == 0)
+                {
+                    throw new Exception("Amount is not correct");
+                }
+
+                totalamount += itemAmt;
+            }
+
+            if (vmDoc.DocType == FinanceDocTypeViewModel.DocType_Transfer || vmDoc.DocType == FinanceDocTypeViewModel.DocType_CurrExchange)
+            {
+                if (totalamount != 0)
+                {
+                    throw new Exception("Amount must be zero");
+                }
+            }
         }
     }
 }
