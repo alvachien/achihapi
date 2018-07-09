@@ -6,6 +6,7 @@ using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
 using achihapi.Utilities;
+using System.Linq;
 
 namespace achihapi.Controllers
 {
@@ -179,7 +180,7 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             // Check the items
-            if (vm.Items.Count <= 0 || vm.TmpDocs.Count <= 0)
+            if (vm.Items.Count <= 0 || vm.TmpDocs.Count <= 0 || vm.Items.Count != 1)
             {
                 return BadRequest("No item or no template docs");
             }
@@ -283,6 +284,28 @@ namespace achihapi.Controllers
                     cmd.Dispose();
                     cmd = null;
 
+                    // 3a. Create another item to loan document
+                    var nMaxItemID = vm.Items.Max(item => item.ItemID);
+                    foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
+                    {
+                        ivm.ItemID = ++nMaxItemID;
+                        ivm.AccountID = nNewAccountID;
+                        ivm.TranType = FinanceTranTypeViewModel.TranType_OpeningAsset;
+
+                        queryString = HIHDBUtility.GetFinDocItemInsertString();
+                        SqlCommand cmd2 = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
+                        HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
+
+                        await cmd2.ExecuteNonQueryAsync();
+
+                        cmd2.Dispose();
+                        cmd2 = null;
+                        break;
+                    }
+
                     // Fourth, creat the ADP part
                     queryString = HIHDBUtility.GetFinanceAccountADPInsertString();
                     cmd = new SqlCommand(queryString, conn)
@@ -295,8 +318,6 @@ namespace achihapi.Controllers
                     cmd.Dispose();
                     cmd = null;
 
-                    // Fifth, create the openning item to new created ADP account
-                    
 
                     // Sixth, create template docs
                     foreach (FinanceTmpDocDPViewModel avm in vm.TmpDocs)

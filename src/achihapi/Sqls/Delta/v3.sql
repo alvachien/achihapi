@@ -70,4 +70,4 @@ WITH LOANACCOUNT AS (SELECT a.[ACCOUNTID]
 		   FROM LOANACCOUNT;
 
 -- Version
-INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (3,'2018.07.07');
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (3,'2018.07.10');

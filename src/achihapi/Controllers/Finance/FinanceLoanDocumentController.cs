@@ -296,9 +296,10 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // 3a. Create another item to loan document
+                    var nMaxItemID = vm.Items.Max(item => item.ItemID);
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
-                        ivm.ItemID = 2;
+                        ivm.ItemID = ++nMaxItemID;
                         ivm.AccountID = nNewAccountID;
                         if (vm.DocType == FinanceDocTypeViewModel.DocType_BorrowFrom)
                             ivm.TranType = FinanceTranTypeViewModel.TranType_OpeningLiability;
@@ -389,7 +390,7 @@ namespace achihapi.Controllers
         // PUT: api/FinanceLoanDocument/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
             return BadRequest();
         }
@@ -397,7 +398,7 @@ namespace achihapi.Controllers
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             return BadRequest();
         }
