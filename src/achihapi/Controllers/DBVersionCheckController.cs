@@ -17,6 +17,8 @@ namespace achihapi.Controllers
     [Route("api/DBVersionCheck")]
     public class DBVersionCheckController : Controller
     {
+        public static Int32 CurrentVersion = 4;
+
         // GET: api/DBVersionCheck
         [HttpGet]
         public async Task<IActionResult> Get()
@@ -92,7 +94,6 @@ namespace achihapi.Controllers
             String strErrMsg = "";
             DBVersionViewModel vmCurrent = new DBVersionViewModel();
             SqlTransaction tran = null;
-            Int32 reqver = 3; // For current API
 
             try
             {
@@ -126,12 +127,12 @@ namespace achihapi.Controllers
                 cmd.Dispose();
                 cmd = null;
 
-                if (vmCurrent.VersionID < reqver)
+                if (vmCurrent.VersionID < CurrentVersion)
                 {
                     tran = conn.BeginTransaction();
 
                     var nver = vmCurrent.VersionID + 1;
-                    while(nver <= reqver)
+                    while(nver <= CurrentVersion)
                     {
                         // Update the DB version
                         await updateDBVersion(conn, tran, nver++);
@@ -139,7 +140,7 @@ namespace achihapi.Controllers
 
                     tran.Commit();
                 }
-                else if (vmCurrent.VersionID > reqver)
+                else if (vmCurrent.VersionID > CurrentVersion)
                 {
                     bError = true;
                     strErrMsg = "Contact system administrator";

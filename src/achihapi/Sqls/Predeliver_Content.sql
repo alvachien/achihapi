@@ -317,17 +317,20 @@ INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (1,'2018.07.
 
 
 -----------------------------------------------------------------------------------------------------------------------------------
--- Updated at 2017.5
+-- Updated at 2017.7.5
 UPDATE dbo.[t_fin_tran_type] SET [PARID] = 24 WHERE [ID] = 82;
 UPDATE dbo.[t_fin_tran_type] SET [PARID] = 10 WHERE [ID] = 1; 
+
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] ON;
 INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (84,N'房租收入',0,5,N'房租收入等');
 INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (85,N'房租支出',1,11,N'房租支出等');
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (2,'2018.07.05');
 
 
 -----------------------------------------------------------------------------------------------------------------------------------
--- Updated at 2017.6
+-- Updated at 2017.7.6
 SET IDENTITY_INSERT dbo.[t_fin_tran_type] ON;
 
 INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (86,N'偿还借贷款',1,25,N'偿还借贷款');
@@ -342,6 +345,16 @@ SET IDENTITY_INSERT dbo.[t_fin_doc_type] OFF;
 
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (3,'2018.07.10');
 
+-----------------------------------------------------------------------------------------------------------------------------------
+-- Updated at 2017.7.11
+-- Tran. type
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] ON;
+
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (88,N'预付款支出',1,25,N'偿还借贷款');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (89,N'资产减值',1,25,N'资产贬值或减值');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (90,N'资产增值',0,5,N'资产增值');
+
+SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 
 
 ---------------------------------
