@@ -127,18 +127,18 @@ namespace achihapi.Controllers
                 cmd.Dispose();
                 cmd = null;
 
-                if (vmCurrent.VersionID < CurrentVersion)
+                if (vmCurrent.VersionID < DBVersionCheckController.CurrentVersion)
                 {
-                    tran = conn.BeginTransaction();
-
                     var nver = vmCurrent.VersionID + 1;
-                    while(nver <= CurrentVersion)
+                    while(nver <= DBVersionCheckController.CurrentVersion)
                     {
+                        tran = conn.BeginTransaction();
+
                         // Update the DB version
                         await updateDBVersion(conn, tran, nver++);
-                    }
 
-                    tran.Commit();
+                        tran.Commit();
+                    }
                 }
                 else if (vmCurrent.VersionID > CurrentVersion)
                 {
@@ -214,7 +214,7 @@ namespace achihapi.Controllers
             {
                 System.Diagnostics.Debug.WriteLine(exception.Message);
                 // ApplicationProvider.WriteToLog<EmbeddedResource>().Error(exception.Message);
-                throw new Exception($"Failed to read Embedded Resource {sqlfile}");
+                throw new Exception($"Failed to read Embedded Resource {sqlfile}, reason: {exception.Message}");
             }
         }
     }

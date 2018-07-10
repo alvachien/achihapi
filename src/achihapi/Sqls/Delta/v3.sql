@@ -34,7 +34,9 @@ UPDATE [dbo].[t_fin_document_item]
 SET [dbo].[t_fin_document_item].[TRANTYPE] = CASE [dbo].[t_fin_account_ext_loan].[IsLendOut] WHEN 1 THEN 86 ELSE 87 END
 FROM [dbo].[t_fin_document_item]
     INNER JOIN [dbo].[t_fin_tmpdoc_loan]
-    ON ([dbo].[t_fin_document_item].DOCID = [dbo].[t_fin_tmpdoc_loan].REFDOCID);
+    ON ([dbo].[t_fin_document_item].DOCID = [dbo].[t_fin_tmpdoc_loan].REFDOCID)
+	INNER JOIN [dbo].[t_fin_account_ext_loan]
+	ON ([dbo].[t_fin_tmpdoc_loan].ACCOUNTID = [dbo].[t_fin_account_ext_loan].ACCOUNTID);
 
 -- Add un-posted document item
 WITH LOANDOCITEM AS (SELECT 
