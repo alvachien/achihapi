@@ -27,16 +27,16 @@ UPDATE [dbo].[t_fin_tmpdoc_loan]
 SET [dbo].[t_fin_tmpdoc_loan].[TRANTYPE] = CASE [dbo].[t_fin_account_ext_loan].[IsLendOut] WHEN 1 THEN 87 ELSE 86 END
 FROM [dbo].[t_fin_tmpdoc_loan]
     INNER JOIN [dbo].[t_fin_account_ext_loan]
-    ON ([dbo].[t_fin_tmpdoc_loan].ACCOUNTID = [dbo].[t_fin_account_ext_loan].ACCOUNTID);  
+    ON [dbo].[t_fin_tmpdoc_loan].ACCOUNTID = [dbo].[t_fin_account_ext_loan].ACCOUNTID;  
 
 ---- Process posted loan document item
 UPDATE [dbo].[t_fin_document_item]
 SET [dbo].[t_fin_document_item].[TRANTYPE] = CASE [dbo].[t_fin_account_ext_loan].[IsLendOut] WHEN 1 THEN 86 ELSE 87 END
 FROM [dbo].[t_fin_document_item]
     INNER JOIN [dbo].[t_fin_tmpdoc_loan]
-    ON ([dbo].[t_fin_document_item].DOCID = [dbo].[t_fin_tmpdoc_loan].REFDOCID)
+    ON [dbo].[t_fin_document_item].DOCID = [dbo].[t_fin_tmpdoc_loan].REFDOCID
 	INNER JOIN [dbo].[t_fin_account_ext_loan]
-	ON ([dbo].[t_fin_tmpdoc_loan].ACCOUNTID = [dbo].[t_fin_account_ext_loan].ACCOUNTID);
+	ON [dbo].[t_fin_tmpdoc_loan].ACCOUNTID = [dbo].[t_fin_account_ext_loan].ACCOUNTID;
 
 -- Add un-posted document item
 WITH LOANDOCITEM AS (SELECT 
@@ -51,7 +51,7 @@ WITH LOANDOCITEM AS (SELECT
 	,c.IsLendOut
 FROM [dbo].[t_fin_document_item] as a
     INNER JOIN [dbo].[t_fin_tmpdoc_loan] as b
-    ON b.DOCID = a.REFDOCID
+    ON b.REFDOCID = a.DOCID
 	INNER JOIN [dbo].[t_fin_account_ext_loan] as c
 	ON c.ACCOUNTID = b.ACCOUNTID )
 	INSERT INTO [dbo].[t_fin_document_item]
