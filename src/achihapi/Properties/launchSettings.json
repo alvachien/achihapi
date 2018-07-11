@@ -13,13 +13,13 @@
       "launchBrowser": true,
       "launchUrl": "api/",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Production"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "achihapi": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "http://localhost:5000/api/values",
+      "applicationUrl": "http://localhost:25688/",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Production"
       }
