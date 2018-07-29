@@ -16,7 +16,7 @@ namespace achihapi.Controllers
         // GET: api/financedocument
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, DateTime? dtbgn = null, DateTime? dtend = null)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, DateTime? dtbgn = null, DateTime? dtend = null, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceDocumentUIViewModel> listVMs = new BaseListViewModel<FinanceDocumentUIViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -81,7 +81,7 @@ namespace achihapi.Controllers
                         queryString += " AND [TRANDATE] >= @dtbgn ";
                     if (dtend.HasValue)
                         queryString += " AND [TRANDATE] <= @dtend ";
-                    queryString += " ORDER BY [TRANDATE] DESC";
+                    queryString += " ORDER BY [TRANDATE] DESC OFFSET " + skip.ToString() + " ROWS FETCH NEXT " + top.ToString() + " ROWS ONLY;";
                     cmd = new SqlCommand(queryString, conn);
                     cmd.Parameters.AddWithValue("@hid", hid);
                     if (dtbgn.HasValue)
