@@ -1759,6 +1759,36 @@ namespace achihapi.Utilities
                           ,[UPDATEDAT]
                         FROM [dbo].[t_fin_tmpdoc_loan] ";
         }
+        internal static string GetFinanceLoanAccountQueryString(Int32 hid, Int32 acntid)
+        {
+            return @"SELECT [t_fin_account].[ID]
+                            ,[t_fin_account].[HID]
+                            ,[t_fin_account].[CTGYID]
+                            ,[t_fin_account].[NAME]
+                            ,[t_fin_account].[COMMENT]
+                            ,[t_fin_account].[OWNER]
+                            ,[t_fin_account].[STATUS]
+                            ,[t_fin_account].[CREATEDBY]
+                            ,[t_fin_account].[CREATEDAT]
+                            ,[t_fin_account].[UPDATEDBY]
+                            ,[t_fin_account].[UPDATEDAT]
+                            ,[t_fin_account_ext_loan].[STARTDATE]
+                            ,[t_fin_account_ext_loan].[ANNUALRATE]
+                            ,[t_fin_account_ext_loan].[INTERESTFREE]
+                            ,[t_fin_account_ext_loan].[REPAYMETHOD]
+                            ,[t_fin_account_ext_loan].[TOTALMONTH]
+                            ,[t_fin_account_ext_loan].[REFDOCID]
+                            ,[t_fin_account_ext_loan].[OTHERS]
+                            ,[t_fin_account_ext_loan].[ENDDATE]
+                            ,[t_fin_account_ext_loan].[ISLENDOUT]
+                        FROM [dbo].[t_fin_account]
+                        LEFT OUTER JOIN [dbo].[t_fin_account_ext_loan]
+                            ON [t_fin_account].[ID] = [t_fin_account_ext_loan].[ACCOUNTID]
+                        WHERE [t_fin_account].[CTGYID] IN ( "
+                        + FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom.ToString()
+                        + ", " + FinanceAccountCtgyViewModel.AccountCategory_LendTo.ToString()
+                        + " ) AND [t_fin_account].[ID] = " + acntid.ToString(); 
+        }
 
         internal static string GetFinanceDocLoanQueryString(Int32 nid, Int32 hid)
         {

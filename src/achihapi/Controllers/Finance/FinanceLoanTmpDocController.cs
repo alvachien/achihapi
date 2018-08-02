@@ -152,7 +152,8 @@ namespace achihapi.Controllers
             // Update the database
             FinanceTmpDocLoanViewModel vmTmpDoc = new FinanceTmpDocLoanViewModel();
             HomeDefViewModel vmHome = new HomeDefViewModel();
-            FinanceAccountExtLoanViewModel vmAccount = new FinanceAccountExtLoanViewModel();
+            FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
+            //FinanceAccountExtLoanViewModel vmAccount = new FinanceAccountExtLoanViewModel();
 
             try
             {
@@ -197,6 +198,29 @@ namespace achihapi.Controllers
                     return BadRequest("Tmp Doc not existed yet or has been posted");
                 }
 
+                // Check: Loan account
+                checkString = HIHDBUtility.GetFinanceLoanAccountQueryString(hid, vmTmpDoc.AccountID);
+                chkcmd = new SqlCommand(checkString, conn);
+                chkreader = chkcmd.ExecuteReader();
+                if (!chkreader.HasRows)
+                {
+                    return BadRequest("Invalid Doc ID inputted: " + tmpdocid.ToString());
+                }
+                else
+                {
+                    while (chkreader.Read())
+                    {
+                        Int32 aidx = 0;
+                        aidx = HIHDBUtility.FinAccountHeader_DB2VM(chkreader, vmAccount, aidx);
+                        vmAccount.ExtraInfo_Loan = new FinanceAccountExtLoanViewModel();
+                        HIHDBUtility.FinAccountLoan_DB2VM(chkreader, vmAccount.ExtraInfo_Loan, aidx);
+                    }
+                }
+                chkreader.Dispose();
+                chkreader = null;
+                chkcmd.Dispose();
+                chkcmd = null;
+
                 // Data validation - basic
                 try
                 {
@@ -210,11 +234,36 @@ namespace achihapi.Controllers
                 // Data validation - loan specific
                 try
                 {
+                    int ninvaliditems = 0;
+                    // Only four tran. types are allowed
+                    if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom)
+                    {
+                        ninvaliditems = repaydoc.Items.Where(item => item.TranType != FinanceTranTypeViewModel.TranType_InterestOut 
+                            && item.TranType != FinanceTranTypeViewModel.TranType_RepaymentOut  
+                            && item.TranType != FinanceTranTypeViewModel.TranType_RepaymentIn)
+                            .Count();
+                    }
+                    else if(vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
+                    {
+                        ninvaliditems = repaydoc.Items.Where(item => item.TranType != FinanceTranTypeViewModel.TranType_InterestIn
+                            && item.TranType != FinanceTranTypeViewModel.TranType_RepaymentOut
+                            && item.TranType != FinanceTranTypeViewModel.TranType_RepaymentIn)
+                            .Count();
+                    }
+                    if (ninvaliditems > 0)
+                    {
+                        return BadRequest("Items with invalid tran type");
+                    }
+
                     // Check the amount
                     decimal totalOut = repaydoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentOut).Sum(item2 => item2.TranAmount);
                     decimal totalIn = repaydoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentIn).Sum(item2 => item2.TranAmount);
                     decimal totalintOut = repaydoc.Items.Where(item => (item.TranType == FinanceTranTypeViewModel.TranType_InterestOut)).Sum(item2 => item2.TranAmount);
                     
+                    if (totalintOut != 0)
+                    {
+                        return BadRequest("Amount is not equal!");
+                    }
                 }
                 catch (Exception exp)
                 {
