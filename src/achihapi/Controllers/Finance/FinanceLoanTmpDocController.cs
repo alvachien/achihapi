@@ -119,10 +119,16 @@ namespace achihapi.Controllers
         // POST: api/FinanceLoanTmpDoc
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Post([FromQuery]Int32 hid, Int32 docid, [FromBody]FinanceDocumentUIViewModel vmdoc)
+        public async Task<IActionResult> Post([FromQuery]Int32 hid, Int32 tmpdocid, [FromBody]FinanceDocumentUIViewModel repaydoc)
         {
+            // The post here is:
+            // 1. Post a repayment document with the content from this template doc
+            // 2. Update the template doc with REFDOCID
+
             // Basic check
-            if (hid <= 0 || docid <= 0 || vmdoc == null || vmdoc.HID != hid)
+            if (hid <= 0 || tmpdocid <= 0 
+                || repaydoc == null || repaydoc.HID != hid 
+                || repaydoc.DocType != FinanceDocTypeViewModel.DocType_Repay)
             {
                 return BadRequest("No data inputted!");
             }
@@ -142,10 +148,6 @@ namespace achihapi.Controllers
             }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
-
-            // The post here is:
-            // 1. Post a repayment document with the content from this template doc
-            // 2. Update the template doc with REFDOCID
 
             // Update the database
             FinanceTmpDocLoanViewModel vmTmpDoc = new FinanceTmpDocLoanViewModel();
@@ -167,12 +169,12 @@ namespace achihapi.Controllers
                 }
 
                 // Check: DocID
-                String checkString = HIHDBUtility.GetFinanceDocLoanListQueryString() + " WHERE [DOCID] = " + docid.ToString() + " AND [HID] = " + hid.ToString();
+                String checkString = HIHDBUtility.GetFinanceDocLoanListQueryString() + " WHERE [DOCID] = " + tmpdocid.ToString() + " AND [HID] = " + hid.ToString();
                 SqlCommand chkcmd = new SqlCommand(checkString, conn);
                 SqlDataReader chkreader = chkcmd.ExecuteReader();
                 if (!chkreader.HasRows)
                 {
-                    return BadRequest("Invalid Doc ID inputted: " + docid.ToString());
+                    return BadRequest("Invalid Doc ID inputted: " + tmpdocid.ToString());
                 }
                 else
                 {
@@ -183,7 +185,6 @@ namespace achihapi.Controllers
                         // It shall be only one entry if found!
                         break;
                     }
-
                 }
                 chkreader.Dispose();
                 chkreader = null;
@@ -199,7 +200,7 @@ namespace achihapi.Controllers
                 // Data validation - basic
                 try
                 {
-                    await FinanceDocumentController.FinanceDocumentBasicValidationAsync(vmdoc, conn);
+                    await FinanceDocumentController.FinanceDocumentBasicValidationAsync(repaydoc, conn);
                 }
                 catch (Exception exp)
                 {
@@ -210,9 +211,9 @@ namespace achihapi.Controllers
                 try
                 {
                     // Check the amount
-                    decimal totalOut = vmdoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentOut).Sum(item2 => item2.TranAmount);
-                    decimal totalIn = vmdoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentIn).Sum(item2 => item2.TranAmount);
-                    decimal totalintOut = vmdoc.Items.Where(item => (item.TranType == FinanceTranTypeViewModel.TranType_InterestOut)).Sum(item2 => item2.TranAmount);
+                    decimal totalOut = repaydoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentOut).Sum(item2 => item2.TranAmount);
+                    decimal totalIn = repaydoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentIn).Sum(item2 => item2.TranAmount);
+                    decimal totalintOut = repaydoc.Items.Where(item => (item.TranType == FinanceTranTypeViewModel.TranType_InterestOut)).Sum(item2 => item2.TranAmount);
                     
                 }
                 catch (Exception exp)
@@ -237,16 +238,16 @@ namespace achihapi.Controllers
                         Transaction = tran
                     };
 
-                    HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vmdoc, usrName);
+                    HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, repaydoc, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
                     Int32 nRst = await cmd.ExecuteNonQueryAsync();
                     nNewDocID = (Int32)idparam.Value;
-                    vmdoc.ID = nNewDocID;
+                    repaydoc.ID = nNewDocID;
 
                     // Then, creating the items
-                    foreach (FinanceDocumentItemUIViewModel ivm in vmdoc.Items)
+                    foreach (FinanceDocumentItemUIViewModel ivm in repaydoc.Items)
                     {
                         queryString = HIHDBUtility.GetFinDocItemInsertString();
 
@@ -273,7 +274,7 @@ namespace achihapi.Controllers
                     cmdTmpDoc.Parameters.AddWithValue("@UPDATEDBY", usrName);
                     cmdTmpDoc.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
                     cmdTmpDoc.Parameters.AddWithValue("@HID", hid);
-                    cmdTmpDoc.Parameters.AddWithValue("@DOCID", docid);
+                    cmdTmpDoc.Parameters.AddWithValue("@DOCID", tmpdocid);
                     await cmdTmpDoc.ExecuteNonQueryAsync();
 
                     tran.Commit();
@@ -312,7 +313,7 @@ namespace achihapi.Controllers
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
             
-            return new JsonResult(vmdoc, setting);
+            return new JsonResult(repaydoc, setting);
         }
 
         // PUT: api/FinanceLoanTmpDoc/5

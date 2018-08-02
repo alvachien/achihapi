@@ -17,7 +17,9 @@ namespace achihapi.Controllers
     [Route("api/DBVersionCheck")]
     public class DBVersionCheckController : Controller
     {
-        public static Int32 CurrentVersion = 4;
+        // Version 4 - 2018.07
+        // Version 5 - 2018.08.02
+        public static Int32 CurrentVersion = 5;
 
         // GET: api/DBVersionCheck
         [HttpGet]

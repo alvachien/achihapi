@@ -1729,6 +1729,20 @@ GO
 ALTER TABLE [dbo].[t_dbversion] ADD  CONSTRAINT [DF_t_dbversion_AppliedDate]  DEFAULT (getdate()) FOR [AppliedDate]
 GO
 
+-- Updated at 2018.8.2
+-- Update table: t_fin_tmpdoc_loan 
+IF EXISTS(SELECT *
+	FROM INFORMATION_SCHEMA.COLUMNS
+	WHERE TABLE_NAME = 't_fin_tmpdoc_loan' AND COLUMN_NAME = 'TRANTYPE')
+BEGIN
+
+    ALTER TABLE [dbo].[t_fin_tmpdoc_loan] 
+		DROP COLUMN TRANTYPE;
+
+END
+
+GO
+
 
 ---------------------------------
 -- TODO...

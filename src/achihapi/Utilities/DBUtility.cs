@@ -1748,7 +1748,6 @@ namespace achihapi.Utilities
                           ,[REFDOCID]
                           ,[ACCOUNTID]
                           ,[TRANDATE]
-                          ,[TRANTYPE]
                           ,[TRANAMOUNT]
                           ,[INTERESTAMOUNT]
                           ,[CONTROLCENTERID]
@@ -1821,7 +1820,6 @@ namespace achihapi.Utilities
                           ,[t_fin_tmpdoc_loan].[REFDOCID]
                           ,[t_fin_tmpdoc_loan].[ACCOUNTID]
                           ,[t_fin_tmpdoc_loan].[TRANDATE]
-                          ,[t_fin_tmpdoc_loan].[TRANTYPE]
                           ,[t_fin_tmpdoc_loan].[TRANAMOUNT]
                           ,[t_fin_tmpdoc_loan].[INTERESTAMOUNT]
                           ,[t_fin_tmpdoc_loan].[CONTROLCENTERID]
@@ -1852,7 +1850,6 @@ namespace achihapi.Utilities
                                 ,[REFDOCID]
                                 ,[ACCOUNTID]
                                 ,[TRANDATE]
-                                ,[TRANTYPE]
                                 ,[TRANAMOUNT]
                                 ,[INTERESTAMOUNT]
                                 ,[CONTROLCENTERID]
@@ -1867,7 +1864,6 @@ namespace achihapi.Utilities
                                 ,@REFDOCID
                                 ,@ACCOUNTID
                                 ,@TRANDATE
-                                ,@TRANTYPE
                                 ,@TRANAMOUNT
                                 ,@INTERESTAMOUNT
                                 ,@CONTROLCENTERID
@@ -1888,7 +1884,7 @@ namespace achihapi.Utilities
                 cmd.Parameters.AddWithValue("@REFDOCID", DBNull.Value);
             cmd.Parameters.AddWithValue("@ACCOUNTID", nNewAccountID);
             cmd.Parameters.AddWithValue("@TRANDATE", avm.TranDate);
-            cmd.Parameters.AddWithValue("@TRANTYPE", avm.TranType);
+            // cmd.Parameters.AddWithValue("@TRANTYPE", avm.TranType);
             cmd.Parameters.AddWithValue("@TRANAMOUNT", avm.TranAmount);
             if (avm.InterestAmount.HasValue)
                 cmd.Parameters.AddWithValue("@INTERESTAMOUNT", avm.InterestAmount.Value);
@@ -1922,7 +1918,7 @@ namespace achihapi.Utilities
                 ++idx;
             vm.AccountID = reader.GetInt32(idx++);
             vm.TranDate = reader.GetDateTime(idx++);
-            vm.TranType = reader.GetInt32(idx++);
+            //vm.TranType = reader.GetInt32(idx++);
             vm.TranAmount = reader.GetDecimal(idx++);
             if (!reader.IsDBNull(idx))
                 vm.InterestAmount = reader.GetDecimal(idx++);

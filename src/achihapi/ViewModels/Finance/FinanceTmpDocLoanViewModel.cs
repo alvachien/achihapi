@@ -17,8 +17,8 @@ namespace achihapi.ViewModels
         public Int32 AccountID { get; set; }
         [Required]
         public DateTime TranDate { get; set; }
-        [Required]
-        public Int32 TranType { get; set; }
+        //[Required]
+        //public Int32 TranType { get; set; }
         [Required]
         public Decimal TranAmount { get; set; }
         public Decimal? InterestAmount { get; set; }

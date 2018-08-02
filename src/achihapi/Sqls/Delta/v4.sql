@@ -51,14 +51,14 @@ INSERT INTO [dbo].[t_fin_document_item]
     ,[DESP])
 SELECT
     [DOCID]
-           , 2
-           , [ACCOUNTID]
-           , 1
-           , TRANAMOUNT
-           , USECURR2
-           , CONTROLCENTERID
-           , ORDERID
-           , DESP
+    , 2
+    , [ACCOUNTID]
+    , 1
+    , TRANAMOUNT
+    , USECURR2
+    , CONTROLCENTERID
+    , ORDERID
+    , DESP
 FROM ADPDOCS;
 
 -- Insert new item to Asset account
@@ -89,14 +89,14 @@ INSERT INTO [dbo].[t_fin_document_item]
     ,[DESP])
 SELECT
     [DOCID]
-           , 2
-           , [ACCOUNTID]
-           , 1
-           , TRANAMOUNT
-           , USECURR2
-           , CONTROLCENTERID
-           , ORDERID
-           , DESP
+    , 2
+    , [ACCOUNTID]
+    , 1
+    , TRANAMOUNT
+    , USECURR2
+    , CONTROLCENTERID
+    , ORDERID
+    , DESP
 FROM ASSETDOCS;
 
 -- Version
@@ -104,3 +104,5 @@ INSERT INTO [dbo].[t_dbversion]
     ([VersionID],[ReleasedDate])
 VALUES
     (4, '2018.07.11');
+
+-- The End.

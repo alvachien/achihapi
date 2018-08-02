@@ -35,5 +35,6 @@ INSERT INTO [dbo].[t_dbversion]
     ([VersionID]
     ,[ReleasedDate])
 VALUES
-    (1
-           , '2018.07.04');
+    (1, '2018.07.04');
+
+-- The End

@@ -100,3 +100,5 @@ INSERT INTO [dbo].[t_dbversion]
     ([VersionID],[ReleasedDate])
 VALUES
     (3, '2018.07.10');
+
+-- The End.
