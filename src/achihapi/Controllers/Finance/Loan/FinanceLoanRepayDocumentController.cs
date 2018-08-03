@@ -36,14 +36,15 @@ namespace achihapi.Controllers
         // POST: api/FinanceLoanRepayDocument
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Post([FromQuery]Int32 hid, Int32 tmpdocid, [FromBody]FinanceDocumentUIViewModel repaydoc)
+        public async Task<IActionResult> Post([FromQuery]Int32 hid, Int32? tmpdocid, Int32? loanAccountID, [FromBody]FinanceDocumentUIViewModel repaydoc)
         {
             // The post here is:
             // 1. Post a repayment document with the content from this template doc
             // 2. Update the template doc with REFDOCID
 
             // Basic check
-            if (hid <= 0 || tmpdocid <= 0
+            if (hid <= 0 || (tmpdocid.HasValue && tmpdocid.Value <= 0)
+                || (loanAccountID.HasValue && loanAccountID.Value <= 0)
                 || repaydoc == null || repaydoc.HID != hid
                 || repaydoc.DocType != FinanceDocTypeViewModel.DocType_Repay)
             {
@@ -70,7 +71,6 @@ namespace achihapi.Controllers
             FinanceTmpDocLoanViewModel vmTmpDoc = new FinanceTmpDocLoanViewModel();
             HomeDefViewModel vmHome = new HomeDefViewModel();
             FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
-            //FinanceAccountExtLoanViewModel vmAccount = new FinanceAccountExtLoanViewModel();
 
             try
             {
@@ -87,27 +87,35 @@ namespace achihapi.Controllers
                 }
 
                 // Check: DocID
-                String checkString = HIHDBUtility.GetFinanceDocLoanListQueryString() + " WHERE [DOCID] = " + tmpdocid.ToString() + " AND [HID] = " + hid.ToString();
-                SqlCommand chkcmd = new SqlCommand(checkString, conn);
-                SqlDataReader chkreader = chkcmd.ExecuteReader();
-                if (!chkreader.HasRows)
+                String checkString = "";
+                SqlCommand chkcmd = null;
+                SqlDataReader chkreader = null;
+                if (tmpdocid.HasValue)
                 {
-                    return BadRequest("Invalid Doc ID inputted: " + tmpdocid.ToString());
-                }
-                else
-                {
-                    while (chkreader.Read())
-                    {
-                        HIHDBUtility.FinTmpDocLoan_DB2VM(chkreader, vmTmpDoc);
+                    checkString = HIHDBUtility.GetFinanceDocLoanListQueryString() + " WHERE [DOCID] = " + tmpdocid.Value.ToString() + " AND [HID] = " + hid.ToString();
+                    chkcmd = new SqlCommand(checkString, conn);
+                    chkreader = chkcmd.ExecuteReader();
 
-                        // It shall be only one entry if found!
-                        break;
+                    if (!chkreader.HasRows)
+                    {
+                        return BadRequest("Invalid Doc ID inputted: " + tmpdocid.Value.ToString());
                     }
+                    else
+                    {
+                        while (chkreader.Read())
+                        {
+                            HIHDBUtility.FinTmpDocLoan_DB2VM(chkreader, vmTmpDoc);
+
+                            // It shall be only one entry if found!
+                            break;
+                        }
+                    }
+
+                    chkreader.Dispose();
+                    chkreader = null;
+                    chkcmd.Dispose();
+                    chkcmd = null;
                 }
-                chkreader.Dispose();
-                chkreader = null;
-                chkcmd.Dispose();
-                chkcmd = null;
 
                 // Check: Tmp doc has posted or not?
                 if (vmTmpDoc == null || (vmTmpDoc.RefDocID.HasValue && vmTmpDoc.RefDocID.Value > 0))
