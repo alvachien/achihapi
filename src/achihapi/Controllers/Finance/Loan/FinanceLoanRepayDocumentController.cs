@@ -36,7 +36,7 @@ namespace achihapi.Controllers
         // POST: api/FinanceLoanRepayDocument
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Post([FromQuery]Int32 hid, Int32? tmpdocid, Int32? loanAccountID, [FromBody]FinanceDocumentUIViewModel repaydoc)
+        public async Task<IActionResult> Post([FromQuery]Int32 hid, Int32 loanAccountID, Int32? tmpdocid, [FromBody]FinanceDocumentUIViewModel repaydoc)
         {
             // The post here is:
             // 1. Post a repayment document with the content from this template doc
@@ -44,7 +44,7 @@ namespace achihapi.Controllers
 
             // Basic check
             if (hid <= 0 || (tmpdocid.HasValue && tmpdocid.Value <= 0)
-                || (loanAccountID.HasValue && loanAccountID.Value <= 0)
+                || loanAccountID <= 0
                 || repaydoc == null || repaydoc.HID != hid
                 || repaydoc.DocType != FinanceDocTypeViewModel.DocType_Repay)
             {
@@ -118,13 +118,14 @@ namespace achihapi.Controllers
                 }
 
                 // Check: Tmp doc has posted or not?
-                if (vmTmpDoc == null || (vmTmpDoc.RefDocID.HasValue && vmTmpDoc.RefDocID.Value > 0))
+                if (vmTmpDoc == null || (vmTmpDoc.RefDocID.HasValue && vmTmpDoc.RefDocID.Value > 0)
+                    || vmTmpDoc.AccountID != loanAccountID)
                 {
                     return BadRequest("Tmp Doc not existed yet or has been posted");
                 }
 
                 // Check: Loan account
-                checkString = HIHDBUtility.GetFinanceLoanAccountQueryString(hid, vmTmpDoc.AccountID);
+                checkString = HIHDBUtility.GetFinanceLoanAccountQueryString(hid, loanAccountID);
                 chkcmd = new SqlCommand(checkString, conn);
                 chkreader = chkcmd.ExecuteReader();
                 if (!chkreader.HasRows)
