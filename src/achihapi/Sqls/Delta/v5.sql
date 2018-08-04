@@ -11,8 +11,6 @@ BEGIN
 END;
 
 -- Version
-INSERT INTO [dbo].[t_dbversion]
-    ([VersionID],[ReleasedDate])
-VALUES (5, '2018.08.02');
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (5, '2018.08.02');
 
 -- The End.

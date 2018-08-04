@@ -356,6 +356,19 @@ INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALU
 
 SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 
+-- Updated at 2017.7.24
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (4,'2018.07.11');
+
+-----------------------------------------------------------------------------------------------------------------------------------
+-- Updated at 2017.8.4
+-- No content update for v5.sql
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (5,'2018.08.04');
+
+-----------------------------------------------------------------------------------------------------------------------------------
+-- Updated at 2017.8.5
+UPDATE dbo.[t_fin_tran_type] SET [EXPENSE] = 1 WHERE [ID] = 81; 
+
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (6,'2018.08.05');
 
 ---------------------------------
 -- TODO...
