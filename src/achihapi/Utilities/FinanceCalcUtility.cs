@@ -37,42 +37,51 @@ namespace achihapi.Utilities
 
             if (datInput.InterestFreeLoan)
             {
-                if (datInput.TotalMonths > 0)
+                switch (datInput.RepaymentMethod)
                 {
-                    for (int i = 0; i < datInput.TotalMonths; i++)
-                    {
-                        listResults.Add(new LoanCalcResult
+                    case LoanRepaymentMethod.EqualPrincipal:
+                    case LoanRepaymentMethod.EqualPrincipalAndInterset:
                         {
-                            TranDate = datInput.StartDate.AddMonths(i),
-                            TranAmount = Math.Round(datInput.TotalAmount / datInput.TotalMonths, 2),
-                            InterestAmount = 0
-                        });
-                    }
-                }
-                else
-                {
-                    if (datInput.EndDate.HasValue)
-                    {
-                        listResults.Add(new LoanCalcResult
+                            for (int i = 0; i < datInput.TotalMonths; i++)
+                            {
+                                listResults.Add(new LoanCalcResult
+                                {
+                                    TranDate = datInput.StartDate.AddMonths(i),
+                                    TranAmount = Math.Round(datInput.TotalAmount / datInput.TotalMonths, 2),
+                                    InterestAmount = 0
+                                });
+                            }
+                        }
+                        break;
+
+                    case LoanRepaymentMethod.DueRepayment:
+                    default:
                         {
-                            TranDate = datInput.EndDate.Value,
-                            TranAmount = datInput.TotalAmount,
-                            InterestAmount = 0
-                        });
-                    }
-                    else if (datInput.TotalMonths > 0)
-                    {
-                        listResults.Add(new LoanCalcResult
-                        {
-                            TranDate = datInput.StartDate.AddMonths(datInput.TotalMonths),
-                            TranAmount = datInput.TotalAmount,
-                            InterestAmount = 0
-                        });
-                    }
+                            if (datInput.EndDate.HasValue)
+                            {
+                                listResults.Add(new LoanCalcResult
+                                {
+                                    TranDate = datInput.EndDate.Value,
+                                    TranAmount = datInput.TotalAmount,
+                                    InterestAmount = 0
+                                });
+                            }
+                            else
+                            {
+                                listResults.Add(new LoanCalcResult
+                                {
+                                    TranDate = datInput.StartDate,
+                                    TranAmount = datInput.TotalAmount,
+                                    InterestAmount = 0
+                                });
+                            }
+                        }
+                        break;
                 }
             }
             else
             {
+                // Have interest rate inputted
                 switch (datInput.RepaymentMethod)
                 {
                     case LoanRepaymentMethod.EqualPrincipalAndInterset:

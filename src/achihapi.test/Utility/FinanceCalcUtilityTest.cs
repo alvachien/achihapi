@@ -24,7 +24,7 @@ namespace achihapi.test
         {
             LoanCalcViewModel vm = new LoanCalcViewModel
             {
-                RepaymentMethod = LoanRepaymentMethod.DueRepayment,
+                RepaymentMethod = LoanRepaymentMethod.EqualPrincipal,
                 InterestFreeLoan = true,
                 StartDate = new DateTime(2020, 1, 1),
                 TotalAmount = 120000,
@@ -45,6 +45,24 @@ namespace achihapi.test
                 Assert.AreEqual(10000, rst.TranAmount);
                 Assert.IsTrue(rst.InterestAmount == 0);
             }
+        }
+
+        [TestMethod]
+        public void LoanCalcTest_InterestFreeAndDue()
+        {
+            LoanCalcViewModel vm = new LoanCalcViewModel
+            {
+                RepaymentMethod = LoanRepaymentMethod.DueRepayment,
+                InterestFreeLoan = true,
+                StartDate = new DateTime(2020, 1, 1),
+                TotalAmount = 120000,
+                EndDate = new DateTime(2021, 1, 1)
+            };
+            List<LoanCalcResult> results = FinanceCalcUtility.LoanCalculate(vm);
+
+            Assert.AreEqual(1, results.Count);
+            Assert.AreEqual(2021, results[0].TranDate.Year);
+            Assert.AreEqual(120000, results[0].TranAmount);
         }
 
         [TestMethod]
