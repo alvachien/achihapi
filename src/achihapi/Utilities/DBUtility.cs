@@ -1793,7 +1793,7 @@ namespace achihapi.Utilities
                           ,[CREATEDAT]
                           ,[UPDATEDBY]
                           ,[UPDATEDAT]
-                        FROM [dbo].[t_fin_tmpdoc_loan] ";
+                        FROM [dbo].[t_fin_tmpdoc_loan]";
         }
         internal static string GetFinanceLoanAccountQueryString(Int32 hid, Int32 acntid)
         {
