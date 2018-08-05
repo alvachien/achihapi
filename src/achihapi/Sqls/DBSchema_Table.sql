@@ -1740,8 +1740,24 @@ BEGIN
 		DROP COLUMN TRANTYPE;
 
 END
-
 GO
+
+-- Updated at 2018.8.5
+-- Update table t_fin_account_ext_loan
+IF EXISTS(SELECT *
+	FROM INFORMATION_SCHEMA.COLUMNS
+	WHERE TABLE_NAME = 't_fin_account_ext_loan' AND COLUMN_NAME = 'IsLendOut')
+BEGIN
+
+    ALTER TABLE [dbo].[t_fin_account_ext_loan] 
+		DROP COLUMN IsLendOut;
+
+    ALTER TABLE [dbo].[t_fin_account_ext_loan]
+		ADD [PAYINGACCOUNT] int NULL;
+
+	ALTER TABLE [dbo].[t_fin_account_ext_loan]
+		ADD [PARTNER] nvarchar(50) NULL;
+END;
 
 
 ---------------------------------

@@ -522,11 +522,24 @@ namespace achihapi.Utilities
                       ,[t_fin_account_ext_as].[REFDOC_BUY] AS [ASREFDOC_BUY]
                       ,[t_fin_account_ext_as].[REFDOC_SOLD] AS [ASREFDOC_SOLD]
                       ,[t_fin_account_ext_as].[COMMENT] AS [ASCOMMENT]
+                      ,[t_fin_account_ext_loan].[STARTDATE] AS [LOAN_STARTDATE]
+                      ,[t_fin_account_ext_loan].[ANNUALRATE] AS [LOAN_ANNUALRATE]
+                      ,[t_fin_account_ext_loan].[INTERESTFREE] AS [LOAN_INTERESTFREE]
+                      ,[t_fin_account_ext_loan].[REPAYMETHOD] AS [LOAN_REPAYMETHOD]
+                      ,[t_fin_account_ext_loan].[TOTALMONTH] AS [LOAN_TOTALMONTH]
+                      ,[t_fin_account_ext_loan].[REFDOCID] AS [LOAN_REFDOCID]
+                      ,[t_fin_account_ext_loan].[OTHERS] AS [LOAN_OTHERS]
+                      ,[t_fin_account_ext_loan].[EndDate] AS [LOAN_ENDDATE]
+                      ,[t_fin_account_ext_loan].[PAYINGACCOUNT] AS [LOAN_PAYINGACCOUNT]
+                      ,[t_fin_account_ext_loan].[PARTNER] AS [LOAN_PARTNER]
                   FROM [dbo].[t_fin_account]
                   LEFT OUTER JOIN [dbo].[t_fin_account_ext_dp]
                        ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID]
                   LEFT OUTER JOIN [dbo].[t_fin_account_ext_as]
-                       ON [t_fin_account].[ID] = [t_fin_account_ext_as].[ACCOUNTID]";
+                       ON [t_fin_account].[ID] = [t_fin_account_ext_as].[ACCOUNTID]
+                  LEFT OUTER JOIN [dbo].[t_fin_account_ext_loan]
+                       ON [t_fin_account].[ID] = [t_fin_account_ext_loan].[ACCOUNTID]
+                  ";
 
             Boolean bwhere = false;
             if (hid.HasValue)
@@ -758,7 +771,14 @@ namespace achihapi.Utilities
                 vmdp.EndDate = reader.GetDateTime(idx++);
             else
                 ++idx;
-            vmdp.IsLendOut = reader.GetBoolean(idx++);
+            if (!reader.IsDBNull(idx))
+                vmdp.PayingAccount = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.Partner = reader.GetString(idx++);
+            else
+                ++idx;
         }
 
         internal static void FinAccountAsset_DB2VM(SqlDataReader reader, FinanceAccountExtASViewModel vmas, Int32 idx)
@@ -811,7 +831,14 @@ namespace achihapi.Utilities
                 }
                 else
                 {
-                    idx += 4; // ?!
+                    idx += 5;
+                }
+
+                if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom
+                    || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
+                {
+                    vm.ExtraInfo_Loan = new FinanceAccountExtLoanViewModel();
+                    FinAccountLoan_DB2VM(reader, vm.ExtraInfo_Loan, idx);
                 }
             }
             catch(Exception exp)
@@ -934,7 +961,8 @@ namespace achihapi.Utilities
                    ,[REFDOCID]
                    ,[OTHERS]
                    ,[ENDDATE]
-                   ,[ISLENDOUT])
+                   ,[PAYINGACCOUNT]
+                   ,[PARTNER])
              VALUES
                    (@ACCOUNTID
                    ,@STARTDATE
@@ -945,7 +973,8 @@ namespace achihapi.Utilities
                    ,@REFDOCID
                    ,@OTHERS
                    ,@ENDDATE
-                   ,@ISLENDOUT)";
+                   ,@PAYINGACCOUNT
+                   ,@PARTNER)";
         }
 
         internal static void BindFinAccountLoanInsertParameter(SqlCommand cmd, FinanceAccountExtLoanViewModel vm, Int32 nNewDocID, Int32 nNewAccountID, String usrName)
@@ -975,7 +1004,14 @@ namespace achihapi.Utilities
                 cmd.Parameters.AddWithValue("@ENDDATE", vm.EndDate.Value);
             else
                 cmd.Parameters.AddWithValue("@ENDDATE", DBNull.Value);
-            cmd.Parameters.AddWithValue("@ISLENDOUT", vm.IsLendOut);
+            if (vm.PayingAccount.HasValue)
+                cmd.Parameters.AddWithValue("@PAYINGACCOUNT", vm.PayingAccount.Value);
+            else
+                cmd.Parameters.AddWithValue("@PAYINGACCOUNT", DBNull.Value);
+            if (!String.IsNullOrEmpty(vm.Partner))
+                cmd.Parameters.AddWithValue("@PARTNER", vm.Partner);
+            else
+                cmd.Parameters.AddWithValue("@PARTNER", DBNull.Value);
         }
         #endregion
 
@@ -1780,7 +1816,8 @@ namespace achihapi.Utilities
                             ,[t_fin_account_ext_loan].[REFDOCID]
                             ,[t_fin_account_ext_loan].[OTHERS]
                             ,[t_fin_account_ext_loan].[ENDDATE]
-                            ,[t_fin_account_ext_loan].[ISLENDOUT]
+                            ,[t_fin_account_ext_loan].[PAYINGACCOUNT]
+                            ,[t_fin_account_ext_loan].[PARTNER]
                         FROM [dbo].[t_fin_account]
                         LEFT OUTER JOIN [dbo].[t_fin_account_ext_loan]
                             ON [t_fin_account].[ID] = [t_fin_account_ext_loan].[ACCOUNTID]
@@ -1837,7 +1874,8 @@ namespace achihapi.Utilities
                             ,[t_fin_account_ext_loan].[REFDOCID]
                             ,[t_fin_account_ext_loan].[OTHERS]
                             ,[t_fin_account_ext_loan].[ENDDATE]
-                            ,[t_fin_account_ext_loan].[ISLENDOUT]
+                            ,[t_fin_account_ext_loan].[PAYINGACCOUNT]
+                            ,[t_fin_account_ext_loan].[PARTNER]
                         FROM [dbo].[t_fin_account]
                         LEFT OUTER JOIN [dbo].[t_fin_account_ext_loan]
                             ON [t_fin_account].[ID] = [t_fin_account_ext_loan].[ACCOUNTID]

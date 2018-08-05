@@ -109,13 +109,16 @@ namespace achihapi.ViewModels
         [StringLength(100)]
         public String Others { get; set; }
         public DateTime? EndDate { get; set; }
-        [Required]
-        public Boolean IsLendOut { get; set; }
+        //[Required]
+        //public Boolean IsLendOut { get; set; }
+        public Int32? PayingAccount { get; set; }
+        [StringLength(50)]
+        public String Partner { get; set; }
 
         public FinanceAccountExtLoanViewModel()
         {
-            // Default
-            this.IsLendOut = false;
+            //// Default
+            //this.IsLendOut = false;
         }
     }
 }
