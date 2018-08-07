@@ -11,6 +11,8 @@ namespace achihapi.Utilities
 {
     internal class HIHDBUtility
     {
+        internal const String TSqlDateFormat = "yyyy-MM-dd";
+
         #region Home define
         internal static string getHomeDefQueryString(String strUserID = null)
         {
@@ -2031,9 +2033,28 @@ namespace achihapi.Utilities
         #endregion
 
         #region Finance Document item - Account View
-        internal static String getFinDocItemAccountView(Int32 nAcntID, Int32? top = null, Int32? skip = null)
+        internal static String getFinDocItemAccountView(Int32 nAcntID, Int32? top = null, Int32? skip = null, DateTime? dtbgn = null, DateTime? dtend = null)
         {
-            String strRst = @"SELECT COUNT(*) FROM [dbo].[v_fin_document_item1] WHERE [ACCOUNTID] = " + nAcntID.ToString() 
+            String strAcnt = " [ACCOUNTID] = " + nAcntID.ToString();
+            String strWhereClause = strAcnt;
+            String strRange = "";
+            if (dtbgn.HasValue || dtend.HasValue)
+            {
+                List<String> listStr = new List<string>();
+                if (dtbgn.HasValue)
+                {
+                    strWhereClause += " AND [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) +"'";
+                    listStr.Append(" [TRANDATE] >= " + dtbgn.Value.ToString(TSqlDateFormat) + "'");
+                }                    
+                if (dtend.HasValue)
+                {
+                    strWhereClause += " AND [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'";
+                    listStr.Append(" [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'");
+                }
+
+                strRange = String.Join(" AND ", listStr);
+            }
+            String strRst = @"SELECT COUNT(*) FROM [dbo].[v_fin_document_item1] WHERE " + strWhereClause
                 + @"; WITH A2 AS (SELECT
 	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
 	                      ,[DOCID]
@@ -2056,9 +2077,9 @@ namespace achihapi.Utilities
                           ,[ORDERNAME]
                           ,[DESP]
                       FROM [dbo].[v_fin_document_item1]
-                      WHERE [ACCOUNTID] = " + nAcntID.ToString() +
-                    @")
-                    SELECT [DOCID]
+                      WHERE " + strAcnt 
+                      + @") " + (String.IsNullOrEmpty(strRange) ? "" : " SELECT * FROM ( ")
+                        + @" SELECT [DOCID]
                           ,[ITEMID]
                           ,[TRANDATE]
                           ,[DOCDESP]
@@ -2077,7 +2098,8 @@ namespace achihapi.Utilities
                           ,[ORDERID]
                           ,[ORDERNAME]
                           ,[DESP]
-                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1 ";
+                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1" 
+                        + (String.IsNullOrEmpty(strRange) ? "" : ") WHERE  " + strRange);
             if (skip.HasValue && top.HasValue)
                 strRst += " ORDER BY (SELECT NULL) OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
 
@@ -2125,9 +2147,28 @@ namespace achihapi.Utilities
         #endregion
 
         #region Finance Document item - Control center View
-        internal static String getFinDocItemControlCenterView(Int32 nCCID, Int32? top = null, Int32? skip = null)
+        internal static String getFinDocItemControlCenterView(Int32 nCCID, Int32? top = null, Int32? skip = null, DateTime? dtbgn = null, DateTime? dtend = null)
         {
-            String strRst = @"SELECT COUNT(*) FROM [dbo].[v_fin_document_item1] WHERE [CONTROLCENTERID] = " + nCCID.ToString() 
+            String strCC = " [CONTROLCENTERID] = " + nCCID.ToString();
+            String strWhereClause = strCC;
+            String strRange = "";
+            if (dtbgn.HasValue || dtend.HasValue)
+            {
+                List<String> listStr = new List<string>();
+                if (dtbgn.HasValue)
+                {
+                    strWhereClause += " AND [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) + "'";
+                    listStr.Append(" [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) + "'");
+                }
+                if (dtend.HasValue)
+                {
+                    strWhereClause += " AND [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'";
+                    listStr.Append(" [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'");
+                }
+
+                strRange = String.Join(" AND ", listStr);
+            }
+            String strRst = @"SELECT COUNT(*) FROM [dbo].[v_fin_document_item1] WHERE " + strWhereClause
                     + @"; WITH A2 AS ( SELECT
 	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
 	                      ,[DOCID]
@@ -2150,9 +2191,9 @@ namespace achihapi.Utilities
                           ,[ORDERNAME]
                           ,[DESP]
                       FROM [dbo].[v_fin_document_item1]
-                      WHERE [CONTROLCENTERID] = " + nCCID.ToString() +
-                    @")
-                    SELECT [DOCID]
+                      WHERE " + strCC
+                    + @") " + (String.IsNullOrEmpty(strRange) ? "" : " SELECT * FROM ( ")
+                    + @"SELECT [DOCID]
                           ,[ITEMID]
                           ,[TRANDATE]
                           ,[DOCDESP]
@@ -2171,7 +2212,8 @@ namespace achihapi.Utilities
                           ,[ORDERID]
                           ,[ORDERNAME]
                           ,[DESP]
-                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1 ";
+                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1 "
+                    + (String.IsNullOrEmpty(strRange) ? "" : ") WHERE  " + strRange);
             if (skip.HasValue && top.HasValue)
                 strRst += " ORDER BY (SELECT NULL) OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
 
@@ -2180,9 +2222,29 @@ namespace achihapi.Utilities
         #endregion
 
         #region Finance Document item - Control center View
-        internal static String getFinDocItemOrderView(Int32 nOrderID, Int32? top = null, Int32? skip = null)
+        internal static String getFinDocItemOrderView(Int32 nOrderID, Int32? top = null, Int32? skip = null, DateTime? dtbgn = null, DateTime? dtend = null)
         {
-            String strRst = @"SELECT COUNT(*) FROM [dbo].[v_fin_document_item1] WHERE [ORDERID] = " + nOrderID.ToString()  
+            String strOrder = " [ORDERID] = " + nOrderID.ToString();
+            String strWhereClause = strOrder;
+            String strRange = "";
+            if (dtbgn.HasValue || dtend.HasValue)
+            {
+                List<String> listStr = new List<string>();
+                if (dtbgn.HasValue)
+                {
+                    strWhereClause += " AND [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) + "'";
+                    listStr.Append(" [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) + "'");
+                }
+                if (dtend.HasValue)
+                {
+                    strWhereClause += " AND [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'";
+                    listStr.Append(" [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'");
+                }
+
+                strRange = String.Join(" AND ", listStr);
+            }
+
+            String strRst = @"SELECT COUNT(*) FROM [dbo].[v_fin_document_item1] WHERE " + strWhereClause
                       + @"; WITH A2 AS ( SELECT
 	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
 	                      ,[DOCID]
@@ -2205,9 +2267,9 @@ namespace achihapi.Utilities
                           ,[ORDERNAME]
                           ,[DESP]
                       FROM [dbo].[v_fin_document_item1]
-                      WHERE [ORDERID] = " + nOrderID.ToString() +
-                    @")
-                    SELECT [DOCID]
+                      WHERE " + strWhereClause
+                    + @") " + (String.IsNullOrEmpty(strRange) ? "" : " SELECT * FROM ( ")
+                    + @"SELECT [DOCID]
                           ,[ITEMID]
                           ,[TRANDATE]
                           ,[DOCDESP]
@@ -2226,7 +2288,8 @@ namespace achihapi.Utilities
                           ,[ORDERID]
                           ,[ORDERNAME]
                           ,[DESP]
-                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1 ";
+                          ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1 "
+                    + (String.IsNullOrEmpty(strRange) ? "" : ") WHERE  " + strRange);
             if (skip.HasValue && top.HasValue)
                 strRst += " ORDER BY (SELECT NULL) OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
 

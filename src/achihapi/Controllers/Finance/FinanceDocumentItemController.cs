@@ -16,7 +16,8 @@ namespace achihapi.Controllers
         // GET: api/financedocumentitems
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32? top = null, Int32? skip = null, String sort = null, Int32? acntid = null, Int32? ccid = null, Int32? ordid = null)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32? top = null, Int32? skip = null, String sort = null, Int32? acntid = null, Int32? ccid = null, Int32? ordid = null,
+            DateTime? dtbgn = null, DateTime? dtend = null)
         {
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
@@ -47,11 +48,11 @@ namespace achihapi.Controllers
             try
             {
                 if (acntid.HasValue)
-                    queryString = HIHDBUtility.getFinDocItemAccountView(acntid.Value, top, skip);
+                    queryString = HIHDBUtility.getFinDocItemAccountView(acntid.Value, top, skip, dtbgn, dtend);
                 else if (ccid.HasValue)
-                    queryString = HIHDBUtility.getFinDocItemControlCenterView(ccid.Value, top, skip);
+                    queryString = HIHDBUtility.getFinDocItemControlCenterView(ccid.Value, top, skip, dtbgn, dtend);
                 else if (ordid.HasValue)
-                    queryString = HIHDBUtility.getFinDocItemOrderView(ordid.Value, top, skip);
+                    queryString = HIHDBUtility.getFinDocItemOrderView(ordid.Value, top, skip, dtbgn, dtend);
 
                 await conn.OpenAsync();
 
