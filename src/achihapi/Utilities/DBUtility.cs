@@ -1511,8 +1511,8 @@ namespace achihapi.Utilities
                     [DESP]
                     FROM [dbo].[V_FIN_DOCUMENT_ITEM] "
                     + (String.IsNullOrEmpty(strWhere) ? "" : (" WHERE " + strWhere));
-            if (skip.HasValue && top.HasValue)
-                strRst += " ORDER BY (SELECT NULL) OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
+            if (top.HasValue)
+                strRst += " ORDER BY (SELECT NULL) OFFSET " + (skip.HasValue? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
 
             return strRst;
         }
@@ -2043,13 +2043,15 @@ namespace achihapi.Utilities
                 List<String> listStr = new List<string>();
                 if (dtbgn.HasValue)
                 {
-                    strWhereClause += " AND [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) +"'";
-                    listStr.Append(" [TRANDATE] >= " + dtbgn.Value.ToString(TSqlDateFormat) + "'");
+                    String strval = " [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) + "'";
+                    strWhereClause += " AND " + strval;
+                    listStr.Add(strval);
                 }                    
                 if (dtend.HasValue)
                 {
-                    strWhereClause += " AND [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'";
-                    listStr.Append(" [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'");
+                    String strval = " [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'";
+                    strWhereClause += " AND " + strval;
+                    listStr.Add(strval);
                 }
 
                 strRange = String.Join(" AND ", listStr);
@@ -2100,8 +2102,8 @@ namespace achihapi.Utilities
                           ,[DESP]
                           ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1" 
                         + (String.IsNullOrEmpty(strRange) ? "" : ") WHERE  " + strRange);
-            if (skip.HasValue && top.HasValue)
-                strRst += " ORDER BY (SELECT NULL) OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
+            if (top.HasValue)
+                strRst += " ORDER BY (SELECT NULL) OFFSET " + (skip.HasValue ? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
 
             return strRst;
         }
@@ -2157,13 +2159,15 @@ namespace achihapi.Utilities
                 List<String> listStr = new List<string>();
                 if (dtbgn.HasValue)
                 {
-                    strWhereClause += " AND [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) + "'";
-                    listStr.Append(" [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) + "'");
+                    String strval = " [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) + "'";
+                    strWhereClause += " AND " + strval;
+                    listStr.Add(strval);
                 }
                 if (dtend.HasValue)
                 {
-                    strWhereClause += " AND [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'";
-                    listStr.Append(" [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'");
+                    String strval = " [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'";
+                    strWhereClause += " AND " + strval;
+                    listStr.Add(strval);
                 }
 
                 strRange = String.Join(" AND ", listStr);
@@ -2214,8 +2218,8 @@ namespace achihapi.Utilities
                           ,[DESP]
                           ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1 "
                     + (String.IsNullOrEmpty(strRange) ? "" : ") WHERE  " + strRange);
-            if (skip.HasValue && top.HasValue)
-                strRst += " ORDER BY (SELECT NULL) OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
+            if (top.HasValue)
+                strRst += " ORDER BY (SELECT NULL) OFFSET " + (skip.HasValue ? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
 
             return strRst;
         }
@@ -2232,18 +2236,19 @@ namespace achihapi.Utilities
                 List<String> listStr = new List<string>();
                 if (dtbgn.HasValue)
                 {
-                    strWhereClause += " AND [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) + "'";
-                    listStr.Append(" [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) + "'");
+                    String strval = " [TRANDATE] >= '" + dtbgn.Value.ToString(TSqlDateFormat) + "'";
+                    strWhereClause += " AND " + strval;
+                    listStr.Add(strval);
                 }
                 if (dtend.HasValue)
                 {
-                    strWhereClause += " AND [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'";
-                    listStr.Append(" [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'");
+                    String strval = " [TRANDATE] <= '" + dtend.Value.ToString(TSqlDateFormat) + "'";
+                    strWhereClause += " AND " + strval;
+                    listStr.Add(strval);
                 }
 
                 strRange = String.Join(" AND ", listStr);
             }
-
             String strRst = @"SELECT COUNT(*) FROM [dbo].[v_fin_document_item1] WHERE " + strWhereClause
                       + @"; WITH A2 AS ( SELECT
 	                      ROW_NUMBER() OVER (ORDER BY [TRANDATE] ASC) AS [ROWID]
@@ -2290,8 +2295,8 @@ namespace achihapi.Utilities
                           ,[DESP]
                           ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1 "
                     + (String.IsNullOrEmpty(strRange) ? "" : ") WHERE  " + strRange);
-            if (skip.HasValue && top.HasValue)
-                strRst += " ORDER BY (SELECT NULL) OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
+            if (top.HasValue)
+                strRst += " ORDER BY (SELECT NULL) OFFSET " + (skip.HasValue ? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
 
             return strRst;
         }
@@ -2555,9 +2560,8 @@ namespace achihapi.Utilities
                     sb.Append(" AND [StartTime] <= '" + dtend.Value.ToString("yyyy-MM-dd") + "' ");
                 if (skipfinish.HasValue)
                     sb.Append(skipfinish.Value ? " AND [CompleteTime] IS NULL " : " [CompleteTime] IS NOT NULL ");
-                if (skip.HasValue && top.HasValue)
-                    sb.Append(@" ORDER BY (SELECT NULL)
-                        OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
+                if (top.HasValue)
+                    sb.Append(" ORDER BY (SELECT NULL) OFFSET " + (skip.HasValue ? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
             }
             else
                 sb.Append(" WHERE [ID] = " + id.Value.ToString());
@@ -2795,9 +2799,8 @@ namespace achihapi.Utilities
             if (listmode)
             {
                 sb.Append(" WHERE [HID] = " + hid.ToString());
-                if (skip.HasValue && top.HasValue)
-                    sb.Append(@" ORDER BY (SELECT NULL)
-                        OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
+                if (top.HasValue)
+                    sb.Append(" ORDER BY (SELECT NULL) OFFSET " + (skip.HasValue ? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
             }
             else
                 sb.Append(" WHERE [ID] = " + id.Value.ToString());
@@ -3003,9 +3006,8 @@ namespace achihapi.Utilities
             if (listmode)
             {
                 sb.Append(" WHERE [HID] = " + hid.ToString());
-                if (skip.HasValue && top.HasValue)
-                    sb.Append(@" ORDER BY (SELECT NULL)
-                        OFFSET " + skip.Value.ToString() + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
+                if (top.HasValue)
+                    sb.Append(" ORDER BY (SELECT NULL) OFFSET " + (skip.HasValue ? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
             }
             else
             {
