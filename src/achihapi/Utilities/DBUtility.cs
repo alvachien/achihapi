@@ -2101,7 +2101,7 @@ namespace achihapi.Utilities
                           ,[ORDERNAME]
                           ,[DESP]
                           ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1" 
-                        + (String.IsNullOrEmpty(strRange) ? "" : ") WHERE  " + strRange);
+                        + (String.IsNullOrEmpty(strRange) ? "" : ") AS T3 WHERE  " + strRange);
             if (top.HasValue)
                 strRst += " ORDER BY (SELECT NULL) OFFSET " + (skip.HasValue ? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
 
@@ -2217,7 +2217,7 @@ namespace achihapi.Utilities
                           ,[ORDERNAME]
                           ,[DESP]
                           ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1 "
-                    + (String.IsNullOrEmpty(strRange) ? "" : ") WHERE  " + strRange);
+                    + (String.IsNullOrEmpty(strRange) ? "" : ") AS T3 WHERE  " + strRange);
             if (top.HasValue)
                 strRst += " ORDER BY (SELECT NULL) OFFSET " + (skip.HasValue ? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
 
@@ -2294,7 +2294,7 @@ namespace achihapi.Utilities
                           ,[ORDERNAME]
                           ,[DESP]
                           ,(SELECT SUM(T2.TRANAMOUNT_LC) FROM A2 AS T2 WHERE T2.ROWID <= T1.ROWID) AS BALANCE_LC FROM A2 AS T1 "
-                    + (String.IsNullOrEmpty(strRange) ? "" : ") WHERE  " + strRange);
+                    + (String.IsNullOrEmpty(strRange) ? "" : ") AS T3 WHERE  " + strRange);
             if (top.HasValue)
                 strRst += " ORDER BY (SELECT NULL) OFFSET " + (skip.HasValue ? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;";
 
