@@ -15,8 +15,10 @@ namespace achihapi.ViewModels
     public class FinanceReportTrendExViewModel
     {
         public DateTime? TranDate { get; set; }
-        public String TranWeek { get; set; }
-        public String TranMonth { get; set; }
+        public Int32? TranWeek { get; set; }
+        public Int32? TranMonth { get; set; }
+        public Int32? TranYear { get; set; }
+        public Boolean Expense { get; set; }
         public Decimal TranAmount { get; set; }
     }
 }
