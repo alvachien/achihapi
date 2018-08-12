@@ -10,6 +10,7 @@ using System.Linq;
 
 namespace achihapi.Controllers
 {
+    [Produces("application/json")]
     [Route("api/[controller]")]
     public class FinanceADPDocumentController : Controller
     {

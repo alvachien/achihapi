@@ -2,25 +2,29 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.ViewModels;
-using System.Data;
-using System.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
 using achihapi.Utilities;
+using System.Data.SqlClient;
 
 namespace achihapi.Controllers
 {
     [Produces("application/json")]
-    [Route("api/[controller]")]
-    public class FinanceReportBSController : Controller
+    [Route("api/FinanceReportTrendEx")]
+    [Authorize]
+    public class FinanceReportTrendExController : Controller
     {
-        // GET: api/financereportbs
+        // GET: api/FinanceReportTrendEx
         [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, DateTime? dtbgn = null, DateTime? dtend = null,
+            Boolean exctran = false,
+            FinanceReportTrendExType trendtype = FinanceReportTrendExType.Daily, Boolean? isexpense = null)
         {
+            if (hid <= 0)
+                return BadRequest("No HID inputted");
+
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
                 usrName = UnitTestUtility.UnitTestUser;
@@ -32,27 +36,16 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            List<FinanceReportBSViewModel> listVm = new List<FinanceReportBSViewModel>();
+            List<FinanceReportTrendBaseViewModel> listVm = new List<FinanceReportTrendBaseViewModel>();
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
 
-            if (hid <= 0)
-                return BadRequest("No HID inputted");
-
             try
             {
-                queryString = @"SELECT [accountid]
-                          ,[ACCOUNTNAME]
-                          ,[ACCOUNTCTGYID]
-                          ,[ACCOUNTCTGYNAME]
-                          ,[debit_balance]
-                          ,[credit_balance]
-                          ,[balance]
-                      FROM [dbo].[v_fin_report_bs] WHERE [HID] = " + hid.ToString();
-
                 await conn.OpenAsync();
+
                 // Check Home assignment with current user
                 try
                 {
@@ -63,31 +56,36 @@ namespace achihapi.Controllers
                     return BadRequest(exp.Message);
                 }
 
+                queryString = @"SELECT YEAR(TRANDATE) AS TRANYEAR, MONTH(TRANDATE) AS TRANMONTH, EXPENSE, SUM(TRANAMOUNT) AS TOTALAMTS 
+                    FROM v_fin_report_trantype WHERE [HID] = @hid ";
+                // Exclude transfer
+                if (exctran)
+                    queryString += " AND [TRANTYPE] !=  " + FinanceTranTypeViewModel.TranType_TransferIn.ToString() + " AND [TRANTYPE] != " + FinanceTranTypeViewModel.TranType_TransferOut.ToString();
+                if (dtbgn.HasValue)
+                    queryString += " AND [TRANDATE] >= @dtbgn ";
+                if (dtend.HasValue)
+                    queryString += " AND [TRANDATE] <= @dtend ";
+                queryString += @" GROUP BY YEAR(TRANDATE), MONTH(TRANDATE), EXPENSE";
+
                 SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Parameters.AddWithValue("@hid", hid);
+                if (dtbgn.HasValue)
+                    cmd.Parameters.AddWithValue("@dtbgn", dtbgn.Value);
+                if (dtbgn.HasValue)
+                    cmd.Parameters.AddWithValue("@dtend", dtend.Value);
+
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
                 {
                     while (reader.Read())
                     {
-                        FinanceReportBSViewModel avm = new FinanceReportBSViewModel
+                        FinanceReportTrendBaseViewModel avm = new FinanceReportTrendBaseViewModel
                         {
-                            AccountID = reader.GetInt32(0),
-                            AccountName = reader.GetString(1),
-                            AccountCategoryID = reader.GetInt32(2),
-                            AccountCategoryName = reader.GetString(3)
+                            Year = reader.GetInt32(0),
+                            Month = reader.GetInt32(1),
+                            Expense = reader.GetBoolean(2),
+                            TranAmount = reader.GetDecimal(3)
                         };
-                        if (reader.IsDBNull(4))
-                            avm.DebitBalance = 0;
-                        else
-                            avm.DebitBalance = Math.Round(reader.GetDecimal(4), 2);
-                        if (reader.IsDBNull(5))
-                            avm.CreditBalance = 0;
-                        else
-                            avm.CreditBalance = Math.Round(reader.GetDecimal(5), 2);
-                        if (reader.IsDBNull(6))
-                            avm.Balance = 0;
-                        else
-                            avm.Balance = Math.Round(reader.GetDecimal(6), 2);
                         listVm.Add(avm);
                     }
                 }
@@ -115,7 +113,7 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+
             return new JsonResult(listVm, setting);
         }
     }

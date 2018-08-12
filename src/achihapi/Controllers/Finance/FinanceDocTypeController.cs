@@ -10,6 +10,7 @@ using achihapi.Utilities;
 
 namespace achihapi.Controllers
 {
+    [Produces("application/json")]
     [Route("api/[controller]")]
     public class FinanceDocTypeController : Controller
     {

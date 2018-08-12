@@ -8,6 +8,7 @@ using achihapi.ViewModels;
 
 namespace achihapi.Controllers
 {
+    [Produces("application/json")]
     [Route("api/[controller]")]
     public class LanguageController : Controller
     {

@@ -10,6 +10,7 @@ using System.Data.SqlClient;
 
 namespace achihapi.Controllers
 {
+    [Produces("application/json")]
     [Route("api/[controller]")]
     public class FinanceCurrencyController : Controller
     {

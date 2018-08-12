@@ -10,7 +10,7 @@ using achihapi.ViewModels;
 using achihapi.Utilities;
 
 namespace achihapi.Controllers
-{    
+{
     [Produces("application/json")]
     [Route("api/FinanceReportTrend")]
     public class FinanceReportTrendController : Controller
