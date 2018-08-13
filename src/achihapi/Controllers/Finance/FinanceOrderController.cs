@@ -817,10 +817,10 @@ namespace achihapi.Controllers
                 }
                 else if (nRstBatch == 1)
                 {
-                    FinanceOrderSRuleUIViewModel srvm = new FinanceOrderSRuleUIViewModel();
-
                     while (reader.Read())
                     {
+                        FinanceOrderSRuleUIViewModel srvm = new FinanceOrderSRuleUIViewModel();
+
                         idx = 0;
                         srvm.OrdID = reader.GetInt32(idx++);
                         srvm.RuleID = reader.GetInt32(idx++);
