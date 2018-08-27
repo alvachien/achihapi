@@ -87,7 +87,7 @@ namespace achihapi.Controllers
                     while (reader.Read())
                     {
                         FinanceAccountUIViewModel vm = new FinanceAccountUIViewModel();
-                        HIHDBUtility.FinAccount_DB2VM(reader, vm);
+                        HIHDBUtility.FinAccountHeader_DB2VM(reader, vm, 0);
                         listVm.Add(vm);
                     }
                 }
@@ -853,7 +853,8 @@ namespace achihapi.Controllers
                 strSQL += ";";
             }
 
-            strSQL += HIHDBUtility.getFinanceAccountQueryString(hid, status, strOwner);
+            //strSQL += HIHDBUtility.getFinanceAccountQueryString(hid, status, strOwner);
+            strSQL += HIHDBUtility.getFinanceAccountHeaderQueryString(hid, status, strOwner);
 
             if (bListMode && nTop.HasValue && nSkip.HasValue)
             {

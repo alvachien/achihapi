@@ -583,6 +583,61 @@ namespace achihapi.Utilities
             return strSQL;
         }
 
+        internal static string getFinanceAccountHeaderQueryString(Int32? hid, Byte? status, String strOwner = "")
+        {
+            String strSQL = @"SELECT [t_fin_account].[ID]
+                      ,[t_fin_account].[HID]  
+                      ,[t_fin_account].[CTGYID]
+                      ,[t_fin_account].[NAME]
+                      ,[t_fin_account].[COMMENT]
+                      ,[t_fin_account].[OWNER]
+                      ,[t_fin_account].[STATUS]
+                      ,[t_fin_account].[CREATEDBY]
+                      ,[t_fin_account].[CREATEDAT]
+                      ,[t_fin_account].[UPDATEDBY]
+                      ,[t_fin_account].[UPDATEDAT]
+                  FROM [dbo].[t_fin_account] ";
+
+            Boolean bwhere = false;
+            if (hid.HasValue)
+            {
+                bwhere = true;
+                strSQL += " WHERE [t_fin_account].[HID] = " + hid.Value.ToString();
+                if (!String.IsNullOrEmpty(strOwner))
+                {
+                    strSQL += " AND [t_fin_account].[OWNER] = N'" + strOwner + "'";
+                }
+            }
+
+            if (status.HasValue)
+            {
+                if (!bwhere)
+                {
+                    bwhere = true;
+                    strSQL += " WHERE ";
+                }
+                else
+                    strSQL += " AND ";
+
+                if (status.Value == 0)
+                    strSQL += " ( [t_fin_account].[STATUS] = 0 OR [t_fin_account].[STATUS] IS NULL ) ";
+                else
+                    strSQL += " [t_fin_account].[STATUS] = " + status.Value.ToString();
+            }
+
+            if (!String.IsNullOrEmpty(strOwner))
+            {
+                if (bwhere)
+                    strSQL += " WHERE ";
+                else
+                    strSQL += " AND ";
+
+                strSQL += " [t_fin_account].[OWNER] = N'" + strOwner + "'";
+            }
+
+            return strSQL;
+        }
+
         internal static string GetFinanceAccountHeaderInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_account]
