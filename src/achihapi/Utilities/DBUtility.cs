@@ -761,107 +761,6 @@ namespace achihapi.Utilities
             return idx;
         }
 
-        internal static void FinAccountADP_DB2VM(SqlDataReader reader, FinanceAccountExtDPViewModel vmdp, Int32 idx)
-        {
-            // Advance payment
-            if (!reader.IsDBNull(idx))
-                vmdp.Direct = reader.GetBoolean(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.StartDate = reader.GetDateTime(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.EndDate = reader.GetDateTime(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.RptType = (RepeatFrequency)reader.GetByte(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.RefDocID = reader.GetInt32(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.DefrrDays = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.Comment = reader.GetString(idx++);
-            else
-                ++idx;
-        }
-
-        internal static void FinAccountLoan_DB2VM(SqlDataReader reader, FinanceAccountExtLoanViewModel vmdp, Int32 idx)
-        {
-            if (!reader.IsDBNull(idx))
-                vmdp.StartDate = reader.GetDateTime(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.AnnualRate = reader.GetDecimal(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.InterestFree = reader.GetBoolean(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.RepaymentMethod = (LoanRepaymentMethod)reader.GetByte(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.TotalMonths = reader.GetInt16(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.RefDocID = reader.GetInt32(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.Others = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.EndDate = reader.GetDateTime(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.PayingAccount = reader.GetInt32(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmdp.Partner = reader.GetString(idx++);
-            else
-                ++idx;
-        }
-
-        internal static void FinAccountAsset_DB2VM(SqlDataReader reader, FinanceAccountExtASViewModel vmas, Int32 idx)
-        {
-            if (!reader.IsDBNull(idx))
-                vmas.CategoryID = reader.GetInt32(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmas.Name = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmas.RefDocForBuy = reader.GetInt32(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmas.RefDocForSold = reader.GetInt32(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vmas.Comment = reader.GetString(idx++);
-            else
-                ++idx;
-        }
-
         internal static void FinAccount_DB2VM(SqlDataReader reader, FinanceAccountUIViewModel vm)
         {
             Int32 idx = 0;
@@ -907,6 +806,52 @@ namespace achihapi.Utilities
         #endregion
 
         #region Finance Account Extra: ADP
+        internal static string getFinanceAccountADPQueryString(Int32 acntid)
+        {
+            return @"SELECT [t_fin_account_ext_dp].[DIRECT]
+                      ,[t_fin_account_ext_dp].[STARTDATE]
+                      ,[t_fin_account_ext_dp].[ENDDATE]
+                      ,[t_fin_account_ext_dp].[RPTTYPE]
+                      ,[t_fin_account_ext_dp].[REFDOCID]
+                      ,[t_fin_account_ext_dp].[DEFRRDAYS]
+                      ,[t_fin_account_ext_dp].[COMMENT]
+                FROM [t_fin_account_ext_dp]
+                WHERE [t_fin_account_ext_dp].[ACCOUNTID] = " + acntid.ToString();
+        }
+
+        internal static void FinAccountADP_DB2VM(SqlDataReader reader, FinanceAccountExtDPViewModel vmdp, Int32 idx)
+        {
+            // Advance payment
+            if (!reader.IsDBNull(idx))
+                vmdp.Direct = reader.GetBoolean(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.StartDate = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.EndDate = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.RptType = (RepeatFrequency)reader.GetByte(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.RefDocID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.DefrrDays = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.Comment = reader.GetString(idx++);
+            else
+                ++idx;
+        }
+
         internal static string GetFinanceAccountADPInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_account_ext_dp]
@@ -942,6 +887,41 @@ namespace achihapi.Utilities
         #endregion
 
         #region Finance Account Extra: Asset
+        internal static string getFinanceAccountAssetQueryString(Int32 acntid)
+        {
+            return @" SELECT [t_fin_account_ext_as].[CTGYID]
+                      ,[t_fin_account_ext_as].[NAME]
+                      ,[t_fin_account_ext_as].[REFDOC_BUY]
+                      ,[t_fin_account_ext_as].[REFDOC_SOLD]
+                      ,[t_fin_account_ext_as].[COMMENT]
+                        FROM [t_fin_account_ext_as]
+                        WHERE [t_fin_account_ext_as].[ACCOUNTID] = " + acntid.ToString();
+        }
+
+        internal static void FinAccountAsset_DB2VM(SqlDataReader reader, FinanceAccountExtASViewModel vmas, Int32 idx)
+        {
+            if (!reader.IsDBNull(idx))
+                vmas.CategoryID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmas.Name = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmas.RefDocForBuy = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmas.RefDocForSold = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmas.Comment = reader.GetString(idx++);
+            else
+                ++idx;
+        }
+
         internal static string GetFinanceAccountAssetInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_account_ext_as]
@@ -1006,6 +986,66 @@ namespace achihapi.Utilities
         #endregion
 
         #region Finance Account Extra: Loan
+        internal static string getFinanceAccountLoanQueryString(Int32 acntid)
+        {
+            return @"SELECT [t_fin_account_ext_loan].[STARTDATE]
+                      ,[t_fin_account_ext_loan].[ANNUALRATE]
+                      ,[t_fin_account_ext_loan].[INTERESTFREE]
+                      ,[t_fin_account_ext_loan].[REPAYMETHOD]
+                      ,[t_fin_account_ext_loan].[TOTALMONTH]
+                      ,[t_fin_account_ext_loan].[REFDOCID]
+                      ,[t_fin_account_ext_loan].[OTHERS]
+                      ,[t_fin_account_ext_loan].[EndDate]
+                      ,[t_fin_account_ext_loan].[PAYINGACCOUNT]
+                      ,[t_fin_account_ext_loan].[PARTNER]
+                    FROM [t_fin_account_ext_loan]
+                    WHERE [t_fin_account_ext_loan].[ACCOUNTID] = " + acntid.ToString();
+        }
+
+        internal static void FinAccountLoan_DB2VM(SqlDataReader reader, FinanceAccountExtLoanViewModel vmdp, Int32 idx)
+        {
+            if (!reader.IsDBNull(idx))
+                vmdp.StartDate = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.AnnualRate = reader.GetDecimal(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.InterestFree = reader.GetBoolean(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.RepaymentMethod = (LoanRepaymentMethod)reader.GetByte(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.TotalMonths = reader.GetInt16(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.RefDocID = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.Others = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.EndDate = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.PayingAccount = reader.GetInt32(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vmdp.Partner = reader.GetString(idx++);
+            else
+                ++idx;
+        }
+
         internal static string GetFinanceAccountLoanInsertString()
         {
             return @"INSERT INTO [dbo].[t_fin_account_ext_loan]

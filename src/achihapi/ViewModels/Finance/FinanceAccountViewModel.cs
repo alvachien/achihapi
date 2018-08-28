@@ -39,6 +39,10 @@ namespace achihapi.ViewModels
     public class FinanceAccountUIViewModel : FinanceAccountViewModel
     {
         public string CtgyName { get; set; }
+        
+        // Template docs
+        public List<FinanceTmpDocLoanViewModel> LoanTmpDocs { get; set; }
+        public List<FinanceTmpDocDPViewModel> DPTmpDocs { get; set; }
     }
 
     public abstract class FinanceAccountExtViewModel
