@@ -226,7 +226,6 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Read out the template docs.
-                    vmAccount.DPTmpDocs = new List<FinanceTmpDocDPViewModel>();
                     queryString = HIHDBUtility.getFinanceDocADPListQueryString() + " WHERE [ACCOUNTID] = " + vmAccount.ID.ToString() + " AND [HID] = " + hid.ToString();
                     cmd = new SqlCommand(queryString, conn);
                     reader = await cmd.ExecuteReaderAsync();
@@ -237,7 +236,7 @@ namespace achihapi.Controllers
                         {
                             var vmTmpADP = new FinanceTmpDocDPViewModel();
                             HIHDBUtility.FinTmpDocADP_DB2VM(reader, vmTmpADP);
-                            vmAccount.DPTmpDocs.Add(vmTmpADP);
+                            vmAccount.ExtraInfo_ADP.DPTmpDocs.Add(vmTmpADP);
                         }
                     }
                     reader.Close();
@@ -299,7 +298,6 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Template docs.
-                    vmAccount.LoanTmpDocs = new List<FinanceTmpDocLoanViewModel>();
                     queryString = HIHDBUtility.GetFinanceDocLoanListQueryString() + " WHERE [ACCOUNTID] = " + vmAccount.ID.ToString() + " AND [HID] = " + hid.ToString();
                     cmd = new SqlCommand(queryString, conn);
                     reader = await cmd.ExecuteReaderAsync();
@@ -310,7 +308,7 @@ namespace achihapi.Controllers
                         {
                             var vmTmpLoan = new FinanceTmpDocLoanViewModel();
                             HIHDBUtility.FinTmpDocLoan_DB2VM(reader, vmTmpLoan);
-                            vmAccount.LoanTmpDocs.Add(vmTmpLoan);
+                            vmAccount.ExtraInfo_Loan.LoanTmpDocs.Add(vmTmpLoan);
                         }
                     }
                     reader.Close();

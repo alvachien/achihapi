@@ -102,7 +102,7 @@ namespace achihapi.Controllers
                 {
                     FinanceTmpDocDPViewModel dpvm = new FinanceTmpDocDPViewModel();
                     HIHDBUtility.FinTmpDocADP_DB2VM(reader, dpvm);
-                    vm.TmpDocs.Add(dpvm);
+                    vm.AccountVM.ExtraInfo_ADP.DPTmpDocs.Add(dpvm);
                 }
                 reader.NextResult();
 
@@ -181,7 +181,7 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             // Check the items
-            if (vm.Items.Count <= 0 || vm.TmpDocs.Count <= 0 || vm.Items.Count != 1)
+            if (vm.Items.Count <= 0 || vm.AccountVM.ExtraInfo_ADP.DPTmpDocs.Count <= 0 || vm.Items.Count != 1)
             {
                 return BadRequest("No item or no template docs");
             }
@@ -321,7 +321,7 @@ namespace achihapi.Controllers
 
 
                     // Sixth, create template docs
-                    foreach (FinanceTmpDocDPViewModel avm in vm.TmpDocs)
+                    foreach (FinanceTmpDocDPViewModel avm in vm.AccountVM.ExtraInfo_ADP.DPTmpDocs)
                     {
                         queryString = HIHDBUtility.getFinanceTmpDocADPInsertString();
 

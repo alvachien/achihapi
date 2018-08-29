@@ -105,7 +105,7 @@ namespace achihapi.Controllers
                 {
                     FinanceTmpDocLoanViewModel loanvm = new FinanceTmpDocLoanViewModel();
                     HIHDBUtility.FinTmpDocLoan_DB2VM(reader, loanvm);
-                    vm.TmpDocs.Add(loanvm);
+                    vm.AccountVM.ExtraInfo_Loan.LoanTmpDocs.Add(loanvm);
                 }
                 reader.NextResult();
 
@@ -186,7 +186,7 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             // Check the items
-            if (vm.Items.Count != 1 || vm.TmpDocs.Count <= 0)
+            if (vm.Items.Count != 1 || vm.AccountVM.ExtraInfo_ADP.DPTmpDocs.Count <= 0)
             {
                 return BadRequest("Only two items allowed or no template docs");
             }
@@ -332,7 +332,7 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Fifth, create template docs
-                    foreach (FinanceTmpDocLoanViewModel avm in vm.TmpDocs)
+                    foreach (FinanceTmpDocLoanViewModel avm in vm.AccountVM.ExtraInfo_Loan.LoanTmpDocs)
                     {
                         queryString = HIHDBUtility.GetFinanceTmpDocLoanInsertString();
 

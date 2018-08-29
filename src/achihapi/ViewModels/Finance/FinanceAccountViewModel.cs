@@ -39,10 +39,6 @@ namespace achihapi.ViewModels
     public class FinanceAccountUIViewModel : FinanceAccountViewModel
     {
         public string CtgyName { get; set; }
-        
-        // Template docs
-        public List<FinanceTmpDocLoanViewModel> LoanTmpDocs { get; set; }
-        public List<FinanceTmpDocDPViewModel> DPTmpDocs { get; set; }
     }
 
     public abstract class FinanceAccountExtViewModel
@@ -76,6 +72,13 @@ namespace achihapi.ViewModels
         public String DefrrDays { get; set; }
         [StringLength(45)]
         public String Comment { get; set; }
+        // Tmp. docs
+        public List<FinanceTmpDocDPViewModel> DPTmpDocs { get; set; }
+
+        public FinanceAccountExtDPViewModel()
+        {
+            this.DPTmpDocs = new List<FinanceTmpDocDPViewModel>();
+        }
     }
 
     // Account extra: Assert
@@ -118,11 +121,14 @@ namespace achihapi.ViewModels
         public Int32? PayingAccount { get; set; }
         [StringLength(50)]
         public String Partner { get; set; }
+        // Tmp. docs
+        public List<FinanceTmpDocLoanViewModel> LoanTmpDocs { get; set; }
 
         public FinanceAccountExtLoanViewModel()
         {
             //// Default
             //this.IsLendOut = false;
+            this.LoanTmpDocs = new List<FinanceTmpDocLoanViewModel>();
         }
     }
 }

@@ -38,9 +38,6 @@ namespace achihapi.ViewModels
     {
         // Account -> Advance payment
         public FinanceAccountViewModel AccountVM = new FinanceAccountViewModel();
-
-        // Templates
-        public List<FinanceTmpDocDPViewModel> TmpDocs = new List<FinanceTmpDocDPViewModel>();
     }
 
     public sealed class FinanceAssetDocumentUIViewModel: FinanceDocumentUIViewModel
@@ -53,9 +50,6 @@ namespace achihapi.ViewModels
     {
         // Account -> Loan account
         public FinanceAccountViewModel AccountVM = new FinanceAccountViewModel();
-
-        // Templates
-        public List<FinanceTmpDocLoanViewModel> TmpDocs = new List<FinanceTmpDocLoanViewModel>();
     }
 }
 
