@@ -884,6 +884,29 @@ namespace achihapi.Utilities
             cmd.Parameters.AddWithValue("@COMMENT",
                 String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
         }
+
+        internal static string GetFinanceAccountADPUpdateString()
+        {
+            return @"UPDATE [dbo].[t_fin_account_ext_dp]
+                   SET [DIRECT] = @DIRECT
+                      ,[STARTDATE] = @STARTDATE
+                      ,[ENDDATE] = @ENDDATE
+                      ,[RPTTYPE] = @RPTTYPE
+                      ,[REFDOCID] = @REFDOCID
+                      ,[COMMENT] = @COMMENT
+                 WHERE [ACCOUNTID] = <ACCOUNTID, int,>";
+        }
+        internal static void BindFinAccountADPUpdateParamter(SqlCommand cmd, FinanceAccountExtDPViewModel vm)
+        {
+            cmd.Parameters.AddWithValue("@DIRECT", vm.Direct);
+            cmd.Parameters.AddWithValue("@STARTDATE", vm.StartDate);
+            cmd.Parameters.AddWithValue("@ENDDATE", vm.EndDate);
+            cmd.Parameters.AddWithValue("@RPTTYPE", vm.RptType);
+            cmd.Parameters.AddWithValue("@REFDOCID", vm.RefDocID);
+            cmd.Parameters.AddWithValue("@COMMENT",
+                String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
+            cmd.Parameters.AddWithValue("@ACCOUNTID", vm.AccountID);
+        }
         #endregion
 
         #region Finance Account Extra: Asset
@@ -1109,6 +1132,58 @@ namespace achihapi.Utilities
                 cmd.Parameters.AddWithValue("@PARTNER", vm.Partner);
             else
                 cmd.Parameters.AddWithValue("@PARTNER", DBNull.Value);
+        }
+
+        internal static string GetFinanceAccountLoanUpdateString()
+        {
+            return @"UPDATE [dbo].[t_fin_account_ext_loan]
+                    SET [STARTDATE] = @STARTDATE
+                        ,[ANNUALRATE] = @ANNUALRATE
+                        ,[INTERESTFREE] = @INTERESTFREE
+                        ,[REPAYMETHOD] = @REPAYMETHOD
+                        ,[TOTALMONTH] = @TOTALMONTH
+                        ,[REFDOCID] = @REFDOCID
+                        ,[OTHERS] = @OTHERS
+                        ,[EndDate] = @EndDate
+                        ,[PAYINGACCOUNT] = @PAYINGACCOUNT
+                        ,[PARTNER] = @PARTNER
+                    WHERE [ACCOUNTID] = @ACCOUNTID";
+        }
+        internal static void BindFinAccountLoanUpdateParameter(SqlCommand cmd, FinanceAccountExtLoanViewModel vm)
+        {
+            cmd.Parameters.AddWithValue("@STARTDATE", vm.StartDate);
+            if (vm.AnnualRate.HasValue)
+                cmd.Parameters.AddWithValue("@ANNUALRATE", vm.AnnualRate.Value);
+            else
+                cmd.Parameters.AddWithValue("@ANNUALRATE", DBNull.Value);
+            if (vm.InterestFree.HasValue)
+                cmd.Parameters.AddWithValue("@INTERESTFREE", vm.InterestFree.Value);
+            else
+                cmd.Parameters.AddWithValue("@INTERESTFREE", DBNull.Value);
+            if (vm.RepaymentMethod.HasValue)
+                cmd.Parameters.AddWithValue("@REPAYMETHOD", vm.RepaymentMethod.Value);
+            else
+                cmd.Parameters.AddWithValue("@REPAYMETHOD", DBNull.Value);
+            if (vm.TotalMonths.HasValue)
+                cmd.Parameters.AddWithValue("@TOTALMONTH", vm.TotalMonths.Value);
+            else
+                cmd.Parameters.AddWithValue("@TOTALMONTH", DBNull.Value);
+            cmd.Parameters.AddWithValue("@REFDOCID", vm.RefDocID);
+            cmd.Parameters.AddWithValue("@OTHERS",
+                String.IsNullOrEmpty(vm.Others) ? String.Empty : vm.Others);
+            if (vm.EndDate.HasValue)
+                cmd.Parameters.AddWithValue("@ENDDATE", vm.EndDate.Value);
+            else
+                cmd.Parameters.AddWithValue("@ENDDATE", DBNull.Value);
+            if (vm.PayingAccount.HasValue)
+                cmd.Parameters.AddWithValue("@PAYINGACCOUNT", vm.PayingAccount.Value);
+            else
+                cmd.Parameters.AddWithValue("@PAYINGACCOUNT", DBNull.Value);
+            if (!String.IsNullOrEmpty(vm.Partner))
+                cmd.Parameters.AddWithValue("@PARTNER", vm.Partner);
+            else
+                cmd.Parameters.AddWithValue("@PARTNER", DBNull.Value);
+            cmd.Parameters.AddWithValue("@ACCOUNTID", vm.AccountID);
         }
         #endregion
 

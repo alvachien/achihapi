@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 
 namespace achihapi.ViewModels
@@ -73,7 +71,7 @@ namespace achihapi.ViewModels
         [StringLength(45)]
         public String Comment { get; set; }
         // Tmp. docs
-        public List<FinanceTmpDocDPViewModel> DPTmpDocs { get; set; }
+        public List<FinanceTmpDocDPViewModel> DPTmpDocs { get; }
 
         public FinanceAccountExtDPViewModel()
         {
@@ -122,7 +120,7 @@ namespace achihapi.ViewModels
         [StringLength(50)]
         public String Partner { get; set; }
         // Tmp. docs
-        public List<FinanceTmpDocLoanViewModel> LoanTmpDocs { get; set; }
+        public List<FinanceTmpDocLoanViewModel> LoanTmpDocs { get; }
 
         public FinanceAccountExtLoanViewModel()
         {

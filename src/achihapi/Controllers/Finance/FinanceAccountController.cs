@@ -516,7 +516,7 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody]FinanceAccountViewModel vm)
         {
-            if (vm == null || vm.HID <= 0)
+            if (vm == null || vm.HID <= 0 || vm.ID != id)
             {
                 return BadRequest("Invalid inputted data, such as miss HID");
             }
@@ -556,6 +556,27 @@ namespace achihapi.Controllers
             {
                 return BadRequest("Name is a must!");
             }
+            if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
+            {
+                if (vm.ExtraInfo_ADP == null)
+                {
+                    return BadRequest("Advance payment info is missing");
+                }
+            }
+            else if(vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
+            {
+                if (vm.ExtraInfo_AS == null)
+                {
+                    return BadRequest("Asset info is missing");
+                }
+            }
+            else if(vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
+            {
+                if (vm.ExtraInfo_Loan == null)
+                {
+                    return BadRequest("Loan info is missing");
+                }
+            }
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
@@ -588,6 +609,8 @@ namespace achihapi.Controllers
                 }
 
                 tran = conn.BeginTransaction();
+
+                // 1. Account header
                 SqlCommand cmd = new SqlCommand(queryString, conn)
                 {
                     Transaction = tran
@@ -610,6 +633,80 @@ namespace achihapi.Controllers
                 cmd.Parameters.AddWithValue("@UPDATEDAT", vm.UpdatedAt);
                 cmd.Parameters.AddWithValue("@ID", vm.ID);
                 await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
+                cmd = null;
+
+                // 2. For extend attributes
+                if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
+                {
+                    // 2.1 Extend attributes
+                    queryString = HIHDBUtility.GetFinanceAccountADPUpdateString();
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    HIHDBUtility.BindFinAccountADPUpdateParamter(cmd, vm.ExtraInfo_ADP);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // 2.2 Tmplate docs
+                    queryString = HIHDBUtility.GetFinanceDocADPDeleteString(vm.HID, vm.ID, true);
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    foreach(var tdoc in vm.ExtraInfo_ADP.DPTmpDocs)
+                    {
+                        if (tdoc.RefDocID != null)
+                            continue;
+
+                        queryString = HIHDBUtility.getFinanceTmpDocADPInsertString();
+                        cmd = new SqlCommand(queryString, conn, tran);
+                        HIHDBUtility.bindFinTmpDocADPParameter(cmd, tdoc, vm.ID, usrName);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+                    }
+                }
+                else if(vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
+                {
+                    // 2.1 Extend attributes
+                    queryString = HIHDBUtility.GetFinanceAccountAssetUpdateString();
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    HIHDBUtility.BindFinAccountAssetUpdateParameter(cmd, vm.ExtraInfo_AS);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+                }
+                else if(vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
+                {
+                    // 2.1 Extend attributes
+                    queryString = HIHDBUtility.GetFinanceAccountLoanUpdateString();
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    HIHDBUtility.BindFinAccountLoanUpdateParameter(cmd, vm.ExtraInfo_Loan);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // 2.2 Tmplate docs
+                    queryString = HIHDBUtility.GetFinanceDocLoanDeleteString(vm.HID, vm.ID, true);
+                    cmd = new SqlCommand(queryString, conn, tran);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    foreach(var tdoc in vm.ExtraInfo_Loan.LoanTmpDocs)
+                    {
+                        if (tdoc.RefDocID != null)
+                            continue;
+
+                        queryString = HIHDBUtility.GetFinanceTmpDocLoanInsertString();
+                        cmd = new SqlCommand(queryString, conn, tran);
+                        HIHDBUtility.BindFinTmpDocLoanParameter(cmd, tdoc, vm.ID, usrName);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+                    }
+                }
 
                 // Now commit it!
                 tran.Commit();
@@ -644,7 +741,7 @@ namespace achihapi.Controllers
             return new JsonResult(vm, setting);
         }
 
-        // PATCH api/event/5
+        // PATCH api/financeaccount/5
         [HttpPatch("{id}")]
         public async Task<IActionResult> Patch(int id, [FromQuery]int hid, [FromBody]JsonPatchDocument<FinanceAccountUIViewModel> patch)
         {
