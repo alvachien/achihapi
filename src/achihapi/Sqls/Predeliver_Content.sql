@@ -373,7 +373,8 @@ INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (6,'2018.08.
 -----------------------------------------------------------------------------------------------------------------------------------
 -- Updated at 2017.8.10
 
-INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (7,'2018.08.10');
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (7,'2018.09.01');
+
 
 ---------------------------------
 -- TODO...
