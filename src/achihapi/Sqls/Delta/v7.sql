@@ -38,6 +38,7 @@ GO
 ALTER TABLE [dbo].[t_fin_account_ext_loan_h] CHECK CONSTRAINT [FK_t_fin_account_ext_loan_h_ID]
 GO
 
+-----------------------------------------------------------------------------------------------------------------------------------------------
 -- Table of CreditCard
 SET ANSI_NULLS ON
 GO
@@ -47,11 +48,12 @@ GO
 
 CREATE TABLE [dbo].[t_fin_account_ext_cc](
 	[ACCOUNTID] [int] NOT NULL,
-	[BILLDATE] [tinyint] NOT NULL,
-	[LASTPAYDATE] [tinyint] NOT NULL,
+	[BILLDATE] [smallint] NOT NULL,
+	[LASTPAYDATE] [smallint] NOT NULL,
 	[CARDNUM] [nvarchar](20) NOT NULL,
 	[OTHERS] [nvarchar](100) NULL,
-	[PARTNER] [nvarchar](50) NULL,
+	[BANK] [nvarchar](50) NULL,
+	[VALIDDATE] [datetime] NULL,
  CONSTRAINT [PK_t_fin_account_ext_cc] PRIMARY KEY CLUSTERED 
 (
 	[ACCOUNTID] ASC

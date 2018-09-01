@@ -129,4 +129,21 @@ namespace achihapi.ViewModels
             this.LoanTmpDocs = new List<FinanceTmpDocLoanViewModel>();
         }
     }
+
+    // Account extra: Creditcard
+    public sealed class FinanceAccountExtCCViewModel : FinanceAccountExtViewModel
+    {
+        [Required]
+        public Int16 BillDate { get; set; }
+        [Required] 
+        public Int16 LastPayDate { get; set; }
+        [Required]
+        [StringLength(20)]
+        public String CardNumber { get; set; }
+        [StringLength(50)]
+        public String Bank { get; set; }
+        [StringLength(100)]
+        public String Others { get; set; }
+        public DateTime? ValidDate { get; set; }
+    }
 }
