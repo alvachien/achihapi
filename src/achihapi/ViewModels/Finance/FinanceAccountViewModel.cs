@@ -134,9 +134,9 @@ namespace achihapi.ViewModels
     public sealed class FinanceAccountExtCCViewModel : FinanceAccountExtViewModel
     {
         [Required]
-        public Int16 BillDate { get; set; }
+        public Int16 BillDayInMonth { get; set; }
         [Required] 
-        public Int16 LastPayDate { get; set; }
+        public Int16 LastPayDayInMonth { get; set; }
         [Required]
         [StringLength(20)]
         public String CardNumber { get; set; }

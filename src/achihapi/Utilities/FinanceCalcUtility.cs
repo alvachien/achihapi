@@ -39,6 +39,35 @@ namespace achihapi.Utilities
                 if (datInput.FirstRepayDate.Value.Day != datInput.RepayDayInMonth.Value)
                     throw new Exception("Inconsistency in first payment data and repay day");
             }
+            if (datInput.RepayDayInMonth.HasValue)
+            {
+                if (datInput.RepayDayInMonth.Value <= 0 || datInput.RepayDayInMonth.Value >= 29)
+                    throw new Exception("Invalid repay. date");
+            }
+            if (datInput.FirstRepayDate.HasValue)
+            {
+                var nInitDays = (int)(datInput.FirstRepayDate.Value.Date - datInput.StartDate.Date).TotalDays;
+                // Check the dates
+                if (nInitDays < 30 || nInitDays > 60)
+                    throw new Exception("First repayment day is invalid");
+            }
+
+            var realStartDate = datInput.StartDate;
+            if (datInput.FirstRepayDate.HasValue)
+                realStartDate = datInput.FirstRepayDate.Value;
+            if (datInput.RepayDayInMonth.HasValue && datInput.RepayDayInMonth.Value != realStartDate.Day)
+            {
+                if (datInput.RepayDayInMonth.Value > realStartDate.Day)
+                {
+                    realStartDate = realStartDate.AddDays(datInput.RepayDayInMonth.Value - realStartDate.Day);
+                }
+                else
+                {
+                    realStartDate = realStartDate.AddMonths(1);
+                    realStartDate = realStartDate.AddDays(datInput.RepayDayInMonth.Value - realStartDate.Day);
+                }
+            }
+            var nInitDelay = (int)(realStartDate.Date - datInput.StartDate.Date).TotalDays - 30;
 
             if (datInput.InterestFreeLoan)
             {
@@ -47,20 +76,6 @@ namespace achihapi.Utilities
                     case LoanRepaymentMethod.EqualPrincipal:
                     case LoanRepaymentMethod.EqualPrincipalAndInterset:
                         {
-                            var realStartDate = datInput.StartDate;
-                            if (datInput.FirstRepayDate.HasValue)
-                                realStartDate = datInput.FirstRepayDate.Value;
-                            if(datInput.RepayDayInMonth.HasValue && datInput.RepayDayInMonth.Value != realStartDate.Day)
-                            {
-                                if (datInput.RepayDayInMonth.Value > realStartDate.Day)
-                                {
-
-                                }
-                                else
-                                {
-
-                                }
-                            }
 
                             for (int i = 0; i < datInput.TotalMonths; i++)
                             {
@@ -106,10 +121,13 @@ namespace achihapi.Utilities
                 {
                     case LoanRepaymentMethod.EqualPrincipalAndInterset:
                         {
+                            // Decimal dInitMonthIntere = 0;
                             //每月月供额 =〔贷款本金×月利率×(1＋月利率)＾还款月数〕÷〔(1＋月利率)＾还款月数 - 1〕
                             //每月应还利息 = 贷款本金×月利率×〔(1 + 月利率) ^ 还款月数 - (1 + 月利率) ^ (还款月序号 - 1)〕÷〔(1 + 月利率) ^ 还款月数 - 1〕
                             //每月应还本金 = 贷款本金×月利率×(1 + 月利率) ^ (还款月序号 - 1)÷〔(1 + 月利率) ^ 还款月数 - 1〕
                             Decimal monthRate = datInput.InterestRate / 12;
+                            //if (nInitDelay > 0)
+                            //    dInitMonthIntere = Math.Round(datInput.TotalAmount * (monthRate / 30) * nInitDelay, 2);
                             Decimal d3 = (Decimal)Math.Pow((double)(1 + monthRate), datInput.TotalMonths) - 1;
                             Decimal monthRepay = datInput.TotalAmount * monthRate * (Decimal)Math.Pow((double)(1 + monthRate), datInput.TotalMonths) / d3;
 
@@ -118,10 +136,13 @@ namespace achihapi.Utilities
                             {
                                 var rst = new LoanCalcResult
                                 {
-                                    TranDate = datInput.StartDate.AddMonths(i),
+                                    TranDate = realStartDate.AddMonths(i),
                                     TranAmount = Math.Round(datInput.TotalAmount * monthRate * (Decimal)Math.Pow((double)(1 + monthRate), i) / d3, 2),
                                     InterestAmount = Math.Round(datInput.TotalAmount * monthRate * ((Decimal)Math.Pow((double)(1 + monthRate), datInput.TotalMonths) - (Decimal)Math.Pow((double)(1 + monthRate), i)) / d3, 2)
                                 };
+
+                                if (i == 0 && nInitDelay > 0)
+                                    rst.InterestAmount = Math.Round(rst.InterestAmount + (nInitDelay - 1) * datInput.TotalAmount * monthRate / 30, 2);
 
                                 //var diff = rst.TranAmount + rst.InterestAmount - monthRepay;
                                 //if (diff != 0)
@@ -152,10 +173,12 @@ namespace achihapi.Utilities
                             {
                                 var rst = new LoanCalcResult
                                 {
-                                    TranDate = datInput.StartDate.AddMonths(i + 1),
+                                    TranDate = realStartDate.AddMonths(i + 1),
                                     TranAmount = Math.Round(monthPrincipal, 2),
                                     InterestAmount = Math.Round(totalAmt * monthRate, 2)
                                 };
+                                if (i == 0 && nInitDelay > 0)
+                                    rst.InterestAmount = Math.Round(rst.InterestAmount + (nInitDelay - 1) * datInput.TotalAmount * monthRate / 30, 2);
 
                                 totalAmt -= monthPrincipal;
 

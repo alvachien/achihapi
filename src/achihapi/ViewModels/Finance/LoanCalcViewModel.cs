@@ -23,5 +23,6 @@ namespace achihapi.ViewModels
         public DateTime TranDate { get; set; }
         public Decimal TranAmount { get; set; }
         public Decimal InterestAmount { get; set; }
+        public Decimal TotalAmount { get { return this.TranAmount + this.InterestAmount; } }
     }
 }

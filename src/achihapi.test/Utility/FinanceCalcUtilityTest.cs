@@ -48,6 +48,64 @@ namespace achihapi.test
         }
 
         [TestMethod]
+        public void LoanCalcTest_RepayDay()
+        {
+            LoanCalcViewModel vm = new LoanCalcViewModel
+            {
+                RepaymentMethod = LoanRepaymentMethod.EqualPrincipal,
+                InterestFreeLoan = true,
+                StartDate = new DateTime(2020, 1, 10),
+                TotalAmount = 120000,
+                EndDate = new DateTime(2021, 1, 10),
+                TotalMonths = 12,
+                RepayDayInMonth = 15
+            };
+            List<LoanCalcResult> results = FinanceCalcUtility.LoanCalculate(vm);
+
+            Assert.AreEqual(12, results.Count);
+
+            var realdate = results[0].TranDate;
+            Assert.AreEqual(2020, realdate.Year);
+            Assert.AreEqual(1, realdate.Month);
+            Assert.AreEqual(15, realdate.Day);
+
+            foreach (var rst in results)
+            {
+                Assert.AreEqual(10000, rst.TranAmount);
+                Assert.IsTrue(rst.InterestAmount == 0);
+            }
+        }
+
+        [TestMethod]
+        public void LoanCalcTest_FirstRepayDay()
+        {
+            LoanCalcViewModel vm = new LoanCalcViewModel
+            {
+                RepaymentMethod = LoanRepaymentMethod.EqualPrincipal,
+                InterestFreeLoan = true,
+                StartDate = new DateTime(2020, 1, 10),
+                TotalAmount = 120000,
+                EndDate = new DateTime(2021, 1, 10),
+                TotalMonths = 12,
+                FirstRepayDate = new DateTime(2020, 2, 15)
+            };
+            List<LoanCalcResult> results = FinanceCalcUtility.LoanCalculate(vm);
+
+            Assert.AreEqual(12, results.Count);
+
+            var realdate = results[0].TranDate;
+            Assert.AreEqual(2020, realdate.Year);
+            Assert.AreEqual(2, realdate.Month);
+            Assert.AreEqual(15, realdate.Day);
+
+            foreach (var rst in results)
+            {
+                Assert.AreEqual(10000, rst.TranAmount);
+                Assert.IsTrue(rst.InterestAmount == 0);
+            }
+        }
+
+        [TestMethod]
         public void LoanCalcTest_InterestFreeAndDue()
         {
             LoanCalcViewModel vm = new LoanCalcViewModel
@@ -176,7 +234,82 @@ namespace achihapi.test
             }
             Assert.IsNull(results);
 
-            // Scenario 6. Others?
+            // Scenario 6. Different repay day with first repay date
+            vm = new LoanCalcViewModel
+            {
+                InterestFreeLoan = false,
+                TotalAmount = 10000,
+                InterestRate = 3,
+                TotalMonths = 12,
+                StartDate = new DateTime(2020, 1, 3),
+                EndDate = new DateTime(2021, 1, 3),
+                RepayDayInMonth = 15,
+                FirstRepayDate = new DateTime(2020, 2, 13)
+            };
+            try
+            {
+                results = FinanceCalcUtility.LoanCalculate(vm);
+                Assert.Fail("UT Failed: throw exception on unmatched repay day and first repay date");
+            }
+            catch (Exception exp)
+            {
+                Assert.IsNotNull(exp);
+            }
+            Assert.IsNull(results);
+
+            // Scenario 7. Invalid repay day
+            vm = new LoanCalcViewModel
+            {
+                InterestFreeLoan = false,
+                TotalAmount = 10000,
+                InterestRate = 3,
+                TotalMonths = 12,
+                StartDate = new DateTime(2018, 1, 3),
+                EndDate = new DateTime(2019, 1, 3),
+                RepayDayInMonth = 30
+            };
+            try
+            {
+                results = FinanceCalcUtility.LoanCalculate(vm);
+                Assert.Fail("UT Failed: throw exception on invalid repay day");
+            }
+            catch (Exception exp)
+            {
+                Assert.IsNotNull(exp);
+            }
+            Assert.IsNull(results);
+
+            // Scenario 8. Others?
+        }
+
+        [TestMethod]
+        public void LoanCalcTest_EqualCAndIAndFirstRepayDay()
+        {
+            LoanCalcViewModel vm = new LoanCalcViewModel
+            {
+                InterestFreeLoan = false,
+                StartDate = new DateTime(2020, 8, 23),
+                TotalAmount = 2680000,
+                TotalMonths = 360,
+                InterestRate = 0.0441M,
+                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterset,
+                FirstRepayDate = new DateTime(2020, 10, 1)
+            };
+            List<LoanCalcResult> results = FinanceCalcUtility.LoanCalculate(vm);
+
+            Assert.AreEqual(360, results.Count);
+
+            var realdate = results[0].TranDate;
+            Assert.AreEqual(2020, realdate.Year);
+            Assert.AreEqual(10, realdate.Month);
+            Assert.AreEqual(1, realdate.Day);
+            Assert.IsTrue(Math.Abs(16062.62M - results[0].TotalAmount) <= 0.01M);
+
+            //foreach (var rst in results)
+            //{
+            //    Assert.AreEqual(10000, rst.TranAmount);
+            //    Assert.IsTrue(rst.InterestAmount == 0);
+            //}
         }
 
         [TestMethod]

@@ -48,8 +48,8 @@ GO
 
 CREATE TABLE [dbo].[t_fin_account_ext_cc](
 	[ACCOUNTID] [int] NOT NULL,
-	[BILLDATE] [smallint] NOT NULL,
-	[LASTPAYDATE] [smallint] NOT NULL,
+	[BILLDAYINMONTH] [smallint] NOT NULL,
+	[REPAYDAYINMONTH] [smallint] NOT NULL,
 	[CARDNUM] [nvarchar](20) NOT NULL,
 	[OTHERS] [nvarchar](100) NULL,
 	[BANK] [nvarchar](50) NULL,
