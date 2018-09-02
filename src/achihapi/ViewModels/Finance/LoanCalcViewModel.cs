@@ -14,7 +14,7 @@ namespace achihapi.ViewModels
         public Boolean InterestFreeLoan { get; set; }
         public LoanRepaymentMethod RepaymentMethod { get; set; }
         public DateTime? EndDate { get; set; }
-        public Int16 RepayDayInMonth { get; set; }
+        public Int16? RepayDayInMonth { get; set; }
         public DateTime? FirstRepayDate { get; set; }
     }
 

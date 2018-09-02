@@ -34,6 +34,11 @@ namespace achihapi.Utilities
                 throw new Exception("Not supported method");
             if (datInput.StartDate == null)
                 throw new Exception("Start date is must");
+            if(datInput.FirstRepayDate.HasValue && datInput.RepayDayInMonth.HasValue)
+            {
+                if (datInput.FirstRepayDate.Value.Day != datInput.RepayDayInMonth.Value)
+                    throw new Exception("Inconsistency in first payment data and repay day");
+            }
 
             if (datInput.InterestFreeLoan)
             {
@@ -42,11 +47,26 @@ namespace achihapi.Utilities
                     case LoanRepaymentMethod.EqualPrincipal:
                     case LoanRepaymentMethod.EqualPrincipalAndInterset:
                         {
+                            var realStartDate = datInput.StartDate;
+                            if (datInput.FirstRepayDate.HasValue)
+                                realStartDate = datInput.FirstRepayDate.Value;
+                            if(datInput.RepayDayInMonth.HasValue && datInput.RepayDayInMonth.Value != realStartDate.Day)
+                            {
+                                if (datInput.RepayDayInMonth.Value > realStartDate.Day)
+                                {
+
+                                }
+                                else
+                                {
+
+                                }
+                            }
+
                             for (int i = 0; i < datInput.TotalMonths; i++)
                             {
                                 listResults.Add(new LoanCalcResult
                                 {
-                                    TranDate = datInput.StartDate.AddMonths(i),
+                                    TranDate = realStartDate.AddMonths(i),
                                     TranAmount = Math.Round(datInput.TotalAmount / datInput.TotalMonths, 2),
                                     InterestAmount = 0
                                 });
