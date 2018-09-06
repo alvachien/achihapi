@@ -186,7 +186,7 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             // Check the items
-            if (vm.Items.Count != 1 || vm.AccountVM.ExtraInfo_ADP.DPTmpDocs.Count <= 0)
+            if (vm.Items.Count != 1 || vm.AccountVM.ExtraInfo_Loan.LoanTmpDocs.Count <= 0)
             {
                 return BadRequest("Only two items allowed or no template docs");
             }
