@@ -244,6 +244,52 @@ namespace achihapi.Controllers
                     cmd.Dispose();
                     cmd = null;
                 }
+                else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive)
+                {
+                    // Advance receive
+                    vmAccount.ExtraInfo_ADP = new FinanceAccountExtDPViewModel();
+                    queryString = HIHDBUtility.getFinanceAccountADPQueryString(vmAccount.ID);
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = await cmd.ExecuteReaderAsync();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            HIHDBUtility.FinAccountADP_DB2VM(reader, vmAccount.ExtraInfo_ADP, 0);
+                            break; // Shall only one entry
+                        };
+                    }
+                    else
+                    {
+                        throw new Exception("Failed to read Account DP");
+                    }
+
+                    reader.Close();
+                    reader = null;
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // Read out the template docs.
+                    queryString = HIHDBUtility.getFinanceDocADPListQueryString() + " WHERE [ACCOUNTID] = " + vmAccount.ID.ToString() + " AND [HID] = " + hid.ToString();
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = await cmd.ExecuteReaderAsync();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            var vmTmpADP = new FinanceTmpDocDPViewModel();
+                            HIHDBUtility.FinTmpDocADP_DB2VM(reader, vmTmpADP);
+                            vmAccount.ExtraInfo_ADP.DPTmpDocs.Add(vmTmpADP);
+                        }
+                    }
+                    reader.Close();
+                    reader = null;
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
                 {
                     vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
@@ -355,11 +401,12 @@ namespace achihapi.Controllers
         {
             if (vm == null 
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment
+                || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
             {
-                return BadRequest("No data is inputted or inputted data for Advance payment/Asset/Loan");
+                return BadRequest("No data is inputted or inputted data for Advance payment/receive/Asset/Loan");
             }
 
             String usrName = "";
@@ -556,7 +603,7 @@ namespace achihapi.Controllers
             {
                 return BadRequest("Name is a must!");
             }
-            if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
+            if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive)
             {
                 if (vm.ExtraInfo_ADP == null)
                 {
@@ -637,7 +684,7 @@ namespace achihapi.Controllers
                 cmd = null;
 
                 // 2. For extend attributes
-                if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
+                if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive)
                 {
                     // 2.1 Extend attributes
                     queryString = HIHDBUtility.GetFinanceAccountADPUpdateString();
@@ -830,6 +877,13 @@ namespace achihapi.Controllers
                         {
                             // Close account.
                             if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
+                            {
+                                // It have to stop all unposted advance payment
+                                queryString = HIHDBUtility.GetFinanceDocADPDeleteString(hid, vmAccount.ID, true);
+                                SqlCommand cmdTmpDoc = new SqlCommand(queryString, conn, tran);
+                                await cmdTmpDoc.ExecuteNonQueryAsync();
+                            }
+                            else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive)
                             {
                                 // It have to stop all unposted advance payment
                                 queryString = HIHDBUtility.GetFinanceDocADPDeleteString(hid, vmAccount.ID, true);

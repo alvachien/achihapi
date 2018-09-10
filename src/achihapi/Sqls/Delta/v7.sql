@@ -71,4 +71,4 @@ ALTER TABLE [dbo].[t_fin_account_ext_cc] CHECK CONSTRAINT [FK_t_fin_account_ext_
 GO
 
 -- New version
-INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (7,'2018.08.10');
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (7,'2018.10.10');

@@ -162,7 +162,8 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceADPDocumentUIViewModel vm)
         {
-            if (vm == null || vm.DocType != FinanceDocTypeViewModel.DocType_AdvancePayment)
+            if (vm == null || vm.DocType != FinanceDocTypeViewModel.DocType_AdvancePayment
+                || vm.DocType != FinanceDocTypeViewModel.DocType_AdvanceReceive)
             {
                 return BadRequest("No data is inputted");
             }

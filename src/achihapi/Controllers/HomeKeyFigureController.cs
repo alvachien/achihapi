@@ -148,7 +148,7 @@ namespace achihapi.Controllers
             sb.Append(@"SELECT [TRANTYPE_EXP], SUM(TRANAMOUNT) FROM [V_FIN_DOCUMENT_ITEM] WHERE [HID] = " + hid.ToString() + @" GROUP BY[TRANTYPE_EXP];");
             sb.Append(@"SELECT [TRANTYPE_EXP], SUM(TRANAMOUNT) FROM [V_FIN_DOCUMENT_ITEM] AS taba 
                     INNER JOIN t_fin_account AS tabb ON taba.ACCOUNTID = tabb.ID 
-                    WHERE taba.[HID] = " + hid.ToString() + " AND tabb.OWNER = N'" + usrName + "' GROUP BY[TRANTYPE_EXP]; ");
+                    WHERE taba.[HID] = " + hid.ToString() + " AND tabb.OWNER = N'" + usrName + "' GROUP BY [TRANTYPE_EXP]; ");
             sb.Append(@"SELECT COUNT(*) AS MSGCOUNT FROM t_homemsg WHERE [READFLAG] = 0 AND [HID] = " + hid.ToString() + ";");
             sb.Append(@"SELECT COUNT(*) AS EVENTCOUNT FROM t_event WHERE [CompleteTime] IS NULL AND [HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrName + "';");
             sb.Append(@"SELECT COUNT(*) AS EVENTCOUNT FROM t_event WHERE [CompleteTime] IS NOT NULL AND [HID] = " + hid.ToString() + " AND [Assignee] = N'" + usrName + "';");

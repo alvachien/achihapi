@@ -22,5 +22,6 @@ namespace achihapi.ViewModels
         public const Int32 AccountCategory_Asset = 7;
         public const Int32 AccountCategory_BorrowFrom = 9;
         public const Int32 AccountCategory_LendTo = 10;
+        public const Int32 AccountCategory_AdvanceReceive = 11;
     }
 }

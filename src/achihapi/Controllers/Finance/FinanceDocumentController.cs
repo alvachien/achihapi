@@ -239,10 +239,11 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Post([FromBody]FinanceDocumentUIViewModel vm)
         {
             if (vm == null || vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment
-                    || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
-                    || vm.DocType == FinanceDocTypeViewModel.DocType_AssetSoldOut
-                    || vm.DocType == FinanceDocTypeViewModel.DocType_BorrowFrom
-                    || vm.DocType == FinanceDocTypeViewModel.DocType_LendTo)
+                || vm.DocType == FinanceDocTypeViewModel.DocType_AdvanceReceive
+                || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
+                || vm.DocType == FinanceDocTypeViewModel.DocType_AssetSoldOut
+                || vm.DocType == FinanceDocTypeViewModel.DocType_BorrowFrom
+                || vm.DocType == FinanceDocTypeViewModel.DocType_LendTo)
             {
                 return BadRequest("No data is inputted or for Advancepay/Loan/Asset");
             }
@@ -392,10 +393,11 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Put(int id, [FromBody]FinanceDocumentUIViewModel vm)
         {
             if (vm == null || vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment
-                    || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
-                    || vm.DocType == FinanceDocTypeViewModel.DocType_AssetSoldOut
-                    || vm.DocType == FinanceDocTypeViewModel.DocType_BorrowFrom
-                    || vm.DocType == FinanceDocTypeViewModel.DocType_LendTo)
+                || vm.DocType == FinanceDocTypeViewModel.DocType_AdvanceReceive
+                || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
+                || vm.DocType == FinanceDocTypeViewModel.DocType_AssetSoldOut
+                || vm.DocType == FinanceDocTypeViewModel.DocType_BorrowFrom
+                || vm.DocType == FinanceDocTypeViewModel.DocType_LendTo)
             {
                 return BadRequest("No data is inputted or for Advancepay/Loan/Asset");
             }
