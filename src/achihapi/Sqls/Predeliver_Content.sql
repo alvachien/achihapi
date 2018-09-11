@@ -371,7 +371,15 @@ UPDATE dbo.[t_fin_tran_type] SET [EXPENSE] = 1 WHERE [ID] = 81;
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (6,'2018.08.05');
 
 -----------------------------------------------------------------------------------------------------------------------------------
--- Updated at 2017.8.10
+-- Updated at 2017.9.11
+SET IDENTITY_INSERT dbo.[t_fin_account_ctgy] ON;
+INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (11,N'Sys.AcntCty.AdvancedRecv',0,N'预收款');
+SET IDENTITY_INSERT dbo.[t_fin_account_ctgy] OFF;
+
+SET IDENTITY_INSERT dbo.[t_fin_doc_type] ON;
+INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (12,N'Sys.DocTy.AdvancedRecv', N'预收款');
+SET IDENTITY_INSERT dbo.[t_fin_doc_type] OFF;
+
 
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (7,'2018.10.10');
 

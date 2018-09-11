@@ -1,12 +1,5 @@
 ﻿
 -- History table
-/****** Object:  Table [dbo].[t_fin_account_ext_loan_h]    Script Date: 8/10/2018 9:51:53 PM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
 CREATE TABLE [dbo].[t_fin_account_ext_loan_h](
 	[ACCOUNTID] [int] NOT NULL,
 	[STARTDATE] [datetime] NOT NULL,
@@ -23,28 +16,19 @@ CREATE TABLE [dbo].[t_fin_account_ext_loan_h](
 (
 	[ACCOUNTID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-GO
+) ON [PRIMARY];
 
-ALTER TABLE [dbo].[t_fin_account_ext_loan_h] ADD  DEFAULT (getdate()) FOR [EndDate]
-GO
+ALTER TABLE [dbo].[t_fin_account_ext_loan_h] ADD  DEFAULT (getdate()) FOR [EndDate];
 
 ALTER TABLE [dbo].[t_fin_account_ext_loan_h]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_account_ext_loan_h_ID] FOREIGN KEY([ACCOUNTID])
 REFERENCES [dbo].[t_fin_account] ([ID])
 ON UPDATE CASCADE
-ON DELETE CASCADE
-GO
+ON DELETE CASCADE;
 
-ALTER TABLE [dbo].[t_fin_account_ext_loan_h] CHECK CONSTRAINT [FK_t_fin_account_ext_loan_h_ID]
-GO
+ALTER TABLE [dbo].[t_fin_account_ext_loan_h] CHECK CONSTRAINT [FK_t_fin_account_ext_loan_h_ID];
 
 -----------------------------------------------------------------------------------------------------------------------------------------------
 -- Table of CreditCard
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
 
 CREATE TABLE [dbo].[t_fin_account_ext_cc](
 	[ACCOUNTID] [int] NOT NULL,
@@ -58,17 +42,28 @@ CREATE TABLE [dbo].[t_fin_account_ext_cc](
 (
 	[ACCOUNTID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-GO
+) ON [PRIMARY];
 
 ALTER TABLE [dbo].[t_fin_account_ext_cc]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_account_ext_cc_ID] FOREIGN KEY([ACCOUNTID])
 REFERENCES [dbo].[t_fin_account] ([ID])
 ON UPDATE CASCADE
-ON DELETE CASCADE
-GO
+ON DELETE CASCADE;
 
-ALTER TABLE [dbo].[t_fin_account_ext_cc] CHECK CONSTRAINT [FK_t_fin_account_ext_cc_ID]
-GO
+ALTER TABLE [dbo].[t_fin_account_ext_cc] CHECK CONSTRAINT [FK_t_fin_account_ext_cc_ID];
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+-- Content part
+-- Account Category
+SET IDENTITY_INSERT dbo.[t_fin_account_ctgy] ON;
+INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (11,N'Sys.AcntCty.AdvancedRecv',0,N'预收款');
+SET IDENTITY_INSERT dbo.[t_fin_account_ctgy] OFF;
+
+-- Doc. Type
+SET IDENTITY_INSERT dbo.[t_fin_doc_type] ON;
+INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (12,N'Sys.DocTy.AdvancedRecv', N'预收款');
+SET IDENTITY_INSERT dbo.[t_fin_doc_type] OFF;
+
 
 -- New version
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (7,'2018.10.10');

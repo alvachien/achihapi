@@ -1799,6 +1799,37 @@ GO
 ALTER TABLE [dbo].[t_fin_account_ext_loan_h] CHECK CONSTRAINT [FK_t_fin_account_ext_loan_h_ID]
 GO
 
+-- Credit card
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[t_fin_account_ext_cc](
+	[ACCOUNTID] [int] NOT NULL,
+	[BILLDAYINMONTH] [smallint] NOT NULL,
+	[REPAYDAYINMONTH] [smallint] NOT NULL,
+	[CARDNUM] [nvarchar](20) NOT NULL,
+	[OTHERS] [nvarchar](100) NULL,
+	[BANK] [nvarchar](50) NULL,
+	[VALIDDATE] [datetime] NULL,
+ CONSTRAINT [PK_t_fin_account_ext_cc] PRIMARY KEY CLUSTERED 
+(
+	[ACCOUNTID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[t_fin_account_ext_cc]  WITH CHECK ADD  CONSTRAINT [FK_t_fin_account_ext_cc_ID] FOREIGN KEY([ACCOUNTID])
+REFERENCES [dbo].[t_fin_account] ([ID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[t_fin_account_ext_cc] CHECK CONSTRAINT [FK_t_fin_account_ext_cc_ID]
+GO
+
 
 ---------------------------------
 -- TODO...
