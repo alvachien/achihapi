@@ -29,13 +29,20 @@ namespace achihapi.ViewModels
     public class FinanceDocumentUIViewModel : FinanceDocumentViewModel
     {
         public String DocTypeName { get; set; }
-
+        
         // Items
         public List<FinanceDocumentItemUIViewModel> Items = new List<FinanceDocumentItemUIViewModel>();
     }
 
     public sealed class FinanceADPDocumentUIViewModel: FinanceDocumentUIViewModel
     {
+        public FinanceADPDocumentUIViewModel()
+        {
+            this.IsADP = true;
+        }
+
+        public Boolean IsADP { get; set; }
+
         // Account -> Advance payment
         public FinanceAccountViewModel AccountVM = new FinanceAccountViewModel();
     }
