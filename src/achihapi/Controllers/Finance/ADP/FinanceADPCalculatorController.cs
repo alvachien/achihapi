@@ -8,17 +8,17 @@ using achihapi.Utilities;
 namespace achihapi.Controllers
 {
     [Produces("application/json")]
-    [Route("api/FinanceLoanCalculator")]
-    public class FinanceLoanCalculatorController : Controller
+    [Route("api/FinanceADPCalculator")]
+    public class FinanceADPCalculatorController : Controller
     {
-        // POST: api/FinanceLoanCalculator
+        // POST: api/FinanceADPCalculator
         [HttpPost]
         [Authorize]
-        public IActionResult Calculate([FromBody]LoanCalcViewModel vm)
+        public IActionResult Calculate([FromBody]ADPGenerateViewModel vm)
         {
             try
             {
-                List<LoanCalcResult> results = FinanceCalcUtility.LoanCalculate(vm);
+                List<ADPGenerateResult> results = FinanceCalcUtility.GenerateAdvancePaymentTmps(vm);
 
                 var setting = new Newtonsoft.Json.JsonSerializerSettings
                 {
