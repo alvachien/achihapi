@@ -367,7 +367,13 @@ namespace achihapi.Utilities
 
                 case RepeatFrequency.Manual:
                     {
-                        // TBD.
+                        // It shall return only entry out
+                        listResults.Add(new ADPGenerateResult
+                        {
+                            TranDate = datInput.EndDate,
+                            TranAmount = datInput.TotalAmount,
+                            Desp = datInput.Desp + " | 1 / 1"
+                        });
                     }
                     break;
             }

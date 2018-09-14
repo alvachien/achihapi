@@ -10,15 +10,6 @@ namespace achihapi.test
     [TestClass]
     public class FinanceCalcUtilityTest
     {
-        //[TestMethod]
-        //public void LoanCalcTest_EmptyInput()
-        //{
-        //    LoanCalcViewModel vm = new LoanCalcViewModel();
-        //    List<LoanCalcResult> results = FinanceCalcUtility.LoanCalculate(vm);
-
-        //    Assert.AreEqual(0, results.Count);
-        //}
-
         [TestMethod]
         public void LoanCalcTest_InterestFree()
         {
@@ -797,6 +788,36 @@ namespace achihapi.test
                 // Desp
                 Assert.AreNotEqual(String.Empty, rst.Desp);
             }
+        }
+
+        [TestMethod]
+        public void ADPTmpGenerateTest_Manual()
+        {
+            List<ADPGenerateResult> results = null;
+            var startdate = DateTime.Today;
+
+            ADPGenerateViewModel vm = new ADPGenerateViewModel
+            {
+                StartDate = startdate.Date,
+                EndDate = startdate.AddYears(10),
+                RptType = RepeatFrequency.Manual,
+                TotalAmount = 10000,
+                Desp = "Test_Manual"
+            };
+
+            results = FinanceCalcUtility.GenerateAdvancePaymentTmps(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 1);
+
+            // Date
+            Assert.AreEqual(vm.EndDate, results[0].TranDate);
+
+            // Amount
+            Assert.AreEqual(10000, results[0].TranAmount);
+
+            // Desp
+            Assert.AreNotEqual(String.Empty, results[0].Desp);
         }
     }
 }
