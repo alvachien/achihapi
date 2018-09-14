@@ -1747,7 +1747,7 @@ namespace achihapi.Utilities
                         FROM [dbo].[t_fin_tmpdoc_dp] ";
         }
 
-        internal static string getFinanceDocADPQueryString(Int32 nid, Int32 hid, Boolean isPayment = true)
+        internal static string getFinanceDocADPQueryString(Int32 nid, Int32 hid, Boolean isADP = true)
         {
             String strSQL = @"SELECT [ID]
                           ,[HID]
@@ -1765,7 +1765,7 @@ namespace achihapi.Utilities
                           ,[UPDATEDBY]
                           ,[UPDATEDAT]
                       FROM [t_fin_document] WHERE [DOCTYPE] = " 
-                    + (isPayment? FinanceDocTypeViewModel.DocType_AdvancePayment.ToString() : FinanceDocTypeViewModel.DocType_AdvanceReceive.ToString()) 
+                    + (isADP ? FinanceDocTypeViewModel.DocType_AdvancePayment.ToString() : FinanceDocTypeViewModel.DocType_AdvanceReceive.ToString()) 
                     + " AND [ID] = " + nid.ToString() + @"; 
                     SELECT [DOCID]
                           ,[ITEMID]
@@ -1799,7 +1799,7 @@ namespace achihapi.Utilities
                         LEFT OUTER JOIN [dbo].[t_fin_account_ext_dp]
                             ON [t_fin_account].[ID] = [t_fin_account_ext_dp].[ACCOUNTID]
                         WHERE [t_fin_account].[CTGYID] = "
-                        + (isPayment? FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment.ToString() : FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive.ToString())
+                        + (isADP ? FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment.ToString() : FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive.ToString())
                         + " AND [t_fin_account_ext_dp].[REFDOCID] = " + nid.ToString() + @"; 
                       SELECT [dbo].[t_fin_tmpdoc_dp].[DOCID]
                           ,[dbo].[t_fin_tmpdoc_dp].[HID]

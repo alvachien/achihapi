@@ -24,7 +24,7 @@ namespace achihapi.Controllers
         // GET api/financeadpdocument/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
+        public async Task<IActionResult> Get(int id, [FromQuery]Boolean isADP = true, Int32 hid = 0)
         {
             if (hid <= 0)
                 return BadRequest("Not HID inputted");
@@ -50,7 +50,7 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = HIHDBUtility.getFinanceDocADPQueryString(id, hid);
+                queryString = HIHDBUtility.getFinanceDocADPQueryString(id, hid, isADP);
 
                 await conn.OpenAsync();
 
@@ -162,8 +162,8 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceADPDocumentUIViewModel vm)
         {
-            if (vm == null || vm.DocType != FinanceDocTypeViewModel.DocType_AdvancePayment
-                || vm.DocType != FinanceDocTypeViewModel.DocType_AdvanceReceive)
+            if (vm == null || !(vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment
+                || vm.DocType == FinanceDocTypeViewModel.DocType_AdvanceReceive))
             {
                 return BadRequest("No data is inputted");
             }
@@ -182,13 +182,10 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             // Check the items
-            if (vm.Items.Count <= 0 || vm.AccountVM.ExtraInfo_ADP.DPTmpDocs.Count <= 0 || vm.Items.Count != 1)
+            if (vm.Items.Count <= 0 || vm.AccountVM == null || vm.AccountVM.ExtraInfo_ADP == null
+                || vm.AccountVM.ExtraInfo_ADP.DPTmpDocs.Count <= 0 || vm.Items.Count != 1)
             {
-                return BadRequest("No item or no template docs");
-            }
-            if (vm.AccountVM == null || vm.AccountVM.ExtraInfo_ADP == null)
-            {
-                return BadRequest("No account info!");
+                return BadRequest("No item or no account or no template docs");
             }
 
             // Update the database
@@ -292,7 +289,10 @@ namespace achihapi.Controllers
                     {
                         ivm.ItemID = ++nMaxItemID;
                         ivm.AccountID = nNewAccountID;
-                        ivm.TranType = FinanceTranTypeViewModel.TranType_OpeningAsset;
+                        if (vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment)
+                            ivm.TranType = FinanceTranTypeViewModel.TranType_OpeningAsset;
+                        else if (vm.DocType == FinanceDocTypeViewModel.DocType_AdvanceReceive)
+                            ivm.TranType = FinanceTranTypeViewModel.TranType_OpeningLiability;
 
                         queryString = HIHDBUtility.GetFinDocItemInsertString();
                         SqlCommand cmd2 = new SqlCommand(queryString, conn)
@@ -319,7 +319,6 @@ namespace achihapi.Controllers
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
-
 
                     // Sixth, create template docs
                     foreach (FinanceTmpDocDPViewModel avm in vm.AccountVM.ExtraInfo_ADP.DPTmpDocs)

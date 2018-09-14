@@ -36,13 +36,6 @@ namespace achihapi.ViewModels
 
     public sealed class FinanceADPDocumentUIViewModel: FinanceDocumentUIViewModel
     {
-        public FinanceADPDocumentUIViewModel()
-        {
-            this.IsADP = true;
-        }
-
-        public Boolean IsADP { get; set; }
-
         // Account -> Advance payment
         public FinanceAccountViewModel AccountVM = new FinanceAccountViewModel();
     }
