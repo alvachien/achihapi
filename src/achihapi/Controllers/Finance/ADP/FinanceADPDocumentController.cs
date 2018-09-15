@@ -187,6 +187,17 @@ namespace achihapi.Controllers
             {
                 return BadRequest("No item or no account or no template docs");
             }
+            // Check on the data
+            if (vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment)
+            {
+                if (vm.Items[0].TranType != FinanceTranTypeViewModel.TranType_AdvancePaymentOut)
+                    return BadRequest("Invalid tran. type for advance payment");
+            }
+            else if(vm.DocType == FinanceDocTypeViewModel.DocType_AdvanceReceive)
+            {
+                if (vm.Items[0].TranType != FinanceTranTypeViewModel.TranType_AdvanceReceiveIn)
+                    return BadRequest("Invalid tran. type for advance payment");
+            }
 
             // Update the database
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);

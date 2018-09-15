@@ -67,3 +67,5 @@ SET IDENTITY_INSERT dbo.[t_fin_doc_type] OFF;
 
 -- New version
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (7,'2018.10.10');
+
+-- The end.

@@ -26,4 +26,7 @@ END;
 -- Update the tran. type
 UPDATE dbo.[t_fin_tran_type] SET [EXPENSE] = 1 WHERE [ID] = 81; 
 
+-- Set the version
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (6,'2018.08.05');
+
+-- The end.

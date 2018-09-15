@@ -29,7 +29,8 @@ namespace achihapi.ViewModels
         public const Int32 TranType_LendTo = 81;
         public const Int32 TranType_RepaymentOut = 86;
         public const Int32 TranType_RepaymentIn = 87;
-        public const Int32 TranType_DownpaymentOut = 88;
+        public const Int32 TranType_AdvancePaymentOut = 88;
+        public const Int32 TranType_AdvanceReceiveIn = 91;
 
         public const Int32 TranType_InterestOut = 55;
         public const Int32 TranType_InterestIn = 8;
