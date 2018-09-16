@@ -396,6 +396,19 @@ UPDATE dbo.[t_fin_tran_type] SET [PARID] = 24, [COMMENT] = N'预付款支出' WH
 
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (8,'2018.11.1');
 
+-----------------------------------------------------------------------------------------------------------------------------------
+-- Updated at 2017.9.15
+
+SET IDENTITY_INSERT dbo.[t_learn_ctgy] ON;
+
+INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (16,NULL,N'摄影',N'摄影相关');
+INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (17,16,N'摄影前期',N'前期相关');
+INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (18,16,N'摄影后期',N'后期相关');
+
+SET IDENTITY_INSERT dbo.[t_learn_ctgy] OFF;
+
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (9,'2018.11.2');
+
 ---------------------------------
 -- TODO...
 

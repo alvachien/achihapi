@@ -14,6 +14,8 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class FinanceCurrencyController : Controller
     {
+        internal static List<FinanceCurrencyViewModel> listReadEntries = new List<FinanceCurrencyViewModel>();
+
         // GET: api/financecurrency
         [HttpGet]
         [Authorize]
