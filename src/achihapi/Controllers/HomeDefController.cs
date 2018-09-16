@@ -38,14 +38,17 @@ namespace achihapi.Controllers
          *      2) When an user is login, fetch all home definitions relevant (via t_homemember), and let the user choose one;
          * 
          */
-         
+
+        // Buffer to improve performance
+        internal static BaseListViewModel<HomeDefViewModel> listReadEntries = new BaseListViewModel<HomeDefViewModel>();
+
         // GET: api/homedef
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<HomeDefViewModel> listVm = new BaseListViewModel<HomeDefViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null; 
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
@@ -79,6 +82,7 @@ namespace achihapi.Controllers
                     return BadRequest();
                 }
 
+                conn = new SqlConnection(Startup.DBConnectionString);
                 queryString = this.getQueryString(true, top, skip, null, scopeFilter);
 
                 await conn.OpenAsync();

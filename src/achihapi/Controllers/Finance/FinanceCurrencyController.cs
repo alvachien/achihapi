@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.ViewModels;
-using System.Data;
 using System.Data.SqlClient;
 
 namespace achihapi.Controllers
@@ -21,53 +20,50 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
-            BaseListViewModel<FinanceCurrencyViewModel> listVMs = new BaseListViewModel<FinanceCurrencyViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            BaseListViewModel<FinanceCurrencyViewModel> listVMs = null;
+            SqlConnection conn = null; 
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
 
             try
             {
-                queryString = this.getQueryString(true, top, skip, null);
-
-                await conn.OpenAsync();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                Int32 nRstBatch = 0;
-                while (reader.HasRows)
+                if (listReadEntries.Count <= 0)
                 {
-                    if (nRstBatch == 0)
+                    conn = new SqlConnection(Startup.DBConnectionString);
+                    queryString = @"SELECT [CURR]
+                              ,[NAME]
+                              ,[SYMBOL]
+                              ,[CREATEDBY]
+                              ,[CREATEDAT]
+                              ,[UPDATEDBY]
+                              ,[UPDATEDAT]
+                          FROM [dbo].[t_fin_currency]";
+
+                    await conn.OpenAsync();
+                    SqlCommand cmd = new SqlCommand(queryString, conn);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    while (reader.HasRows)
                     {
                         while (reader.Read())
                         {
-                            listVMs.TotalCount = reader.GetInt32(0);
-                            //if (listVMs.TotalCount > top)
-                            //{
-                            //    listVMs.TotalCount = top;
-                            //}
-                            break;
+                            FinanceCurrencyViewModel avm = new FinanceCurrencyViewModel();
+                            this.onDB2VM(reader, avm);
+
+                            listVMs.Add(avm);
                         }
                     }
-                    else
-                    {
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                FinanceCurrencyViewModel avm = new FinanceCurrencyViewModel();
-                                this.onDB2VM(reader, avm);
-
-                                listVMs.Add(avm);
-                            }
-                        }
-                    }
-
-                    ++nRstBatch;
-
-                    reader.NextResult();
                 }
+
+                if (listReadEntries.Count <= 0)
+                    throw new Exception("No Currencies found");
+
+                listVMs = new BaseListViewModel<FinanceCurrencyViewModel>()
+                {
+                    TotalCount = listReadEntries.Count,
+                    ContentList = listReadEntries.Skip(skip).Take(top).ToList<FinanceCurrencyViewModel>()
+                };
             }
             catch (Exception exp)
             {
@@ -92,7 +88,7 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+
             return new JsonResult(listVMs, setting);
         }
 
@@ -100,65 +96,7 @@ namespace achihapi.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string sid)
         {
-            FinanceCurrencyViewModel vm = new FinanceCurrencyViewModel();
-
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
-            String queryString = "";
-            Boolean bError = false;
-            String strErrMsg = "";
-            Boolean bNotFound = false;
-
-            try
-            {
-                queryString = this.getQueryString(false, null, null, sid);
-
-                await conn.OpenAsync();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        onDB2VM(reader, vm);
-                        break; // Should only one result!!!
-                    }
-                }
-                else
-                {
-                    bNotFound = true;
-                }
-            }
-            catch (Exception exp)
-            {
-                System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
-                strErrMsg = exp.Message;
-            }
-            finally
-            {
-                if (conn != null)
-                {
-                    conn.Close();
-                    conn.Dispose();
-                }
-            }
-
-            if (bNotFound)
-            {
-                return NotFound();
-            }
-            else if (bError)
-            {
-                return StatusCode(500, strErrMsg);
-            }
-
-            var setting = new Newtonsoft.Json.JsonSerializerSettings
-            {
-                DateFormatString = HIHAPIConstants.DateFormatPattern,
-                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
-            };
-            ;
-            return new JsonResult(vm, setting);
+            return BadRequest();
         }
 
         // POST api/financecurrency
