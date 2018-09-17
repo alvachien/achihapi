@@ -51,7 +51,7 @@ namespace achihapi.Controllers
                             FinanceCurrencyViewModel avm = new FinanceCurrencyViewModel();
                             this.onDB2VM(reader, avm);
 
-                            listVMs.Add(avm);
+                            listReadEntries.Add(avm);
                         }
                     }
                 }

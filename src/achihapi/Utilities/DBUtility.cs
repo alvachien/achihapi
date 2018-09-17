@@ -1185,6 +1185,33 @@ namespace achihapi.Utilities
                 cmd.Parameters.AddWithValue("@PARTNER", DBNull.Value);
             cmd.Parameters.AddWithValue("@ACCOUNTID", vm.AccountID);
         }
+        internal static string GetFinanceAccountLoanHistoryInsertString(Int32 nAccountID)
+        {
+            return @"INSERT INTO [dbo].[t_fin_account_ext_loan_h]
+                       ([ACCOUNTID]
+                       ,[STARTDATE]
+                       ,[ANNUALRATE]
+                       ,[INTERESTFREE]
+                       ,[REPAYMETHOD]
+                       ,[TOTALMONTH]
+                       ,[REFDOCID]
+                       ,[OTHERS]
+                       ,[EndDate]
+                       ,[PAYINGACCOUNT]
+                       ,[PARTNER])
+                 VALUES
+                       (<ACCOUNTID, int,>
+                       ,<STARTDATE, datetime,>
+                       ,<ANNUALRATE, decimal(17,2),>
+                       ,<INTERESTFREE, bit,>
+                       ,<REPAYMETHOD, tinyint,>
+                       ,<TOTALMONTH, smallint,>
+                       ,<REFDOCID, int,>
+                       ,<OTHERS, nvarchar(100),>
+                       ,<EndDate, date,>
+                       ,<PAYINGACCOUNT, int,>
+                       ,<PARTNER, nvarchar(50),>)";
+        }
         #endregion
 
         #region Finance document List

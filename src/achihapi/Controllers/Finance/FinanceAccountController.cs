@@ -726,6 +726,9 @@ namespace achihapi.Controllers
                 }
                 else if(vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
                 {
+                    // 2.0 History table
+                    // TBD.
+
                     // 2.1 Extend attributes
                     queryString = HIHDBUtility.GetFinanceAccountLoanUpdateString();
                     cmd = new SqlCommand(queryString, conn, tran);
