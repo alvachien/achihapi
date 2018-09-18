@@ -2760,7 +2760,7 @@ namespace achihapi.Utilities
                 if (skipfinish.HasValue)
                     sb.Append(skipfinish.Value ? " AND [CompleteTime] IS NULL " : " [CompleteTime] IS NOT NULL ");
                 if (top.HasValue)
-                    sb.Append(" ORDER BY (SELECT NULL) OFFSET " + (skip.HasValue ? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
+                    sb.Append(" ORDER BY [StartTime] ASC OFFSET " + (skip.HasValue ? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
             }
             else
                 sb.Append(" WHERE [ID] = " + id.Value.ToString());
