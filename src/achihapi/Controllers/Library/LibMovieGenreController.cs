@@ -59,31 +59,23 @@ namespace achihapi.Controllers
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
-                Int32 nRstBatch = 0;
-
-                while (reader.HasRows)
+                if (reader.HasRows)
                 {
-                    if (nRstBatch == 0)
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            listVm.TotalCount = reader.GetInt32(0);
-                            break;
-                        }
+                        listVm.TotalCount = reader.GetInt32(0);
+                        break;
                     }
-                    else
+                }
+                reader.NextResult();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            LibMovieGenreViewModel vm = new LibMovieGenreViewModel();
-                            HIHDBUtility.LibMovieGenre_DB2VM(reader, vm);
-                            listVm.Add(vm);
-                        }
+                        LibMovieGenreViewModel vm = new LibMovieGenreViewModel();
+                        HIHDBUtility.LibMovieGenre_DB2VM(reader, vm);
+                        listVm.Add(vm);
                     }
-
-                    ++nRstBatch;
-
-                    reader.NextResult();
                 }
             }
             catch (Exception exp)

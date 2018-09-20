@@ -44,7 +44,7 @@ namespace achihapi.Controllers
                     SqlCommand cmd = new SqlCommand(queryString, conn);
                     SqlDataReader reader = cmd.ExecuteReader();
 
-                    while (reader.HasRows)
+                    if (reader.HasRows)
                     {
                         while (reader.Read())
                         {

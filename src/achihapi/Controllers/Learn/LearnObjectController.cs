@@ -58,30 +58,23 @@ namespace achihapi.Controllers
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                Int32 nRstBatch = 0;
-                while (reader.HasRows)
+                if (reader.HasRows)
                 {
-                    if (nRstBatch == 0)
+                    while (reader.Read())
                     {
-                        while(reader.Read())
-                        {
-                            listVm.TotalCount = reader.GetInt32(0);
-                            break;
-                        }
+                        listVm.TotalCount = reader.GetInt32(0);
+                        break;
                     }
-                    else
+                }
+                reader.NextResult();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            LearnObjectUIViewModel vm = new LearnObjectUIViewModel();
-                            onDB2VM(reader, bIncContent, vm);
-                            listVm.Add(vm);
-                        }
+                        LearnObjectUIViewModel vm = new LearnObjectUIViewModel();
+                        onDB2VM(reader, bIncContent, vm);
+                        listVm.Add(vm);
                     }
-
-                    ++nRstBatch;
-
-                    reader.NextResult();
                 }
             }
             catch (Exception exp)

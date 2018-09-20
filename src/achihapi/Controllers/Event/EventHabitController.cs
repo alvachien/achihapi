@@ -61,41 +61,35 @@ namespace achihapi.Controllers
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                Int32 nRstBatch = 0;
-                while (reader.HasRows)
+                if (reader.HasRows)
                 {
-                    if (nRstBatch == 0)
+                    while (reader.Read())
                     {
-                        while (reader.Read())
+                        listVm.TotalCount = reader.GetInt32(0);
+                        break;
+                    }
+                }
+                reader.NextResult();
+
+                if (reader.HasRows)
+                {
+                    Dictionary<Int32, EventHabitViewModel> dictVM = new Dictionary<int, EventHabitViewModel>();
+                    while (reader.Read())
+                    {
+                        EventHabitViewModel vm = new EventHabitViewModel();
+                        EventHabitDetail detail = new EventHabitDetail();
+                        HIHDBUtility.Event_HabitDB2VM(reader, vm, detail, true);
+                        if (dictVM.ContainsKey(vm.ID))
                         {
-                            listVm.TotalCount = reader.GetInt32(0);
-                            break;
+                            dictVM[vm.ID].Details.Add(detail);
+                        }
+                        else
+                        {
+                            vm.Details.Add(detail);
+                            listVm.Add(vm);
+                            dictVM.Add(vm.ID, vm);
                         }
                     }
-                    else
-                    {
-                        Dictionary<Int32, EventHabitViewModel> dictVM = new Dictionary<int, EventHabitViewModel>();
-                        while (reader.Read())
-                        {
-                            EventHabitViewModel vm = new EventHabitViewModel();
-                            EventHabitDetail detail = new EventHabitDetail();
-                            HIHDBUtility.Event_HabitDB2VM(reader, vm, detail, true);
-                            if (dictVM.ContainsKey(vm.ID))
-                            {
-                                dictVM[vm.ID].Details.Add(detail);
-                            }
-                            else
-                            {
-                                vm.Details.Add(detail);
-                                listVm.Add(vm);
-                                dictVM.Add(vm.ID, vm);
-                            }
-                        }
-                    }
-
-                    ++nRstBatch;
-
-                    reader.NextResult();
                 }
             }
             catch (Exception exp)

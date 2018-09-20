@@ -773,76 +773,71 @@ namespace achihapi.Controllers
         }
         private void onItemDB2VM(SqlDataReader reader, FinanceOrderViewModel vm)
         {
-            Int32 nRstBatch = 0;
             Int32 idx = 0;
-            while (reader.HasRows)
+
+            if (reader.HasRows)
             {
-                if (nRstBatch == 0)
+                idx = 0;
+                while (reader.Read())
                 {
+                    vm.ID = reader.GetInt32(idx++);
+                    vm.HID = reader.GetInt32(idx++);
+                    vm.Name = reader.GetString(idx++);
+                    if (!reader.IsDBNull(idx))
+                        vm.ValidFrom = reader.GetDateTime(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.ValidTo = reader.GetDateTime(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.Comment = reader.GetString(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.CreatedBy = reader.GetString(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.CreatedAt = reader.GetDateTime(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.UpdatedBy = reader.GetString(idx++);
+                    else
+                        ++idx;
+                    if (!reader.IsDBNull(idx))
+                        vm.UpdatedAt = reader.GetDateTime(idx++);
+                    else
+                        ++idx;
+                }
+            }
+            reader.NextResult();
+            if (reader.HasRows)
+            {
+                while (reader.Read())
+                {
+                    FinanceOrderSRuleUIViewModel srvm = new FinanceOrderSRuleUIViewModel();
+
                     idx = 0;
-                    while (reader.Read())
+                    srvm.OrdID = reader.GetInt32(idx++);
+                    srvm.RuleID = reader.GetInt32(idx++);
+                    srvm.ControlCenterID = reader.GetInt32(idx++);
+                    if (!reader.IsDBNull(idx))
+                        srvm.ControlCenterName = reader.GetString(idx++);
+                    else
+                        ++idx;
+                    srvm.Precent = reader.GetInt32(idx++);
+                    if (!reader.IsDBNull(idx))
                     {
-                        vm.ID = reader.GetInt32(idx++);
-                        vm.HID = reader.GetInt32(idx++);
-                        vm.Name = reader.GetString(idx++);
-                        if (!reader.IsDBNull(idx))
-                            vm.ValidFrom = reader.GetDateTime(idx++);
-                        else
-                            ++idx;
-                        if (!reader.IsDBNull(idx))
-                            vm.ValidTo = reader.GetDateTime(idx++);
-                        else
-                            ++idx;
-                        if (!reader.IsDBNull(idx))
-                            vm.Comment = reader.GetString(idx++);
-                        else
-                            ++idx;
-                        if (!reader.IsDBNull(idx))
-                            vm.CreatedBy = reader.GetString(idx++);
-                        else
-                            ++idx;
-                        if (!reader.IsDBNull(idx))
-                            vm.CreatedAt = reader.GetDateTime(idx++);
-                        else
-                            ++idx;
-                        if (!reader.IsDBNull(idx))
-                            vm.UpdatedBy = reader.GetString(idx++);
-                        else
-                            ++idx;
-                        if (!reader.IsDBNull(idx))
-                            vm.UpdatedAt = reader.GetDateTime(idx++);
-                        else
-                            ++idx;
+                        srvm.Comment = reader.GetString(idx++);
                     }
+                    else
+                        ++idx;
+
+                    vm.SRuleList.Add(srvm);
                 }
-                else if (nRstBatch == 1)
-                {
-                    while (reader.Read())
-                    {
-                        FinanceOrderSRuleUIViewModel srvm = new FinanceOrderSRuleUIViewModel();
-
-                        idx = 0;
-                        srvm.OrdID = reader.GetInt32(idx++);
-                        srvm.RuleID = reader.GetInt32(idx++);
-                        srvm.ControlCenterID = reader.GetInt32(idx++);
-                        if (!reader.IsDBNull(idx))
-                            srvm.ControlCenterName = reader.GetString(idx++);
-                        else
-                            ++idx;
-                        srvm.Precent = reader.GetInt32(idx++);
-                        if (!reader.IsDBNull(idx))
-                        {
-                            srvm.Comment = reader.GetString(idx++);
-                        }
-                        else
-                            ++idx;
-
-                        vm.SRuleList.Add(srvm);
-                    }
-                }
-                ++nRstBatch;
-
-                reader.NextResult();
             }
         }
 

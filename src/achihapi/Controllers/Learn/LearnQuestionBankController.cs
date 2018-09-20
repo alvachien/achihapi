@@ -60,44 +60,37 @@ namespace achihapi.Controllers
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                Int32 nRstBatch = 0;
-                while (reader.HasRows)
+                if (reader.HasRows)
                 {
-                    if (nRstBatch == 0)
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            listVm.TotalCount = reader.GetInt32(0);
-                            break;
-                        }
+                        listVm.TotalCount = reader.GetInt32(0);
+                        break;
                     }
-                    else
+                }
+                reader.NextResult();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            LearnQuestionBankViewModel vm = new LearnQuestionBankViewModel();
-                            OnHeader2VM(reader, vm);
+                        LearnQuestionBankViewModel vm = new LearnQuestionBankViewModel();
+                        OnHeader2VM(reader, vm);
 
-                            // Check the ID exist in the list already or not.
-                            Boolean bExist = false;
-                            foreach(LearnQuestionBankViewModel vm2 in listVm)
+                        // Check the ID exist in the list already or not.
+                        Boolean bExist = false;
+                        foreach (LearnQuestionBankViewModel vm2 in listVm)
+                        {
+                            if (vm2.ID == vm.ID)
                             {
-                                if (vm2.ID == vm.ID)
-                                {
-                                    bExist = true;
+                                bExist = true;
 
-                                    vm2.SubItemList.AddRange(vm.SubItemList);
-                                }
+                                vm2.SubItemList.AddRange(vm.SubItemList);
                             }
-
-                            if (!bExist)
-                                listVm.Add(vm);
                         }
+
+                        if (!bExist)
+                            listVm.Add(vm);
                     }
-
-                    ++nRstBatch;
-
-                    reader.NextResult();
                 }
             }
             catch (Exception exp)
