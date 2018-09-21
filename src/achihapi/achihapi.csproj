@@ -28,13 +28,15 @@
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='AzureRelease|AnyCPU'">
-    <DefineConstants>TRACE;RELEASE;NETCOREAPP2_0;USE_AZURE;USE_SSL</DefineConstants>
+    <DefineConstants>RELEASE;NETCOREAPP2_0;USE_AZURE;USE_SSL</DefineConstants>
     <PublishWithAspNetCoreTargetManifest>false</PublishWithAspNetCoreTargetManifest>
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='AliRelease|AnyCPU'">
-    <DefineConstants>TRACE;RELEASE;NETCOREAPP2_0;USE_ALIYUN</DefineConstants>
+    <DefineConstants>RELEASE;NETCOREAPP2_0;USE_ALIYUN</DefineConstants>
     <PublishWithAspNetCoreTargetManifest>true</PublishWithAspNetCoreTargetManifest>
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
