@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.SqlClient;
 using achihapi.Utilities;
 using System.Linq;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -47,6 +48,7 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
             Boolean bNotFound = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -205,6 +207,7 @@ namespace achihapi.Controllers
             Int32 nNewDocID = -1;
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {

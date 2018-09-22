@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using achihapi.ViewModels;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -41,6 +42,7 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -294,6 +296,7 @@ namespace achihapi.Controllers
 
             SqlCommand cmd = null;
             SqlTransaction tran = null;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -418,8 +421,9 @@ namespace achihapi.Controllers
 
         // PUT: api/EventHabit/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
+            return BadRequest();
         }
         
         // DELETE: api/ApiWithActions/5
@@ -445,6 +449,7 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {

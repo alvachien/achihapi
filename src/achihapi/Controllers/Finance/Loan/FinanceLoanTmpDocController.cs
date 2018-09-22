@@ -8,6 +8,7 @@ using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -39,6 +40,7 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -110,15 +112,15 @@ namespace achihapi.Controllers
 
         // GET: api/FinanceLoanTmpDoc/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public IActionResult Get(int id)
         {
-            return "value";
+            return Forbid();
         }
         
         // POST: api/FinanceLoanTmpDoc
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Post([FromQuery]Int32 hid, Int32 tmpdocid, [FromBody]FinanceDocumentUIViewModel repaydoc)
+        public IActionResult Post([FromQuery]Int32 hid, Int32 tmpdocid, [FromBody]FinanceDocumentUIViewModel repaydoc)
         {
             return Forbid();
         }
@@ -126,7 +128,7 @@ namespace achihapi.Controllers
         // PUT: api/FinanceLoanTmpDoc/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(int id, [FromBody]FinanceTmpDocDPViewModel vm)
+        public IActionResult Put(int id, [FromBody]FinanceTmpDocDPViewModel vm)
         {
             return BadRequest();
         }
@@ -134,7 +136,7 @@ namespace achihapi.Controllers
         // DELETE: api/FinanceLoanTmpDoc/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             return BadRequest();
         }

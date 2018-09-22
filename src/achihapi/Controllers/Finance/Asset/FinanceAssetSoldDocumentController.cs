@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.SqlClient;
 using achihapi.Utilities;
 using Microsoft.AspNetCore.JsonPatch;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -17,7 +18,7 @@ namespace achihapi.Controllers
         // GET: api/FinanceAssetSoldDocument
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get()
+        public IActionResult Get()
         {
             return BadRequest();
         }
@@ -48,6 +49,7 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
             Boolean bNotFound = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -188,6 +190,7 @@ namespace achihapi.Controllers
             Int32 nNewDocID = -1;
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -328,7 +331,7 @@ namespace achihapi.Controllers
         // PUT: api/FinanceAssetSoldDocument/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
             return BadRequest();
         }
@@ -351,6 +354,7 @@ namespace achihapi.Controllers
             DateTime? headTranDate = null;
             Boolean headDespUpdate = false;
             String headDesp = null;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             // Check the inputs.
             // Allowed to change:
@@ -503,7 +507,7 @@ namespace achihapi.Controllers
         // DELETE: api/FinanceAssetSoldDocument/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             return BadRequest();
         }

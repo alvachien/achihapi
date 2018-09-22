@@ -9,6 +9,7 @@ using System.Data;
 using System.Data.SqlClient;
 using achihapi.ViewModels;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -19,16 +20,16 @@ namespace achihapi.Controllers
     {
         // GET: api/EventHabitCheckIn
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IActionResult Get()
         {
-            return new string[] { "value1", "value2" };
+            return Forbid();
         }
 
         // GET: api/EventHabitCheckIn/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public IActionResult Get(int id)
         {
-            return "value";
+            return Forbid();
         }
         
         // POST: api/EventHabitCheckIn
@@ -53,6 +54,7 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
             String usrName = String.Empty;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             if (unitMode)
                 usrName = UnitTestUtility.UnitTestUser;
@@ -174,14 +176,16 @@ namespace achihapi.Controllers
 
         // PUT: api/EventHabitCheckIn/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
+            return Forbid();
         }
         
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            return Forbid();
         }
     }
 }

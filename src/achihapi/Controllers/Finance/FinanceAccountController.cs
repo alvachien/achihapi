@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
 using Microsoft.AspNetCore.JsonPatch;
 using System.Collections.Generic;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -28,6 +29,7 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -136,6 +138,7 @@ namespace achihapi.Controllers
             Boolean bExist = false;
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -456,6 +459,7 @@ namespace achihapi.Controllers
             Int32 nNewID = -1;
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -631,6 +635,7 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
             SqlTransaction tran = null;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -807,6 +812,7 @@ namespace achihapi.Controllers
             Boolean bNonExistEntry = false;
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -1019,6 +1025,7 @@ namespace achihapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
             SqlTransaction tran = null;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {

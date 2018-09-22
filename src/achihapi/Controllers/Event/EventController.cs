@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -34,47 +35,50 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             BaseListViewModel<EventViewModel> listVm = new BaseListViewModel<EventViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                queryString = HIHDBUtility.Event_GetNormalEventQueryString(true, usrName, hid, skip, top, null, skipfinished, dtbgn, dtend);
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        listVm.TotalCount = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-                await reader.NextResultAsync();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    catch (Exception exp)
                     {
-                        EventViewModel vm = new EventViewModel();
-                        HIHDBUtility.Event_DB2VM(reader, vm, true);
-                        listVm.Add(vm);
+                        return BadRequest(exp.Message);
+                    }
+
+                    queryString = HIHDBUtility.Event_GetNormalEventQueryString(true, usrName, hid, skip, top, null, skipfinished, dtbgn, dtend);
+
+                    SqlCommand cmd = new SqlCommand(queryString, conn);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            listVm.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
+                    }
+                    await reader.NextResultAsync();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            EventViewModel vm = new EventViewModel();
+                            HIHDBUtility.Event_DB2VM(reader, vm, true);
+                            listVm.Add(vm);
+                        }
                     }
                 }
             }
@@ -82,7 +86,7 @@ namespace achihapi.Controllers
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 strErrMsg = exp.Message;
-                bError = true;
+                errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
@@ -94,8 +98,20 @@ namespace achihapi.Controllers
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -131,6 +147,7 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -209,6 +226,7 @@ namespace achihapi.Controllers
             Int32 nNewID = -1;
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -324,6 +342,7 @@ namespace achihapi.Controllers
             Boolean bNonExistEntry = false;
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -424,6 +443,7 @@ namespace achihapi.Controllers
             Boolean bNonExistEntry = false;
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -543,8 +563,9 @@ namespace achihapi.Controllers
 
         // DELETE api/event/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            return Forbid();
             //return BadRequest();
             //String queryString = @"DELETE FROM [dbo].[t_event]
             //    WHERE <Search Conditions,,>";

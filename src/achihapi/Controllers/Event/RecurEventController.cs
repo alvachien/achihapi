@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using achihapi.ViewModels;
 using achihapi.Utilities;
 using System.Data;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -38,6 +39,7 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -131,6 +133,7 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -372,14 +375,16 @@ namespace achihapi.Controllers
 
         // PUT: api/RecurEvent/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
+            return BadRequest();
         }
 
         // PACH: api/RecurEvent/5
         [HttpPatch("{id}")]
-        public void Patch(int id, [FromBody]string value)
+        public IActionResult Patch(int id, [FromBody]string value)
         {
+            return BadRequest();
         }
 
         // DELETE: api/ApiWithActions/5
@@ -404,6 +409,7 @@ namespace achihapi.Controllers
             String queryString = "";
             Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             SqlTransaction tran = null;
             try

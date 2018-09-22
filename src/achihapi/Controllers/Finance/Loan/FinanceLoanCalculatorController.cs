@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.ViewModels;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -16,6 +17,7 @@ namespace achihapi.Controllers
         [Authorize]
         public IActionResult Calculate([FromBody]LoanCalcViewModel vm)
         {
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             try
             {
                 List<LoanCalcResult> results = FinanceCalcUtility.LoanCalculate(vm);

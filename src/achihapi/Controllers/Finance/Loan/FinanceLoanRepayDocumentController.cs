@@ -9,6 +9,7 @@ using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -18,16 +19,16 @@ namespace achihapi.Controllers
     {
         // GET: api/FinanceLoanRepayDocument
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IActionResult Get()
         {
-            return new string[] { "value1", "value2" };
+            return Forbid();
         }
 
         // GET: api/FinanceLoanRepayDocument/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public IActionResult Get(int id)
         {
-            return "value";
+            return Forbid();
         }
         
         // POST: api/FinanceLoanRepayDocument
@@ -52,6 +53,7 @@ namespace achihapi.Controllers
             String queryString = String.Empty;
             Boolean bError = false;
             String strErrMsg = String.Empty;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -290,14 +292,16 @@ namespace achihapi.Controllers
 
         // PUT: api/FinanceLoanRepayDocument/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
+            return Forbid();
         }
         
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            return Forbid();
         }
     }
 }
