@@ -37,125 +37,130 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             List<FinanceReportTrendExViewModel> listVm = new List<FinanceReportTrendExViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                switch(trendtype)
-                {
-                    case FinanceReportTrendExType.Daily:
-                        {
-                            queryString = @"SELECT TRANDATE, EXPENSE, SUM(TRANAMOUNT) AS TOTALAMTS 
-                                FROM v_fin_report_trantype WHERE [HID] = @hid ";
-                            // Exclude transfer
-                            if (exctran)
-                                queryString += " AND [TRANTYPE] !=  " + FinanceTranTypeViewModel.TranType_TransferIn.ToString() + " AND [TRANTYPE] != " + FinanceTranTypeViewModel.TranType_TransferOut.ToString();
-                            if (dtbgn.HasValue)
-                                queryString += " AND [TRANDATE] >= @dtbgn ";
-                            if (dtend.HasValue)
-                                queryString += " AND [TRANDATE] <= @dtend ";
-                            queryString += @" GROUP BY TRANDATE, EXPENSE";
-                        }
-                        break;
-
-                    case FinanceReportTrendExType.Weekly:
-                        {
-                            queryString = @"SELECT YEAR(TRANDATE) AS TRANYEAR, DATENAME(week, TRANDATE) AS TRANWEEK, EXPENSE, SUM(TRANAMOUNT) AS TOTALAMTS 
-                                FROM v_fin_report_trantype WHERE [HID] = @hid ";
-                            // Exclude transfer
-                            if (exctran)
-                                queryString += " AND [TRANTYPE] !=  " + FinanceTranTypeViewModel.TranType_TransferIn.ToString() + " AND [TRANTYPE] != " + FinanceTranTypeViewModel.TranType_TransferOut.ToString();
-                            if (dtbgn.HasValue)
-                                queryString += " AND [TRANDATE] >= @dtbgn ";
-                            if (dtend.HasValue)
-                                queryString += " AND [TRANDATE] <= @dtend ";
-                            queryString += @" GROUP BY YEAR(TRANDATE), DATENAME(week, TRANDATE), EXPENSE";
-                        }
-                        break;
-
-                    case FinanceReportTrendExType.Monthly:
-                        {
-                            queryString = @"SELECT YEAR(TRANDATE) AS TRANYEAR, MONTH(TRANDATE) AS TRANMONTH, EXPENSE, SUM(TRANAMOUNT) AS TOTALAMTS 
-                                FROM v_fin_report_trantype WHERE [HID] = @hid ";
-                            // Exclude transfer
-                            if (exctran)
-                                queryString += " AND [TRANTYPE] !=  " + FinanceTranTypeViewModel.TranType_TransferIn.ToString() + " AND [TRANTYPE] != " + FinanceTranTypeViewModel.TranType_TransferOut.ToString();
-                            if (dtbgn.HasValue)
-                                queryString += " AND [TRANDATE] >= @dtbgn ";
-                            if (dtend.HasValue)
-                                queryString += " AND [TRANDATE] <= @dtend ";
-                            queryString += @" GROUP BY YEAR(TRANDATE), MONTH(TRANDATE), EXPENSE";
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@hid", hid);
-                if (dtbgn.HasValue)
-                    cmd.Parameters.AddWithValue("@dtbgn", dtbgn.Value);
-                if (dtbgn.HasValue)
-                    cmd.Parameters.AddWithValue("@dtend", dtend.Value);
-
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        switch (trendtype)
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    switch (trendtype)
+                    {
+                        case FinanceReportTrendExType.Daily:
+                            {
+                                queryString = @"SELECT TRANDATE, EXPENSE, SUM(TRANAMOUNT) AS TOTALAMTS 
+                                FROM v_fin_report_trantype WHERE [HID] = @hid ";
+                                // Exclude transfer
+                                if (exctran)
+                                    queryString += " AND [TRANTYPE] !=  " + FinanceTranTypeViewModel.TranType_TransferIn.ToString() + " AND [TRANTYPE] != " + FinanceTranTypeViewModel.TranType_TransferOut.ToString();
+                                if (dtbgn.HasValue)
+                                    queryString += " AND [TRANDATE] >= @dtbgn ";
+                                if (dtend.HasValue)
+                                    queryString += " AND [TRANDATE] <= @dtend ";
+                                queryString += @" GROUP BY TRANDATE, EXPENSE";
+                            }
+                            break;
+
+                        case FinanceReportTrendExType.Weekly:
+                            {
+                                queryString = @"SELECT YEAR(TRANDATE) AS TRANYEAR, DATENAME(week, TRANDATE) AS TRANWEEK, EXPENSE, SUM(TRANAMOUNT) AS TOTALAMTS 
+                                FROM v_fin_report_trantype WHERE [HID] = @hid ";
+                                // Exclude transfer
+                                if (exctran)
+                                    queryString += " AND [TRANTYPE] !=  " + FinanceTranTypeViewModel.TranType_TransferIn.ToString() + " AND [TRANTYPE] != " + FinanceTranTypeViewModel.TranType_TransferOut.ToString();
+                                if (dtbgn.HasValue)
+                                    queryString += " AND [TRANDATE] >= @dtbgn ";
+                                if (dtend.HasValue)
+                                    queryString += " AND [TRANDATE] <= @dtend ";
+                                queryString += @" GROUP BY YEAR(TRANDATE), DATENAME(week, TRANDATE), EXPENSE";
+                            }
+                            break;
+
+                        case FinanceReportTrendExType.Monthly:
+                            {
+                                queryString = @"SELECT YEAR(TRANDATE) AS TRANYEAR, MONTH(TRANDATE) AS TRANMONTH, EXPENSE, SUM(TRANAMOUNT) AS TOTALAMTS 
+                                FROM v_fin_report_trantype WHERE [HID] = @hid ";
+                                // Exclude transfer
+                                if (exctran)
+                                    queryString += " AND [TRANTYPE] !=  " + FinanceTranTypeViewModel.TranType_TransferIn.ToString() + " AND [TRANTYPE] != " + FinanceTranTypeViewModel.TranType_TransferOut.ToString();
+                                if (dtbgn.HasValue)
+                                    queryString += " AND [TRANDATE] >= @dtbgn ";
+                                if (dtend.HasValue)
+                                    queryString += " AND [TRANDATE] <= @dtend ";
+                                queryString += @" GROUP BY YEAR(TRANDATE), MONTH(TRANDATE), EXPENSE";
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@hid", hid);
+                    if (dtbgn.HasValue)
+                        cmd.Parameters.AddWithValue("@dtbgn", dtbgn.Value);
+                    if (dtbgn.HasValue)
+                        cmd.Parameters.AddWithValue("@dtend", dtend.Value);
+
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
                         {
-                            case FinanceReportTrendExType.Daily:
-                                FinanceReportTrendExViewModel dvm = new FinanceReportTrendExViewModel
-                                {
-                                    TranDate = reader.GetDateTime(0),
-                                    Expense = reader.GetBoolean(1),
-                                    TranAmount = reader.GetDecimal(2)
-                                };
-                                listVm.Add(dvm);
-                                break;
+                            switch (trendtype)
+                            {
+                                case FinanceReportTrendExType.Daily:
+                                    FinanceReportTrendExViewModel dvm = new FinanceReportTrendExViewModel
+                                    {
+                                        TranDate = reader.GetDateTime(0),
+                                        Expense = reader.GetBoolean(1),
+                                        TranAmount = reader.GetDecimal(2)
+                                    };
+                                    listVm.Add(dvm);
+                                    break;
 
-                            case FinanceReportTrendExType.Weekly:
-                                FinanceReportTrendExViewModel wvm = new FinanceReportTrendExViewModel
-                                {
-                                    TranYear = reader.GetInt32(0),
-                                    TranWeek = Int32.Parse(reader.GetString(1)),
-                                    Expense = reader.GetBoolean(2),
-                                    TranAmount = reader.GetDecimal(3)
-                                };
-                                listVm.Add(wvm);
-                                break;
+                                case FinanceReportTrendExType.Weekly:
+                                    FinanceReportTrendExViewModel wvm = new FinanceReportTrendExViewModel
+                                    {
+                                        TranYear = reader.GetInt32(0),
+                                        TranWeek = Int32.Parse(reader.GetString(1)),
+                                        Expense = reader.GetBoolean(2),
+                                        TranAmount = reader.GetDecimal(3)
+                                    };
+                                    listVm.Add(wvm);
+                                    break;
 
-                            case FinanceReportTrendExType.Monthly:
-                                FinanceReportTrendExViewModel mvm = new FinanceReportTrendExViewModel
-                                {
-                                    TranYear = reader.GetInt32(0),
-                                    TranMonth = reader.GetInt32(1),
-                                    Expense = reader.GetBoolean(2),
-                                    TranAmount = reader.GetDecimal(3)
-                                };
-                                listVm.Add(mvm);
-                                break;
+                                case FinanceReportTrendExType.Monthly:
+                                    FinanceReportTrendExViewModel mvm = new FinanceReportTrendExViewModel
+                                    {
+                                        TranYear = reader.GetInt32(0),
+                                        TranMonth = reader.GetInt32(1),
+                                        Expense = reader.GetBoolean(2),
+                                        TranAmount = reader.GetDecimal(3)
+                                    };
+                                    listVm.Add(mvm);
+                                    break;
 
-                            default:
-                                break;
+                                default:
+                                    break;
+                            }
                         }
                     }
                 }
@@ -163,20 +168,43 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {

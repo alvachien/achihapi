@@ -9,6 +9,7 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -36,46 +37,52 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             BaseListViewModel<LibLocationViewModel> listVm = new BaseListViewModel<LibLocationViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = this.GetQueryString(true, top, skip, null, hid);
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        listVm.TotalCount = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-                reader.NextResult();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    catch (Exception)
                     {
-                        LibLocationViewModel vm = new LibLocationViewModel();
-                        OnDB2VM(reader, vm);
-                        listVm.Add(vm);
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            listVm.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
+                    }
+                    reader.NextResult();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            LibLocationViewModel vm = new LibLocationViewModel();
+                            OnDB2VM(reader, vm);
+                            listVm.Add(vm);
+                        }
                     }
                 }
             }
@@ -83,19 +90,42 @@ namespace achihapi.Controllers
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 strErrMsg = exp.Message;
-                bError = true;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -120,65 +150,88 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             LibLocationViewModel vm = new LibLocationViewModel();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
-            Boolean bNotFound = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = this.GetQueryString(false, null, null, id, 0);
 
-                await conn.OpenAsync();
+                using(conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        OnDB2VM(reader, vm);
-                        break; // Should only one result!!!
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-                else
-                {
-                    bNotFound = true;
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            OnDB2VM(reader, vm);
+                            break; // Should only one result!!!
+                        }
+                    }
+                    else
+                    {
+                        errorCode = HttpStatusCode.NotFound;
+                        throw new Exception();
+                    }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bNotFound)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return NotFound();
-            }
-            else if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -215,52 +268,58 @@ namespace achihapi.Controllers
             }
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bDuplicatedEntry = false;
-            Int32 nDuplicatedID = -1;
             Int32 nNewID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = @"SELECT [ID]
                             FROM [dbo].[t_lib_location] WHERE [Name] = N'" + vm.Name + "' AND [HID] = " + vm.HID.ToString();
 
-                await conn.OpenAsync();
+                using(conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    bDuplicatedEntry = true;
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        nDuplicatedID = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
                     }
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                    cmd.Dispose();
-                    cmd = null;
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        Int32 nDuplicatedID = -1;
+                        while (reader.Read())
+                        {
+                            nDuplicatedID = reader.GetInt32(0);
+                            break;
+                        }
 
-                    // Now go ahead for the creating
-                    queryString = @"INSERT INTO [dbo].[t_lib_location]
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Location with name already exists: " + nDuplicatedID.ToString());
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
+
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Now go ahead for the creating
+                        queryString = @"INSERT INTO [dbo].[t_lib_location]
                                    ([HID]
                                    ,[Name]
                                    ,[IsDevice]
@@ -275,46 +334,63 @@ namespace achihapi.Controllers
                                    ,@CREATEDBY
                                    ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
 
-                    cmd = new SqlCommand(queryString, conn);
-                    cmd.Parameters.AddWithValue("@HID", vm.HID);
-                    cmd.Parameters.AddWithValue("@Name", vm.Name);
-                    cmd.Parameters.AddWithValue("@IsDevice", vm.IsDevice);
-                    if (String.IsNullOrEmpty(vm.Desp))
-                        cmd.Parameters.AddWithValue("@Desp", DBNull.Value);
-                    else
-                        cmd.Parameters.AddWithValue("@Desp", vm.Desp);
-                    cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
-                    cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                    idparam.Direction = ParameterDirection.Output;
+                        cmd = new SqlCommand(queryString, conn);
+                        cmd.Parameters.AddWithValue("@HID", vm.HID);
+                        cmd.Parameters.AddWithValue("@Name", vm.Name);
+                        cmd.Parameters.AddWithValue("@IsDevice", vm.IsDevice);
+                        if (String.IsNullOrEmpty(vm.Desp))
+                            cmd.Parameters.AddWithValue("@Desp", DBNull.Value);
+                        else
+                            cmd.Parameters.AddWithValue("@Desp", vm.Desp);
+                        cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+                        cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
+                        SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                        idparam.Direction = ParameterDirection.Output;
 
-                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                    nNewID = (Int32)idparam.Value;
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        nNewID = (Int32)idparam.Value;
+                    }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bDuplicatedEntry)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Location with name already exists: " + nDuplicatedID.ToString());
-            }
-
-            if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             vm.ID = nNewID;
@@ -329,14 +405,14 @@ namespace achihapi.Controllers
 
         // PUT: api/LibLocation/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
             return BadRequest();
         }
 
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             return BadRequest();
         }

@@ -9,6 +9,7 @@ using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
 using System.Text;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -25,102 +26,120 @@ namespace achihapi.Controllers
                 return BadRequest("No home inputted");
 
             HomeKeyFigure figure = new HomeKeyFigure();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             String strErrMsg = "";
+
+            String usrName = "";
+            try
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
+            catch
+            {
+                return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
+            }
 
             try
             {
-                String usrName = "";
-                try
-                {
-                    var usrObj = HIHAPIUtility.GetUserClaim(this);
-                    usrName = usrObj.Value;
-                }
-                catch
-                {
-                    return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
-                }
-
                 queryString = this.getQueryString(hid, usrName);
 
-                await conn.OpenAsync();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                // 1. Total assets and liability
-                if (reader.HasRows)
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    while (reader.Read())
-                    {
-                        if (reader.GetBoolean(0))
-                        {
-                            figure.TotalLiability = reader.GetDecimal(1);
-                        }
-                        else
-                        {
-                            figure.TotalAsset = reader.GetDecimal(1);
-                        }
-                    }
-                }
-                await reader.NextResultAsync();
+                    await conn.OpenAsync();
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
 
-                // 2. Total assets and liability
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // 1. Total assets and liability
+                    if (reader.HasRows)
                     {
-                        if (reader.GetBoolean(0))
+                        while (reader.Read())
                         {
-                            figure.TotalLiabilityUnderMyName = reader.GetDecimal(1);
-                        }
-                        else
-                        {
-                            figure.TotalAssetUnderMyName = reader.GetDecimal(1);
+                            if (reader.GetBoolean(0))
+                            {
+                                figure.TotalLiability = reader.GetDecimal(1);
+                            }
+                            else
+                            {
+                                figure.TotalAsset = reader.GetDecimal(1);
+                            }
                         }
                     }
-                }
-                await reader.NextResultAsync();
+                    await reader.NextResultAsync();
 
-                // 3. Total unread message
-                if (reader.HasRows)
-                {
-                    while(reader.Read())
+                    // 2. Total assets and liability
+                    if (reader.HasRows)
                     {
-                        figure.TotalUnreadMessage = reader.GetInt32(0);
+                        while (reader.Read())
+                        {
+                            if (reader.GetBoolean(0))
+                            {
+                                figure.TotalLiabilityUnderMyName = reader.GetDecimal(1);
+                            }
+                            else
+                            {
+                                figure.TotalAssetUnderMyName = reader.GetDecimal(1);
+                            }
+                        }
                     }
-                }
-                await reader.NextResultAsync();
+                    await reader.NextResultAsync();
 
-                // 4. My uncomplated event
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // 3. Total unread message
+                    if (reader.HasRows)
                     {
-                        figure.MyUnCompletedEvents = reader.GetInt32(0);
+                        while (reader.Read())
+                        {
+                            figure.TotalUnreadMessage = reader.GetInt32(0);
+                        }
                     }
-                }
-                await reader.NextResultAsync();
+                    await reader.NextResultAsync();
 
-                // 5. My completed events
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // 4. My uncomplated event
+                    if (reader.HasRows)
                     {
-                        figure.MyCompletedEvents = reader.GetInt32(0);
+                        while (reader.Read())
+                        {
+                            figure.MyUnCompletedEvents = reader.GetInt32(0);
+                        }
                     }
+                    await reader.NextResultAsync();
+
+                    // 5. My completed events
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            figure.MyCompletedEvents = reader.GetInt32(0);
+                        }
+                    }
+                    await reader.NextResultAsync();
                 }
-                await reader.NextResultAsync();
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
                     conn.Close();
@@ -128,9 +147,19 @@ namespace achihapi.Controllers
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings

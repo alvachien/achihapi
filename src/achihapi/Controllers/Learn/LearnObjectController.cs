@@ -8,6 +8,7 @@ using System.Data;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -34,46 +35,52 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             BaseListViewModel<LearnObjectUIViewModel> listVm = new BaseListViewModel<LearnObjectUIViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = this.getQueryString(bIncContent, ctgyid, true, top, skip, null, hid);
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        listVm.TotalCount = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-                reader.NextResult();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    catch (Exception)
                     {
-                        LearnObjectUIViewModel vm = new LearnObjectUIViewModel();
-                        onDB2VM(reader, bIncContent, vm);
-                        listVm.Add(vm);
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            listVm.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
+                    }
+                    reader.NextResult();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            LearnObjectUIViewModel vm = new LearnObjectUIViewModel();
+                            onDB2VM(reader, bIncContent, vm);
+                            listVm.Add(vm);
+                        }
                     }
                 }
             }
@@ -81,20 +88,42 @@ namespace achihapi.Controllers
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 strErrMsg = exp.Message;
-                bError = true;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -103,88 +132,6 @@ namespace achihapi.Controllers
             };
             
             return new JsonResult(listVm, setting);
-        }
-
-        private string getQueryString(Boolean bIncContent, Int32? nCtgyID, Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32 hid)
-        {
-            String strSQL = "";
-            if (bListMode)
-            {
-                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_obj] WHERE [HID] = " + hid.ToString() + "; ";
-            }
-            
-            strSQL += @"SELECT [t_learn_obj].[ID]
-                      ,[t_learn_obj].[HID]
-                      ,[t_learn_obj].[CATEGORY]
-                      ,[t_learn_ctgy].[NAME] as [CATEGORYNAME]
-                      ,[t_learn_obj].[NAME]";
-            if (bIncContent)
-                strSQL += @",[t_learn_obj].[CONTENT] ";
-            strSQL += @",[t_learn_obj].[CREATEDBY]
-                      ,[t_learn_obj].[CREATEDAT]
-                      ,[t_learn_obj].[UPDATEDBY]
-                      ,[t_learn_obj].[UPDATEDAT] 
-                        FROM [dbo].[t_learn_obj]
-                            INNER JOIN [dbo].[t_learn_ctgy]
-                        ON [t_learn_obj].[CATEGORY] = [t_learn_ctgy].[ID] ";
-            if (bListMode && nTop.HasValue && nSkip.HasValue)
-            {
-                strSQL += @" WHERE [t_learn_obj].[HID] = " + hid.ToString() 
-                       + (nCtgyID.HasValue ? (" AND [t_learn_obj].[CATEGORY] = " + nCtgyID.Value.ToString()) : "" )
-                       + @" ORDER BY (SELECT NULL) OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
-            }
-            else if (!bListMode && nSearchID.HasValue)
-            {
-                strSQL += " WHERE [t_learn_obj].[ID] = " + nSearchID.Value.ToString();
-            }
-
-            return strSQL;
-        }
-
-        private void onDB2VM(SqlDataReader reader, Boolean bIncContent, LearnObjectUIViewModel vm)
-        {
-            var idx = 0;
-            vm.ID = reader.GetInt32(idx++);
-            vm.HID = reader.GetInt32(idx++);
-            vm.CategoryID = reader.GetInt32(idx++);
-            if (!reader.IsDBNull(idx))
-                vm.CategoryName = reader.GetString(idx++);
-            else
-            {
-                vm.CategoryName = String.Empty;
-                ++idx;
-            }                
-            if (!reader.IsDBNull(idx))
-                vm.Name = reader.GetString(idx++);
-            else
-            {
-                vm.Name = String.Empty;
-                ++idx;
-            }
-                
-            if (bIncContent)
-            {
-                if (!reader.IsDBNull(idx))
-                    vm.Content = reader.GetString(idx ++);
-                else
-                    ++idx;
-            }
-            if (!reader.IsDBNull(idx))
-                vm.CreatedBy = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.CreatedAt = reader.GetDateTime(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedBy = reader.GetString(idx++);
-            else
-                ++idx;
-            if (!reader.IsDBNull(idx))
-                vm.UpdatedAt = reader.GetDateTime(idx++);
-            else
-                ++idx;
         }
 
         // GET api/learnobject/5
@@ -207,66 +154,88 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             LearnObjectUIViewModel vm = new LearnObjectUIViewModel();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
-            Boolean bNotFound = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = this.getQueryString(true, null, false, null, null, id, hid);
 
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        onDB2VM(reader, true, vm);
-                        break; // Should only one result!!!
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-                else
-                {
-                    bNotFound = true;
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            onDB2VM(reader, true, vm);
+                            break; // Should only one result!!!
+                        }
+                    }
+                    else
+                    {
+                        errorCode = HttpStatusCode.NotFound;
+                        throw new Exception();
+                    }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bNotFound)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return NotFound();
-            } 
-            else if(bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -309,52 +278,58 @@ namespace achihapi.Controllers
             }
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bDuplicatedEntry = false;
-            Int32 nDuplicatedID = -1;
             Int32 nNewID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = @"SELECT [ID]
                             FROM [dbo].[t_learn_obj] WHERE [Name] = N'" + vm.Name + "' AND [HID] = " + vm.HID.ToString();
 
-                await conn.OpenAsync();
+                using(conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    bDuplicatedEntry = true;
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        nDuplicatedID = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
                     }
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                    cmd.Dispose();
-                    cmd = null;
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        Int32 nDuplicatedID = -1;
+                        while (reader.Read())
+                        {
+                            nDuplicatedID = reader.GetInt32(0);
+                            break;
+                        }
 
-                    // Now go ahead for the creating
-                    queryString = @"INSERT INTO [dbo].[t_learn_obj]
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Object with name already exists: " + nDuplicatedID.ToString());
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
+
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Now go ahead for the creating
+                        queryString = @"INSERT INTO [dbo].[t_learn_obj]
                                        ([HID]
                                        ,[CATEGORY]
                                        ,[NAME]
@@ -369,43 +344,60 @@ namespace achihapi.Controllers
                                        ,@CREATEDAT
                                     ); SELECT @Identity = SCOPE_IDENTITY();";
 
-                    cmd = new SqlCommand(queryString, conn);
-                    cmd.Parameters.AddWithValue("@HID", vm.HID);
-                    cmd.Parameters.AddWithValue("@CTGY", vm.CategoryID);
-                    cmd.Parameters.AddWithValue("@NAME", vm.Name);
-                    cmd.Parameters.AddWithValue("@CONTENT", vm.Content);
-                    cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
-                    cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                    idparam.Direction = ParameterDirection.Output;
+                        cmd = new SqlCommand(queryString, conn);
+                        cmd.Parameters.AddWithValue("@HID", vm.HID);
+                        cmd.Parameters.AddWithValue("@CTGY", vm.CategoryID);
+                        cmd.Parameters.AddWithValue("@NAME", vm.Name);
+                        cmd.Parameters.AddWithValue("@CONTENT", vm.Content);
+                        cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+                        cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
+                        SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                        idparam.Direction = ParameterDirection.Output;
 
-                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                    nNewID = (Int32)idparam.Value;
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        nNewID = (Int32)idparam.Value;
+                    }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bDuplicatedEntry)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Object with name already exists: " + nDuplicatedID.ToString());
-            }
-
-            if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             vm.ID = nNewID;
@@ -449,10 +441,11 @@ namespace achihapi.Controllers
             }
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -464,45 +457,65 @@ namespace achihapi.Controllers
                                     ,[UPDATEDAT] = @UPDATEDAT
                                 WHERE [ID] = @OBJID";
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@CTGY", vm.CategoryID);
-                cmd.Parameters.AddWithValue("@NAME", vm.Name);
-                cmd.Parameters.AddWithValue("@CONTENT", vm.Content);
-                cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
-                cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
-                cmd.Parameters.AddWithValue("@OBJID", vm.ID);
-                Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@CTGY", vm.CategoryID);
+                    cmd.Parameters.AddWithValue("@NAME", vm.Name);
+                    cmd.Parameters.AddWithValue("@CONTENT", vm.Content);
+                    cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                    cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+                    cmd.Parameters.AddWithValue("@OBJID", vm.ID);
+                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -510,7 +523,7 @@ namespace achihapi.Controllers
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+
             return new JsonResult(vm, setting);
         }
 
@@ -534,10 +547,11 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
-            String queryString = "";
-            Boolean bError = false;
-            Int32 usageAmount = 0;
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            String queryString = "";            
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             String strErrMsg = "";
 
@@ -546,31 +560,36 @@ namespace achihapi.Controllers
                 queryString = @"SELECT COUNT( * )
                             FROM [dbo].[t_learn_hist] WHERE [OBJECTID] = " + id.ToString() + " AND [HID] = " + hid.ToString();
 
-                await conn.OpenAsync();
+                using(conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        usageAmount = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
+                    catch (Exception exp)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                if (usageAmount <= 0)
-                {
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        Int32 usageAmount = 0;
+                        while (reader.Read())
+                        {
+                            usageAmount = reader.GetInt32(0);
+                            break;
+                        }
+
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Object still in use: " + usageAmount.ToString());
+                    }
+
                     reader.Dispose();
                     reader = null;
 
@@ -587,29 +606,127 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (usageAmount > 0)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Object still in use: " + usageAmount.ToString());
-            }
-
-            if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             return Ok();
+        }
+
+        private string getQueryString(Boolean bIncContent, Int32? nCtgyID, Boolean bListMode, Int32? nTop, Int32? nSkip, Int32? nSearchID, Int32 hid)
+        {
+            String strSQL = "";
+            if (bListMode)
+            {
+                strSQL += @"SELECT count(*) FROM [dbo].[t_learn_obj] WHERE [HID] = " + hid.ToString() + "; ";
+            }
+
+            strSQL += @"SELECT [t_learn_obj].[ID]
+                      ,[t_learn_obj].[HID]
+                      ,[t_learn_obj].[CATEGORY]
+                      ,[t_learn_ctgy].[NAME] as [CATEGORYNAME]
+                      ,[t_learn_obj].[NAME]";
+            if (bIncContent)
+                strSQL += @",[t_learn_obj].[CONTENT] ";
+            strSQL += @",[t_learn_obj].[CREATEDBY]
+                      ,[t_learn_obj].[CREATEDAT]
+                      ,[t_learn_obj].[UPDATEDBY]
+                      ,[t_learn_obj].[UPDATEDAT] 
+                        FROM [dbo].[t_learn_obj]
+                            INNER JOIN [dbo].[t_learn_ctgy]
+                        ON [t_learn_obj].[CATEGORY] = [t_learn_ctgy].[ID] ";
+            if (bListMode && nTop.HasValue && nSkip.HasValue)
+            {
+                strSQL += @" WHERE [t_learn_obj].[HID] = " + hid.ToString()
+                       + (nCtgyID.HasValue ? (" AND [t_learn_obj].[CATEGORY] = " + nCtgyID.Value.ToString()) : "")
+                       + @" ORDER BY (SELECT NULL) OFFSET " + nSkip.Value.ToString() + " ROWS FETCH NEXT " + nTop.Value.ToString() + " ROWS ONLY;";
+            }
+            else if (!bListMode && nSearchID.HasValue)
+            {
+                strSQL += " WHERE [t_learn_obj].[ID] = " + nSearchID.Value.ToString();
+            }
+
+            return strSQL;
+        }
+
+        private void onDB2VM(SqlDataReader reader, Boolean bIncContent, LearnObjectUIViewModel vm)
+        {
+            var idx = 0;
+            vm.ID = reader.GetInt32(idx++);
+            vm.HID = reader.GetInt32(idx++);
+            vm.CategoryID = reader.GetInt32(idx++);
+            if (!reader.IsDBNull(idx))
+                vm.CategoryName = reader.GetString(idx++);
+            else
+            {
+                vm.CategoryName = String.Empty;
+                ++idx;
+            }
+            if (!reader.IsDBNull(idx))
+                vm.Name = reader.GetString(idx++);
+            else
+            {
+                vm.Name = String.Empty;
+                ++idx;
+            }
+
+            if (bIncContent)
+            {
+                if (!reader.IsDBNull(idx))
+                    vm.Content = reader.GetString(idx++);
+                else
+                    ++idx;
+            }
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
         }
     }
 }

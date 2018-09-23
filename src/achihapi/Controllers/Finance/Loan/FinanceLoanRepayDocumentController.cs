@@ -48,10 +48,11 @@ namespace achihapi.Controllers
             {
                 return BadRequest("No data inputted!");
             }
-
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            SqlTransaction tran = null;
             String queryString = String.Empty;
-            Boolean bError = false;
             String strErrMsg = String.Empty;
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
@@ -73,139 +74,141 @@ namespace achihapi.Controllers
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check: HID, it requires more info than just check, so it implemented it 
-                try
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                // Check: DocID
-                String checkString = "";
-                SqlCommand chkcmd = null;
-                SqlDataReader chkreader = null;
-                if (tmpdocid.HasValue)
-                {
-                    checkString = HIHDBUtility.GetFinanceDocLoanListQueryString() + " WHERE [DOCID] = " + tmpdocid.Value.ToString() + " AND [HID] = " + hid.ToString();
-                    chkcmd = new SqlCommand(checkString, conn);
-                    chkreader = chkcmd.ExecuteReader();
-
-                    if (!chkreader.HasRows)
+                    // Check: HID, it requires more info than just check, so it implemented it 
+                    try
                     {
-                        return BadRequest("Invalid Doc ID inputted: " + tmpdocid.Value.ToString());
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    // Check: DocID
+                    String checkString = "";
+                    if (tmpdocid.HasValue)
+                    {
+                        checkString = HIHDBUtility.GetFinanceDocLoanListQueryString() + " WHERE [DOCID] = " + tmpdocid.Value.ToString() + " AND [HID] = " + hid.ToString();
+                        cmd = new SqlCommand(checkString, conn);
+                        reader = cmd.ExecuteReader();
+
+                        if (!reader.HasRows)
+                        {
+                            errorCode = HttpStatusCode.BadRequest;
+                            throw new Exception("Invalid Doc ID inputted: " + tmpdocid.Value.ToString());
+                        }
+                        else
+                        {
+                            while (reader.Read())
+                            {
+                                HIHDBUtility.FinTmpDocLoan_DB2VM(reader, vmTmpDoc);
+
+                                // It shall be only one entry if found!
+                                break;
+                            }
+                        }
+
+                        reader.Dispose();
+                        reader = null;
+                        cmd.Dispose();
+                        cmd = null;
+                    }
+
+                    // Check: Tmp doc has posted or not?
+                    if (vmTmpDoc == null || (vmTmpDoc.RefDocID.HasValue && vmTmpDoc.RefDocID.Value > 0)
+                        || vmTmpDoc.AccountID != loanAccountID)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Tmp Doc not existed yet or has been posted");
+                    }
+
+                    // Check: Loan account
+                    checkString = HIHDBUtility.GetFinanceLoanAccountQueryString(hid, loanAccountID);
+                    cmd = new SqlCommand(checkString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (!reader.HasRows)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Invalid Doc ID inputted: " + tmpdocid.ToString());
                     }
                     else
                     {
-                        while (chkreader.Read())
+                        while (reader.Read())
                         {
-                            HIHDBUtility.FinTmpDocLoan_DB2VM(chkreader, vmTmpDoc);
-
-                            // It shall be only one entry if found!
-                            break;
+                            Int32 aidx = 0;
+                            aidx = HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+                            vmAccount.ExtraInfo_Loan = new FinanceAccountExtLoanViewModel();
+                            HIHDBUtility.FinAccountLoan_DB2VM(reader, vmAccount.ExtraInfo_Loan, aidx);
                         }
                     }
+                    reader.Dispose();
+                    reader = null;
+                    cmd.Dispose();
+                    cmd = null;
 
-                    chkreader.Dispose();
-                    chkreader = null;
-                    chkcmd.Dispose();
-                    chkcmd = null;
-                }
-
-                // Check: Tmp doc has posted or not?
-                if (vmTmpDoc == null || (vmTmpDoc.RefDocID.HasValue && vmTmpDoc.RefDocID.Value > 0)
-                    || vmTmpDoc.AccountID != loanAccountID)
-                {
-                    return BadRequest("Tmp Doc not existed yet or has been posted");
-                }
-
-                // Check: Loan account
-                checkString = HIHDBUtility.GetFinanceLoanAccountQueryString(hid, loanAccountID);
-                chkcmd = new SqlCommand(checkString, conn);
-                chkreader = chkcmd.ExecuteReader();
-                if (!chkreader.HasRows)
-                {
-                    return BadRequest("Invalid Doc ID inputted: " + tmpdocid.ToString());
-                }
-                else
-                {
-                    while (chkreader.Read())
+                    // Data validation - basic
+                    try
                     {
-                        Int32 aidx = 0;
-                        aidx = HIHDBUtility.FinAccountHeader_DB2VM(chkreader, vmAccount, aidx);
-                        vmAccount.ExtraInfo_Loan = new FinanceAccountExtLoanViewModel();
-                        HIHDBUtility.FinAccountLoan_DB2VM(chkreader, vmAccount.ExtraInfo_Loan, aidx);
+                        await FinanceDocumentController.FinanceDocumentBasicValidationAsync(repaydoc, conn);
                     }
-                }
-                chkreader.Dispose();
-                chkreader = null;
-                chkcmd.Dispose();
-                chkcmd = null;
-
-                // Data validation - basic
-                try
-                {
-                    await FinanceDocumentController.FinanceDocumentBasicValidationAsync(repaydoc, conn);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
-
-                // Data validation - loan specific
-                try
-                {
-                    int ninvaliditems = 0;
-                    // Only four tran. types are allowed
-                    if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom)
+                    catch (Exception)
                     {
-                        ninvaliditems = repaydoc.Items.Where(item => item.TranType != FinanceTranTypeViewModel.TranType_InterestOut
-                            && item.TranType != FinanceTranTypeViewModel.TranType_RepaymentOut
-                            && item.TranType != FinanceTranTypeViewModel.TranType_RepaymentIn)
-                            .Count();
-                    }
-                    else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
-                    {
-                        ninvaliditems = repaydoc.Items.Where(item => item.TranType != FinanceTranTypeViewModel.TranType_InterestIn
-                            && item.TranType != FinanceTranTypeViewModel.TranType_RepaymentOut
-                            && item.TranType != FinanceTranTypeViewModel.TranType_RepaymentIn)
-                            .Count();
-                    }
-                    if (ninvaliditems > 0)
-                    {
-                        return BadRequest("Items with invalid tran type");
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
                     }
 
-                    // Check the amount
-                    decimal totalOut = repaydoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentOut).Sum(item2 => item2.TranAmount);
-                    decimal totalIn = repaydoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentIn).Sum(item2 => item2.TranAmount);
-                    //decimal totalintOut = repaydoc.Items.Where(item => (item.TranType == FinanceTranTypeViewModel.TranType_InterestOut)).Sum(item2 => item2.TranAmount);
-
-                    if (totalOut != totalIn)
+                    // Data validation - loan specific
+                    try
                     {
-                        return BadRequest("Amount is not equal!");
+                        int ninvaliditems = 0;
+                        // Only four tran. types are allowed
+                        if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom)
+                        {
+                            ninvaliditems = repaydoc.Items.Where(item => item.TranType != FinanceTranTypeViewModel.TranType_InterestOut
+                                && item.TranType != FinanceTranTypeViewModel.TranType_RepaymentOut
+                                && item.TranType != FinanceTranTypeViewModel.TranType_RepaymentIn)
+                                .Count();
+                        }
+                        else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
+                        {
+                            ninvaliditems = repaydoc.Items.Where(item => item.TranType != FinanceTranTypeViewModel.TranType_InterestIn
+                                && item.TranType != FinanceTranTypeViewModel.TranType_RepaymentOut
+                                && item.TranType != FinanceTranTypeViewModel.TranType_RepaymentIn)
+                                .Count();
+                        }
+                        if (ninvaliditems > 0)
+                        {
+                            throw new Exception("Items with invalid tran type");
+                        }
+
+                        // Check the amount
+                        decimal totalOut = repaydoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentOut).Sum(item2 => item2.TranAmount);
+                        decimal totalIn = repaydoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentIn).Sum(item2 => item2.TranAmount);
+                        //decimal totalintOut = repaydoc.Items.Where(item => (item.TranType == FinanceTranTypeViewModel.TranType_InterestOut)).Sum(item2 => item2.TranAmount);
+
+                        if (totalOut != totalIn)
+                        {
+                            throw new Exception("Amount is not equal!");
+                        }
                     }
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                // Now go ahead for the creating
-                SqlTransaction tran = conn.BeginTransaction();
+                    // Now go ahead for the creating
+                    tran = conn.BeginTransaction();
+                    Int32 nNewDocID = 0;
 
-                SqlCommand cmd = null;
-                Int32 nNewDocID = 0;
+                    // Now go ahead for creating
+                    queryString = HIHDBUtility.GetFinDocHeaderInsertString();
 
-                // Now go ahead for creating
-                queryString = HIHDBUtility.GetFinDocHeaderInsertString();
-
-                try
-                {
                     // Header
                     cmd = new SqlCommand(queryString, conn)
                     {
@@ -253,32 +256,53 @@ namespace achihapi.Controllers
 
                     tran.Commit();
                 }
-                catch (Exception exp)
-                {
-                    if (tran != null)
-                        tran.Rollback();
-
-                    throw exp; // Re-throw
-                }
             }
             catch (Exception exp)
             {
+                if (tran != null)
+                    tran.Rollback();
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings

@@ -39,6 +39,8 @@ namespace achihapi.Controllers
             String queryString = "";
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
 
             try
             {
@@ -51,15 +53,16 @@ namespace achihapi.Controllers
                     {
                         HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                    catch (Exception exp)
+                    catch (Exception)
                     {
-                        return BadRequest(exp.Message);
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
                     }
 
                     queryString = HIHDBUtility.Event_GetNormalEventQueryString(true, usrName, hid, skip, top, null, skipfinished, dtbgn, dtend);
 
-                    SqlCommand cmd = new SqlCommand(queryString, conn);
-                    SqlDataReader reader = cmd.ExecuteReader();
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
 
                     if (reader.HasRows)
                     {
@@ -84,15 +87,27 @@ namespace achihapi.Controllers
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
                 strErrMsg = exp.Message;
-                errorCode = HttpStatusCode.InternalServerError;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Close();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
@@ -143,57 +158,86 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             EventViewModel vm = new EventViewModel();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                queryString = HIHDBUtility.Event_GetNormalEventQueryString(false, usrName, hid, null, null, id);
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        HIHDBUtility.Event_DB2VM(reader, vm, false);
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    queryString = HIHDBUtility.Event_GetNormalEventQueryString(false, usrName, hid, null, null, id);
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            HIHDBUtility.Event_DB2VM(reader, vm, false);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
                 strErrMsg = exp.Message;
-                bError = true;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Close();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -219,12 +263,11 @@ namespace achihapi.Controllers
                 return BadRequest("Name is a must!");
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bDuplicatedEntry = false;
-            Int32 nDuplicatedID = -1;
             Int32 nNewID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
@@ -244,72 +287,97 @@ namespace achihapi.Controllers
                 queryString = @"SELECT [ID]
                             FROM [dbo].[t_event] WHERE [Name] = N'" + vm.Name + "'";
 
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    throw exp; // Re-throw
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    bDuplicatedEntry = true;
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        nDuplicatedID = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
                     }
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
-
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Now go ahead for the creating
-                    queryString =HIHDBUtility.Event_GetNormalEventInsertString();
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw; // Re-throw
+                    }
 
                     cmd = new SqlCommand(queryString, conn);
-                    HIHDBUtility.Event_BindNormalEventInsertParameters(cmd, vm, usrName);
-                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                    idparam.Direction = ParameterDirection.Output;
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        Int32 ndupid = -1;
+                        while (reader.Read())
+                        {
+                            ndupid = reader.GetInt32(0);
+                            break;
+                        }
+                        errorCode = HttpStatusCode.BadRequest;
+                        strErrMsg = "Object with name already exists: " + ndupid.ToString();
+                        throw new Exception(strErrMsg);
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
 
-                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                    nNewID = (Int32)idparam.Value;
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Now go ahead for the creating
+                        queryString = HIHDBUtility.Event_GetNormalEventInsertString();
+
+                        cmd = new SqlCommand(queryString, conn);
+                        HIHDBUtility.Event_BindNormalEventInsertParameters(cmd, vm, usrName);
+                        SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                        idparam.Direction = ParameterDirection.Output;
+
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        nNewID = (Int32)idparam.Value;
+                    }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bDuplicatedEntry)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Object with name already exists: " + nDuplicatedID.ToString());
-            }
-
-            if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             vm.ID = nNewID;
@@ -337,10 +405,10 @@ namespace achihapi.Controllers
                 return BadRequest("Name is a must!");
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bNonExistEntry = false;
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
@@ -359,64 +427,88 @@ namespace achihapi.Controllers
             {
                 queryString = @"SELECT [ID] FROM [dbo].[t_event] WHERE [ID] = " + vm.ID.ToString();
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    throw exp; // Re-throw
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (!reader.HasRows)
-                {
-                    bNonExistEntry = true;
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
-
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Now go ahead for the creating
-                    queryString = HIHDBUtility.Event_GetNormalEventUpdateString();
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw; // Re-throw
+                    }
 
                     cmd = new SqlCommand(queryString, conn);
-                    HIHDBUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
+                    reader = cmd.ExecuteReader();
+                    if (!reader.HasRows)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        strErrMsg = "Object with ID doesnot exist: " + id.ToString();
+                        throw new Exception(strErrMsg);
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
 
-                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Now go ahead for the creating
+                        queryString = HIHDBUtility.Event_GetNormalEventUpdateString();
+
+                        cmd = new SqlCommand(queryString, conn);
+                        HIHDBUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
+
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                    }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bNonExistEntry)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Object with ID doesnot exist: " + id.ToString());
-            }
-
-            if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -438,10 +530,10 @@ namespace achihapi.Controllers
                 return BadRequest("No home is inputted");
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bNonExistEntry = false;
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
@@ -461,95 +553,113 @@ namespace achihapi.Controllers
             {
                 queryString = HIHDBUtility.Event_GetNormalEventQueryString(false, usrName, null, null, null, id);
 
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    throw exp; // Re-throw
-                }
-
-                // Optimization logic for Mark as complete
-                if (patch.Operations.Count == 1 && patch.Operations[0].path == "/completeTimePoint")
-                {
-                    // Only update the complete time
-                    queryString = HIHDBUtility.Event_GetNormalEventMarkAsCompleteString();
-                    SqlCommand cmdupdate = new SqlCommand(queryString, conn);
-                    HIHDBUtility.Event_BindNormalEventMarkAsCompleteParameters(cmdupdate, DateTime.Parse((string)patch.Operations[0].value), usrName, id);
-
-                    await cmdupdate.ExecuteNonQueryAsync();
-                }
-                else
-                {
-                    SqlCommand cmd = new SqlCommand(queryString, conn);
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    if (!reader.HasRows)
+                    // Check Home assignment with current user
+                    try
                     {
-                        bNonExistEntry = true;
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw; // Re-throw
+                    }
+
+                    // Optimization logic for Mark as complete
+                    if (patch.Operations.Count == 1 && patch.Operations[0].path == "/completeTimePoint")
+                    {
+                        // Only update the complete time
+                        queryString = HIHDBUtility.Event_GetNormalEventMarkAsCompleteString();
+                        SqlCommand cmdupdate = new SqlCommand(queryString, conn);
+                        HIHDBUtility.Event_BindNormalEventMarkAsCompleteParameters(cmdupdate, DateTime.Parse((string)patch.Operations[0].value), usrName, id);
+
+                        await cmdupdate.ExecuteNonQueryAsync();
                     }
                     else
                     {
-                        while (reader.Read())
-                        {
-                            HIHDBUtility.Event_DB2VM(reader, vm, false);
-                        }
-
-                        reader.Dispose();
-                        reader = null;
-
-                        cmd.Dispose();
-                        cmd = null;
-
-                        // Now go ahead for the update
-                        //var patched = vm.Copy();
-                        patch.ApplyTo(vm, ModelState);
-                        if (!ModelState.IsValid)
-                        {
-                            return new BadRequestObjectResult(ModelState);
-                        }
-
-                        //var model = new
-                        //{
-                        //    original = vm,
-                        //    patched = vm
-                        //};
-
-                        queryString = HIHDBUtility.Event_GetNormalEventUpdateString();
-
                         cmd = new SqlCommand(queryString, conn);
-                        HIHDBUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
+                        reader = cmd.ExecuteReader();
+                        if (!reader.HasRows)
+                        {
+                            errorCode = HttpStatusCode.BadRequest;
+                            strErrMsg = "Object with ID doesnot exist: " + id.ToString();
+                            throw new Exception(strErrMsg);
+                        }
+                        else
+                        {
+                            while (reader.Read())
+                            {
+                                HIHDBUtility.Event_DB2VM(reader, vm, false);
+                            }
 
-                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                            reader.Dispose();
+                            reader = null;
+
+                            cmd.Dispose();
+                            cmd = null;
+
+                            // Now go ahead for the update
+                            //var patched = vm.Copy();
+                            patch.ApplyTo(vm, ModelState);
+                            if (!ModelState.IsValid)
+                            {
+                                return new BadRequestObjectResult(ModelState);
+                            }
+
+                            queryString = HIHDBUtility.Event_GetNormalEventUpdateString();
+
+                            cmd = new SqlCommand(queryString, conn);
+                            HIHDBUtility.Event_BindNormalEventUpdateParameters(cmd, vm, usrName);
+
+                            Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bNonExistEntry)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Object with ID doesnot exist: " + id.ToString());
-            }
-
-            if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -566,9 +676,7 @@ namespace achihapi.Controllers
         public IActionResult Delete(int id)
         {
             return Forbid();
-            //return BadRequest();
-            //String queryString = @"DELETE FROM [dbo].[t_event]
-            //    WHERE <Search Conditions,,>";
+            // @"DELETE FROM [dbo].[t_event] WHERE <Search Conditions,,>";
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using achihapi.ViewModels;
 using System.Data.SqlClient;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -17,10 +18,12 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Get()
         {
             List<LearnAwardViewModel> listVm = new List<LearnAwardViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -35,42 +38,69 @@ namespace achihapi.Controllers
                               ,[UPDATEDAT]
                           FROM [dbo].[t_learn_award]";
 
-                await conn.OpenAsync();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    while (reader.Read())
+                    await conn.OpenAsync();
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
                     {
-                        LearnAwardViewModel vm = new LearnAwardViewModel();
-                        onDB2VM(reader, vm);
-                        listVm.Add(vm);
+                        while (reader.Read())
+                        {
+                            LearnAwardViewModel vm = new LearnAwardViewModel();
+                            onDB2VM(reader, vm);
+                            listVm.Add(vm);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
-            if (bError)
-                return StatusCode(500, strErrMsg);
+
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+
             return new JsonResult(listVm, setting);
         }
 
@@ -93,27 +123,30 @@ namespace achihapi.Controllers
 
         // GET api/learnaward/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public IActionResult Get(int id)
         {
-            return "value";
+            return Forbid();
         }
 
         // POST api/learnaward
         [HttpPost]
-        public void Post([FromBody]string value)
+        public IActionResult Post([FromBody]string value)
         {
+            return Forbid();
         }
 
         // PUT api/learnaward/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
+            return Forbid();
         }
 
         // DELETE api/learnaward/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            return Forbid();
         }
     }
 }

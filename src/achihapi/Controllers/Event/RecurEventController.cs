@@ -35,69 +35,98 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             BaseListViewModel<RecurEventViewModel> listVm = new BaseListViewModel<RecurEventViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                queryString = HIHDBUtility.Event_GetRecurEventQueryString(true, usrName, hid, skip, top);
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        listVm.TotalCount = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-                reader.NextResult();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    catch (Exception)
                     {
-                        RecurEventViewModel vm = new RecurEventViewModel();
-                        HIHDBUtility.Event_RecurDB2VM(reader, vm, true);
-                        listVm.Add(vm);
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    queryString = HIHDBUtility.Event_GetRecurEventQueryString(true, usrName, hid, skip, top);
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            listVm.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
+                    }
+                    reader.NextResult();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            RecurEventViewModel vm = new RecurEventViewModel();
+                            HIHDBUtility.Event_RecurDB2VM(reader, vm, true);
+                            listVm.Add(vm);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
                 strErrMsg = exp.Message;
-                bError = true;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -129,76 +158,105 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             RecurUIEventViewModel vm = new RecurUIEventViewModel();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                queryString = HIHDBUtility.Event_GetRecurEventQueryString(false, usrName, hid, null, null, id);
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        HIHDBUtility.Event_RecurDB2VM(reader, vm, false);
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-
-                reader.Close();
-                cmd.Dispose();
-                cmd = null;
-
-                queryString = HIHDBUtility.Event_GetNormalEventByRecurIDString();
-                cmd = new SqlCommand(queryString, conn);
-                HIHDBUtility.Event_BindNormalEventForRecurDeletionParameters(cmd, hid, id);
-                reader = await cmd.ExecuteReaderAsync();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    catch (Exception)
                     {
-                        var vmevent = new EventViewModel();
-                        HIHDBUtility.Event_DB2VM(reader, vmevent, true);
-                        vm.EventList.Add(vmevent);
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    queryString = HIHDBUtility.Event_GetRecurEventQueryString(false, usrName, hid, null, null, id);
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            HIHDBUtility.Event_RecurDB2VM(reader, vm, false);
+                        }
+                    }
+
+                    reader.Close();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    queryString = HIHDBUtility.Event_GetNormalEventByRecurIDString();
+                    cmd = new SqlCommand(queryString, conn);
+                    HIHDBUtility.Event_BindNormalEventForRecurDeletionParameters(cmd, hid, id);
+                    reader = await cmd.ExecuteReaderAsync();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            var vmevent = new EventViewModel();
+                            HIHDBUtility.Event_DB2VM(reader, vmevent, true);
+                            vm.EventList.Add(vmevent);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
                 strErrMsg = exp.Message;
-                bError = true;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -224,13 +282,13 @@ namespace achihapi.Controllers
                 return BadRequest("Name is a must!");
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bDuplicatedEntry = false;
-            Int32 nDuplicatedID = -1;
             Int32 nNewID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -259,93 +317,116 @@ namespace achihapi.Controllers
                 queryString = @"SELECT [ID]
                             FROM [dbo].[t_event_recur] WHERE [Name] = N'" + vm.Name + "'";
 
-                await conn.OpenAsync();
+                using(conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    throw exp; // Re-throw
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    bDuplicatedEntry = true;
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        nDuplicatedID = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
                     }
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
-
-                    cmd.Dispose();
-                    cmd = null;
-
-                    tran = conn.BeginTransaction();
-                    // Now go ahead for the creating
-                    queryString = HIHDBUtility.Event_GetRecurEventInsertString();
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
                     cmd = new SqlCommand(queryString, conn);
-                    cmd.Transaction = tran;
-                    HIHDBUtility.Event_BindRecurEventInsertParameters(cmd, vm, usrName);
-                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                    idparam.Direction = ParameterDirection.Output;
-
-                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                    nNewID = (Int32)idparam.Value;
-
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Go for the recur item creation
-                    foreach(var gitem in listRsts)
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
                     {
-                        queryString = HIHDBUtility.Event_GetNormalEventInsertString(false);
-                        cmd = new SqlCommand(queryString, conn);
-                        cmd.Transaction = tran;
-                        var vmEvent = new EventViewModel();
-                        vmEvent.EndTimePoint = gitem.EndTimePoint;
-                        vmEvent.StartTimePoint = gitem.StartTimePoint;
-                        vmEvent.RefRecurrID = nNewID;
-                        vmEvent.IsPublic = vm.IsPublic;
-                        vmEvent.Name = gitem.Name;
-                        vmEvent.HID = vm.HID;
-                        vmEvent.Content = vm.Content;
-                        vmEvent.Assignee = vm.Assignee;
-                        HIHDBUtility.Event_BindNormalEventInsertParameters(cmd, vmEvent, usrName);
-                        await cmd.ExecuteNonQueryAsync();
+                        Int32 nDuplicatedID = -1;
+                        while (reader.Read())
+                        {
+                            nDuplicatedID = reader.GetInt32(0);
+                            break;
+                        }
+                        strErrMsg = "Object with name already exists: " + nDuplicatedID.ToString();
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception(strErrMsg);
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
 
                         cmd.Dispose();
                         cmd = null;
-                    }
 
-                    tran.Commit();
+                        tran = conn.BeginTransaction();
+                        // Now go ahead for the creating
+                        queryString = HIHDBUtility.Event_GetRecurEventInsertString();
+
+                        cmd = new SqlCommand(queryString, conn);
+                        cmd.Transaction = tran;
+                        HIHDBUtility.Event_BindRecurEventInsertParameters(cmd, vm, usrName);
+                        SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                        idparam.Direction = ParameterDirection.Output;
+
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        nNewID = (Int32)idparam.Value;
+
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Go for the recur item creation
+                        foreach (var gitem in listRsts)
+                        {
+                            queryString = HIHDBUtility.Event_GetNormalEventInsertString(false);
+                            cmd = new SqlCommand(queryString, conn);
+                            cmd.Transaction = tran;
+                            var vmEvent = new EventViewModel();
+                            vmEvent.EndTimePoint = gitem.EndTimePoint;
+                            vmEvent.StartTimePoint = gitem.StartTimePoint;
+                            vmEvent.RefRecurrID = nNewID;
+                            vmEvent.IsPublic = vm.IsPublic;
+                            vmEvent.Name = gitem.Name;
+                            vmEvent.HID = vm.HID;
+                            vmEvent.Content = vm.Content;
+                            vmEvent.Assignee = vm.Assignee;
+                            HIHDBUtility.Event_BindNormalEventInsertParameters(cmd, vmEvent, usrName);
+                            await cmd.ExecuteNonQueryAsync();
+
+                            cmd.Dispose();
+                            cmd = null;
+                        }
+
+                        tran.Commit();
+                    }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
 
                 if (tran != null)
                 {
                     tran.Rollback();
-                    tran.Dispose();
-                    tran = null;
                 }
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
                     conn.Close();
@@ -353,14 +434,19 @@ namespace achihapi.Controllers
                 }
             }
 
-            if (bDuplicatedEntry)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Object with name already exists: " + nDuplicatedID.ToString());
-            }
-
-            if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             vm.ID = nNewID;
@@ -405,74 +491,100 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
-
+            SqlCommand cmd = null;
             SqlTransaction tran = null;
+
             try
             {
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    await conn.OpenAsync();
+
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    // Step 1. Delete events for recur
+                    tran = conn.BeginTransaction();
+
+                    queryString = HIHDBUtility.Event_GetNormalEventForRecurDeletionString();
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Transaction = tran;
+                    HIHDBUtility.Event_BindNormalEventForRecurDeletionParameters(cmd, hid, id);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    // Step 2. Delete recur item
+                    queryString = HIHDBUtility.Event_GetRecurEventDeletionString();
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Transaction = tran;
+                    HIHDBUtility.Event_BindRecurEventDeletionParameters(cmd, hid, id);
+                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+
+                    tran.Commit();
                 }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
-
-                // Step 1. Delete events for recur
-                tran = conn.BeginTransaction();
-
-                queryString = HIHDBUtility.Event_GetNormalEventForRecurDeletionString();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Transaction = tran;
-                HIHDBUtility.Event_BindNormalEventForRecurDeletionParameters(cmd, hid, id);
-                await cmd.ExecuteNonQueryAsync();
-                cmd.Dispose();
-                cmd = null;
-
-                // Step 2. Delete recur item
-                queryString = HIHDBUtility.Event_GetRecurEventDeletionString();
-                cmd = new SqlCommand(queryString, conn);
-                cmd.Transaction = tran;
-                HIHDBUtility.Event_BindRecurEventDeletionParameters(cmd, hid, id);
-                await cmd.ExecuteNonQueryAsync();
-                cmd.Dispose();
-                cmd = null;
-
-                tran.Commit();
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
                 strErrMsg = exp.Message;
-                bError = true;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
 
                 if (tran != null)
                 {
                     tran.Rollback();
-                    tran.Dispose();
-                    tran = null;
                 }
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             return Ok();
         }

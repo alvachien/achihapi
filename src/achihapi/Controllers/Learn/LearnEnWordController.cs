@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.ViewModels;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -36,46 +37,52 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             BaseListViewModel<LearnEnWordViewModel> listVm = new BaseListViewModel<LearnEnWordViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = this.getQueryString(true, top, skip, null, hid);
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        listVm.TotalCount = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-                reader.NextResult();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    catch (Exception)
                     {
-                        LearnEnWordViewModel vm = new LearnEnWordViewModel();
-                        OnWordHeader2VM(reader, vm);
-                        listVm.Add(vm);
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            listVm.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
+                    }
+                    reader.NextResult();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            LearnEnWordViewModel vm = new LearnEnWordViewModel();
+                            OnWordHeader2VM(reader, vm);
+                            listVm.Add(vm);
+                        }
                     }
                 }
             }
@@ -83,19 +90,42 @@ namespace achihapi.Controllers
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 strErrMsg = exp.Message;
-                bError = true;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -125,52 +155,55 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             LearnEnWordViewModel vm = new LearnEnWordViewModel();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
-            Boolean bNotFound = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = this.getQueryString(false, null, null, id, hid);
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                // Header
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        OnWordHeader2VM(reader, vm);
-                        break; // Should only one result!!!
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-                else
-                {
-                    bNotFound = true;
-                }
-                await reader.NextResultAsync();
-
-                // Explains
-                if (!bNotFound)
-                {
-                    if(reader.HasRows)
+                    catch (Exception)
                     {
-                        while(reader.Read())
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    // Header
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            OnWordHeader2VM(reader, vm);
+                            break; // Should only one result!!!
+                        }
+                    }
+                    else
+                    {
+                        errorCode = HttpStatusCode.NotFound;
+                        throw new Exception();
+                    }
+                    await reader.NextResultAsync();
+
+                    // Explains
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
                         {
                             // Explain
                             var vmExp = new LearnEnWordExpViewModel();
@@ -183,26 +216,42 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bNotFound)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return NotFound();
-            }
-            else if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -246,52 +295,58 @@ namespace achihapi.Controllers
                 return BadRequest("Explain is a must");
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bDuplicatedEntry = false;
-            Int32 nDuplicatedID = -1;
             Int32 nNewID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
             SqlTransaction tran = null;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = @"SELECT [ID] FROM [dbo].[t_learn_enword] WHERE [Word] = N'" + vm.Word + "' AND [HID] = " + vm.HID.ToString();
 
-                await conn.OpenAsync();
+                using(conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    bDuplicatedEntry = true;
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        nDuplicatedID = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
                     }
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                    cmd.Dispose();
-                    cmd = null;
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        Int32 nDuplicatedID = -1;
+                        while (reader.Read())
+                        {
+                            nDuplicatedID = reader.GetInt32(0);
+                            break;
+                        }
 
-                    // Now go ahead for the creating
-                    queryString = @"INSERT INTO [dbo].[t_learn_enword]
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Object with name already exists: " + nDuplicatedID.ToString());
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
+
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Now go ahead for the creating
+                        queryString = @"INSERT INTO [dbo].[t_learn_enword]
                                    ([HID]
                                    ,[Word]
                                    ,[CREATEDBY]
@@ -302,29 +357,29 @@ namespace achihapi.Controllers
                                    ,@CREATEDBY
                                    ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
 
-                    tran = conn.BeginTransaction();
+                        tran = conn.BeginTransaction();
 
-                    // Header
-                    cmd = new SqlCommand(queryString, conn, tran);
-                    
-                    cmd.Parameters.AddWithValue("@HID", vm.HID);
-                    cmd.Parameters.AddWithValue("@Word", vm.Word);
-                    cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
-                    cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                    idparam.Direction = ParameterDirection.Output;
+                        // Header
+                        cmd = new SqlCommand(queryString, conn, tran);
 
-                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                    nNewID = (Int32)idparam.Value;
-                    vm.ID = nNewID;
+                        cmd.Parameters.AddWithValue("@HID", vm.HID);
+                        cmd.Parameters.AddWithValue("@Word", vm.Word);
+                        cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+                        cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
+                        SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                        idparam.Direction = ParameterDirection.Output;
 
-                    cmd.Dispose();
-                    cmd = null;
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        nNewID = (Int32)idparam.Value;
+                        vm.ID = nNewID;
 
-                    // Explains
-                    foreach(var exp in vm.Explains)
-                    {
-                        queryString = @"INSERT INTO [dbo].[t_learn_enwordexp]
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Explains
+                        foreach (var exp in vm.Explains)
+                        {
+                            queryString = @"INSERT INTO [dbo].[t_learn_enwordexp]
                                        ([WORDID]
                                        ,[ExpID]
                                        ,[POSAbb]
@@ -336,53 +391,73 @@ namespace achihapi.Controllers
                                        ,@POSAbb
                                        ,@LangKey
                                        ,@ExpDetail)";
-                        cmd = new SqlCommand(queryString, conn, tran);
+                            cmd = new SqlCommand(queryString, conn, tran);
 
-                        cmd.Parameters.AddWithValue("@WORDID", vm.ID);
-                        cmd.Parameters.AddWithValue("@ExpID", exp.ExpID);
-                        if (String.IsNullOrEmpty(exp.POSAbb))
-                            cmd.Parameters.AddWithValue("@POSAbb", DBNull.Value);
-                        else 
-                            cmd.Parameters.AddWithValue("@POSAbb", exp.POSAbb);
-                        cmd.Parameters.AddWithValue("@LangKey", exp.LanguageKey);
-                        cmd.Parameters.AddWithValue("@ExpDetail", exp.Detail);
+                            cmd.Parameters.AddWithValue("@WORDID", vm.ID);
+                            cmd.Parameters.AddWithValue("@ExpID", exp.ExpID);
+                            if (String.IsNullOrEmpty(exp.POSAbb))
+                                cmd.Parameters.AddWithValue("@POSAbb", DBNull.Value);
+                            else
+                                cmd.Parameters.AddWithValue("@POSAbb", exp.POSAbb);
+                            cmd.Parameters.AddWithValue("@LangKey", exp.LanguageKey);
+                            cmd.Parameters.AddWithValue("@ExpDetail", exp.Detail);
 
-                        await cmd.ExecuteNonQueryAsync();
-                        cmd.Dispose();
-                        cmd = null;
+                            await cmd.ExecuteNonQueryAsync();
+                            cmd.Dispose();
+                            cmd = null;
+                        }
+
+                        tran.Commit();
                     }
-
-                    tran.Commit();
                 }
             }
             catch (Exception exp)
             {
                 if (tran != null)
-                {
                     tran.Rollback();
-                }
 
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bDuplicatedEntry)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Object with name already exists: " + nDuplicatedID.ToString());
-            }
-
-            if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             vm.ID = nNewID;
@@ -397,8 +472,9 @@ namespace achihapi.Controllers
 
         // PUT: api/LearnEnWord/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
+            return Forbid();
             //UPDATE[dbo].[t_learn_enword]
             //   SET[HID] = < HID, int,>
             //      ,[Word] = <Word, nvarchar(100),>
@@ -419,8 +495,9 @@ namespace achihapi.Controllers
         
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            return Forbid();
             // DELETE FROM [dbo].[t_learn_enword] WHERE < Search Conditions,,>
             // DELETE FROM [dbo].[t_learn_enwordexp] WHERE < Search Conditions,,>
         }

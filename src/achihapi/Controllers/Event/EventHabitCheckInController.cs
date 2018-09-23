@@ -46,12 +46,9 @@ namespace achihapi.Controllers
 
             Boolean unitMode = Startup.UnitTestMode;
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
             String queryString = "";
-            Boolean bDuplicatedEntry = false;
-            Int32 nDuplicatedID = -1;
             Int32 nNewID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
             String usrName = String.Empty;
             HttpStatusCode errorCode = HttpStatusCode.OK;
@@ -75,53 +72,61 @@ namespace achihapi.Controllers
                 queryString = @"SELECT [ID]
                             FROM [dbo].[t_event_habit_checkin] WHERE [TranDate] = @trandate AND [HabitID] = @habitid";
 
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    throw exp; // Re-throw
-                }
-
-                cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@trandate", vm.TranDate);
-                cmd.Parameters.AddWithValue("@habitid", vm.HabitID);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    bDuplicatedEntry = true;
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        nDuplicatedID = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
                     }
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
-
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Now go ahead for the creating
-                    queryString = HIHDBUtility.Event_GetEventHabitCheckInInsertString();
-                    tran = conn.BeginTransaction();
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw; // Re-throw
+                    }
 
                     cmd = new SqlCommand(queryString, conn);
-                    cmd.Transaction = tran;
-                    HIHDBUtility.Event_BindEventHabitCheckInInsertParameters(cmd, vm, usrName);
-                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                    idparam.Direction = ParameterDirection.Output;
+                    cmd.Parameters.AddWithValue("@trandate", vm.TranDate);
+                    cmd.Parameters.AddWithValue("@habitid", vm.HabitID);
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        Int32 nDuplicatedID = -1;
+                        while (reader.Read())
+                        {
+                            nDuplicatedID = reader.GetInt32(0);
+                            break;
+                        }
 
-                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                    nNewID = (Int32)idparam.Value;
+                        errorCode = HttpStatusCode.BadRequest;
+                        strErrMsg = "Event has been checked in at same date: " + nDuplicatedID.ToString();
+                        throw new Exception(strErrMsg);
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
 
-                    tran.Commit();
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Now go ahead for the creating
+                        queryString = HIHDBUtility.Event_GetEventHabitCheckInInsertString();
+                        tran = conn.BeginTransaction();
+
+                        cmd = new SqlCommand(queryString, conn);
+                        cmd.Transaction = tran;
+                        HIHDBUtility.Event_BindEventHabitCheckInInsertParameters(cmd, vm, usrName);
+                        SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                        idparam.Direction = ParameterDirection.Output;
+
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        nNewID = (Int32)idparam.Value;
+
+                        tran.Commit();
+                    }
                 }
             }
             catch (Exception exp)
@@ -131,9 +136,12 @@ namespace achihapi.Controllers
                     tran.Rollback();
                 }
 
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
@@ -151,17 +159,23 @@ namespace achihapi.Controllers
                 {
                     conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bDuplicatedEntry)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Event has been checked in at same date: " + nDuplicatedID.ToString());
-            }
-
-            if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             vm.ID = nNewID;

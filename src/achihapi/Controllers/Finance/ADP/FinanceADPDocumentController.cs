@@ -42,85 +42,94 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             FinanceADPDocumentUIViewModel vm = new FinanceADPDocumentUIViewModel();
-
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
-            Boolean bNotFound = false;
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = HIHDBUtility.getFinanceDocADPQueryString(id, hid, isADP);
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    throw exp; // Re-throw
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                // Header
-                while (reader.Read())
-                {
-                    HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
-                }
-                reader.NextResult();
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
 
-                // Items
-                while (reader.Read())
-                {
-                    FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                    HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
+                    if (!reader.HasRows)
+                    {
+                        errorCode = HttpStatusCode.NotFound;
+                        throw new Exception();
+                    }
 
-                    vm.Items.Add(itemvm);
-                }
-                reader.NextResult();
-
-                // Account
-                while (reader.Read())
-                {
-                    FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
-                    Int32 aidx = 0;
-                    aidx = HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
-                    vmAccount.ExtraInfo_ADP = new FinanceAccountExtDPViewModel();
-                    HIHDBUtility.FinAccountADP_DB2VM(reader, vmAccount.ExtraInfo_ADP, aidx);
-
-                    vm.AccountVM = vmAccount;
-                }
-                reader.NextResult();
-
-                // Tmp docs
-                while (reader.Read())
-                {
-                    FinanceTmpDocDPViewModel dpvm = new FinanceTmpDocDPViewModel();
-                    HIHDBUtility.FinTmpDocADP_DB2VM(reader, dpvm);
-                    vm.AccountVM.ExtraInfo_ADP.DPTmpDocs.Add(dpvm);
-                }
-                reader.NextResult();
-
-                // Tag
-                if (reader.HasRows)
-                {
+                    // Header
                     while (reader.Read())
                     {
-                        Int32 itemID = reader.GetInt32(0);
-                        String sterm = reader.GetString(1);
+                        HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
+                    }
+                    reader.NextResult();
 
-                        foreach (var vitem in vm.Items)
+                    // Items
+                    while (reader.Read())
+                    {
+                        FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
+                        HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
+
+                        vm.Items.Add(itemvm);
+                    }
+                    reader.NextResult();
+
+                    // Account
+                    while (reader.Read())
+                    {
+                        FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
+                        Int32 aidx = 0;
+                        aidx = HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+                        vmAccount.ExtraInfo_ADP = new FinanceAccountExtDPViewModel();
+                        HIHDBUtility.FinAccountADP_DB2VM(reader, vmAccount.ExtraInfo_ADP, aidx);
+
+                        vm.AccountVM = vmAccount;
+                    }
+                    reader.NextResult();
+
+                    // Tmp docs
+                    while (reader.Read())
+                    {
+                        FinanceTmpDocDPViewModel dpvm = new FinanceTmpDocDPViewModel();
+                        HIHDBUtility.FinTmpDocADP_DB2VM(reader, dpvm);
+                        vm.AccountVM.ExtraInfo_ADP.DPTmpDocs.Add(dpvm);
+                    }
+                    reader.NextResult();
+
+                    // Tag
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
                         {
-                            if (vitem.ItemID == itemID)
+                            Int32 itemID = reader.GetInt32(0);
+                            String sterm = reader.GetString(1);
+
+                            foreach (var vitem in vm.Items)
                             {
-                                vitem.TagTerms.Add(sterm);
+                                if (vitem.ItemID == itemID)
+                                {
+                                    vitem.TagTerms.Add(sterm);
+                                }
                             }
                         }
                     }
@@ -129,25 +138,42 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bNotFound)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return NotFound();
-            }
-            else if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -202,33 +228,34 @@ namespace achihapi.Controllers
             }
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            SqlTransaction tran = null;
             String queryString = "";
             Int32 nNewDocID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlTransaction tran = conn.BeginTransaction();
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                SqlCommand cmd = null;
+                    tran = conn.BeginTransaction();
 
-                try
-                {
                     // First, craete the doc header => nNewDocID
                     queryString = HIHDBUtility.GetFinDocHeaderInsertString();
                     cmd = new SqlCommand(queryString, conn)
@@ -249,16 +276,16 @@ namespace achihapi.Controllers
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
                         queryString = HIHDBUtility.GetFinDocItemInsertString();
-                        SqlCommand cmd2 = new SqlCommand(queryString, conn)
+                        cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
+                        HIHDBUtility.BindFinDocItemInsertParameter(cmd, ivm, nNewDocID);
 
-                        await cmd2.ExecuteNonQueryAsync();
+                        await cmd.ExecuteNonQueryAsync();
 
-                        cmd2.Dispose();
-                        cmd2 = null;
+                        cmd.Dispose();
+                        cmd = null;
 
                         // Tags
                         if (ivm.TagTerms.Count > 0)
@@ -268,14 +295,14 @@ namespace achihapi.Controllers
                             {
                                 queryString = HIHDBUtility.GetTagInsertString();
 
-                                cmd2 = new SqlCommand(queryString, conn, tran);
+                                cmd = new SqlCommand(queryString, conn, tran);
 
-                                HIHDBUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
+                                HIHDBUtility.BindTagInsertParameter(cmd, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
 
-                                await cmd2.ExecuteNonQueryAsync();
+                                await cmd.ExecuteNonQueryAsync();
 
-                                cmd2.Dispose();
-                                cmd2 = null;
+                                cmd.Dispose();
+                                cmd = null;
                             }
                         }
                     }
@@ -309,16 +336,16 @@ namespace achihapi.Controllers
                             ivm.TranType = FinanceTranTypeViewModel.TranType_OpeningLiability;
 
                         queryString = HIHDBUtility.GetFinDocItemInsertString();
-                        SqlCommand cmd2 = new SqlCommand(queryString, conn)
+                        cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
+                        HIHDBUtility.BindFinDocItemInsertParameter(cmd, ivm, nNewDocID);
 
-                        await cmd2.ExecuteNonQueryAsync();
+                        await cmd.ExecuteNonQueryAsync();
 
-                        cmd2.Dispose();
-                        cmd2 = null;
+                        cmd.Dispose();
+                        cmd = null;
                         break;
                     }
 
@@ -353,35 +380,57 @@ namespace achihapi.Controllers
 
                     tran.Commit();
                 }
-                catch (Exception exp)
-                {
-                    if (tran != null)
-                        tran.Rollback();
-
-                    throw exp; // Re-throw the exception
-                }
             }
             catch (Exception exp)
             {
+                if (tran != null)
+                    tran.Rollback();
 #if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
 #endif
 
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             vm.ID = nNewDocID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings

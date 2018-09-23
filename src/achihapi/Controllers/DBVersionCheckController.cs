@@ -10,6 +10,7 @@ using System.Data.SqlClient;
 using System.Reflection;
 using System.IO;
 using System.Text;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -29,45 +30,63 @@ namespace achihapi.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             List<DBVersionViewModel> listVM = new List<DBVersionViewModel>();
 
             try
             {
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                queryString = @"SELECT [VersionID]
+                    queryString = @"SELECT [VersionID]
                               ,[ReleasedDate]
                               ,[AppliedDate]
                           FROM [dbo].[t_dbversion]
                           ORDER BY [VersionID] DESC";
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
 
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    if (reader.HasRows)
                     {
-                        DBVersionViewModel vm = new DBVersionViewModel();
-                        vm.VersionID = reader.GetInt32(0);
-                        vm.ReleasedDate = reader.GetDateTime(1);
-                        vm.AppliedDate = reader.GetDateTime(2);
-                        listVM.Add(vm);
+                        while (reader.Read())
+                        {
+                            DBVersionViewModel vm = new DBVersionViewModel();
+                            vm.VersionID = reader.GetInt32(0);
+                            vm.ReleasedDate = reader.GetDateTime(1);
+                            vm.AppliedDate = reader.GetDateTime(2);
+                            listVM.Add(vm);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
                     conn.Close();
@@ -75,9 +94,19 @@ namespace achihapi.Controllers
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             return new JsonResult(listVM);
@@ -94,90 +123,120 @@ namespace achihapi.Controllers
         [HttpPost]
         public async Task<IActionResult> Post()
         {
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
-            String queryString = "";
-            Boolean bError = false;
-            String strErrMsg = "";
-            DBVersionViewModel vmCurrent = new DBVersionViewModel();
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             SqlTransaction tran = null;
+            String queryString = "";
+            String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
+            DBVersionViewModel vmCurrent = new DBVersionViewModel();
 
             try
             {
-                await conn.OpenAsync();
+                using(conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                queryString = @"SELECT TOP (1) [VersionID]
+                    queryString = @"SELECT TOP (1) [VersionID]
                                   ,[ReleasedDate]
                                   ,[AppliedDate]
                               FROM [dbo].[t_dbversion]
                               ORDER BY [VersionID] DESC";
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
 
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    if (reader.HasRows)
                     {
-                        vmCurrent.VersionID = reader.GetInt32(0);
-                        vmCurrent.ReleasedDate = reader.GetDateTime(1);
-                        vmCurrent.AppliedDate = reader.GetDateTime(2);
+                        while (reader.Read())
+                        {
+                            vmCurrent.VersionID = reader.GetInt32(0);
+                            vmCurrent.ReleasedDate = reader.GetDateTime(1);
+                            vmCurrent.AppliedDate = reader.GetDateTime(2);
 
-                        // Only 1 row
-                        break;
+                            // Only 1 row
+                            break;
+                        }
                     }
-                }
-                else
-                    vmCurrent.VersionID = 0;
-                reader.Close();
-                reader = null;
-                cmd.Dispose();
-                cmd = null;
+                    else
+                        vmCurrent.VersionID = 0;
+                    reader.Close();
+                    reader = null;
+                    cmd.Dispose();
+                    cmd = null;
 
-                if (vmCurrent.VersionID < DBVersionCheckController.CurrentVersion)
-                {
-                    var nver = vmCurrent.VersionID + 1;
-                    while(nver <= DBVersionCheckController.CurrentVersion)
+                    if (vmCurrent.VersionID < DBVersionCheckController.CurrentVersion)
                     {
-                        tran = conn.BeginTransaction();
+                        var nver = vmCurrent.VersionID + 1;
+                        while (nver <= DBVersionCheckController.CurrentVersion)
+                        {
+                            tran = conn.BeginTransaction();
 
-                        // Update the DB version
-                        await updateDBVersion(conn, tran, nver++);
+                            // Update the DB version
+                            await updateDBVersion(conn, tran, nver++);
 
-                        tran.Commit();
+                            tran.Commit();
+                        }
                     }
-                }
-                else if (vmCurrent.VersionID > CurrentVersion)
-                {
-                    bError = true;
-                    strErrMsg = "Contact system administrator";
+                    else if (vmCurrent.VersionID > CurrentVersion)
+                    {
+                        strErrMsg = "Contact system administrator";
+                        throw new Exception(strErrMsg);
+                    }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
 
                 if (tran != null)
                 {
                     tran.Rollback();
-                    tran.Dispose();
-                    tran = null;
                 }
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             return Ok();

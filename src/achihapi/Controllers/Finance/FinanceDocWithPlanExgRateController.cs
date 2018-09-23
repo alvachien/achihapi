@@ -9,6 +9,7 @@ using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -36,10 +37,12 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             List<FinanceDocPlanExgRateViewModel> listVMs = new List<FinanceDocPlanExgRateViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -59,92 +62,119 @@ namespace achihapi.Controllers
 	                            AND ( ( [EXGRATE_PLAN] = 1 AND [TRANCURR] = @curr )
 		                            OR ( [EXGRATE_PLAN2] = 1 AND [TRANCURR2] = @curr ) )";
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@hid", hid);
-                cmd.Parameters.AddWithValue("@curr", tgtcurr);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        FinanceDocPlanExgRateViewModel avm = new FinanceDocPlanExgRateViewModel();
-                        Int32 idx = 0;
-                        avm.DocID = reader.GetInt32(idx++);
-                        avm.HID = reader.GetInt32(idx++);
-                        avm.DocType = reader.GetInt16(idx++);
-                        avm.TranDate = reader.GetDateTime(idx++);
-                        avm.TranCurr = reader.GetString(idx++);
-                        avm.Desp = reader.GetString(idx++);
-                        if (reader.IsDBNull(idx))
-                            ++idx;
-                        else
-                            avm.ExgRate = reader.GetDecimal(idx++);
-                        if (reader.IsDBNull(idx))
-                            ++idx;
-                        else
-                            avm.ExgRate_Plan = reader.GetBoolean(idx++);
-                        if (reader.IsDBNull(idx))
-                            ++idx;
-                        else
-                            avm.ExgRate_Plan2 = reader.GetBoolean(idx++);
-                        if (reader.IsDBNull(idx))
-                            ++idx;
-                        else
-                            avm.TranCurr2 = reader.GetString(idx++);
-                        if (reader.IsDBNull(idx))
-                            ++idx;
-                        else
-                            avm.ExgRate2 = reader.GetDecimal(idx++);
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception exp)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@hid", hid);
+                    cmd.Parameters.AddWithValue("@curr", tgtcurr);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            FinanceDocPlanExgRateViewModel avm = new FinanceDocPlanExgRateViewModel();
+                            Int32 idx = 0;
+                            avm.DocID = reader.GetInt32(idx++);
+                            avm.HID = reader.GetInt32(idx++);
+                            avm.DocType = reader.GetInt16(idx++);
+                            avm.TranDate = reader.GetDateTime(idx++);
+                            avm.TranCurr = reader.GetString(idx++);
+                            avm.Desp = reader.GetString(idx++);
+                            if (reader.IsDBNull(idx))
+                                ++idx;
+                            else
+                                avm.ExgRate = reader.GetDecimal(idx++);
+                            if (reader.IsDBNull(idx))
+                                ++idx;
+                            else
+                                avm.ExgRate_Plan = reader.GetBoolean(idx++);
+                            if (reader.IsDBNull(idx))
+                                ++idx;
+                            else
+                                avm.ExgRate_Plan2 = reader.GetBoolean(idx++);
+                            if (reader.IsDBNull(idx))
+                                ++idx;
+                            else
+                                avm.TranCurr2 = reader.GetString(idx++);
+                            if (reader.IsDBNull(idx))
+                                ++idx;
+                            else
+                                avm.ExgRate2 = reader.GetDecimal(idx++);
 
 
-                        listVMs.Add(avm);
+                            listVMs.Add(avm);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+
             return new JsonResult(listVMs, setting);
         }
 
         // GET: api/FinanceDocWithPlanExgRate/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id)
+        public IActionResult Get(int id)
         {
             return BadRequest();
         }
@@ -171,10 +201,13 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             List<FinanceDocPlanExgRateViewModel> listVMs = new List<FinanceDocPlanExgRateViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            SqlTransaction tran = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             // Basic check
             if (String.IsNullOrEmpty(vm.TargetCurrency))
@@ -190,25 +223,27 @@ namespace achihapi.Controllers
                 return BadRequest();
             }
 
-            SqlTransaction tran = null;
             try
             {
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                    }
+                    catch (Exception exp)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                tran = conn.BeginTransaction();
-                foreach (var did in vm.DocIDs)
-                {
-                    queryString = @"UPDATE [dbo].[t_fin_document]
+                    tran = conn.BeginTransaction();
+                    foreach (var did in vm.DocIDs)
+                    {
+                        queryString = @"UPDATE [dbo].[t_fin_document]
                                SET [EXGRATE] = @EXGRATE
                                   ,[EXGRATE_PLAN] = @EXGRATE_PLAN
                                   ,[UPDATEDBY] = @UPDATEDBY
@@ -217,23 +252,23 @@ namespace achihapi.Controllers
                                AND [TRANCURR] = @tcurr
                                AND [EXGRATE_PLAN] = @isplan";
 
-                    SqlCommand cmd = new SqlCommand(queryString, conn)
-                    {
-                        Transaction = tran
-                    };
-                    cmd.Parameters.AddWithValue("@EXGRATE", vm.ExchangeRate);
-                    cmd.Parameters.AddWithValue("@EXGRATE_PLAN", false);
-                    cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
-                    cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
-                    cmd.Parameters.AddWithValue("@id", did);
-                    cmd.Parameters.AddWithValue("@tcurr", vm.TargetCurrency);
-                    cmd.Parameters.AddWithValue("@isplan", true);
+                        cmd = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
+                        cmd.Parameters.AddWithValue("@EXGRATE", vm.ExchangeRate);
+                        cmd.Parameters.AddWithValue("@EXGRATE_PLAN", false);
+                        cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                        cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+                        cmd.Parameters.AddWithValue("@id", did);
+                        cmd.Parameters.AddWithValue("@tcurr", vm.TargetCurrency);
+                        cmd.Parameters.AddWithValue("@isplan", true);
 
-                    await cmd.ExecuteNonQueryAsync();
-                    cmd.Dispose();
-                    cmd = null;
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
 
-                    queryString = @"UPDATE [dbo].[t_fin_document]
+                        queryString = @"UPDATE [dbo].[t_fin_document]
                                SET [EXGRATE2] = @EXGRATE
                                   ,[EXGRATE_PLAN2] = @EXGRATE_PLAN
                                   ,[UPDATEDBY] = @UPDATEDBY
@@ -242,59 +277,88 @@ namespace achihapi.Controllers
                                AND [TRANCURR2] = @tcurr
                                AND [EXGRATE_PLAN2] = @isplan";
 
-                    cmd = new SqlCommand(queryString, conn)
-                    {
-                        Transaction = tran
-                    };
-                    cmd.Parameters.AddWithValue("@EXGRATE", vm.ExchangeRate);
-                    cmd.Parameters.AddWithValue("@EXGRATE_PLAN", false);
-                    cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
-                    cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
-                    cmd.Parameters.AddWithValue("@id", did);
-                    cmd.Parameters.AddWithValue("@tcurr", vm.TargetCurrency);
-                    cmd.Parameters.AddWithValue("@isplan", true);
+                        cmd = new SqlCommand(queryString, conn)
+                        {
+                            Transaction = tran
+                        };
+                        cmd.Parameters.AddWithValue("@EXGRATE", vm.ExchangeRate);
+                        cmd.Parameters.AddWithValue("@EXGRATE_PLAN", false);
+                        cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                        cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+                        cmd.Parameters.AddWithValue("@id", did);
+                        cmd.Parameters.AddWithValue("@tcurr", vm.TargetCurrency);
+                        cmd.Parameters.AddWithValue("@isplan", true);
 
-                    await cmd.ExecuteNonQueryAsync();
-                    cmd.Dispose();
-                    cmd = null;
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+                    }
+
+                    tran.Commit();
                 }
-
-                tran.Commit();
             }
             catch (Exception exp)
             {
-                System.Diagnostics.Debug.WriteLine(exp.Message);
                 if (tran != null)
                     tran.Rollback();
+                System.Diagnostics.Debug.WriteLine(exp.Message);
 
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             return Ok();
         }
 
         // PUT: api/FinanceDocWithPlanExgRate/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
             return BadRequest();
         }
 
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             return BadRequest();
         }

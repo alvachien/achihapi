@@ -6,6 +6,7 @@ using achihapi.ViewModels;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -31,70 +32,99 @@ namespace achihapi.Controllers
 
             BaseListViewModel<FinanceTranTypeViewModel> listVMs = new BaseListViewModel<FinanceTranTypeViewModel>();
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = this.getQueryString(true, top, skip, null, hid);
 
-                await conn.OpenAsync();
-
-                if (hid != 0)
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    // Check Home assignment with current user
-                    try
-                    {
-                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                    }
-                    catch (Exception exp)
-                    {
-                        return BadRequest(exp.Message);
-                    }
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    if (hid != 0)
                     {
-                        listVMs.TotalCount = reader.GetInt32(0);
-                        break;
+                        // Check Home assignment with current user
+                        try
+                        {
+                            HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                        }
+                        catch (Exception)
+                        {
+                            errorCode = HttpStatusCode.BadRequest;
+                            throw;
+                        }
                     }
-                }
-                reader.NextResult();
 
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
                     {
-                        FinanceTranTypeViewModel avm = new FinanceTranTypeViewModel();
-                        this.onDB2VM(reader, avm);
-                        listVMs.Add(avm);
+                        while (reader.Read())
+                        {
+                            listVMs.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
+                    }
+                    reader.NextResult();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            FinanceTranTypeViewModel avm = new FinanceTranTypeViewModel();
+                            this.onDB2VM(reader, avm);
+                            listVMs.Add(avm);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             return new ObjectResult(listVMs);
         }
@@ -104,55 +134,76 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Get(int id)
         {
             FinanceTranTypeViewModel vm = new FinanceTranTypeViewModel();
-
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
-            Boolean bNotFound = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = this.getQueryString(false, null, null, id, null);
 
-                await conn.OpenAsync();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    while (reader.Read())
+                    await conn.OpenAsync();
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
                     {
-                        onDB2VM(reader, vm);
-                        break; // Should only one result!!!
+                        while (reader.Read())
+                        {
+                            onDB2VM(reader, vm);
+                            break; // Should only one result!!!
+                        }
                     }
-                }
-                else
-                {
-                    bNotFound = true;
+                    else
+                    {
+                        errorCode = HttpStatusCode.NotFound;
+                        throw new Exception();
+                    }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bNotFound)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return NotFound();
-            }
-            else if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings

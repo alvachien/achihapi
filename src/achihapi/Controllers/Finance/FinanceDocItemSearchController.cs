@@ -46,9 +46,10 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             FinanceDocItemSearchResultListViewModel listVMs = new FinanceDocItemSearchResultListViewModel();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
@@ -56,65 +57,89 @@ namespace achihapi.Controllers
             {
                 String subqueries = " HID = " + hid.ToString() + " AND " + filters.GetFullWhereClause();
                 queryString = HIHDBUtility.getFinDocItemSearchView(subqueries, top, skip);
-#if DEBUG
-                System.Diagnostics.Debug.Write(queryString);
-#endif
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                // 1. Count
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        listVMs.TotalCount = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                    reader.NextResult();
-                }
-
-                // 2. Items
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    catch (Exception)
                     {
-                        FinanceDocItemSearchResultViewModel avm = new FinanceDocItemSearchResultViewModel();
-                        HIHDBUtility.FinDocItem_SearchView2VM(reader, avm);
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                        listVMs.Add(avm);
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    // 1. Count
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            listVMs.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
+                        reader.NextResult();
+                    }
+
+                    // 2. Items
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            FinanceDocItemSearchResultViewModel avm = new FinanceDocItemSearchResultViewModel();
+                            HIHDBUtility.FinDocItem_SearchView2VM(reader, avm);
+
+                            listVMs.Add(avm);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {

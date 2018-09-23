@@ -7,6 +7,7 @@ using achihapi.ViewModels;
 using System.Data;
 using System.Data.SqlClient;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -20,10 +21,12 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Get([FromQuery]Int32 hid, DateTime? dtbgn = null, DateTime? dtend = null, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceDocumentUIViewModel> listVMs = new BaseListViewModel<FinanceDocumentUIViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
@@ -40,49 +43,26 @@ namespace achihapi.Controllers
 
             try
             {
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                queryString = @"SELECT count(*) FROM[dbo].[t_fin_document] WHERE[HID] = @hid ";
-                if (dtbgn.HasValue)
-                    queryString += " AND [TRANDATE] >= @dtbgn ";
-                if (dtend.HasValue)
-                    queryString += " AND [TRANDATE] <= @dtend ";
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@hid", hid);
-                if (dtbgn.HasValue)
-                    cmd.Parameters.AddWithValue("@dtbgn", dtbgn.Value);
-                if (dtend.HasValue)
-                    cmd.Parameters.AddWithValue("@dtend", dtend.Value);
-                SqlDataReader reader = await cmd.ExecuteReaderAsync();
-                while (reader.Read())
-                {
-                    listVMs.TotalCount = reader.GetInt32(0);
-                    break;
-                }
-                reader.Dispose();
-                reader = null;
-                cmd.Dispose();
-                cmd = null;
-
-                if (listVMs.TotalCount > 0)
-                {
-                    queryString = HIHDBUtility.getFinanceDocListQueryString();
-                    queryString += @" WHERE [HID] = @hid ";
+                    queryString = @"SELECT count(*) FROM[dbo].[t_fin_document] WHERE[HID] = @hid ";
                     if (dtbgn.HasValue)
                         queryString += " AND [TRANDATE] >= @dtbgn ";
                     if (dtend.HasValue)
                         queryString += " AND [TRANDATE] <= @dtend ";
-                    queryString += " ORDER BY [TRANDATE] DESC OFFSET " + skip.ToString() + " ROWS FETCH NEXT " + top.ToString() + " ROWS ONLY;";
                     cmd = new SqlCommand(queryString, conn);
                     cmd.Parameters.AddWithValue("@hid", hid);
                     if (dtbgn.HasValue)
@@ -90,14 +70,41 @@ namespace achihapi.Controllers
                     if (dtend.HasValue)
                         cmd.Parameters.AddWithValue("@dtend", dtend.Value);
                     reader = await cmd.ExecuteReaderAsync();
-                    if (reader.HasRows)
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            FinanceDocumentUIViewModel avm = new FinanceDocumentUIViewModel();
-                            HIHDBUtility.FinDocList_DB2VM(reader, avm);
+                        listVMs.TotalCount = reader.GetInt32(0);
+                        break;
+                    }
+                    reader.Dispose();
+                    reader = null;
+                    cmd.Dispose();
+                    cmd = null;
 
-                            listVMs.Add(avm);
+                    if (listVMs.TotalCount > 0)
+                    {
+                        queryString = HIHDBUtility.getFinanceDocListQueryString();
+                        queryString += @" WHERE [HID] = @hid ";
+                        if (dtbgn.HasValue)
+                            queryString += " AND [TRANDATE] >= @dtbgn ";
+                        if (dtend.HasValue)
+                            queryString += " AND [TRANDATE] <= @dtend ";
+                        queryString += " ORDER BY [TRANDATE] DESC OFFSET " + skip.ToString() + " ROWS FETCH NEXT " + top.ToString() + " ROWS ONLY;";
+                        cmd = new SqlCommand(queryString, conn);
+                        cmd.Parameters.AddWithValue("@hid", hid);
+                        if (dtbgn.HasValue)
+                            cmd.Parameters.AddWithValue("@dtbgn", dtbgn.Value);
+                        if (dtend.HasValue)
+                            cmd.Parameters.AddWithValue("@dtend", dtend.Value);
+                        reader = await cmd.ExecuteReaderAsync();
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                FinanceDocumentUIViewModel avm = new FinanceDocumentUIViewModel();
+                                HIHDBUtility.FinDocList_DB2VM(reader, avm);
+
+                                listVMs.Add(avm);
+                            }
                         }
                     }
                 }
@@ -105,20 +112,43 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -149,85 +179,118 @@ namespace achihapi.Controllers
 
             FinanceDocumentUIViewModel vm = new FinanceDocumentUIViewModel();
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
-            Boolean bNotFound = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = HIHDBUtility.getFinanceDocQueryString(id, hid);
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                // Header
-                while (reader.Read())
-                {
-                    HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
-                }
-                reader.NextResult();
-
-                // Items
-                while (reader.Read())
-                {
-                    FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                    HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
-
-                    vm.Items.Add(itemvm);
-                }
-                reader.NextResult();
-
-                // Tags
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        Int32 itemID = reader.GetInt32(0);
-                        String sterm = reader.GetString(1);
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                        foreach (var vitem in vm.Items)
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        // Header
+                        while (reader.Read())
                         {
-                            if (vitem.ItemID == itemID)
+                            HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
+                        }
+                        reader.NextResult();
+
+                        // Items
+                        while (reader.Read())
+                        {
+                            FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
+                            HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
+
+                            vm.Items.Add(itemvm);
+                        }
+                        reader.NextResult();
+
+                        // Tags
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
                             {
-                                vitem.TagTerms.Add(sterm);
+                                Int32 itemID = reader.GetInt32(0);
+                                String sterm = reader.GetString(1);
+
+                                foreach (var vitem in vm.Items)
+                                {
+                                    if (vitem.ItemID == itemID)
+                                    {
+                                        vitem.TagTerms.Add(sterm);
+                                    }
+                                }
                             }
                         }
+                    }
+                    else
+                    {
+                        errorCode = HttpStatusCode.NotFound;
+                        throw new Exception();
                     }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
+                if (conn != null)
+                {
+                    conn.Dispose();
+                    conn = null;
+                }
             }
 
-            if (bNotFound)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return NotFound();
-            }
-            else if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             return new ObjectResult(vm);
@@ -261,11 +324,14 @@ namespace achihapi.Controllers
             }
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            SqlTransaction tran = null;
             String queryString = "";
             Int32 nNewDocID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -280,27 +346,27 @@ namespace achihapi.Controllers
 
             try
             {
-                await conn.OpenAsync();
-
-                // Do the validation
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    await FinanceDocumentBasicValidationAsync(vm, conn);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlTransaction tran = conn.BeginTransaction();
+                    // Do the validation
+                    try
+                    {
+                        await FinanceDocumentBasicValidationAsync(vm, conn);
+                    }
+                    catch (Exception exp)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                SqlCommand cmd = null;
+                    tran = conn.BeginTransaction();
 
-                // Now go ahead for the creating
-                queryString = HIHDBUtility.GetFinDocHeaderInsertString();
 
-                try
-                {
+                    // Now go ahead for the creating
+                    queryString = HIHDBUtility.GetFinDocHeaderInsertString();
+
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
@@ -312,70 +378,93 @@ namespace achihapi.Controllers
 
                     Int32 nRst = await cmd.ExecuteNonQueryAsync();
                     nNewDocID = (Int32)idparam.Value;
+                    cmd.Dispose();
+                    cmd = null;
 
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
                     {
                         queryString = HIHDBUtility.GetFinDocItemInsertString();
-
-                        SqlCommand cmd2 = new SqlCommand(queryString, conn)
+                        cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
+                        HIHDBUtility.BindFinDocItemInsertParameter(cmd, ivm, nNewDocID);
 
-                        await cmd2.ExecuteNonQueryAsync();
-
-                        cmd2.Dispose();
-                        cmd2 = null;
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
 
                         // Tags
                         if (ivm.TagTerms.Count > 0)
                         {
                             // Create tags
-                            foreach(var term in ivm.TagTerms)
+                            foreach (var term in ivm.TagTerms)
                             {
                                 queryString = HIHDBUtility.GetTagInsertString();
 
-                                cmd2 = new SqlCommand(queryString, conn, tran);
+                                cmd = new SqlCommand(queryString, conn, tran);
 
-                                HIHDBUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
+                                HIHDBUtility.BindTagInsertParameter(cmd, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
 
-                                await cmd2.ExecuteNonQueryAsync();
+                                await cmd.ExecuteNonQueryAsync();
 
-                                cmd2.Dispose();
-                                cmd2 = null;
+                                cmd.Dispose();
+                                cmd = null;
                             }
                         }
                     }
 
                     tran.Commit();
                 }
-                catch (Exception exp)
-                {
-                    if (tran != null)
-                        tran.Rollback();
-
-                    throw exp; // Re-throw
-                }
             }
             catch (Exception exp)
             {
+                if (tran != null)
+                    tran.Rollback();
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             vm.ID = nNewDocID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -416,10 +505,13 @@ namespace achihapi.Controllers
                 return BadRequest(exp.Message);
             }
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            SqlTransaction tran = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -434,27 +526,25 @@ namespace achihapi.Controllers
 
             try
             {
-                await conn.OpenAsync();
-
-                // Do the validation
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    await FinanceDocumentBasicValidationAsync(vm, conn);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlTransaction tran = conn.BeginTransaction();
+                    // Do the validation
+                    try
+                    {
+                        await FinanceDocumentBasicValidationAsync(vm, conn);
+                    }
+                    catch (Exception exp)
+                    {
+                        return BadRequest(exp.Message);
+                    }
 
-                SqlCommand cmd = null;
+                    tran = conn.BeginTransaction();
 
-                // Now go ahead for the updating
-                queryString = HIHDBUtility.GetFinDocHeaderUpdateString();
+                    // Now go ahead for the updating
+                    queryString = HIHDBUtility.GetFinDocHeaderUpdateString();
 
-                try
-                {
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
@@ -476,24 +566,24 @@ namespace achihapi.Controllers
                     {
                         queryString = HIHDBUtility.GetFinDocItemInsertString();
 
-                        SqlCommand cmd2 = new SqlCommand(queryString, conn)
+                        cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, vm.ID);
+                        HIHDBUtility.BindFinDocItemInsertParameter(cmd, ivm, vm.ID);
 
-                        await cmd2.ExecuteNonQueryAsync();
+                        await cmd.ExecuteNonQueryAsync();
 
-                        cmd2.Dispose();
-                        cmd2 = null;
+                        cmd.Dispose();
+                        cmd = null;
 
                         // Delete tag if exist
                         queryString = HIHDBUtility.GetTagDeleteString(true);
-                        cmd2 = new SqlCommand(queryString, conn, tran);
-                        HIHDBUtility.BindTagDeleteParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, vm.ID, ivm.ItemID);
-                        await cmd2.ExecuteNonQueryAsync();
-                        cmd2.Dispose();
-                        cmd2 = null;
+                        cmd = new SqlCommand(queryString, conn, tran);
+                        HIHDBUtility.BindTagDeleteParameter(cmd, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, vm.ID, ivm.ItemID);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
 
                         // Tags
                         if (ivm.TagTerms.Count > 0)
@@ -503,47 +593,67 @@ namespace achihapi.Controllers
                             {
                                 queryString = HIHDBUtility.GetTagInsertString();
 
-                                cmd2 = new SqlCommand(queryString, conn, tran);
-                                HIHDBUtility.BindTagInsertParameter(cmd2, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, vm.ID, term, ivm.ItemID);
+                                cmd = new SqlCommand(queryString, conn, tran);
+                                HIHDBUtility.BindTagInsertParameter(cmd, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, vm.ID, term, ivm.ItemID);
 
-                                await cmd2.ExecuteNonQueryAsync();
+                                await cmd.ExecuteNonQueryAsync();
 
-                                cmd2.Dispose();
-                                cmd2 = null;
+                                cmd.Dispose();
+                                cmd = null;
                             }
                         }
                     }
 
                     tran.Commit();
                 }
-                catch (Exception exp)
-                {
-#if DEBUG
-                    System.Diagnostics.Debug.WriteLine(exp.Message);
-#endif
-                    bError = true;
-                    strErrMsg = exp.Message;
-                    if (tran != null)
-                        tran.Rollback();
-                }
             }
             catch (Exception exp)
             {
+                if (tran != null)
+                    tran.Rollback();
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -574,14 +684,15 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            SqlTransaction tran = null;
             String queryString = "";
-            Boolean bError = false;
             Int32 accID = -1, tmpdocID = -1;
             List<Int32> listPostedID = new List<Int32>();
-
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             String strErrMsg = "";
-            SqlTransaction tran = null;
 
             try
             {
@@ -591,175 +702,179 @@ namespace achihapi.Controllers
                         + " UNION ALL SELECT [ACCOUNTID],[REFDOC_SOLD] AS [REFDOCID] FROM [dbo].[t_fin_account_ext_as] WHERE [REFDOC_SOLD] = " + id.ToString()
                         ;
 
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
-
-                // Check current document is used for creating account for adp
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        accID = reader.GetInt32(0);
-                        break; // One doc shall be reference to one Account at maximum
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-                reader.Dispose();
-                reader = null;
-                cmd.Dispose();
-                cmd = null;
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                if (accID == -1)
-                {
-                    // Check current document is referenced in template doc
-                    queryString = @"SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [REFDOCID] = " + id.ToString()
-                            + @" UNION ALL SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_loan] WHERE [REFDOCID] = " + id.ToString();
-
+                    // Check current document is used for creating account for adp
                     cmd = new SqlCommand(queryString, conn);
                     reader = cmd.ExecuteReader();
+
                     if (reader.HasRows)
                     {
                         while (reader.Read())
                         {
-                            tmpdocID = reader.GetInt32(0);
-                            break; // One doc shall be reference to one tmp. doc at maximum
+                            accID = reader.GetInt32(0);
+                            break; // One doc shall be reference to one Account at maximum
                         }
                     }
-
                     reader.Dispose();
                     reader = null;
                     cmd.Dispose();
                     cmd = null;
-                }
-                else
-                {
-                    // Need fetch out the document posted already
-                    queryString = @"SELECT [REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [ACCOUNTID] = " + accID.ToString()
-                            + @" AND [REFDOCID] IS NOT NULL UNION ALL SELECT [REFDOCID] FROM [dbo].[t_fin_tmpdoc_loan] WHERE [ACCOUNTID] = " + accID.ToString()
-                            + " AND [REFDOCID] IS NOT NULL";
 
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-                    if (reader.HasRows)
+                    if (accID == -1)
                     {
-                        while (reader.Read())
+                        // Check current document is referenced in template doc
+                        queryString = @"SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [REFDOCID] = " + id.ToString()
+                                + @" UNION ALL SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_loan] WHERE [REFDOCID] = " + id.ToString();
+
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = cmd.ExecuteReader();
+                        if (reader.HasRows)
                         {
-                            listPostedID.Add(reader.GetInt32(0));
+                            while (reader.Read())
+                            {
+                                tmpdocID = reader.GetInt32(0);
+                                break; // One doc shall be reference to one tmp. doc at maximum
+                            }
                         }
+
+                        reader.Dispose();
+                        reader = null;
+                        cmd.Dispose();
+                        cmd = null;
+                    }
+                    else
+                    {
+                        // Need fetch out the document posted already
+                        queryString = @"SELECT [REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [ACCOUNTID] = " + accID.ToString()
+                                + @" AND [REFDOCID] IS NOT NULL UNION ALL SELECT [REFDOCID] FROM [dbo].[t_fin_tmpdoc_loan] WHERE [ACCOUNTID] = " + accID.ToString()
+                                + " AND [REFDOCID] IS NOT NULL";
+
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = cmd.ExecuteReader();
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                listPostedID.Add(reader.GetInt32(0));
+                            }
+                        }
+
+                        reader.Dispose();
+                        reader = null;
+                        cmd.Dispose();
+                        cmd = null;
                     }
 
-                    reader.Dispose();
-                    reader = null;
-                    cmd.Dispose();
-                    cmd = null;
-                }
+                    // Checks have been applied, go ahead to deletion
+                    tran = conn.BeginTransaction();
 
-                // Checks have been applied, go ahead to deletion
-                tran = conn.BeginTransaction();
-
-                // Document header
-                queryString = @"DELETE FROM [dbo].[t_fin_document] WHERE [ID] = " + id.ToString();
-                cmd = new SqlCommand(queryString, conn, tran);
-                await cmd.ExecuteNonQueryAsync();
-                cmd.Dispose();
-                cmd = null;
-
-                // Document items
-                queryString = @"DELETE FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + id.ToString();
-                cmd = new SqlCommand(queryString, conn, tran);
-                await cmd.ExecuteNonQueryAsync();
-                cmd.Dispose();
-                cmd = null;
-
-                if (accID != -1)
-                {
-                    // Account deletion
-                    queryString = @"DELETE FROM [t_fin_account] WHERE [ID] = " + accID.ToString();
+                    // Document header
+                    queryString = @"DELETE FROM [dbo].[t_fin_document] WHERE [ID] = " + id.ToString();
                     cmd = new SqlCommand(queryString, conn, tran);
                     await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
 
-                    // ADP account
-                    queryString = @"DELETE FROM [dbo].[t_fin_account_ext_dp] WHERE [ACCOUNTID] = " + accID.ToString();
+                    // Document items
+                    queryString = @"DELETE FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + id.ToString();
                     cmd = new SqlCommand(queryString, conn, tran);
                     await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
 
-                    // Loan account
-                    queryString = @"DELETE FROM [dbo].[t_fin_account_ext_loan] WHERE [ACCOUNTID] = " + accID.ToString();
-                    cmd = new SqlCommand(queryString, conn, tran);
-                    await cmd.ExecuteNonQueryAsync();
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Asset account
-                    queryString = @"DELETE FROM [dbo].[t_fin_account_ext_as] WHERE [ACCOUNTID] = " + accID.ToString();
-                    cmd = new SqlCommand(queryString, conn, tran);
-                    await cmd.ExecuteNonQueryAsync();
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Template doc - ADP
-                    queryString = @"DELETE FROM [dbo].[t_fin_tmpdoc_dp] WHERE [ACCOUNTID] = " + accID.ToString();
-                    cmd = new SqlCommand(queryString, conn, tran);
-                    await cmd.ExecuteNonQueryAsync();
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Template doc - Loan
-                    queryString = @"DELETE FROM [dbo].[t_fin_tmpdoc_loan] WHERE [ACCOUNTID] = " + accID.ToString();
-                    cmd = new SqlCommand(queryString, conn, tran);
-                    await cmd.ExecuteNonQueryAsync();
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Posted documents
-                    foreach(Int32 npostid in listPostedID)
+                    if (accID != -1)
                     {
-                        queryString = @"DELETE FROM [dbo].[t_fin_document] WHERE [ID] = " + npostid.ToString();
+                        // Account deletion
+                        queryString = @"DELETE FROM [t_fin_account] WHERE [ID] = " + accID.ToString();
                         cmd = new SqlCommand(queryString, conn, tran);
                         await cmd.ExecuteNonQueryAsync();
                         cmd.Dispose();
                         cmd = null;
 
-                        queryString = @"DELETE FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + npostid.ToString();
+                        // ADP account
+                        queryString = @"DELETE FROM [dbo].[t_fin_account_ext_dp] WHERE [ACCOUNTID] = " + accID.ToString();
+                        cmd = new SqlCommand(queryString, conn, tran);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Loan account
+                        queryString = @"DELETE FROM [dbo].[t_fin_account_ext_loan] WHERE [ACCOUNTID] = " + accID.ToString();
+                        cmd = new SqlCommand(queryString, conn, tran);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Asset account
+                        queryString = @"DELETE FROM [dbo].[t_fin_account_ext_as] WHERE [ACCOUNTID] = " + accID.ToString();
+                        cmd = new SqlCommand(queryString, conn, tran);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Template doc - ADP
+                        queryString = @"DELETE FROM [dbo].[t_fin_tmpdoc_dp] WHERE [ACCOUNTID] = " + accID.ToString();
+                        cmd = new SqlCommand(queryString, conn, tran);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Template doc - Loan
+                        queryString = @"DELETE FROM [dbo].[t_fin_tmpdoc_loan] WHERE [ACCOUNTID] = " + accID.ToString();
+                        cmd = new SqlCommand(queryString, conn, tran);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Posted documents
+                        foreach (Int32 npostid in listPostedID)
+                        {
+                            queryString = @"DELETE FROM [dbo].[t_fin_document] WHERE [ID] = " + npostid.ToString();
+                            cmd = new SqlCommand(queryString, conn, tran);
+                            await cmd.ExecuteNonQueryAsync();
+                            cmd.Dispose();
+                            cmd = null;
+
+                            queryString = @"DELETE FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + npostid.ToString();
+                            cmd = new SqlCommand(queryString, conn, tran);
+                            await cmd.ExecuteNonQueryAsync();
+                            cmd.Dispose();
+                            cmd = null;
+                        }
+                    }
+                    else if (tmpdocID != -1)
+                    {
+                        // Just clear the refernce id
+                        queryString = @"UPDATE [dbo].[t_fin_tmpdoc_dp] SET [REFDOCID] = NULL WHERE [REFDOCID] = " + id.ToString();
+                        cmd = new SqlCommand(queryString, conn, tran);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Just clear the refernce id
+                        queryString = @"UPDATE [dbo].[t_fin_tmpdoc_loan] SET [REFDOCID] = NULL WHERE [REFDOCID] = " + id.ToString();
                         cmd = new SqlCommand(queryString, conn, tran);
                         await cmd.ExecuteNonQueryAsync();
                         cmd.Dispose();
                         cmd = null;
                     }
-                }
-                else if (tmpdocID != -1)
-                {
-                    // Just clear the refernce id
-                    queryString = @"UPDATE [dbo].[t_fin_tmpdoc_dp] SET [REFDOCID] = NULL WHERE [REFDOCID] = " + id.ToString();
-                    cmd = new SqlCommand(queryString, conn, tran);
-                    await cmd.ExecuteNonQueryAsync();
-                    cmd.Dispose();
-                    cmd = null;
 
-                    // Just clear the refernce id
-                    queryString = @"UPDATE [dbo].[t_fin_tmpdoc_loan] SET [REFDOCID] = NULL WHERE [REFDOCID] = " + id.ToString();
-                    cmd = new SqlCommand(queryString, conn, tran);
-                    await cmd.ExecuteNonQueryAsync();
-                    cmd.Dispose();
-                    cmd = null;
+                    tran.Commit();
                 }
-
-                tran.Commit();
             }
             catch (Exception exp)
             {
@@ -767,22 +882,47 @@ namespace achihapi.Controllers
                     tran.Rollback();
 
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             return Ok();

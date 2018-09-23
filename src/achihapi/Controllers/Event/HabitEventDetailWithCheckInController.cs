@@ -37,56 +37,79 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             List<EventHabitDetailWithCheckInViewModel> listVm = new List<EventHabitDetailWithCheckInViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                queryString = HIHDBUtility.Event_GetHabitDetailWithCheckInSearchString();
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                HIHDBUtility.Event_BindHabitDetailWithCheckInSearchParameter(cmd, hid, dtbgn, dtend);
-                SqlDataReader reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    EventHabitDetailWithCheckInViewModel vm = new EventHabitDetailWithCheckInViewModel();
-                    HIHDBUtility.Event_HabitDetailWithCheckInDB2VM(reader, vm);
-                    listVm.Add(vm);
+                    queryString = HIHDBUtility.Event_GetHabitDetailWithCheckInSearchString();
+
+                    cmd = new SqlCommand(queryString, conn);
+                    HIHDBUtility.Event_BindHabitDetailWithCheckInSearchParameter(cmd, hid, dtbgn, dtend);
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        EventHabitDetailWithCheckInViewModel vm = new EventHabitDetailWithCheckInViewModel();
+                        HIHDBUtility.Event_HabitDetailWithCheckInDB2VM(reader, vm);
+                        listVm.Add(vm);
+                    }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
                 strErrMsg = exp.Message;
-                bError = true;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {

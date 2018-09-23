@@ -36,9 +36,10 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             BaseListViewModel<FinanceControlCenterViewModel> listVMs = new BaseListViewModel<FinanceControlCenterViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
@@ -46,60 +47,86 @@ namespace achihapi.Controllers
             {
                 queryString = this.getQueryString(true, top, skip, null, hid);
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        listVMs.TotalCount = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-                reader.NextResult();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    catch (Exception)
                     {
-                        FinanceControlCenterViewModel avm = new FinanceControlCenterViewModel();
-                        this.onDB2VM(reader, avm);
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                        listVMs.Add(avm);
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            listVMs.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
+                    }
+                    reader.NextResult();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            FinanceControlCenterViewModel avm = new FinanceControlCenterViewModel();
+                            this.onDB2VM(reader, avm);
+
+                            listVMs.Add(avm);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -131,71 +158,96 @@ namespace achihapi.Controllers
 
             FinanceControlCenterViewModel vm = new FinanceControlCenterViewModel();
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
-            Boolean bNotFound = false;
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = this.getQueryString(false, null, null, id, null);
 
-                await conn.OpenAsync();
+                using(conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = await cmd.ExecuteReaderAsync();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        onDB2VM(reader, vm);
-                        break; // Should only one result!!!
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-                else
-                {
-                    bNotFound = true;
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = await cmd.ExecuteReaderAsync();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            onDB2VM(reader, vm);
+                            break; // Should only one result!!!
+                        }
+                    }
+                    else
+                    {
+                        errorCode = HttpStatusCode.NotFound;
+                        throw new Exception();
+                    }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bNotFound)
-                return NotFound();
-            else if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+
             return new JsonResult(vm, setting);
         }
 
@@ -226,53 +278,57 @@ namespace achihapi.Controllers
                 return BadRequest("Name is a must!");
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bDuplicatedEntry = false;
-            Int32 nDuplicatedID = -1;
             Int32 nNewID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                queryString = @"SELECT [ID]
-                  FROM [dbo].[t_fin_controlcenter] WHERE [Name] = N'" + vm.Name + "'";
+                queryString = @"SELECT [ID] FROM [dbo].[t_fin_controlcenter] WHERE [Name] = N'" + vm.Name + "'";
 
-                await conn.OpenAsync();
+                using(conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    bDuplicatedEntry = true;
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        nDuplicatedID = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
                     }
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                    cmd.Dispose();
-                    cmd = null;
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        Int32 nDuplicatedID = -1;
+                        while (reader.Read())
+                        {
+                            nDuplicatedID = reader.GetInt32(0);
+                            break;
+                        }
 
-                    // Now go ahead for the creating
-                    queryString = @"INSERT INTO [dbo].[t_fin_controlcenter]
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Control center with same name already exists: " + nDuplicatedID.ToString());
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
+
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Now go ahead for the creating
+                        queryString = @"INSERT INTO [dbo].[t_fin_controlcenter]
                                ([HID]    
                                ,[NAME]
                                ,[PARID]
@@ -288,52 +344,72 @@ namespace achihapi.Controllers
                                ,@CREATEDBY
                                ,@CREATEDAT); SELECT @Identity = SCOPE_IDENTITY();";
 
-                    cmd = new SqlCommand(queryString, conn);
-                    cmd.Parameters.AddWithValue("@HID", vm.HID);
-                    cmd.Parameters.AddWithValue("@NAME", vm.Name);
-                    if (vm.ParID.HasValue)
-                        cmd.Parameters.AddWithValue("@PARID", vm.ParID.Value);
-                    else
-                        cmd.Parameters.AddWithValue("@PARID", DBNull.Value);
-                    cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
-                    if (String.IsNullOrEmpty(vm.Owner))
-                    {
-                        cmd.Parameters.AddWithValue("@OWNER", DBNull.Value);
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@OWNER", vm.Owner);
-                    }
-                    cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
-                    cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
-                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                    idparam.Direction = ParameterDirection.Output;
+                        cmd = new SqlCommand(queryString, conn);
+                        cmd.Parameters.AddWithValue("@HID", vm.HID);
+                        cmd.Parameters.AddWithValue("@NAME", vm.Name);
+                        if (vm.ParID.HasValue)
+                            cmd.Parameters.AddWithValue("@PARID", vm.ParID.Value);
+                        else
+                            cmd.Parameters.AddWithValue("@PARID", DBNull.Value);
+                        cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
+                        if (String.IsNullOrEmpty(vm.Owner))
+                        {
+                            cmd.Parameters.AddWithValue("@OWNER", DBNull.Value);
+                        }
+                        else
+                        {
+                            cmd.Parameters.AddWithValue("@OWNER", vm.Owner);
+                        }
+                        cmd.Parameters.AddWithValue("@CREATEDBY", usrName);
+                        cmd.Parameters.AddWithValue("@CREATEDAT", vm.CreatedAt);
+                        SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                        idparam.Direction = ParameterDirection.Output;
 
-                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                    nNewID = (Int32)idparam.Value;
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        nNewID = (Int32)idparam.Value;
+                    }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bDuplicatedEntry)
-                return BadRequest("Control center with same name already exists: " + nDuplicatedID.ToString());
-
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             vm.ID = nNewID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -373,52 +449,56 @@ namespace achihapi.Controllers
                 return BadRequest("Name is a must!");
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bDuplicatedEntry = false;
-            Int32 nDuplicatedID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                queryString = @"SELECT [ID]
-                  FROM [dbo].[t_fin_controlcenter] WHERE [Name] = N'" + vm.Name + "' AND [ID] <> " + id.ToString();
+                queryString = @"SELECT [ID] FROM [dbo].[t_fin_controlcenter] WHERE [Name] = N'" + vm.Name + "' AND [ID] <> " + id.ToString();
 
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    bDuplicatedEntry = true;
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        nDuplicatedID = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
                     }
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                    cmd.Dispose();
-                    cmd = null;
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        Int32 nDuplicatedID = -1;
+                        while (reader.Read())
+                        {
+                            nDuplicatedID = reader.GetInt32(0);
+                            break;
+                        }
 
-                    // Now go ahead for the creating
-                    queryString = @"UPDATE [dbo].[t_fin_controlcenter]
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Control center with same name already exists: " + nDuplicatedID.ToString());
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
+
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Now go ahead for the creating
+                        queryString = @"UPDATE [dbo].[t_fin_controlcenter]
                                    SET [NAME] = @NAME
                                       ,[PARID] = @PARID
                                       ,[COMMENT] = @COMMENT
@@ -427,49 +507,69 @@ namespace achihapi.Controllers
                                       ,[UPDATEDAT] = @UPDATEDAT
                                  WHERE [ID] = @ID";
 
-                    cmd = new SqlCommand(queryString, conn);
-                    cmd.Parameters.AddWithValue("@NAME", vm.Name);
-                    if (vm.ParID.HasValue)
-                        cmd.Parameters.AddWithValue("@PARID", vm.ParID.Value);
-                    else
-                        cmd.Parameters.AddWithValue("@PARID", DBNull.Value);
-                    cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
-                    if (String.IsNullOrEmpty(vm.Owner))
-                    {
-                        cmd.Parameters.AddWithValue("@OWNER", DBNull.Value);
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@OWNER", vm.Owner);
-                    }
-                    cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
-                    cmd.Parameters.AddWithValue("@UPDATEDAT", vm.CreatedAt);
-                    cmd.Parameters.AddWithValue("@ID", id);
+                        cmd = new SqlCommand(queryString, conn);
+                        cmd.Parameters.AddWithValue("@NAME", vm.Name);
+                        if (vm.ParID.HasValue)
+                            cmd.Parameters.AddWithValue("@PARID", vm.ParID.Value);
+                        else
+                            cmd.Parameters.AddWithValue("@PARID", DBNull.Value);
+                        cmd.Parameters.AddWithValue("@COMMENT", String.IsNullOrEmpty(vm.Comment) ? String.Empty : vm.Comment);
+                        if (String.IsNullOrEmpty(vm.Owner))
+                        {
+                            cmd.Parameters.AddWithValue("@OWNER", DBNull.Value);
+                        }
+                        else
+                        {
+                            cmd.Parameters.AddWithValue("@OWNER", vm.Owner);
+                        }
+                        cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                        cmd.Parameters.AddWithValue("@UPDATEDAT", vm.CreatedAt);
+                        cmd.Parameters.AddWithValue("@ID", id);
 
-                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                    }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bDuplicatedEntry)
-                return BadRequest("Control center with same name already exists: " + nDuplicatedID.ToString());
-
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -498,83 +598,99 @@ namespace achihapi.Controllers
 
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
-
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
-            Boolean bStillInUse = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                // Check whether the control center is used already
-                queryString = @"select ID from [t_fin_controlcenter] where exists (select * from t_fin_document_item where [CONTROLCENTERID] = [t_fin_controlcenter].ID) AND [ID] = @id
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    // Check whether the control center is used already
+                    queryString = @"select ID from [t_fin_controlcenter] where exists (select * from t_fin_document_item where [CONTROLCENTERID] = [t_fin_controlcenter].ID) AND [ID] = @id
                                 UNION ALL
                                 select ID from [t_fin_controlcenter] where [PARID] = @id";
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                SqlDataReader reader = await cmd.ExecuteReaderAsync();
-                if (reader.HasRows)
-                {
-                    bStillInUse = true;
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
-
-                    cmd.Dispose();
-                    cmd = null;
-
-                    queryString = @"DELETE FROM [dbo].[t_fin_controlcenter] WHERE [ID] = @id";
                     cmd = new SqlCommand(queryString, conn);
                     cmd.Parameters.AddWithValue("@id", id);
-                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                    cmd.Dispose();
-                    cmd = null;
+                    reader = await cmd.ExecuteReaderAsync();
+                    if (reader.HasRows)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Control center still in use!");
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
+
+                        cmd.Dispose();
+                        cmd = null;
+
+                        queryString = @"DELETE FROM [dbo].[t_fin_controlcenter] WHERE [ID] = @id";
+                        cmd = new SqlCommand(queryString, conn);
+                        cmd.Parameters.AddWithValue("@id", id);
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+                    }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bStillInUse)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Control center still in use!");
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
-
-            if (bError)
-                return StatusCode(500, strErrMsg);
-
-            //var setting = new Newtonsoft.Json.JsonSerializerSettings
-            //{
-            //    DateFormatString = HIHAPIConstants.DateFormatPattern,
-            //    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
-            //};
 
             return Ok();
         }

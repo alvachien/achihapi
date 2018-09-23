@@ -22,9 +22,10 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceCurrencyViewModel> listVMs = null;
-            SqlConnection conn = null; 
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
@@ -32,7 +33,6 @@ namespace achihapi.Controllers
             {
                 if (listReadEntries.Count <= 0)
                 {
-                    conn = new SqlConnection(Startup.DBConnectionString);
                     queryString = @"SELECT [CURR]
                               ,[NAME]
                               ,[SYMBOL]
@@ -42,18 +42,21 @@ namespace achihapi.Controllers
                               ,[UPDATEDAT]
                           FROM [dbo].[t_fin_currency]";
 
-                    await conn.OpenAsync();
-                    SqlCommand cmd = new SqlCommand(queryString, conn);
-                    SqlDataReader reader = cmd.ExecuteReader();
-
-                    if (reader.HasRows)
+                    using (conn = new SqlConnection(Startup.DBConnectionString))
                     {
-                        while (reader.Read())
-                        {
-                            FinanceCurrencyViewModel avm = new FinanceCurrencyViewModel();
-                            this.onDB2VM(reader, avm);
+                        await conn.OpenAsync();
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = cmd.ExecuteReader();
 
-                            listReadEntries.Add(avm);
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                FinanceCurrencyViewModel avm = new FinanceCurrencyViewModel();
+                                this.onDB2VM(reader, avm);
+
+                                listReadEntries.Add(avm);
+                            }
                         }
                     }
                 }
@@ -69,21 +72,46 @@ namespace achihapi.Controllers
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -96,7 +124,7 @@ namespace achihapi.Controllers
 
         // GET api/financecurrency/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(string sid)
+        public IActionResult Get(string sid)
         {
             return BadRequest();
         }

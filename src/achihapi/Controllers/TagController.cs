@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Data.SqlClient;
 using achihapi.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -28,100 +29,130 @@ namespace achihapi.Controllers
 
             List<TagCountViewModel> listTermCounts = new List<TagCountViewModel>();
             List<TagViewModel> listTerms = new List<TagViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             String strErrMsg = "";
 
             try
             {
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                //queryString = @"SELECT DISTINCT [Term] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
-                if (reqamt)
-                {
-                    queryString = @"SELECT [Term], COUNT(*) AS TERMCOUNT FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
-                    if (tagtype.HasValue)
+                    //queryString = @"SELECT DISTINCT [Term] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
+                    if (reqamt)
                     {
-                        queryString += " AND [TagType] = " + tagtype.Value.ToString();
-                    }
-                    if (!String.IsNullOrEmpty(tagterm))
-                    {
-                        queryString += " AND [Term] LIKE '%" + tagterm + "%'";
-                    }
-                    queryString += @" GROUP BY [Term]";
-                } 
-                else
-                {
-                    queryString = @"SELECT [Term], [TagType], [TagID], [TagSubID] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
-                    if (tagtype.HasValue)
-                    {
-                        queryString += " AND [TagType] = " + tagtype.Value.ToString();
-                    }
-                    if (!String.IsNullOrEmpty(tagterm))
-                    {
-                        queryString += " AND [Term] LIKE '%" + tagterm + "%'";
-                    }
-                }
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        if (reqamt)
+                        queryString = @"SELECT [Term], COUNT(*) AS TERMCOUNT FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
+                        if (tagtype.HasValue)
                         {
-                            listTermCounts.Add(new TagCountViewModel()
-                            {
-                                Term = reader.GetString(0),
-                                TermCount = reader.GetInt32(1)
-                            });
+                            queryString += " AND [TagType] = " + tagtype.Value.ToString();
                         }
-                        else
+                        if (!String.IsNullOrEmpty(tagterm))
                         {
-                            listTerms.Add(new TagViewModel()
+                            queryString += " AND [Term] LIKE '%" + tagterm + "%'";
+                        }
+                        queryString += @" GROUP BY [Term]";
+                    }
+                    else
+                    {
+                        queryString = @"SELECT [Term], [TagType], [TagID], [TagSubID] FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString();
+                        if (tagtype.HasValue)
+                        {
+                            queryString += " AND [TagType] = " + tagtype.Value.ToString();
+                        }
+                        if (!String.IsNullOrEmpty(tagterm))
+                        {
+                            queryString += " AND [Term] LIKE '%" + tagterm + "%'";
+                        }
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            if (reqamt)
                             {
-                                Term = reader.GetString(0),
-                                TagType = reader.GetInt16(1),
-                                TagID = reader.GetInt32(2),
-                                TagSubID = reader.GetInt32(3)
-                            });
+                                listTermCounts.Add(new TagCountViewModel()
+                                {
+                                    Term = reader.GetString(0),
+                                    TermCount = reader.GetInt32(1)
+                                });
+                            }
+                            else
+                            {
+                                listTerms.Add(new TagViewModel()
+                                {
+                                    Term = reader.GetString(0),
+                                    TagType = reader.GetInt16(1),
+                                    TagID = reader.GetInt32(2),
+                                    TagSubID = reader.GetInt32(3)
+                                });
+                            }
                         }
                     }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
-            return reqamt? new JsonResult(listTermCounts) : new JsonResult(listTerms);
+            return reqamt ? new JsonResult(listTermCounts) : new JsonResult(listTerms);
         }
 
         // POST api/tag
@@ -161,47 +192,55 @@ namespace achihapi.Controllers
             }
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
             String queryString = "";
-            Boolean bDuplicatedEntry = false;
-            Boolean bError = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             String strErrMsg = "";
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            SqlTransaction tran = null;
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                queryString = @"SELECT [HID],[TagType],[TagID],[Term] FROM [dbo].[t_tag] WHERE [HID] = " + vm.HID.ToString() + " AND [TagType] = " + vm.TagType.ToString() 
-                    + " AND [TagID] = " + vm.TagID.ToString() + " AND [Term] = N'" + vm.Term + "'";
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    bDuplicatedEntry = true;
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
+                    queryString = @"SELECT [HID],[TagType],[TagID],[Term] FROM [dbo].[t_tag] WHERE [HID] = "
+                        + vm.HID.ToString() + " AND [TagType] = " + vm.TagType.ToString()
+                        + " AND [TagID] = " + vm.TagID.ToString() + " AND [Term] = N'" + vm.Term + "'";
 
-                    cmd.Dispose();
-                    cmd = null;
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        strErrMsg = "Tag existed already!";
+                        throw new Exception(strErrMsg);
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
 
-                    // Now go ahead for the creating
-                    SqlTransaction tran = conn.BeginTransaction();
+                        cmd.Dispose();
+                        cmd = null;
 
-                    queryString = @"INSERT INTO [dbo].[t_tag]
+                        // Now go ahead for the creating
+                        tran = conn.BeginTransaction();
+
+                        queryString = @"INSERT INTO [dbo].[t_tag]
                                        ([HID]
                                        ,[TagType]
                                        ,[TagID]
@@ -211,8 +250,6 @@ namespace achihapi.Controllers
                                        ,@TagID
                                        ,@Term)";
 
-                    try
-                    {
                         cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
@@ -226,41 +263,57 @@ namespace achihapi.Controllers
 
                         tran.Commit();
                     }
-                    catch (Exception exp)
-                    {
-#if DEBUG
-                        System.Diagnostics.Debug.WriteLine(exp.Message);
-#endif
-                        bError = true;
-                        strErrMsg = exp.Message;
-
-                        if (tran != null)
-                            tran.Rollback();
-                    }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
+                if (tran != null)
+                    tran.Rollback();
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bDuplicatedEntry)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Tag already existed!");
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
-
-            if (bError)
-                return StatusCode(500, strErrMsg);
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -273,14 +326,16 @@ namespace achihapi.Controllers
 
         // PUT api/tag/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
+            return Forbid();
         }
 
         // DELETE api/tag/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            return Forbid();
         }
     }
 }

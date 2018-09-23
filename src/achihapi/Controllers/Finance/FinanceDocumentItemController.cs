@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using achihapi.ViewModels;
 using System.Data.SqlClient;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -41,10 +42,12 @@ namespace achihapi.Controllers
             }
 
             FinanceDocumentItemWithBalanceUIListViewModel listVMs = new FinanceDocumentItemWithBalanceUIListViewModel();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
@@ -55,62 +58,89 @@ namespace achihapi.Controllers
                 else if (ordid.HasValue)
                     queryString = HIHDBUtility.getFinDocItemOrderView(ordid.Value, top, skip, dtbgn, dtend);
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                // 1. Total amount
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        listVMs.TotalCount = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception exp)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
                     }
 
-                    reader.NextResult();
-                }
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
 
-                // 2. Items
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // 1. Total amount
+                    if (reader.HasRows)
                     {
-                        FinanceDocumentItemWithBalanceUIViewModel avm = new FinanceDocumentItemWithBalanceUIViewModel();
-                        HIHDBUtility.FinDocItemWithBalanceList_DB2VM(reader, avm);
+                        while (reader.Read())
+                        {
+                            listVMs.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
 
-                        listVMs.Add(avm);
+                        reader.NextResult();
+                    }
+
+                    // 2. Items
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            FinanceDocumentItemWithBalanceUIViewModel avm = new FinanceDocumentItemWithBalanceUIViewModel();
+                            HIHDBUtility.FinDocItemWithBalanceList_DB2VM(reader, avm);
+
+                            listVMs.Add(avm);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {

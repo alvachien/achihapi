@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using achihapi.ViewModels;
 using Microsoft.AspNetCore.JsonPatch;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -20,9 +21,11 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean sentbox = false, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<HomeMsgViewModel> listVm = new BaseListViewModel<HomeMsgViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             String strErrMsg = "";
 
             try
@@ -36,48 +39,65 @@ namespace achihapi.Controllers
 
                 queryString = this.getQueryString(true, top, skip, hid, sentbox, usrName);
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        listVm.TotalCount = reader.GetInt32(0);
-                        break;
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                }
-                reader.NextResult();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    catch (Exception)
                     {
-                        HomeMsgViewModel vm = new HomeMsgViewModel();
-                        HIHDBUtility.HomeMsg_DB2VM(reader, vm);
-                        listVm.Add(vm);
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            listVm.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
+                    }
+                    reader.NextResult();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            HomeMsgViewModel vm = new HomeMsgViewModel();
+                            HIHDBUtility.HomeMsg_DB2VM(reader, vm);
+                            listVm.Add(vm);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
                     conn.Close();
@@ -85,9 +105,19 @@ namespace achihapi.Controllers
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -101,7 +131,7 @@ namespace achihapi.Controllers
 
         // GET: api/HomeMsg/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        public IActionResult Get(int id)
         {
             return BadRequest();
         }
@@ -119,42 +149,54 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(vm.Content))
                 return BadRequest("Content is a must");
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
             String queryString = "";
-            Boolean bError = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             String strErrMsg = "";
+
+            var usrObj = HIHAPIUtility.GetUserClaim(this);
+            if (usrObj == null)
+                return BadRequest();
+            var usrName = usrObj.Value;
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest();
+            if (String.CompareOrdinal(usrName, vm.UserFrom) != 0)
+                return BadRequest("Cannot send message for others");
 
             try
             {
-                var usrObj = HIHAPIUtility.GetUserClaim(this);
-                if (usrObj == null)
-                    return BadRequest();
-                var usrName = usrObj.Value;
-                if (String.IsNullOrEmpty(usrName))
-                    return BadRequest();
-                if (String.CompareOrdinal(usrName, vm.UserFrom) != 0)
-                    return BadRequest("Cannot send message for others");
-
                 queryString = GetInsertString();
 
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                BindInsertParameters(cmd, vm, usrName);
-                SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                idparam.Direction = ParameterDirection.Output;
-                await cmd.ExecuteNonQueryAsync();
+                    cmd = new SqlCommand(queryString, conn);
+                    BindInsertParameters(cmd, vm, usrName);
+                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                    idparam.Direction = ParameterDirection.Output;
+                    await cmd.ExecuteNonQueryAsync();
 
-                vm.ID = (Int32)idparam.Value;
+                    vm.ID = (Int32)idparam.Value;
+                }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
                     conn.Close();
@@ -162,9 +204,19 @@ namespace achihapi.Controllers
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -178,7 +230,7 @@ namespace achihapi.Controllers
 
         // PUT: api/HomeMsg/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]string value)
         {
             return BadRequest();
         }
@@ -193,11 +245,12 @@ namespace achihapi.Controllers
                 return BadRequest("No home is inputted");
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
             String queryString = "";
-            Boolean bNonExistEntry = false;
-            Boolean bError = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             String strErrMsg = "";
+
             var usr = User.FindFirst(c => c.Type == "sub");
             String usrName = String.Empty;
             if (usr != null)
@@ -208,59 +261,72 @@ namespace achihapi.Controllers
 
             try
             {
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    throw exp; // Re-throw
-                }
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw; // Re-throw
+                    }
 
-                // Optimization logic for Mark as complete
-                if (patch.Operations.Count == 1 && patch.Operations[0].path == "/readFlag")
-                {
-                    // Only update the complete time
-                    queryString = HIHDBUtility.HomeMsg_GetMarkAsReadUpdateString();
-                    SqlCommand cmdupdate = new SqlCommand(queryString, conn);
-                    HIHDBUtility.HomeMsg_BindMarkAsReadUpdateParameters(cmdupdate, (Boolean)patch.Operations[0].value, id, hid);
+                    // Optimization logic for Mark as complete
+                    if (patch.Operations.Count == 1 && patch.Operations[0].path == "/readFlag")
+                    {
+                        // Only update the complete time
+                        queryString = HIHDBUtility.HomeMsg_GetMarkAsReadUpdateString();
+                        cmd = new SqlCommand(queryString, conn);
+                        HIHDBUtility.HomeMsg_BindMarkAsReadUpdateParameters(cmd, (Boolean)patch.Operations[0].value, id, hid);
 
-                    await cmdupdate.ExecuteNonQueryAsync();
-                }
-                else if (patch.Operations.Count == 1 && patch.Operations[0].path == "/receiverDeletion")
-                {
-                    // Only update the complete time
-                    queryString = HIHDBUtility.HomeMsg_GetReceiverDeletionUpdateString();
-                    SqlCommand cmdupdate = new SqlCommand(queryString, conn);
-                    HIHDBUtility.HomeMsg_BindReceiverDeletionUpdateParameters(cmdupdate, (Boolean)patch.Operations[0].value, id, hid);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                    else if (patch.Operations.Count == 1 && patch.Operations[0].path == "/receiverDeletion")
+                    {
+                        // Only update the complete time
+                        queryString = HIHDBUtility.HomeMsg_GetReceiverDeletionUpdateString();
+                        cmd = new SqlCommand(queryString, conn);
+                        HIHDBUtility.HomeMsg_BindReceiverDeletionUpdateParameters(cmd, (Boolean)patch.Operations[0].value, id, hid);
 
-                    await cmdupdate.ExecuteNonQueryAsync();
-                }
-                else if (patch.Operations.Count == 1 && patch.Operations[0].path == "/senderDeletion")
-                {
-                    // Only update the complete time
-                    queryString = HIHDBUtility.HomeMsg_GetSenderDeletionUpdateString();
-                    SqlCommand cmdupdate = new SqlCommand(queryString, conn);
-                    HIHDBUtility.HomeMsg_BindSenderDeletioUpdateParameters(cmdupdate, (Boolean)patch.Operations[0].value, id, hid);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                    else if (patch.Operations.Count == 1 && patch.Operations[0].path == "/senderDeletion")
+                    {
+                        // Only update the complete time
+                        queryString = HIHDBUtility.HomeMsg_GetSenderDeletionUpdateString();
+                        cmd = new SqlCommand(queryString, conn);
+                        HIHDBUtility.HomeMsg_BindSenderDeletioUpdateParameters(cmd, (Boolean)patch.Operations[0].value, id, hid);
 
-                    await cmdupdate.ExecuteNonQueryAsync();
-                }
-                else
-                {
-                    return BadRequest("Non support patch mode!");
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                    else
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Non support patch mode!");
+                    }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
                     conn.Close();
@@ -268,14 +334,19 @@ namespace achihapi.Controllers
                 }
             }
 
-            if (bNonExistEntry)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Object with ID doesnot exist: " + id.ToString());
-            }
-
-            if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -289,7 +360,7 @@ namespace achihapi.Controllers
 
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             return BadRequest();
         }

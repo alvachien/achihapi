@@ -35,9 +35,10 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             List<FinanceTmpDocDPViewModel> listVm = new List<FinanceTmpDocDPViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
@@ -52,53 +53,80 @@ namespace achihapi.Controllers
                     queryString += " AND [TRANDATE] <= @dtend ";
                 queryString += " ORDER BY [TRANDATE] DESC";
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@hid", hid);
-                if (dtbgn.HasValue)
-                    cmd.Parameters.AddWithValue("@dtbgn", dtbgn.Value);
-                if (dtbgn.HasValue)
-                    cmd.Parameters.AddWithValue("@dtend", dtend.Value);
-
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    // Check Home assignment with current user
+                    try
                     {
-                        FinanceTmpDocDPViewModel dpvm = new FinanceTmpDocDPViewModel();
-                        HIHDBUtility.FinTmpDocADP_DB2VM(reader, dpvm);
-                        listVm.Add(dpvm);
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@hid", hid);
+                    if (dtbgn.HasValue)
+                        cmd.Parameters.AddWithValue("@dtbgn", dtbgn.Value);
+                    if (dtbgn.HasValue)
+                        cmd.Parameters.AddWithValue("@dtend", dtend.Value);
+
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            FinanceTmpDocDPViewModel dpvm = new FinanceTmpDocDPViewModel();
+                            HIHDBUtility.FinTmpDocADP_DB2VM(reader, dpvm);
+                            listVm.Add(dpvm);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -132,13 +160,16 @@ namespace achihapi.Controllers
             }
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            SqlTransaction tran = null;
             String queryString = String.Empty;
-            Boolean bError = false;
             String strErrMsg = String.Empty;
             FinanceTmpDocDPViewModel vmTmpDoc = new FinanceTmpDocDPViewModel();
             HomeDefViewModel vmHome = new HomeDefViewModel();
             FinanceDocumentUIViewModel vmFIDOC = new FinanceDocumentUIViewModel();
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -153,101 +184,107 @@ namespace achihapi.Controllers
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check: HID, it requires more info than just check, so it implemented it 
-                if (hid != 0)
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    String strHIDCheck = HIHDBUtility.getHomeDefQueryString() + " WHERE [ID]= @hid AND [USER] = @user";
-                    SqlCommand cmdHIDCheck = new SqlCommand(strHIDCheck, conn);
-                    cmdHIDCheck.Parameters.AddWithValue("@hid", hid);
-                    cmdHIDCheck.Parameters.AddWithValue("@user", usrName);
-                    SqlDataReader readHIDCheck = await cmdHIDCheck.ExecuteReaderAsync();
-                    if (!readHIDCheck.HasRows)
-                        return BadRequest("No home found");
+                    await conn.OpenAsync();
+
+                    // Check: HID, it requires more info than just check, so it implemented it 
+                    if (hid != 0)
+                    {
+                        String strHIDCheck = HIHDBUtility.getHomeDefQueryString() + " WHERE [ID]= @hid AND [USER] = @user";
+                        cmd = new SqlCommand(strHIDCheck, conn);
+                        cmd.Parameters.AddWithValue("@hid", hid);
+                        cmd.Parameters.AddWithValue("@user", usrName);
+                        reader = await cmd.ExecuteReaderAsync();
+                        if (!reader.HasRows)
+                        {
+                            errorCode = HttpStatusCode.BadRequest;
+                            throw new Exception("Not home found!");
+                        }                            
+                        else
+                        {
+                            while (reader.Read())
+                            {
+                                HIHDBUtility.HomeDef_DB2VM(reader, vmHome);
+
+                                // It shall be only one entry if found!
+                                break;
+                            }
+                        }
+
+                        reader.Dispose();
+                        reader = null;
+                        cmd.Dispose();
+                        cmd = null;
+                    }
+
+                    if (vmHome == null || String.IsNullOrEmpty(vmHome.BaseCurrency) || vmHome.ID != hid)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Home Definition is invalid");
+                    }
+
+                    // Check: DocID
+                    String checkString = HIHDBUtility.getFinanceDocADPListQueryString() + " WHERE [DOCID] = " + docid.ToString() + " AND [HID] = " + hid.ToString();
+                    cmd = new SqlCommand(checkString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (!reader.HasRows)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Invalid Doc ID inputted: " + docid.ToString());
+                    }
                     else
                     {
-                        while (readHIDCheck.Read())
+                        while (reader.Read())
                         {
-                            HIHDBUtility.HomeDef_DB2VM(readHIDCheck, vmHome);
+                            HIHDBUtility.FinTmpDocADP_DB2VM(reader, vmTmpDoc);
 
                             // It shall be only one entry if found!
                             break;
                         }
-                    }                        
 
-                    readHIDCheck.Dispose();
-                    readHIDCheck = null;
-                    cmdHIDCheck.Dispose();
-                    cmdHIDCheck = null;
-                }
-
-                if (vmHome == null || String.IsNullOrEmpty(vmHome.BaseCurrency) || vmHome.ID != hid)
-                {
-                    return BadRequest("Home Definition is invalid");
-                }
-
-                // Check: DocID
-                String checkString = HIHDBUtility.getFinanceDocADPListQueryString() + " WHERE [DOCID] = " + docid.ToString() + " AND [HID] = " + hid.ToString();
-                SqlCommand chkcmd = new SqlCommand(checkString, conn);
-                SqlDataReader chkreader = chkcmd.ExecuteReader();
-                if (!chkreader.HasRows)
-                {
-                    return BadRequest("Invalid Doc ID inputted: " + docid.ToString());
-                } 
-                else
-                {
-                    while(chkreader.Read())
-                    {
-                        HIHDBUtility.FinTmpDocADP_DB2VM(chkreader, vmTmpDoc);
-
-                        // It shall be only one entry if found!
-                        break;
                     }
-                    
-                }
-                chkreader.Dispose();
-                chkreader = null;
-                chkcmd.Dispose();
-                chkcmd = null;
+                    reader.Dispose();
+                    reader = null;
+                    cmd.Dispose();
+                    cmd = null;
 
-                // Check: Tmp doc has posted or not?
-                if (vmTmpDoc == null || (vmTmpDoc.RefDocID.HasValue && vmTmpDoc.RefDocID.Value > 0))
-                {
-                    return BadRequest("Tmp Doc not existed yet or has been posted");
-                }
+                    // Check: Tmp doc has posted or not?
+                    if (vmTmpDoc == null || (vmTmpDoc.RefDocID.HasValue && vmTmpDoc.RefDocID.Value > 0))
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Tmp Doc not existed yet or has been posted");
+                    }
 
-                // Now go ahead for the creating
-                SqlTransaction tran = conn.BeginTransaction();
+                    // Now go ahead for the creating
+                    tran = conn.BeginTransaction();
 
-                SqlCommand cmd = null;
-                Int32 nNewDocID = 0;
-                vmFIDOC.Desp = vmTmpDoc.Desp;
-                vmFIDOC.DocType = FinanceDocTypeViewModel.DocType_Normal;
-                vmFIDOC.HID = hid;
-                //vmFIDOC.TranAmount = vmTmpDoc.TranAmount;
-                vmFIDOC.TranCurr = vmHome.BaseCurrency;
-                vmFIDOC.TranDate = vmTmpDoc.TranDate;
-                vmFIDOC.CreatedAt = DateTime.Now;
-                FinanceDocumentItemUIViewModel vmItem = new FinanceDocumentItemUIViewModel
-                {
-                    AccountID = vmTmpDoc.AccountID
-                };
-                if (vmTmpDoc.ControlCenterID.HasValue)
-                    vmItem.ControlCenterID = vmTmpDoc.ControlCenterID.Value;
-                if (vmTmpDoc.OrderID.HasValue)
-                    vmItem.OrderID = vmTmpDoc.OrderID.Value;
-                vmItem.Desp = vmTmpDoc.Desp;
-                vmItem.ItemID = 1;
-                vmItem.TranAmount = vmTmpDoc.TranAmount;
-                vmItem.TranType = vmTmpDoc.TranType;
-                vmFIDOC.Items.Add(vmItem);
+                    cmd = null;
+                    Int32 nNewDocID = 0;
+                    vmFIDOC.Desp = vmTmpDoc.Desp;
+                    vmFIDOC.DocType = FinanceDocTypeViewModel.DocType_Normal;
+                    vmFIDOC.HID = hid;
+                    //vmFIDOC.TranAmount = vmTmpDoc.TranAmount;
+                    vmFIDOC.TranCurr = vmHome.BaseCurrency;
+                    vmFIDOC.TranDate = vmTmpDoc.TranDate;
+                    vmFIDOC.CreatedAt = DateTime.Now;
+                    FinanceDocumentItemUIViewModel vmItem = new FinanceDocumentItemUIViewModel
+                    {
+                        AccountID = vmTmpDoc.AccountID
+                    };
+                    if (vmTmpDoc.ControlCenterID.HasValue)
+                        vmItem.ControlCenterID = vmTmpDoc.ControlCenterID.Value;
+                    if (vmTmpDoc.OrderID.HasValue)
+                        vmItem.OrderID = vmTmpDoc.OrderID.Value;
+                    vmItem.Desp = vmTmpDoc.Desp;
+                    vmItem.ItemID = 1;
+                    vmItem.TranAmount = vmTmpDoc.TranAmount;
+                    vmItem.TranType = vmTmpDoc.TranType;
+                    vmFIDOC.Items.Add(vmItem);
 
-                // Now go ahead for the creating
-                queryString = HIHDBUtility.GetFinDocHeaderInsertString();
+                    // Now go ahead for the creating
+                    queryString = HIHDBUtility.GetFinDocHeaderInsertString();
 
-                try
-                {
                     // Header
                     cmd = new SqlCommand(queryString, conn)
                     {
@@ -261,19 +298,23 @@ namespace achihapi.Controllers
                     Int32 nRst = await cmd.ExecuteNonQueryAsync();
                     nNewDocID = (Int32)idparam.Value;
                     vmFIDOC.ID = nNewDocID;
+                    cmd.Dispose();
+                    cmd = null;
 
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in vmFIDOC.Items)
                     {
                         queryString = HIHDBUtility.GetFinDocItemInsertString();
 
-                        SqlCommand cmd2 = new SqlCommand(queryString, conn)
+                        cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
                         };
-                        HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
+                        HIHDBUtility.BindFinDocItemInsertParameter(cmd, ivm, nNewDocID);
 
-                        await cmd2.ExecuteNonQueryAsync();
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
                     }
 
                     // Then, update the template doc
@@ -282,49 +323,66 @@ namespace achihapi.Controllers
                                           ,[UPDATEDBY] = @UPDATEDBY
                                           ,[UPDATEDAT] = @UPDATEDAT
                                      WHERE [HID] = @HID AND [DOCID] = @DOCID";
-                    SqlCommand cmdTmpDoc = new SqlCommand(queryString, conn)
+                    cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
-                    cmdTmpDoc.Parameters.AddWithValue("@REFDOCID", nNewDocID);
-                    cmdTmpDoc.Parameters.AddWithValue("@UPDATEDBY", usrName);
-                    cmdTmpDoc.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
-                    cmdTmpDoc.Parameters.AddWithValue("@HID", hid);
-                    cmdTmpDoc.Parameters.AddWithValue("@DOCID", docid);
-                    await cmdTmpDoc.ExecuteNonQueryAsync();
+                    cmd.Parameters.AddWithValue("@REFDOCID", nNewDocID);
+                    cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+                    cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+                    cmd.Parameters.AddWithValue("@HID", hid);
+                    cmd.Parameters.AddWithValue("@DOCID", docid);
+                    await cmd.ExecuteNonQueryAsync();
 
                     tran.Commit();
-                }
-                catch (Exception exp)
-                {
-#if DEBUG
-                    System.Diagnostics.Debug.WriteLine(exp.Message);
-#endif
-                    bError = true;
-                    strErrMsg = exp.Message;
-
-                    if (tran != null)
-                        tran.Rollback();
                 }
             }
             catch (Exception exp)
             {
+                if (tran != null)
+                    tran.Rollback();
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -345,7 +403,7 @@ namespace achihapi.Controllers
 
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             return BadRequest();
         }

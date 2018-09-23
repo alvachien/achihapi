@@ -8,6 +8,7 @@ using System.Data;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -36,56 +37,65 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             BaseListViewModel<FinanceOrderViewModel> listVMs = new BaseListViewModel<FinanceOrderViewModel>();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                queryString = @"SELECT count(*) FROM [dbo].[t_fin_order] WHERE [HID] = " + hid.ToString();
-                if (!incInv.HasValue || !incInv.Value)
-                    queryString += " AND [VALID_FROM] <= GETDATE() AND [VALID_TO] >= GETDATE()";
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = await cmd.ExecuteReaderAsync();
-                while (reader.Read())
-                {
-                    listVMs.TotalCount = reader.GetInt32(0);
-                    break;
-                }
-                reader.Dispose();
-                reader = null;
-                cmd.Dispose();
-                cmd = null;
-
-                if (listVMs.TotalCount > 0)
-                {
-                    queryString = this.getListQueryString(hid);
+                    queryString = @"SELECT count(*) FROM [dbo].[t_fin_order] WHERE [HID] = " + hid.ToString();
                     if (!incInv.HasValue || !incInv.Value)
                         queryString += " AND [VALID_FROM] <= GETDATE() AND [VALID_TO] >= GETDATE()";
+
                     cmd = new SqlCommand(queryString, conn);
                     reader = await cmd.ExecuteReaderAsync();
-
                     if (reader.HasRows)
                     {
                         while (reader.Read())
                         {
-                            FinanceOrderViewModel vm = new FinanceOrderViewModel();
-                            this.onListDB2VM(reader, vm);
-                            listVMs.Add(vm);
+                            listVMs.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
+                    }
+                    reader.Dispose();
+                    reader = null;
+                    cmd.Dispose();
+                    cmd = null;
+
+                    if (listVMs.TotalCount > 0)
+                    {
+                        queryString = this.getListQueryString(hid);
+                        if (!incInv.HasValue || !incInv.Value)
+                            queryString += " AND [VALID_FROM] <= GETDATE() AND [VALID_TO] >= GETDATE()";
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = await cmd.ExecuteReaderAsync();
+
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                FinanceOrderViewModel vm = new FinanceOrderViewModel();
+                                this.onListDB2VM(reader, vm);
+                                listVMs.Add(vm);
+                            }
                         }
                     }
                 }
@@ -93,21 +103,43 @@ namespace achihapi.Controllers
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -139,73 +171,96 @@ namespace achihapi.Controllers
 
             FinanceOrderViewModel vm = new FinanceOrderViewModel();
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
-            Boolean bNotFound = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 //queryString = this.getQueryString(false, null, null, id);
                 queryString = this.getItemQueryString(id);
 
-                await conn.OpenAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                // Check Home assignment with current user
-                try
-                {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    //BaseListViewModel<FinanceOrderViewModel> listVM = new BaseListViewModel<FinanceOrderViewModel>();
-                    //onDB2VM(reader, listVM);
-                    //if (listVM.ContentList.Count == 1)
-                    //{
-                    //    vm = listVM.ContentList[0];
-                    //}
-                    //else
-                    //{
-                    //    throw new Exception("Failed to read db entry successfully!");
-                    //}
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        //BaseListViewModel<FinanceOrderViewModel> listVM = new BaseListViewModel<FinanceOrderViewModel>();
+                        //onDB2VM(reader, listVM);
+                        //if (listVM.ContentList.Count == 1)
+                        //{
+                        //    vm = listVM.ContentList[0];
+                        //}
+                        //else
+                        //{
+                        //    throw new Exception("Failed to read db entry successfully!");
+                        //}
 
-                    this.onItemDB2VM(reader, vm);
-                }
-                else
-                {
-                    bNotFound = true;
+                        this.onItemDB2VM(reader, vm);
+                    }
+                    else
+                    {
+                        errorCode = HttpStatusCode.NotFound;
+                        throw new Exception();
+                    }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bNotFound)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return NotFound();
-            }
-            else if (bError)
-            {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -262,57 +317,61 @@ namespace achihapi.Controllers
                 return BadRequest("Total percentage shall sum up to 100");
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            SqlTransaction tran = null;
             String queryString = "";
-            Boolean bDuplicatedEntry = false;
-            Int32 nDuplicatedID = -1;
             Int32 nNewID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = @"SELECT [ID]
                   FROM [dbo].[t_fin_order] WHERE [Name] = N'" + vm.Name + "'";
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using(conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    bDuplicatedEntry = true;
-                    while (reader.Read())
-                    {
-                        nDuplicatedID = reader.GetInt32(0);
-                        break;
-                    }
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
-
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Now go ahead for the creating
-                    SqlTransaction tran = conn.BeginTransaction();
-
-                    queryString = HIHDBUtility.GetFinOrderInsertString();
-
+                    // Check Home assignment with current user
                     try
                     {
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        Int32 nDuplicatedID = -1;
+                        while (reader.Read())
+                        {
+                            nDuplicatedID = reader.GetInt32(0);
+                            break;
+                        }
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Order with same name already exists: " + nDuplicatedID.ToString());
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
+
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Now go ahead for the creating
+                        tran = conn.BeginTransaction();
+
+                        queryString = HIHDBUtility.GetFinOrderInsertString();
+
                         cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
@@ -345,36 +404,56 @@ namespace achihapi.Controllers
 
                         tran.Commit();
                     }
-                    catch(Exception exp)
-                    {
-                        if (tran != null)
-                            tran.Rollback();
-
-                        throw exp; // Re-throw
-                    }
                 }
             }
             catch (Exception exp)
             {
+                if (tran != null)
+                    tran.Rollback();
+
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bDuplicatedEntry)
-                return BadRequest("Order with same name already exists: " + nDuplicatedID.ToString());
-
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             vm.ID = nNewID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -433,56 +512,61 @@ namespace achihapi.Controllers
                 return BadRequest("Total percentage shall sum up to 100");
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            SqlTransaction tran = null;
             String queryString = "";
-            Boolean bDuplicatedEntry = false;
-            Int32 nDuplicatedID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
                 queryString = @"SELECT [ID]
                   FROM [dbo].[t_fin_order] WHERE [Name] = N'" + vm.Name + "' AND [ID] <> " + id.ToString();
 
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    bDuplicatedEntry = true;
-                    while (reader.Read())
-                    {
-                        nDuplicatedID = reader.GetInt32(0);
-                        break;
-                    }
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
-
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Now go ahead for the creating
-                    SqlTransaction tran = conn.BeginTransaction();
-
-                    queryString = HIHDBUtility.GetFinOrderUpdateString();
-
+                    // Check Home assignment with current user
                     try
                     {
+                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                    }
+                    catch (Exception exp)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        Int32 nDuplicatedID = -1;
+                        while (reader.Read())
+                        {
+                            nDuplicatedID = reader.GetInt32(0);
+                            break;
+                        }
+
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Order with same name already exists: " + nDuplicatedID.ToString());
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
+
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Now go ahead for the creating
+                        tran = conn.BeginTransaction();
+
+                        queryString = HIHDBUtility.GetFinOrderUpdateString();
+
                         cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
@@ -522,40 +606,55 @@ namespace achihapi.Controllers
 
                         tran.Commit();
                     }
-                    catch (Exception exp)
-                    {
-#if DEBUG
-                        System.Diagnostics.Debug.WriteLine(exp.Message);
-#endif
-                        bError = true;
-                        strErrMsg = exp.Message;
-
-                        if (tran != null)
-                            tran.Rollback();
-                    }
                 }
             }
             catch (Exception exp)
             {
+                if (tran != null)
+                    tran.Rollback();
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bDuplicatedEntry)
-                return BadRequest("Order with same name already exists: " + nDuplicatedID.ToString());
-
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
@@ -585,49 +684,53 @@ namespace achihapi.Controllers
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            SqlTransaction tran = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
-            Boolean bStillInUse = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                await conn.OpenAsync();
-
-                // Check Home assignment with current user
-                try
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                }
-                catch (Exception exp)
-                {
-                    return BadRequest(exp.Message);
-                }
+                    await conn.OpenAsync();
 
-                // Check whether the order is used already
-                queryString = @"SELECT ID FROM [t_fin_order] WHERE EXISTS (SELECT * FROM [t_fin_document_item] WHERE ORDERID = t_fin_order.ID) AND ID = " + id.ToString();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = await cmd.ExecuteReaderAsync();
-                if (reader.HasRows)
-                {
-                    bStillInUse = true;
-                }
-                else
-                {
-                    reader.Dispose();
-                    reader = null;
-
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Now go ahead for the deletion
-                    SqlTransaction tran = conn.BeginTransaction();
-
-                    queryString = @"DELETE FROM [dbo].[t_fin_order] WHERE [ID] = @id";
-
+                    // Check Home assignment with current user
                     try
                     {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception exp)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    // Check whether the order is used already
+                    queryString = @"SELECT ID FROM [t_fin_order] WHERE EXISTS (SELECT * FROM [t_fin_document_item] WHERE ORDERID = t_fin_order.ID) AND ID = " + id.ToString();
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = await cmd.ExecuteReaderAsync();
+                    if (reader.HasRows)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Order still in use!");
+                    }
+                    else
+                    {
+                        reader.Dispose();
+                        reader = null;
+
+                        cmd.Dispose();
+                        cmd = null;
+
+                        // Now go ahead for the deletion
+                        tran = conn.BeginTransaction();
+
+                        queryString = @"DELETE FROM [dbo].[t_fin_order] WHERE [ID] = @id";
+
                         cmd = new SqlCommand(queryString, conn)
                         {
                             Transaction = tran
@@ -650,42 +753,55 @@ namespace achihapi.Controllers
 
                         tran.Commit();
                     }
-                    catch (Exception exp)
-                    {
-#if DEBUG
-                        System.Diagnostics.Debug.WriteLine(exp.Message);
-#endif
-                        bError = true;
-                        strErrMsg = exp.Message;
-
-                        if (tran != null)
-                            tran.Rollback();
-                    }
                 }
             }
             catch (Exception exp)
             {
+                if (tran != null)
+                    tran.Rollback();
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bStillInUse)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return BadRequest("Order still in use!");
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
-
-            if (bError)
-                return StatusCode(500, strErrMsg);
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {

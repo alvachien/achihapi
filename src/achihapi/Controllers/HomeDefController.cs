@@ -9,6 +9,7 @@ using System.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
+using System.Net;
 
 namespace achihapi.Controllers
 {
@@ -39,18 +40,17 @@ namespace achihapi.Controllers
          * 
          */
 
-        // Buffer to improve performance
-        internal static BaseListViewModel<HomeDefViewModel> listReadEntries = new BaseListViewModel<HomeDefViewModel>();
-
         // GET: api/homedef
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<HomeDefViewModel> listVm = new BaseListViewModel<HomeDefViewModel>();
-            SqlConnection conn = null; 
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             String strErrMsg = "";
 
             try
@@ -82,50 +82,75 @@ namespace achihapi.Controllers
                     return BadRequest();
                 }
 
-                conn = new SqlConnection(Startup.DBConnectionString);
                 queryString = this.getQueryString(true, top, skip, null, scopeFilter);
-
-                await conn.OpenAsync();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    while (reader.Read())
+                    await conn.OpenAsync();
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
                     {
-                        listVm.TotalCount = reader.GetInt32(0);
-                        break;
+                        while (reader.Read())
+                        {
+                            listVm.TotalCount = reader.GetInt32(0);
+                            break;
+                        }
                     }
-                }
-                reader.NextResult();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
+                    reader.NextResult();
+                    if (reader.HasRows)
                     {
-                        HomeDefViewModel vm = new HomeDefViewModel();
-                        HIHDBUtility.HomeDef_DB2VM(reader, vm);
-                        listVm.Add(vm);
+                        while (reader.Read())
+                        {
+                            HomeDefViewModel vm = new HomeDefViewModel();
+                            HIHDBUtility.HomeDef_DB2VM(reader, vm);
+                            listVm.Add(vm);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -143,11 +168,12 @@ namespace achihapi.Controllers
         public async Task<IActionResult> Get(int id)
         {
             HomeDefViewModel vm = new HomeDefViewModel();
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
             String queryString = "";
-            Boolean bExist = false;
-            Boolean bError = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             String strErrMsg = "";
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
 
             try
             {
@@ -170,55 +196,83 @@ namespace achihapi.Controllers
                 }
 
                 queryString = this.getQueryString(false, null, null, id, scopeFilter);
-
-                await conn.OpenAsync();
-
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    // Header part
-                    bExist = true;
-                    while (reader.Read())
+                    await conn.OpenAsync();
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
                     {
-                        HIHDBUtility.HomeDef_DB2VM(reader, vm);
+                        // Header part
+                        while (reader.Read())
+                        {
+                            HIHDBUtility.HomeDef_DB2VM(reader, vm);
 
-                        // It should return one entry only!
-                        // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
+                            // It should return one entry only!
+                            // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
 
-                        break;
+                            break;
+                        }
+
+                        reader.NextResult();
+
+                        while (reader.Read())
+                        {
+                            HomeMemViewModel vmMem = new HomeMemViewModel();
+                            HIHDBUtility.HomeMem_DB2VM(reader, vmMem);
+                            vm.Members.Add(vmMem);
+                        }
                     }
-
-                    reader.NextResult();
-
-                    while(reader.Read())
+                    else
                     {
-                        HomeMemViewModel vmMem = new HomeMemViewModel();
-                        HIHDBUtility.HomeMem_DB2VM(reader, vmMem);
-                        vm.Members.Add(vmMem);
+                        errorCode = HttpStatusCode.NotFound;
+                        throw new Exception();
                     }
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            // In case not found, return a 404
-            if (!bExist)
-                return NotFound();
-            else if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             // Only return the meaningful object
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -271,74 +325,101 @@ namespace achihapi.Controllers
 
             // Update the database
             SqlConnection conn = null;
+            SqlCommand cmd = null;
             SqlTransaction tran = null;
-
             String queryString = "";
             Int32 nNewID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try
             {
-                conn = new SqlConnection(Startup.DBConnectionString);
-                conn.Open();
-                tran = conn.BeginTransaction();
                 queryString = HIHDBUtility.getHomeDefInsertString();
-                SqlCommand cmd = new SqlCommand(queryString, conn)
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    Transaction = tran
-                };
+                    await conn.OpenAsync();
+                    tran = conn.BeginTransaction();                    
+                    cmd = new SqlCommand(queryString, conn)
+                    {
+                        Transaction = tran
+                    };
 
-                // Home def.
-                HIHDBUtility.bindHomeDefInsertParameter(cmd, vm, usrId);
-                SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                idparam.Direction = ParameterDirection.Output;
+                    // Home def.
+                    HIHDBUtility.bindHomeDefInsertParameter(cmd, vm, usrId);
+                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                    idparam.Direction = ParameterDirection.Output;
 
-                Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                nNewID = (Int32)idparam.Value;
+                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                    nNewID = (Int32)idparam.Value;
 
-                // Home members
-                cmd.Dispose();
-                cmd = null;
-                queryString = HIHDBUtility.getHomeMemInsertString();
-                cmd = new SqlCommand(queryString, conn)
-                {
-                    Transaction = tran
-                };
-                HomeMemViewModel vmMem = new HomeMemViewModel
-                {
-                    HomeID = nNewID,
-                    CreatedBy = usrId,
-                    CreatedAt = DateTime.Now,
-                    User = usrId,
-                    DisplayAs = vm.CreatorDisplayAs,
-                    Relation = (Int16)(HIHHomeMemberRelationship.Self)
-                };
-                HIHDBUtility.bindHomeMemInsertParameter(cmd, vmMem, usrId);
-                await cmd.ExecuteNonQueryAsync();
+                    // Home members
+                    cmd.Dispose();
+                    cmd = null;
+                    queryString = HIHDBUtility.getHomeMemInsertString();
+                    cmd = new SqlCommand(queryString, conn)
+                    {
+                        Transaction = tran
+                    };
+                    HomeMemViewModel vmMem = new HomeMemViewModel
+                    {
+                        HomeID = nNewID,
+                        CreatedBy = usrId,
+                        CreatedAt = DateTime.Now,
+                        User = usrId,
+                        DisplayAs = vm.CreatorDisplayAs,
+                        Relation = (Int16)(HIHHomeMemberRelationship.Self)
+                    };
+                    HIHDBUtility.bindHomeMemInsertParameter(cmd, vmMem, usrId);
+                    await cmd.ExecuteNonQueryAsync();
 
-                tran.Commit();
+                    tran.Commit();
+                }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
 
                 if (tran != null)
                     tran.Rollback();
             }
             finally
             {
+                if (tran != null)
+                {
+                    tran.Dispose();
+                    tran = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             vm.ID = nNewID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -395,40 +476,62 @@ namespace achihapi.Controllers
             }
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             String queryString = "";
-            Int32 nNewID = -1;
-            Boolean bError = false;
             String strErrMsg = "";
 
             try
             {
                 queryString = HIHDBUtility.getHomeDefUpdateString();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    cmd = new SqlCommand(queryString, conn);
 
-                HIHDBUtility.bindHomeDefUpdateParameter(cmd, vm, usrName);
+                    HIHDBUtility.bindHomeDefUpdateParameter(cmd, vm, usrName);
 
-                await cmd.ExecuteNonQueryAsync();
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
-            vm.ID = nNewID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
@@ -474,27 +577,39 @@ namespace achihapi.Controllers
             }
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
             String queryString = "";
-            Boolean bError = false;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             String strErrMsg = "";
 
             try
             {
                 queryString = HIHDBUtility.getHomeDefDeleteString();
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@ID", id);
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@ID", id);
 
-                await cmd.ExecuteNonQueryAsync();
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
+#endif
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
                     conn.Close();
@@ -502,8 +617,20 @@ namespace achihapi.Controllers
                 }
             }
 
-            if (bError)
-                return StatusCode(500, strErrMsg);
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
 
             return Ok();
         }
