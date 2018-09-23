@@ -17,7 +17,7 @@ namespace achihapi.Controllers
         [Authorize]
         public IActionResult Calculate([FromBody]ADPGenerateViewModel vm)
         {
-            HttpStatusCode errorCode = HttpStatusCode.OK;
+            //HttpStatusCode errorCode = HttpStatusCode.OK;
             try
             {
                 List<ADPGenerateResult> results = FinanceCalcUtility.GenerateAdvancePaymentTmps(vm);

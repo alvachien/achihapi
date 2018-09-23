@@ -50,7 +50,6 @@ namespace achihapi.Controllers
             SqlDataReader reader = null;
             String queryString = "";
             String strErrMsg = "";
-            Boolean bNotFound = false;
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
             try

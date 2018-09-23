@@ -72,14 +72,14 @@ namespace achihapi
 
             // DB connection string
 #if DEBUG
-            DBConnectionString = Configuration["ConnectionStrings:DebugConnection"];
+            DBConnectionString = Configuration.GetConnectionString("DebugConnection");
             if (UnitTestMode)
-                DBConnectionString = Configuration["ConnectionStrings:UnitTestConnection"];
+                DBConnectionString = Configuration.GetConnectionString("UnitTestConnection");
 #else
 #if USE_ALIYUN
-            DBConnectionString = Configuration["ConnectionStrings:AliyunConnection"];
+            DBConnectionString = Configuration.GetConnectionString("AliyunConnection");
 #elif USE_AZURE
-            DBConnectionString = Configuration["ConnectionStrings:AzureConnection"];
+            DBConnectionString = Configuration.GetConnectionString("AzureConnection");
 #endif
 #endif
         }

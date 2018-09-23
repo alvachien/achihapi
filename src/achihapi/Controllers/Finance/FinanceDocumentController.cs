@@ -355,7 +355,7 @@ namespace achihapi.Controllers
                     {
                         await FinanceDocumentBasicValidationAsync(vm, conn);
                     }
-                    catch (Exception exp)
+                    catch (Exception)
                     {
                         errorCode = HttpStatusCode.BadRequest;
                         throw;

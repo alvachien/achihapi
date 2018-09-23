@@ -67,7 +67,7 @@ namespace achihapi.Controllers
                     {
                         HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                     }
-                    catch (Exception exp)
+                    catch (Exception)
                     {
                         errorCode = HttpStatusCode.BadRequest;
                         throw;
