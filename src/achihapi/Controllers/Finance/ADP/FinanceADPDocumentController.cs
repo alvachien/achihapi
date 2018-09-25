@@ -224,7 +224,7 @@ namespace achihapi.Controllers
             else if(vm.DocType == FinanceDocTypeViewModel.DocType_AdvanceReceive)
             {
                 if (vm.Items[0].TranType != FinanceTranTypeViewModel.TranType_AdvanceReceiveIn)
-                    return BadRequest("Invalid tran. type for advance payment");
+                    return BadRequest("Invalid tran. type for advance receive");
             }
 
             // Update the database
