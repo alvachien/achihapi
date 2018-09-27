@@ -18,6 +18,7 @@ namespace achihapi.Controllers
         // GET: api/financedocument
         [HttpGet]
         [Authorize]
+        [ResponseCache(Duration = 180)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, DateTime? dtbgn = null, DateTime? dtend = null, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceDocumentUIViewModel> listVMs = new BaseListViewModel<FinanceDocumentUIViewModel>();
@@ -162,10 +163,11 @@ namespace achihapi.Controllers
         // GET api/financedocument/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
+        public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
+
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
                 usrName = UnitTestUtility.UnitTestUser;
@@ -301,6 +303,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceDocumentUIViewModel vm)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (vm == null || vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment
                 || vm.DocType == FinanceDocTypeViewModel.DocType_AdvanceReceive
                 || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
@@ -479,8 +486,13 @@ namespace achihapi.Controllers
         // PUT api/financedocument/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(int id, [FromBody]FinanceDocumentUIViewModel vm)
+        public async Task<IActionResult> Put([FromRoute]int id, [FromBody]FinanceDocumentUIViewModel vm)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (vm == null || vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment
                 || vm.DocType == FinanceDocTypeViewModel.DocType_AdvanceReceive
                 || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
@@ -667,7 +679,7 @@ namespace achihapi.Controllers
         // DELETE api/financedocument/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id, [FromQuery]Int32 hid = 0)
+        public async Task<IActionResult> Delete([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
             if (hid <= 0)
                 return BadRequest("No Home Inputted");

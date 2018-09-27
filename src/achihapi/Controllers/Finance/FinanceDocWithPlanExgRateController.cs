@@ -20,6 +20,7 @@ namespace achihapi.Controllers
         // GET: api/FinanceDocWithPlanExgRate
         [HttpGet]
         [Authorize]
+        [ResponseCache(Duration = 300)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, String tgtcurr)
         {
             if (hid <= 0)
@@ -174,7 +175,7 @@ namespace achihapi.Controllers
         // GET: api/FinanceDocWithPlanExgRate/5
         [HttpGet("{id}")]
         [Authorize]
-        public IActionResult Get(int id)
+        public IActionResult Get([FromRoute]int id)
         {
             return BadRequest();
         }
@@ -184,8 +185,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceDocPlanExgRateForUpdViewModel vm)
         {
-            if (vm == null)
-                return BadRequest("No Data inputted");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (vm.HID <= 0)
                 return BadRequest("No Home inputted");
 
@@ -351,14 +355,14 @@ namespace achihapi.Controllers
 
         // PUT: api/FinanceDocWithPlanExgRate/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody]string value)
+        public IActionResult Put([FromRoute]int id, [FromBody]string value)
         {
             return BadRequest();
         }
 
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute]int id)
         {
             return BadRequest();
         }

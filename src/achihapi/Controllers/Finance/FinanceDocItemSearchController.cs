@@ -22,6 +22,11 @@ namespace achihapi.Controllers
         [HttpPost]
         public async Task<IActionResult> Search([FromBody]FinanceDocItemSearchFilterViewModel filters, [FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
             if (filters == null || filters.FieldList.Count <= 0)

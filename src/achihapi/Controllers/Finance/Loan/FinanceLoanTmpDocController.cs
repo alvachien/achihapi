@@ -140,7 +140,7 @@ namespace achihapi.Controllers
 
         // GET: api/FinanceLoanTmpDoc/5
         [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        public IActionResult Get([FromRoute]int id)
         {
             return Forbid();
         }
@@ -156,7 +156,7 @@ namespace achihapi.Controllers
         // PUT: api/FinanceLoanTmpDoc/5
         [HttpPut("{id}")]
         [Authorize]
-        public IActionResult Put(int id, [FromBody]FinanceTmpDocDPViewModel vm)
+        public IActionResult Put([FromRoute]int id, [FromBody]FinanceTmpDocDPViewModel vm)
         {
             return BadRequest();
         }
@@ -164,7 +164,7 @@ namespace achihapi.Controllers
         // DELETE: api/FinanceLoanTmpDoc/5
         [HttpDelete("{id}")]
         [Authorize]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute]int id)
         {
             return BadRequest();
         }

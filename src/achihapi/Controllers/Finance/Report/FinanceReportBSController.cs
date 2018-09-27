@@ -10,6 +10,7 @@ using System.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using achihapi.Utilities;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -17,11 +18,21 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class FinanceReportBSController : Controller
     {
+        private IMemoryCache _cache;
+
+        public FinanceReportBSController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         // GET: api/financereportbs
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 hid)
         {
+            if (hid <= 0)
+                return BadRequest("No HID inputted");
+
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
                 usrName = UnitTestUtility.UnitTestUser;
@@ -40,9 +51,6 @@ namespace achihapi.Controllers
             String queryString = "";
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
-
-            if (hid <= 0)
-                return BadRequest("No HID inputted");
 
             try
             {

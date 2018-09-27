@@ -17,6 +17,7 @@ namespace achihapi.Controllers
         // GET: api/trantype
         [HttpGet]
         [Authorize]
+        [ResponseCache(Duration = 600)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
             String usrName = String.Empty;
@@ -131,7 +132,9 @@ namespace achihapi.Controllers
 
         // GET api/trantype/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        [Authorize]
+        [ResponseCache(Duration = 600)]
+        public async Task<IActionResult> Get([FromRoute]int id)
         {
             FinanceTranTypeViewModel vm = new FinanceTranTypeViewModel();
             SqlConnection conn = null;
@@ -226,7 +229,7 @@ namespace achihapi.Controllers
         // PUT api/trantype/5
         [HttpPut("{id}")]
         [Authorize]
-        public IActionResult Put(int id, [FromBody]string value)
+        public IActionResult Put([FromRoute]int id, [FromBody]string value)
         {
             return BadRequest();
         }
@@ -234,7 +237,7 @@ namespace achihapi.Controllers
         // DELETE api/trantype/5
         [HttpDelete("{id}")]
         [Authorize]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute]int id)
         {
             return BadRequest();
         }

@@ -36,6 +36,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromQuery]Int32 hid, Int32 loanAccountID, Int32? tmpdocid, [FromBody]FinanceDocumentUIViewModel repaydoc)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             // The post here is:
             // 1. Post a repayment document with the content from this template doc
             // 2. Update the template doc with REFDOCID
@@ -316,14 +321,14 @@ namespace achihapi.Controllers
 
         // PUT: api/FinanceLoanRepayDocument/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody]string value)
+        public IActionResult Put([FromRoute]int id, [FromBody]string value)
         {
             return Forbid();
         }
         
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute]int id)
         {
             return Forbid();
         }

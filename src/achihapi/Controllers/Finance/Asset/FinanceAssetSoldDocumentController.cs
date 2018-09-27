@@ -26,7 +26,7 @@ namespace achihapi.Controllers
         // GET: api/FinanceAssetSoldDocument/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
+        public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
             if (hid <= 0)
                 return BadRequest("Not HID inputted");
@@ -181,6 +181,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceAssetDocumentUIViewModel vm)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (vm == null || vm.DocType != FinanceDocTypeViewModel.DocType_AssetSoldOut)
             {
                 return BadRequest("No data is inputted");

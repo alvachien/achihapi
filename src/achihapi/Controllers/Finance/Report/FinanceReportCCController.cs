@@ -20,8 +20,12 @@ namespace achihapi.Controllers
         // GET: api/financereportcc
         [HttpGet]
         [Authorize]
+        [ResponseCache(Duration = 300)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid)
         {
+            if (hid <= 0)
+                return BadRequest("No HID inputted");
+
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
                 usrName = UnitTestUtility.UnitTestUser;
@@ -40,9 +44,6 @@ namespace achihapi.Controllers
             String queryString = "";
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
-
-            if (hid <= 0)
-                return BadRequest("No HID inputted");
 
             try
             {

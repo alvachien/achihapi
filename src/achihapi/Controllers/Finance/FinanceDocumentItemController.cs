@@ -18,6 +18,7 @@ namespace achihapi.Controllers
         // GET: api/financedocumentitems
         [HttpGet]
         [Authorize]
+        [ResponseCache(Duration = 300)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32? top = null, Int32? skip = null, String sort = null, Int32? acntid = null, Int32? ccid = null, Int32? ordid = null,
             DateTime? dtbgn = null, DateTime? dtend = null)
         {

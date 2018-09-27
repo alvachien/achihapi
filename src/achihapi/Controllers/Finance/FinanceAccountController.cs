@@ -19,6 +19,7 @@ namespace achihapi.Controllers
         // GET: api/financeaccount
         [HttpGet]
         [Authorize]
+        [ResponseCache(Duration = 600)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Byte? status = null, Int32 top = 100, Int32 skip = 0)
         {
             if (hid <= 0)
@@ -153,7 +154,8 @@ namespace achihapi.Controllers
         // GET api/financeaccount/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
+        [ResponseCache(Duration = 600)]
+        public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
             if (hid <= 0)
                 return BadRequest("Not HID inputted");
@@ -460,6 +462,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceAccountViewModel vm)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (vm == null 
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive
@@ -644,8 +651,13 @@ namespace achihapi.Controllers
         // PUT api/financeaccount/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(int id, [FromBody]FinanceAccountViewModel vm)
+        public async Task<IActionResult> Put([FromRoute]int id, [FromBody]FinanceAccountViewModel vm)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (vm == null || vm.HID <= 0 || vm.ID != id)
             {
                 return BadRequest("Invalid inputted data, such as miss HID");
@@ -910,7 +922,7 @@ namespace achihapi.Controllers
 
         // PATCH api/financeaccount/5
         [HttpPatch("{id}")]
-        public async Task<IActionResult> Patch(int id, [FromQuery]int hid, [FromBody]JsonPatchDocument<FinanceAccountUIViewModel> patch)
+        public async Task<IActionResult> Patch([FromRoute]int id, [FromQuery]int hid, [FromBody]JsonPatchDocument<FinanceAccountUIViewModel> patch)
         {
             if (patch == null || id <= 0)
                 return BadRequest("No data is inputted");

@@ -82,6 +82,10 @@ namespace achihapi
             DBConnectionString = Configuration.GetConnectionString("AzureConnection");
 #endif
 #endif
+            // Response Caching
+            services.AddResponseCaching();
+            // Memory cache
+            services.AddMemoryCache();
         }
 
         public void Configure(IApplicationBuilder app)
@@ -128,6 +132,8 @@ namespace achihapi
                 );
 
             app.UseMvc();
+
+            app.UseResponseCaching();
         }
     }
 }

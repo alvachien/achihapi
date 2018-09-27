@@ -17,7 +17,11 @@ namespace achihapi.Controllers
         [Authorize]
         public IActionResult Calculate([FromBody]LoanCalcViewModel vm)
         {
-            //HttpStatusCode errorCode = HttpStatusCode.OK;
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 List<LoanCalcResult> results = FinanceCalcUtility.LoanCalculate(vm);

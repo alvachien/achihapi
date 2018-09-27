@@ -19,6 +19,7 @@ namespace achihapi.Controllers
         // GET: api/financecontrolcenter
         [HttpGet]
         [Authorize]
+        [ResponseCache(Duration = 600)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
             if (hid <= 0)
@@ -140,7 +141,8 @@ namespace achihapi.Controllers
         // GET api/financecontrolcenter/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
+        [ResponseCache(Duration = 600)]
+        public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
             if (hid <= 0)
                 return BadRequest("No Home inputted");
@@ -256,7 +258,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceControlCenterViewModel vm)
         {
-            if (vm == null)
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            if (vm == null || vm.HID <= 0)
                 return BadRequest("No data is inputted");
 
             String usrName = String.Empty;
@@ -270,8 +276,6 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            if (vm.HID <= 0)
-                return BadRequest("No Home Inputted");
             if (vm.Name != null)
                 vm.Name = vm.Name.Trim();
             if (String.IsNullOrEmpty(vm.Name))
@@ -423,7 +427,7 @@ namespace achihapi.Controllers
 
         // PUT api/financecontrollingcenter/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody]FinanceControlCenterViewModel vm)
+        public async Task<IActionResult> Put([FromRoute]int id, [FromBody]FinanceControlCenterViewModel vm)
         {
             if (vm == null)
                 return BadRequest("No data is inputted");
@@ -583,7 +587,7 @@ namespace achihapi.Controllers
         // DELETE api/financecontrollingcenter/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id, [FromQuery] Int32 hid = 0)
+        public async Task<IActionResult> Delete([FromRoute]int id, [FromQuery] Int32 hid = 0)
         {
             String usrName = String.Empty;
             if (Startup.UnitTestMode)

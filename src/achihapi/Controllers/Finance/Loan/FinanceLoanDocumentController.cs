@@ -28,7 +28,7 @@ namespace achihapi.Controllers
         // GET: api/FinanceLoanDocument/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
+        public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
             if (hid <= 0)
                 return BadRequest("Not HID inputted");
@@ -193,6 +193,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceLoanDocumentUIViewModel vm)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (vm == null || (vm.DocType != FinanceDocTypeViewModel.DocType_BorrowFrom
                 && vm.DocType != FinanceDocTypeViewModel.DocType_LendTo))
             {
@@ -441,7 +446,7 @@ namespace achihapi.Controllers
         // PUT: api/FinanceLoanDocument/5
         [HttpPut("{id}")]
         [Authorize]
-        public IActionResult Put(int id, [FromBody]string value)
+        public IActionResult Put([FromRoute]int id, [FromBody]string value)
         {
             return BadRequest();
         }
@@ -449,7 +454,7 @@ namespace achihapi.Controllers
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
         [Authorize]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute]int id)
         {
             return BadRequest();
         }

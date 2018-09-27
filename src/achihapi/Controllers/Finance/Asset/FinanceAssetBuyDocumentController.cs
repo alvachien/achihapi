@@ -183,6 +183,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceAssetDocumentUIViewModel vm)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (vm == null || vm.DocType != FinanceDocTypeViewModel.DocType_AssetBuyIn 
                 || vm.AccountVM == null || vm.AccountVM.ExtraInfo_AS == null
                 || vm.Items.Count <= 0)
@@ -386,14 +391,14 @@ namespace achihapi.Controllers
         // PUT: api/FinanceAssetBuyDocument/5
         [HttpPut("{id}")]
         [Authorize]
-        public IActionResult Put(int id, [FromBody]string value)
+        public IActionResult Put([FromRoute]int id, [FromBody]string value)
         {
             return BadRequest();
         }
 
         // PATCH: 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> Patch(int id, [FromQuery]int hid, [FromBody]JsonPatchDocument<FinanceAssetDocumentUIViewModel> patch)
+        public async Task<IActionResult> Patch([FromRoute]int id, [FromQuery]int hid, [FromBody]JsonPatchDocument<FinanceAssetDocumentUIViewModel> patch)
         {
             if (patch == null || id <= 0 || patch.Operations.Count <= 0)
                 return BadRequest("No data is inputted");
@@ -592,7 +597,7 @@ namespace achihapi.Controllers
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
         [Authorize]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute]int id)
         {
             return BadRequest();
         }

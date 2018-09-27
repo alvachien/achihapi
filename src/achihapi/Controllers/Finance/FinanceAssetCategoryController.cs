@@ -18,6 +18,7 @@ namespace achihapi.Controllers
         // GET: api/financeassetcategory
         [HttpGet]
         [Authorize]
+        [ResponseCache(Duration = 600)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceAssetCtgyViewModel> listVMs = new BaseListViewModel<FinanceAssetCtgyViewModel>();
@@ -141,7 +142,8 @@ namespace achihapi.Controllers
         // GET api/financeassetcategory/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
+        [ResponseCache(Duration = 600)]
+        public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -266,7 +268,7 @@ namespace achihapi.Controllers
         // PUT api/financeassetcateogry/5
         [HttpPut("{id}")]
         [Authorize]
-        public IActionResult Put(int id, [FromBody]string value)
+        public IActionResult Put([FromRoute]int id, [FromBody]string value)
         {
             return BadRequest();
         }
@@ -274,7 +276,7 @@ namespace achihapi.Controllers
         // DELETE api/financeassetcateogry/5
         [HttpDelete("{id}")]
         [Authorize]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute]int id)
         {
             return BadRequest();
         }

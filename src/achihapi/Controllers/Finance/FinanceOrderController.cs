@@ -20,6 +20,7 @@ namespace achihapi.Controllers
         // GET: api/financeorder
         [HttpGet]
         [Authorize]
+        [ResponseCache(Duration = 600)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean? incInv = null)
         {
             if (hid <= 0)
@@ -153,7 +154,8 @@ namespace achihapi.Controllers
         // GET api/financeorder/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> Get(int id, [FromQuery]Int32 hid = 0)
+        [ResponseCache(Duration = 600)]
+        public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
             if (hid <= 0)
                 return BadRequest("No Home Inputted");
@@ -277,6 +279,11 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceOrderViewModel vm)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
                 usrName = UnitTestUtility.UnitTestUser;
@@ -288,8 +295,6 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            if (vm == null)
-                return BadRequest("No data is inputted");
             if (vm.HID <= 0)
                 return BadRequest("No Home Inputted");
 
@@ -468,8 +473,13 @@ namespace achihapi.Controllers
         // PUT api/financeorder/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Put(int id, [FromBody]FinanceOrderViewModel vm)
+        public async Task<IActionResult> Put([FromRoute]int id, [FromBody]FinanceOrderViewModel vm)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
                 usrName = UnitTestUtility.UnitTestUser;
@@ -668,7 +678,7 @@ namespace achihapi.Controllers
         // DELETE api/financeorder/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id, [FromQuery] Int32 hid = 0)
+        public async Task<IActionResult> Delete([FromRoute]int id, [FromQuery] Int32 hid = 0)
         {
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
