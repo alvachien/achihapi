@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -17,6 +18,13 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class FinanceReportOrderController : Controller
     {
+        private IMemoryCache _cache;
+
+        public FinanceReportOrderController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         // GET: api/financereportorder
         [HttpGet]
         [Authorize]

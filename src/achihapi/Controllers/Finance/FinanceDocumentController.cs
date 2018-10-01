@@ -8,6 +8,7 @@ using System.Data;
 using System.Data.SqlClient;
 using achihapi.Utilities;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -18,7 +19,6 @@ namespace achihapi.Controllers
         // GET: api/financedocument
         [HttpGet]
         [Authorize]
-        [ResponseCache(Duration = 180)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, DateTime? dtbgn = null, DateTime? dtend = null, Int32 top = 100, Int32 skip = 0)
         {
             BaseListViewModel<FinanceDocumentUIViewModel> listVMs = new BaseListViewModel<FinanceDocumentUIViewModel>();

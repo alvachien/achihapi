@@ -10,6 +10,7 @@ using System.Data;
 using System.Data.SqlClient;
 using achihapi.Utilities;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -20,7 +21,6 @@ namespace achihapi.Controllers
         // GET: api/FinanceDocWithPlanExgRate
         [HttpGet]
         [Authorize]
-        [ResponseCache(Duration = 300)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, String tgtcurr)
         {
             if (hid <= 0)

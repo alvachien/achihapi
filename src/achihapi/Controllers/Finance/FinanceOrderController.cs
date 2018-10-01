@@ -9,6 +9,7 @@ using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -20,7 +21,6 @@ namespace achihapi.Controllers
         // GET: api/financeorder
         [HttpGet]
         [Authorize]
-        [ResponseCache(Duration = 600)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean? incInv = null)
         {
             if (hid <= 0)
@@ -154,7 +154,6 @@ namespace achihapi.Controllers
         // GET api/financeorder/5
         [HttpGet("{id}")]
         [Authorize]
-        [ResponseCache(Duration = 600)]
         public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
             if (hid <= 0)

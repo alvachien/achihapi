@@ -9,6 +9,7 @@ using achihapi.Utilities;
 using Microsoft.AspNetCore.JsonPatch;
 using System.Collections.Generic;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -16,10 +17,15 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class FinanceAccountController : Controller
     {
+        private IMemoryCache _cache;
+        public FinanceAccountController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         // GET: api/financeaccount
         [HttpGet]
         [Authorize]
-        [ResponseCache(Duration = 600)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Byte? status = null, Int32 top = 100, Int32 skip = 0)
         {
             if (hid <= 0)
@@ -154,7 +160,6 @@ namespace achihapi.Controllers
         // GET api/financeaccount/5
         [HttpGet("{id}")]
         [Authorize]
-        [ResponseCache(Duration = 600)]
         public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
             if (hid <= 0)

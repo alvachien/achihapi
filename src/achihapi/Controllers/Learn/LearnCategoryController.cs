@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -14,10 +15,15 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class LearnCategoryController : Controller
     {
+        private IMemoryCache _cache;
+        public LearnCategoryController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         // GET: api/learncategory
         [HttpGet]
         [Authorize]
-        [ResponseCache(Duration = 600)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
         {
             String usrName = String.Empty;

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -17,6 +18,8 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class HomeDefController : Controller
     {
+        private IMemoryCache _cache;
+
         /**
          * Create
          *      When a user create a Home defintion, it will be the host automatically.
@@ -40,12 +43,17 @@ namespace achihapi.Controllers
          * 
          */
 
+        public HomeDefController(IMemoryCache cache)
+        {
+            this._cache = cache;
+        }
+
         // GET: api/homedef
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
         {
-            BaseListViewModel<HomeDefViewModel> listVm = new BaseListViewModel<HomeDefViewModel>();
+            BaseListViewModel<HomeDefViewModel> listVm = null;
             SqlConnection conn = null;
             SqlCommand cmd = null;
             SqlDataReader reader = null;
@@ -82,31 +90,46 @@ namespace achihapi.Controllers
                     return BadRequest();
                 }
 
-                queryString = this.getQueryString(true, top, skip, null, scopeFilter);
-                using (conn = new SqlConnection(Startup.DBConnectionString))
+                // Cache key
+                var cacheKey = String.Format(CacheKeys.HomeDefList, scopeFilter, top, skip);
+                if (_cache.TryGetValue<BaseListViewModel<HomeDefViewModel>>(cacheKey, out listVm))
                 {
-                    await conn.OpenAsync();
-
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-
-                    if (reader.HasRows)
+                    // Do nothing
+                }
+                else
+                {
+                    listVm = new BaseListViewModel<HomeDefViewModel>();
+                    queryString = this.getQueryString(true, top, skip, null, scopeFilter);
+                    using (conn = new SqlConnection(Startup.DBConnectionString))
                     {
-                        while (reader.Read())
+                        await conn.OpenAsync();
+
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = cmd.ExecuteReader();
+
+                        if (reader.HasRows)
                         {
-                            listVm.TotalCount = reader.GetInt32(0);
-                            break;
+                            while (reader.Read())
+                            {
+                                listVm.TotalCount = reader.GetInt32(0);
+                                break;
+                            }
+                        }
+                        reader.NextResult();
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                HomeDefViewModel vm = new HomeDefViewModel();
+                                HIHDBUtility.HomeDef_DB2VM(reader, vm);
+                                listVm.Add(vm);
+                            }
                         }
                     }
-                    reader.NextResult();
-                    if (reader.HasRows)
+
+                    if (listVm.TotalCount > 0)
                     {
-                        while (reader.Read())
-                        {
-                            HomeDefViewModel vm = new HomeDefViewModel();
-                            HIHDBUtility.HomeDef_DB2VM(reader, vm);
-                            listVm.Add(vm);
-                        }
+                        _cache.Set<BaseListViewModel<HomeDefViewModel>>(cacheKey, listVm, TimeSpan.FromMinutes(10));
                     }
                 }
             }
@@ -167,7 +190,7 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Get(int id)
         {
-            HomeDefViewModel vm = new HomeDefViewModel();
+            HomeDefViewModel vm = null;
             SqlConnection conn = null;
             String queryString = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
@@ -195,40 +218,52 @@ namespace achihapi.Controllers
                     return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
                 }
 
-                queryString = this.getQueryString(false, null, null, id, scopeFilter);
-                using (conn = new SqlConnection(Startup.DBConnectionString))
+                var cacheKey = String.Format(CacheKeys.HomeDef, id);
+                if (_cache.TryGetValue<HomeDefViewModel>(cacheKey, out vm))
                 {
-                    await conn.OpenAsync();
+                    // Do nothing
+                }
+                else
+                {
+                    vm = new HomeDefViewModel();
+                    queryString = this.getQueryString(false, null, null, id, scopeFilter);
 
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-                    if (reader.HasRows)
+                    using (conn = new SqlConnection(Startup.DBConnectionString))
                     {
-                        // Header part
-                        while (reader.Read())
+                        await conn.OpenAsync();
+
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = cmd.ExecuteReader();
+                        if (reader.HasRows)
                         {
-                            HIHDBUtility.HomeDef_DB2VM(reader, vm);
+                            // Header part
+                            while (reader.Read())
+                            {
+                                HIHDBUtility.HomeDef_DB2VM(reader, vm);
 
-                            // It should return one entry only!
-                            // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
+                                // It should return one entry only!
+                                // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
 
-                            break;
+                                break;
+                            }
+
+                            reader.NextResult();
+
+                            while (reader.Read())
+                            {
+                                HomeMemViewModel vmMem = new HomeMemViewModel();
+                                HIHDBUtility.HomeMem_DB2VM(reader, vmMem);
+                                vm.Members.Add(vmMem);
+                            }
                         }
-
-                        reader.NextResult();
-
-                        while (reader.Read())
+                        else
                         {
-                            HomeMemViewModel vmMem = new HomeMemViewModel();
-                            HIHDBUtility.HomeMem_DB2VM(reader, vmMem);
-                            vm.Members.Add(vmMem);
+                            errorCode = HttpStatusCode.NotFound;
+                            throw new Exception();
                         }
                     }
-                    else
-                    {
-                        errorCode = HttpStatusCode.NotFound;
-                        throw new Exception();
-                    }
+
+                    _cache.Set<HomeDefViewModel>(cacheKey, vm, TimeSpan.FromMinutes(10));
                 }
             }
             catch (Exception exp)

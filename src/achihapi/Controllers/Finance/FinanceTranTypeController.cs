@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -14,11 +15,17 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class FinanceTranTypeController : Controller
     {
+        private IMemoryCache _cache;
+        public FinanceTranTypeController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         // GET: api/trantype
         [HttpGet]
         [Authorize]
-        [ResponseCache(Duration = 600)]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid = 0, Int32 top = 100, Int32 skip = 0)
+        [Produces(typeof(List<FinanceTranTypeViewModel>))]
+        public async Task<IActionResult> Get([FromQuery]Int32 hid = 0)
         {
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -31,7 +38,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            BaseListViewModel<FinanceTranTypeViewModel> listVMs = new BaseListViewModel<FinanceTranTypeViewModel>();
+            List<FinanceTranTypeViewModel> listVMs = null;
 
             SqlConnection conn = null;
             SqlCommand cmd = null;
@@ -42,53 +49,80 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(true, top, skip, null, hid);
+                var cacheKey = String.Format(CacheKeys.FinTranTypeList, hid);
 
-                using (conn = new SqlConnection(Startup.DBConnectionString))
+                if (_cache.TryGetValue<List<FinanceTranTypeViewModel>>(cacheKey, out listVMs))
                 {
-                    await conn.OpenAsync();
+                    // Do nothing
+                }
+                else
+                {
+                    listVMs = new List<FinanceTranTypeViewModel>();
+                    if (hid == 0)
+                        queryString = @"SELECT [ID]
+                          ,[HID]
+                          ,[NAME]
+                          ,[EXPENSE]
+                          ,[PARID]
+                          ,[COMMENT]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                          FROM [dbo].[t_fin_tran_type] WHERE [HID] IS NULL";
+                    else
+                        queryString = @"SELECT [ID]
+                          ,[HID]
+                          ,[NAME]
+                          ,[EXPENSE]
+                          ,[PARID]
+                          ,[COMMENT]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                          FROM [dbo].[t_fin_tran_type] WHERE [HID] IS NULL OR [HID] = " + hid.ToString();
 
-                    if (hid != 0)
+                    using (conn = new SqlConnection(Startup.DBConnectionString))
                     {
-                        // Check Home assignment with current user
-                        try
+                        await conn.OpenAsync();
+
+                        if (hid != 0)
                         {
-                            HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                            // Check Home assignment with current user
+                            try
+                            {
+                                HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                            }
+                            catch (Exception)
+                            {
+                                errorCode = HttpStatusCode.BadRequest;
+                                throw;
+                            }
                         }
-                        catch (Exception)
+
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = cmd.ExecuteReader();
+
+                        if (reader.HasRows)
                         {
-                            errorCode = HttpStatusCode.BadRequest;
-                            throw;
+                            while (reader.Read())
+                            {
+                                FinanceTranTypeViewModel avm = new FinanceTranTypeViewModel();
+                                this.onDB2VM(reader, avm);
+                                listVMs.Add(avm);
+                            }
                         }
                     }
 
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            listVMs.TotalCount = reader.GetInt32(0);
-                            break;
-                        }
-                    }
-                    reader.NextResult();
-
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            FinanceTranTypeViewModel avm = new FinanceTranTypeViewModel();
-                            this.onDB2VM(reader, avm);
-                            listVMs.Add(avm);
-                        }
-                    }
+                    _cache.Set<List<FinanceTranTypeViewModel>>(cacheKey, listVMs, TimeSpan.FromMinutes(20));
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
                 strErrMsg = exp.Message;
                 if (errorCode == HttpStatusCode.OK)
                     errorCode = HttpStatusCode.InternalServerError;
@@ -133,89 +167,89 @@ namespace achihapi.Controllers
         // GET api/trantype/5
         [HttpGet("{id}")]
         [Authorize]
-        [ResponseCache(Duration = 600)]
-        public async Task<IActionResult> Get([FromRoute]int id)
+        public IActionResult Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
-            FinanceTranTypeViewModel vm = new FinanceTranTypeViewModel();
-            SqlConnection conn = null;
-            SqlCommand cmd = null;
-            SqlDataReader reader = null;
-            String queryString = "";
-            String strErrMsg = "";
-            HttpStatusCode errorCode = HttpStatusCode.OK;
+            return Forbid();
+            //FinanceTranTypeViewModel vm = new FinanceTranTypeViewModel();
+            //SqlConnection conn = null;
+            //SqlCommand cmd = null;
+            //SqlDataReader reader = null;
+            //String queryString = "";
+            //String strErrMsg = "";
+            //HttpStatusCode errorCode = HttpStatusCode.OK;
 
-            try
-            {
-                queryString = this.getQueryString(false, null, null, id, null);
+            //try
+            //{
+            //    queryString = this.getQueryString(false, null, null, id, null);
 
-                using (conn = new SqlConnection(Startup.DBConnectionString))
-                {
-                    await conn.OpenAsync();
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            onDB2VM(reader, vm);
-                            break; // Should only one result!!!
-                        }
-                    }
-                    else
-                    {
-                        errorCode = HttpStatusCode.NotFound;
-                        throw new Exception();
-                    }
-                }
-            }
-            catch (Exception exp)
-            {
-                System.Diagnostics.Debug.WriteLine(exp.Message);
-                strErrMsg = exp.Message;
-                if (errorCode == HttpStatusCode.OK)
-                    errorCode = HttpStatusCode.InternalServerError;
-            }
-            finally
-            {
-                if (reader != null)
-                {
-                    reader.Dispose();
-                    reader = null;
-                }
-                if (cmd != null)
-                {
-                    cmd.Dispose();
-                    cmd = null;
-                }
-                if (conn != null)
-                {
-                    conn.Dispose();
-                    conn = null;
-                }
-            }
+            //    using (conn = new SqlConnection(Startup.DBConnectionString))
+            //    {
+            //        await conn.OpenAsync();
+            //        cmd = new SqlCommand(queryString, conn);
+            //        reader = cmd.ExecuteReader();
+            //        if (reader.HasRows)
+            //        {
+            //            while (reader.Read())
+            //            {
+            //                onDB2VM(reader, vm);
+            //                break; // Should only one result!!!
+            //            }
+            //        }
+            //        else
+            //        {
+            //            errorCode = HttpStatusCode.NotFound;
+            //            throw new Exception();
+            //        }
+            //    }
+            //}
+            //catch (Exception exp)
+            //{
+            //    System.Diagnostics.Debug.WriteLine(exp.Message);
+            //    strErrMsg = exp.Message;
+            //    if (errorCode == HttpStatusCode.OK)
+            //        errorCode = HttpStatusCode.InternalServerError;
+            //}
+            //finally
+            //{
+            //    if (reader != null)
+            //    {
+            //        reader.Dispose();
+            //        reader = null;
+            //    }
+            //    if (cmd != null)
+            //    {
+            //        cmd.Dispose();
+            //        cmd = null;
+            //    }
+            //    if (conn != null)
+            //    {
+            //        conn.Dispose();
+            //        conn = null;
+            //    }
+            //}
 
-            if (errorCode != HttpStatusCode.OK)
-            {
-                switch (errorCode)
-                {
-                    case HttpStatusCode.Unauthorized:
-                        return Unauthorized();
-                    case HttpStatusCode.NotFound:
-                        return NotFound();
-                    case HttpStatusCode.BadRequest:
-                        return BadRequest();
-                    default:
-                        return StatusCode(500, strErrMsg);
-                }
-            }
+            //if (errorCode != HttpStatusCode.OK)
+            //{
+            //    switch (errorCode)
+            //    {
+            //        case HttpStatusCode.Unauthorized:
+            //            return Unauthorized();
+            //        case HttpStatusCode.NotFound:
+            //            return NotFound();
+            //        case HttpStatusCode.BadRequest:
+            //            return BadRequest();
+            //        default:
+            //            return StatusCode(500, strErrMsg);
+            //    }
+            //}
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings
-            {
-                DateFormatString = HIHAPIConstants.DateFormatPattern,
-                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
-            };
+            //var setting = new Newtonsoft.Json.JsonSerializerSettings
+            //{
+            //    DateFormatString = HIHAPIConstants.DateFormatPattern,
+            //    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            //};
             
-            return new JsonResult(vm, setting);
+            //return new JsonResult(vm, setting);
         }
 
         // POST api/trantype

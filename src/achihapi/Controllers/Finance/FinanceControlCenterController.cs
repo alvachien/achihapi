@@ -19,7 +19,6 @@ namespace achihapi.Controllers
         // GET: api/financecontrolcenter
         [HttpGet]
         [Authorize]
-        [ResponseCache(Duration = 600)]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
         {
             if (hid <= 0)
@@ -141,7 +140,6 @@ namespace achihapi.Controllers
         // GET api/financecontrolcenter/5
         [HttpGet("{id}")]
         [Authorize]
-        [ResponseCache(Duration = 600)]
         public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
             if (hid <= 0)

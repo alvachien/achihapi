@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using achihapi.ViewModels;
 using System.Data.SqlClient;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -14,15 +15,23 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class FinanceCurrencyController : Controller
     {
-        internal static List<FinanceCurrencyViewModel> listReadEntries = new List<FinanceCurrencyViewModel>();
+        private IMemoryCache _cache;
+
+        public FinanceCurrencyController(IMemoryCache cache)
+        {
+            this._cache = cache;
+        }
 
         // GET: api/financecurrency
         [HttpGet]
         [Authorize]
-        [ResponseCache(Duration = 6000)]
-        public async Task<IActionResult> Get([FromQuery]Int32 top = 100, Int32 skip = 0)
+        [Produces(typeof(List<FinanceCurrencyViewModel>))]
+        public async Task<IActionResult> Get()
         {
-            BaseListViewModel<FinanceCurrencyViewModel> listVMs = null;
+            // For Currency, the paging is not supported.
+            // It is full buffered;
+
+            List<FinanceCurrencyViewModel> listVMs = null;
             SqlConnection conn = null;
             SqlCommand cmd = null;
             SqlDataReader reader = null;
@@ -32,17 +41,22 @@ namespace achihapi.Controllers
 
             try
             {
-                if (listReadEntries.Count <= 0)
+                if (_cache.TryGetValue<List<FinanceCurrencyViewModel>>(CacheKeys.FinCurrency, out listVMs))
+                { 
+                    // DO nothing!
+                }
+                else
                 {
-                    queryString = @"SELECT [CURR]
+                    queryString = @"SELECT[CURR]
                               ,[NAME]
                               ,[SYMBOL]
                               ,[CREATEDBY]
                               ,[CREATEDAT]
                               ,[UPDATEDBY]
                               ,[UPDATEDAT]
-                          FROM [dbo].[t_fin_currency]";
+                            FROM[dbo].[t_fin_currency] ";
 
+                    listVMs = new List<FinanceCurrencyViewModel>();
                     using (conn = new SqlConnection(Startup.DBConnectionString))
                     {
                         await conn.OpenAsync();
@@ -56,20 +70,14 @@ namespace achihapi.Controllers
                                 FinanceCurrencyViewModel avm = new FinanceCurrencyViewModel();
                                 this.onDB2VM(reader, avm);
 
-                                listReadEntries.Add(avm);
+                                listVMs.Add(avm);
                             }
                         }
                     }
+
+                    // Buffer it for 20 minutes
+                    _cache.Set<List<FinanceCurrencyViewModel>>(CacheKeys.FinCurrency, listVMs, TimeSpan.FromSeconds(1200));
                 }
-
-                if (listReadEntries.Count <= 0)
-                    throw new Exception("No Currencies found");
-
-                listVMs = new BaseListViewModel<FinanceCurrencyViewModel>()
-                {
-                    TotalCount = listReadEntries.Count,
-                    ContentList = listReadEntries.Skip(skip).Take(top).ToList<FinanceCurrencyViewModel>()
-                };
             }
             catch (Exception exp)
             {

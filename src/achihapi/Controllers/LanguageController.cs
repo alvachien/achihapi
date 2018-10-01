@@ -14,6 +14,8 @@ namespace achihapi.Controllers
     {
         // GET: api/language
         [HttpGet]
+        [Produces(typeof(List<LanguageViewModel>))]
+        [ResponseCache(Duration = 18000)]
         public async Task<IActionResult> Get()
         {
             List<LanguageViewModel> listVMs = new List<LanguageViewModel>();
