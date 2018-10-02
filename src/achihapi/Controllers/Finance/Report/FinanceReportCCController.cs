@@ -28,6 +28,7 @@ namespace achihapi.Controllers
         // GET: api/financereportcc
         [HttpGet]
         [Authorize]
+        [Produces(typeof(List<FinanceReportCCViewModel>))]
         public async Task<IActionResult> Get([FromQuery]Int32 hid)
         {
             if (hid <= 0)
@@ -44,7 +45,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            List<FinanceReportCCViewModel> listVm = new List<FinanceReportCCViewModel>();
+            List<FinanceReportCCViewModel> listVm = null;
             SqlConnection conn = null;
             SqlCommand cmd = null;
             SqlDataReader reader = null;
@@ -54,59 +55,74 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = @"SELECT [CONTROLCENTERID]
+                var cacheKey = String.Format(CacheKeys.FinReportCC, hid);
+
+                if (_cache.TryGetValue<List<FinanceReportCCViewModel>>(cacheKey, out listVm))
+                {
+                    // Do nothing
+                }
+                else
+                {
+                    listVm = new List<FinanceReportCCViewModel>();
+
+                    queryString = @"SELECT [CONTROLCENTERID]
                               ,[CONTROLCENTERNAME]
                               ,[debit_balance]
                               ,[credit_balance]
                               ,[balance]
                           FROM [dbo].[v_fin_report_cc] WHERE [HID] = " + hid.ToString();
 
-                using(conn = new SqlConnection(Startup.DBConnectionString))
-                {
-                    await conn.OpenAsync();
+                    using (conn = new SqlConnection(Startup.DBConnectionString))
+                    {
+                        await conn.OpenAsync();
 
-                    // Check Home assignment with current user
-                    try
-                    {
-                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                    }
-                    catch (Exception)
-                    {
-                        errorCode = HttpStatusCode.BadRequest;
-                        throw;
-                    }
-
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
+                        // Check Home assignment with current user
+                        try
                         {
-                            FinanceReportCCViewModel avm = new FinanceReportCCViewModel
+                            HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                        }
+                        catch (Exception)
+                        {
+                            errorCode = HttpStatusCode.BadRequest;
+                            throw;
+                        }
+
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = cmd.ExecuteReader();
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
                             {
-                                ControlCenterID = reader.GetInt32(0),
-                                ControlCenterName = reader.GetString(1)
-                            };
-                            if (reader.IsDBNull(2))
-                                avm.DebitBalance = 0;
-                            else
-                                avm.DebitBalance = Math.Round(reader.GetDecimal(2), 2);
-                            if (reader.IsDBNull(3))
-                                avm.CreditBalance = 0;
-                            else
-                                avm.CreditBalance = Math.Round(reader.GetDecimal(3), 2);
-                            if (reader.IsDBNull(4))
-                                avm.Balance = 0;
-                            else
-                                avm.Balance = Math.Round(reader.GetDecimal(4), 2);
-                            listVm.Add(avm);
+                                FinanceReportCCViewModel avm = new FinanceReportCCViewModel
+                                {
+                                    ControlCenterID = reader.GetInt32(0),
+                                    ControlCenterName = reader.GetString(1)
+                                };
+                                if (reader.IsDBNull(2))
+                                    avm.DebitBalance = 0;
+                                else
+                                    avm.DebitBalance = Math.Round(reader.GetDecimal(2), 2);
+                                if (reader.IsDBNull(3))
+                                    avm.CreditBalance = 0;
+                                else
+                                    avm.CreditBalance = Math.Round(reader.GetDecimal(3), 2);
+                                if (reader.IsDBNull(4))
+                                    avm.Balance = 0;
+                                else
+                                    avm.Balance = Math.Round(reader.GetDecimal(4), 2);
+                                listVm.Add(avm);
+                            }
                         }
                     }
+
+                    _cache.Set<List<FinanceReportCCViewModel>>(cacheKey, listVm, TimeSpan.FromMinutes(20));
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
                 strErrMsg = exp.Message;
                 if (errorCode == HttpStatusCode.OK)
                     errorCode = HttpStatusCode.InternalServerError;

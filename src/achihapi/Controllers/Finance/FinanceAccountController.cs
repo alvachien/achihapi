@@ -26,10 +26,33 @@ namespace achihapi.Controllers
         // GET: api/financeaccount
         [HttpGet]
         [Authorize]
+        [Produces(typeof(BaseListViewModel<FinanceAccountUIViewModel>))]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Byte? status = null, Int32 top = 100, Int32 skip = 0)
         {
             if (hid <= 0)
                 return BadRequest("HID is missing");
+            String usrName = "";
+            String scopeFilter = String.Empty;
+            try
+            {
+                if (Startup.UnitTestMode)
+                    usrName = UnitTestUtility.UnitTestUser;
+                else
+                {
+                    var usrObj = HIHAPIUtility.GetUserClaim(this);
+                    usrName = usrObj.Value;
+                    //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
+
+                    //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                }
+            }
+            catch
+            {
+                return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
+            }
+
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("No user found");
 
             BaseListViewModel<FinanceAccountUIViewModel> listVm = new BaseListViewModel<FinanceAccountUIViewModel>();
             SqlConnection conn = null;
@@ -41,30 +64,8 @@ namespace achihapi.Controllers
 
             try
             {
-                String usrName = "";
-                String scopeFilter = String.Empty;
-                try
-                {
-                    if (Startup.UnitTestMode)
-                        usrName = UnitTestUtility.UnitTestUser;
-                    else
-                    {
-                        var usrObj = HIHAPIUtility.GetUserClaim(this);
-                        usrName = usrObj.Value;
-                        //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.FinanceAccountScope);
-
-                        //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
-                    }
-                }
-                catch
-                {
-                    return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
-                }
-
-                if (String.IsNullOrEmpty(usrName))
-                    return BadRequest("No user found");
-
-                using(conn = new SqlConnection(Startup.DBConnectionString))
+                var cacheKey = String.Format(CacheKeys.FinAccountList, hid);
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
                     await conn.OpenAsync();
 
