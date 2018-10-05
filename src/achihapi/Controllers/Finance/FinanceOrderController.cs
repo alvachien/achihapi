@@ -18,9 +18,16 @@ namespace achihapi.Controllers
     [Authorize]
     public class FinanceOrderController : Controller
     {
+        private IMemoryCache _cache;
+        public FinanceOrderController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         // GET: api/financeorder
         [HttpGet]
         [Authorize]
+        [Produces(typeof(BaseListViewModel<FinanceOrderViewModel>))]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean? incInv = null)
         {
             if (hid <= 0)
@@ -37,7 +44,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            BaseListViewModel<FinanceOrderViewModel> listVMs = new BaseListViewModel<FinanceOrderViewModel>();
+            BaseListViewModel<FinanceOrderViewModel> listVMs = null;
             SqlConnection conn = null;
             SqlCommand cmd = null;
             SqlDataReader reader = null;
@@ -47,63 +54,77 @@ namespace achihapi.Controllers
 
             try
             {
-                using (conn = new SqlConnection(Startup.DBConnectionString))
+                var cacheKey = String.Format(CacheKeys.FinOrderList, hid, incInv);
+                if (_cache.TryGetValue<BaseListViewModel<FinanceOrderViewModel>>(cacheKey, out listVMs))
                 {
-                    await conn.OpenAsync();
+                    // Do nothing
+                }
+                else
+                {
+                    listVMs = new BaseListViewModel<FinanceOrderViewModel>();
 
-                    // Check Home assignment with current user
-                    try
+                    using (conn = new SqlConnection(Startup.DBConnectionString))
                     {
-                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                    }
-                    catch (Exception)
-                    {
-                        errorCode = HttpStatusCode.BadRequest;
-                        throw;
-                    }
+                        await conn.OpenAsync();
 
-                    queryString = @"SELECT count(*) FROM [dbo].[t_fin_order] WHERE [HID] = " + hid.ToString();
-                    if (!incInv.HasValue || !incInv.Value)
-                        queryString += " AND [VALID_FROM] <= GETDATE() AND [VALID_TO] >= GETDATE()";
-
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = await cmd.ExecuteReaderAsync();
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
+                        // Check Home assignment with current user
+                        try
                         {
-                            listVMs.TotalCount = reader.GetInt32(0);
-                            break;
+                            HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                         }
-                    }
-                    reader.Dispose();
-                    reader = null;
-                    cmd.Dispose();
-                    cmd = null;
+                        catch (Exception)
+                        {
+                            errorCode = HttpStatusCode.BadRequest;
+                            throw;
+                        }
 
-                    if (listVMs.TotalCount > 0)
-                    {
-                        queryString = this.getListQueryString(hid);
+                        queryString = @"SELECT count(*) FROM [dbo].[t_fin_order] WHERE [HID] = " + hid.ToString();
                         if (!incInv.HasValue || !incInv.Value)
                             queryString += " AND [VALID_FROM] <= GETDATE() AND [VALID_TO] >= GETDATE()";
+
                         cmd = new SqlCommand(queryString, conn);
                         reader = await cmd.ExecuteReaderAsync();
-
                         if (reader.HasRows)
                         {
                             while (reader.Read())
                             {
-                                FinanceOrderViewModel vm = new FinanceOrderViewModel();
-                                this.onListDB2VM(reader, vm);
-                                listVMs.Add(vm);
+                                listVMs.TotalCount = reader.GetInt32(0);
+                                break;
+                            }
+                        }
+                        reader.Dispose();
+                        reader = null;
+                        cmd.Dispose();
+                        cmd = null;
+
+                        if (listVMs.TotalCount > 0)
+                        {
+                            queryString = this.getListQueryString(hid);
+                            if (!incInv.HasValue || !incInv.Value)
+                                queryString += " AND [VALID_FROM] <= GETDATE() AND [VALID_TO] >= GETDATE()";
+                            cmd = new SqlCommand(queryString, conn);
+                            reader = await cmd.ExecuteReaderAsync();
+
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    FinanceOrderViewModel vm = new FinanceOrderViewModel();
+                                    this.onListDB2VM(reader, vm);
+                                    listVMs.Add(vm);
+                                }
                             }
                         }
                     }
+
+                    _cache.Set<BaseListViewModel<FinanceOrderViewModel>>(cacheKey, listVMs, TimeSpan.FromMinutes(20));
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
                 strErrMsg = exp.Message;
                 if (errorCode == HttpStatusCode.OK)
                     errorCode = HttpStatusCode.InternalServerError;

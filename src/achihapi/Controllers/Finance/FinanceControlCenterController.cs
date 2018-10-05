@@ -9,6 +9,7 @@ using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -16,10 +17,17 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class FinanceControlCenterController : Controller
     {
+        private IMemoryCache _cache;
+        public FinanceControlCenterController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         // GET: api/financecontrolcenter
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Int32 top = 100, Int32 skip = 0)
+        [Produces(typeof(List<FinanceControlCenterViewModel>))]
+        public async Task<IActionResult> Get([FromQuery]Int32 hid)
         {
             if (hid <= 0)
                 return BadRequest("No Home inputted");
@@ -35,7 +43,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            BaseListViewModel<FinanceControlCenterViewModel> listVMs = new BaseListViewModel<FinanceControlCenterViewModel>();
+            List<FinanceControlCenterViewModel> listVMs = null;
             SqlConnection conn = null;
             SqlCommand cmd = null;
             SqlDataReader reader = null;
@@ -45,46 +53,58 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(true, top, skip, null, hid);
-
-                using(conn = new SqlConnection(Startup.DBConnectionString))
+                var cacheKey = String.Format(CacheKeys.FinCCList, hid);
+                if (_cache.TryGetValue<List<FinanceControlCenterViewModel>>(cacheKey, out listVMs))
                 {
-                    await conn.OpenAsync();
+                    // Do nothing
+                }
+                else
+                {
+                    listVMs = new List<FinanceControlCenterViewModel>();
 
-                    // Check Home assignment with current user
-                    try
-                    {
-                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                    }
-                    catch (Exception)
-                    {
-                        errorCode = HttpStatusCode.BadRequest;
-                        throw;
-                    }
+                    queryString = @"SELECT [ID]
+                              ,[HID]
+                              ,[NAME]
+                              ,[PARID]
+                              ,[COMMENT]
+                              ,[OWNER]
+                              ,[CREATEDBY]
+                              ,[CREATEDAT]
+                              ,[UPDATEDBY]
+                              ,[UPDATEDAT] FROM [dbo].[t_fin_controlcenter]
+                                WHERE [HID] = " + hid.ToString();
 
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-
-                    if (reader.HasRows)
+                    using (conn = new SqlConnection(Startup.DBConnectionString))
                     {
-                        while (reader.Read())
+                        await conn.OpenAsync();
+
+                        // Check Home assignment with current user
+                        try
                         {
-                            listVMs.TotalCount = reader.GetInt32(0);
-                            break;
+                            HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                        }
+                        catch (Exception)
+                        {
+                            errorCode = HttpStatusCode.BadRequest;
+                            throw;
+                        }
+
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = cmd.ExecuteReader();
+
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                FinanceControlCenterViewModel avm = new FinanceControlCenterViewModel();
+                                this.onDB2VM(reader, avm);
+
+                                listVMs.Add(avm);
+                            }
                         }
                     }
-                    reader.NextResult();
 
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            FinanceControlCenterViewModel avm = new FinanceControlCenterViewModel();
-                            this.onDB2VM(reader, avm);
-
-                            listVMs.Add(avm);
-                        }
-                    }
+                    _cache.Set<List<FinanceControlCenterViewModel>>(cacheKey, listVMs, TimeSpan.FromMinutes(20));
                 }
             }
             catch (Exception exp)
@@ -138,7 +158,7 @@ namespace achihapi.Controllers
         }
 
         // GET api/financecontrolcenter/5
-        [HttpGet("{id}")]
+        [HttpGet("{ id}")]
         [Authorize]
         public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {

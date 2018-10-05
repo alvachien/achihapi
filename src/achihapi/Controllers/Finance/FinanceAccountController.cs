@@ -27,7 +27,7 @@ namespace achihapi.Controllers
         [HttpGet]
         [Authorize]
         [Produces(typeof(BaseListViewModel<FinanceAccountUIViewModel>))]
-        public async Task<IActionResult> Get([FromQuery]Int32 hid, Byte? status = null, Int32 top = 100, Int32 skip = 0)
+        public async Task<IActionResult> Get([FromQuery]Int32 hid, Byte? status = null)
         {
             if (hid <= 0)
                 return BadRequest("HID is missing");
@@ -54,7 +54,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("No user found");
 
-            BaseListViewModel<FinanceAccountUIViewModel> listVm = new BaseListViewModel<FinanceAccountUIViewModel>();
+            BaseListViewModel<FinanceAccountUIViewModel> listVm = null;
             SqlConnection conn = null;
             SqlCommand cmd = null;
             SqlDataReader reader = null;
@@ -64,53 +64,66 @@ namespace achihapi.Controllers
 
             try
             {
-                var cacheKey = String.Format(CacheKeys.FinAccountList, hid);
-                using (conn = new SqlConnection(Startup.DBConnectionString))
+                var cacheKey = String.Format(CacheKeys.FinAccountList, hid, status);
+                if (_cache.TryGetValue<BaseListViewModel<FinanceAccountUIViewModel>>(cacheKey, out listVm))
                 {
-                    await conn.OpenAsync();
+                    // Do nothing
+                }
+                else
+                {
+                    listVm = new BaseListViewModel<FinanceAccountUIViewModel>();
 
-                    // Check Home assignment with current user
-                    try
+                    using (conn = new SqlConnection(Startup.DBConnectionString))
                     {
-                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                    }
-                    catch (Exception)
-                    {
-                        errorCode = HttpStatusCode.BadRequest;
-                        throw;
-                    }
+                        await conn.OpenAsync();
 
-                    queryString = this.getQueryString(true, status, top, skip, null, scopeFilter, hid);
-
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-
-                    // 1. Count
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
+                        // Check Home assignment with current user
+                        try
                         {
-                            listVm.TotalCount = reader.GetInt32(0);
-                            break;
+                            HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                         }
-                        await reader.NextResultAsync();
+                        catch (Exception)
+                        {
+                            errorCode = HttpStatusCode.BadRequest;
+                            throw;
+                        }
+
+                        queryString = this.getQueryString(true, status, null, null, null, scopeFilter, hid);
+
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = cmd.ExecuteReader();
+
+                        // 1. Count
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                listVm.TotalCount = reader.GetInt32(0);
+                                break;
+                            }
+                            await reader.NextResultAsync();
+                        }
+
+                        // 2. Records
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                FinanceAccountUIViewModel vm = new FinanceAccountUIViewModel();
+                                HIHDBUtility.FinAccountHeader_DB2VM(reader, vm, 0);
+                                listVm.Add(vm);
+                            }
+                        }
                     }
 
-                    // 2. Records
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            FinanceAccountUIViewModel vm = new FinanceAccountUIViewModel();
-                            HIHDBUtility.FinAccountHeader_DB2VM(reader, vm, 0);
-                            listVm.Add(vm);
-                        }
-                    }
+                    _cache.Set<BaseListViewModel<FinanceAccountUIViewModel>>(cacheKey, listVm, TimeSpan.FromMinutes(20));
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
                 strErrMsg = exp.Message;
                 if (errorCode == HttpStatusCode.OK)
                     errorCode = HttpStatusCode.InternalServerError;
@@ -161,12 +174,13 @@ namespace achihapi.Controllers
         // GET api/financeaccount/5
         [HttpGet("{id}")]
         [Authorize]
+        [Produces(typeof(FinanceAccountUIViewModel))]
         public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
             if (hid <= 0)
                 return BadRequest("Not HID inputted");
 
-            FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
+            FinanceAccountUIViewModel vmAccount = null;
             SqlConnection conn = null;
             SqlCommand cmd = null;
             SqlDataReader reader = null;
@@ -200,221 +214,234 @@ namespace achihapi.Controllers
                     return BadRequest("No user found");
                 }
 
-                queryString = this.getQueryString(false, null, null, null, id, scopeFilter, null);
-
-                using (conn = new SqlConnection(Startup.DBConnectionString))
+                var cacheKey = String.Format(CacheKeys.FinAccount, hid, id);
+                if (_cache.TryGetValue<FinanceAccountUIViewModel>(cacheKey, out vmAccount))
                 {
-                    await conn.OpenAsync();
+                    // Do nothing
+                }
+                else
+                {
+                    vmAccount = new FinanceAccountUIViewModel();
+                    queryString = this.getQueryString(false, null, null, null, id, scopeFilter, null);
 
-                    // Check Home assignment with current user
-                    try
+                    using (conn = new SqlConnection(Startup.DBConnectionString))
                     {
-                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                    }
-                    catch (Exception)
-                    {
-                        errorCode = HttpStatusCode.BadRequest;
-                        throw;
-                    }
+                        await conn.OpenAsync();
 
-                    // 1. Read header
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
+                        // Check Home assignment with current user
+                        try
                         {
-                            HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, 0);
-
-                            // It should return one entry only!
-                            // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
-
-                            break;
+                            HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
                         }
-                    }
-                    else
-                    {
-                        errorCode = HttpStatusCode.NotFound;
-                        throw new Exception();
-                    }
-                    reader.Close();
-                    reader = null;
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // Depends on the category
-                    if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
-                    {
-                        vmAccount.ExtraInfo_ADP = new FinanceAccountExtDPViewModel();
-                        queryString = HIHDBUtility.getFinanceAccountADPQueryString(vmAccount.ID);
-
-                        cmd = new SqlCommand(queryString, conn);
-                        reader = await cmd.ExecuteReaderAsync();
-
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                HIHDBUtility.FinAccountADP_DB2VM(reader, vmAccount.ExtraInfo_ADP, 0);
-                                break; // Shall only one entry
-                            };
-                        }
-                        else
+                        catch (Exception)
                         {
                             errorCode = HttpStatusCode.BadRequest;
-                            throw new Exception("Failed to read Account DP");
+                            throw;
                         }
 
-                        reader.Close();
-                        reader = null;
-                        cmd.Dispose();
-                        cmd = null;
-
-                        // Read out the template docs.
-                        queryString = HIHDBUtility.getFinanceDocADPListQueryString() + " WHERE [ACCOUNTID] = " + vmAccount.ID.ToString() + " AND [HID] = " + hid.ToString();
+                        // 1. Read header
                         cmd = new SqlCommand(queryString, conn);
-                        reader = await cmd.ExecuteReaderAsync();
-
+                        reader = cmd.ExecuteReader();
                         if (reader.HasRows)
                         {
                             while (reader.Read())
                             {
-                                var vmTmpADP = new FinanceTmpDocDPViewModel();
-                                HIHDBUtility.FinTmpDocADP_DB2VM(reader, vmTmpADP);
-                                vmAccount.ExtraInfo_ADP.DPTmpDocs.Add(vmTmpADP);
+                                HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, 0);
+
+                                // It should return one entry only!
+                                // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
+
+                                break;
                             }
                         }
-                        reader.Close();
-                        reader = null;
-                        cmd.Dispose();
-                        cmd = null;
-                    }
-                    else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive)
-                    {
-                        // Advance receive
-                        vmAccount.ExtraInfo_ADP = new FinanceAccountExtDPViewModel();
-                        queryString = HIHDBUtility.getFinanceAccountADPQueryString(vmAccount.ID);
-
-                        cmd = new SqlCommand(queryString, conn);
-                        reader = await cmd.ExecuteReaderAsync();
-
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                HIHDBUtility.FinAccountADP_DB2VM(reader, vmAccount.ExtraInfo_ADP, 0);
-                                break; // Shall only one entry
-                            };
-                        }
                         else
                         {
-                            errorCode = HttpStatusCode.BadRequest;
-                            throw new Exception("Failed to read Account DP");
+                            errorCode = HttpStatusCode.NotFound;
+                            throw new Exception();
                         }
-
                         reader.Close();
                         reader = null;
                         cmd.Dispose();
                         cmd = null;
 
-                        // Read out the template docs.
-                        queryString = HIHDBUtility.getFinanceDocADPListQueryString() + " WHERE [ACCOUNTID] = " + vmAccount.ID.ToString() + " AND [HID] = " + hid.ToString();
-                        cmd = new SqlCommand(queryString, conn);
-                        reader = await cmd.ExecuteReaderAsync();
-
-                        if (reader.HasRows)
+                        // Depends on the category
+                        if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment)
                         {
-                            while (reader.Read())
+                            vmAccount.ExtraInfo_ADP = new FinanceAccountExtDPViewModel();
+                            queryString = HIHDBUtility.getFinanceAccountADPQueryString(vmAccount.ID);
+
+                            cmd = new SqlCommand(queryString, conn);
+                            reader = await cmd.ExecuteReaderAsync();
+
+                            if (reader.HasRows)
                             {
-                                var vmTmpADP = new FinanceTmpDocDPViewModel();
-                                HIHDBUtility.FinTmpDocADP_DB2VM(reader, vmTmpADP);
-                                vmAccount.ExtraInfo_ADP.DPTmpDocs.Add(vmTmpADP);
+                                while (reader.Read())
+                                {
+                                    HIHDBUtility.FinAccountADP_DB2VM(reader, vmAccount.ExtraInfo_ADP, 0);
+                                    break; // Shall only one entry
+                                };
                             }
-                        }
-                        reader.Close();
-                        reader = null;
-                        cmd.Dispose();
-                        cmd = null;
-                    }
-                    else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
-                    {
-                        vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
-                        queryString = HIHDBUtility.getFinanceAccountAssetQueryString(vmAccount.ID);
-
-                        cmd = new SqlCommand(queryString, conn);
-                        reader = await cmd.ExecuteReaderAsync();
-
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
+                            else
                             {
-                                HIHDBUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, 0);
-                                break; // Shall only one entry
-                            };
-                        }
-                        else
-                        {
-                            errorCode = HttpStatusCode.BadRequest;
-                            throw new Exception("Failed to read Account Asset");
-                        }
-
-                        reader.Close();
-                        reader = null;
-                        cmd.Dispose();
-                        cmd = null;
-                    }
-                    else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom
-                        || vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
-                    {
-                        vmAccount.ExtraInfo_Loan = new FinanceAccountExtLoanViewModel();
-                        queryString = HIHDBUtility.getFinanceAccountLoanQueryString(vmAccount.ID);
-
-                        cmd = new SqlCommand(queryString, conn);
-                        reader = await cmd.ExecuteReaderAsync();
-
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                HIHDBUtility.FinAccountLoan_DB2VM(reader, vmAccount.ExtraInfo_Loan, 0);
-                                break; // Shall only one entry
-                            };
-                        }
-                        else
-                        {
-                            errorCode = HttpStatusCode.BadRequest;
-                            throw new Exception("Failed to read Account DP");
-                        }
-
-                        reader.Close();
-                        reader = null;
-                        cmd.Dispose();
-                        cmd = null;
-
-                        // Template docs.
-                        queryString = HIHDBUtility.GetFinanceDocLoanListQueryString() + " WHERE [ACCOUNTID] = " + vmAccount.ID.ToString() + " AND [HID] = " + hid.ToString();
-                        cmd = new SqlCommand(queryString, conn);
-                        reader = await cmd.ExecuteReaderAsync();
-
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                var vmTmpLoan = new FinanceTmpDocLoanViewModel();
-                                HIHDBUtility.FinTmpDocLoan_DB2VM(reader, vmTmpLoan);
-                                vmAccount.ExtraInfo_Loan.LoanTmpDocs.Add(vmTmpLoan);
+                                errorCode = HttpStatusCode.BadRequest;
+                                throw new Exception("Failed to read Account DP");
                             }
+
+                            reader.Close();
+                            reader = null;
+                            cmd.Dispose();
+                            cmd = null;
+
+                            // Read out the template docs.
+                            queryString = HIHDBUtility.getFinanceDocADPListQueryString() + " WHERE [ACCOUNTID] = " + vmAccount.ID.ToString() + " AND [HID] = " + hid.ToString();
+                            cmd = new SqlCommand(queryString, conn);
+                            reader = await cmd.ExecuteReaderAsync();
+
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    var vmTmpADP = new FinanceTmpDocDPViewModel();
+                                    HIHDBUtility.FinTmpDocADP_DB2VM(reader, vmTmpADP);
+                                    vmAccount.ExtraInfo_ADP.DPTmpDocs.Add(vmTmpADP);
+                                }
+                            }
+                            reader.Close();
+                            reader = null;
+                            cmd.Dispose();
+                            cmd = null;
                         }
-                        reader.Close();
-                        reader = null;
-                        cmd.Dispose();
-                        cmd = null;
+                        else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive)
+                        {
+                            // Advance receive
+                            vmAccount.ExtraInfo_ADP = new FinanceAccountExtDPViewModel();
+                            queryString = HIHDBUtility.getFinanceAccountADPQueryString(vmAccount.ID);
+
+                            cmd = new SqlCommand(queryString, conn);
+                            reader = await cmd.ExecuteReaderAsync();
+
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    HIHDBUtility.FinAccountADP_DB2VM(reader, vmAccount.ExtraInfo_ADP, 0);
+                                    break; // Shall only one entry
+                                };
+                            }
+                            else
+                            {
+                                errorCode = HttpStatusCode.BadRequest;
+                                throw new Exception("Failed to read Account DP");
+                            }
+
+                            reader.Close();
+                            reader = null;
+                            cmd.Dispose();
+                            cmd = null;
+
+                            // Read out the template docs.
+                            queryString = HIHDBUtility.getFinanceDocADPListQueryString() + " WHERE [ACCOUNTID] = " + vmAccount.ID.ToString() + " AND [HID] = " + hid.ToString();
+                            cmd = new SqlCommand(queryString, conn);
+                            reader = await cmd.ExecuteReaderAsync();
+
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    var vmTmpADP = new FinanceTmpDocDPViewModel();
+                                    HIHDBUtility.FinTmpDocADP_DB2VM(reader, vmTmpADP);
+                                    vmAccount.ExtraInfo_ADP.DPTmpDocs.Add(vmTmpADP);
+                                }
+                            }
+                            reader.Close();
+                            reader = null;
+                            cmd.Dispose();
+                            cmd = null;
+                        }
+                        else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
+                        {
+                            vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+                            queryString = HIHDBUtility.getFinanceAccountAssetQueryString(vmAccount.ID);
+
+                            cmd = new SqlCommand(queryString, conn);
+                            reader = await cmd.ExecuteReaderAsync();
+
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    HIHDBUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, 0);
+                                    break; // Shall only one entry
+                                };
+                            }
+                            else
+                            {
+                                errorCode = HttpStatusCode.BadRequest;
+                                throw new Exception("Failed to read Account Asset");
+                            }
+
+                            reader.Close();
+                            reader = null;
+                            cmd.Dispose();
+                            cmd = null;
+                        }
+                        else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom
+                            || vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
+                        {
+                            vmAccount.ExtraInfo_Loan = new FinanceAccountExtLoanViewModel();
+                            queryString = HIHDBUtility.getFinanceAccountLoanQueryString(vmAccount.ID);
+
+                            cmd = new SqlCommand(queryString, conn);
+                            reader = await cmd.ExecuteReaderAsync();
+
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    HIHDBUtility.FinAccountLoan_DB2VM(reader, vmAccount.ExtraInfo_Loan, 0);
+                                    break; // Shall only one entry
+                                };
+                            }
+                            else
+                            {
+                                errorCode = HttpStatusCode.BadRequest;
+                                throw new Exception("Failed to read Account DP");
+                            }
+
+                            reader.Close();
+                            reader = null;
+                            cmd.Dispose();
+                            cmd = null;
+
+                            // Template docs.
+                            queryString = HIHDBUtility.GetFinanceDocLoanListQueryString() + " WHERE [ACCOUNTID] = " + vmAccount.ID.ToString() + " AND [HID] = " + hid.ToString();
+                            cmd = new SqlCommand(queryString, conn);
+                            reader = await cmd.ExecuteReaderAsync();
+
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    var vmTmpLoan = new FinanceTmpDocLoanViewModel();
+                                    HIHDBUtility.FinTmpDocLoan_DB2VM(reader, vmTmpLoan);
+                                    vmAccount.ExtraInfo_Loan.LoanTmpDocs.Add(vmTmpLoan);
+                                }
+                            }
+                            reader.Close();
+                            reader = null;
+                            cmd.Dispose();
+                            cmd = null;
+                        }
                     }
+
+                    _cache.Set<FinanceAccountUIViewModel>(cacheKey, vmAccount, TimeSpan.FromMinutes(20));
                 }
             }
             catch (Exception exp)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
                 strErrMsg = exp.Message;
                 if (errorCode == HttpStatusCode.OK)
                     errorCode = HttpStatusCode.InternalServerError;
