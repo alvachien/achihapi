@@ -8,6 +8,7 @@ using System.Data.SqlClient;
 using achihapi.Utilities;
 using Microsoft.AspNetCore.JsonPatch;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -15,6 +16,12 @@ namespace achihapi.Controllers
     [Route("api/FinanceAssetSoldDocument")]
     public class FinanceAssetSoldDocumentController : Controller
     {
+        private IMemoryCache _cache;
+        public FinanceAssetSoldDocumentController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         // GET: api/FinanceAssetSoldDocument
         [HttpGet]
         [Authorize]
@@ -324,6 +331,10 @@ namespace achihapi.Controllers
                     // Fifth, the tag
 
                     tran.Commit();
+
+                    // Update the buffer
+                    var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
+                    this._cache.Remove(cacheKey);
                 }
             }
             catch (Exception exp)

@@ -492,8 +492,18 @@ namespace achihapi.Controllers
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
             {
-                return BadRequest("No data is inputted or inputted data for Advance payment/receive/Asset/Loan");
+                // We are support creating ASSET account directly with initial value.
+                return BadRequest("No data is inputted or inputted data for Advance payment/receive/Loan");
             }
+            if (vm.Name != null)
+                vm.Name = vm.Name.Trim();
+            if (String.IsNullOrEmpty(vm.Name))
+            {
+                return BadRequest("Name is a must!");
+            }
+
+            if (vm.HID <= 0)
+                return BadRequest("No HID inputted!");
 
             String usrName = "";
             try
@@ -523,16 +533,6 @@ namespace achihapi.Controllers
             {
                 return BadRequest("Not valid HTTP HEAD: User and Scope Failed!");
             }
-
-            if (vm.Name != null)
-                vm.Name = vm.Name.Trim();
-            if (String.IsNullOrEmpty(vm.Name))
-            {
-                return BadRequest("Name is a must!");
-            }
-
-            if (vm.HID <= 0)
-                return BadRequest("No HID inputted!");
 
             // Update the database
             SqlConnection conn = null;
@@ -564,6 +564,7 @@ namespace achihapi.Controllers
                         throw;
                     }
 
+                    // Check duplicate names
                     cmd = new SqlCommand(queryString, conn);
                     reader = cmd.ExecuteReader();
                     if (reader.HasRows)
@@ -605,6 +606,10 @@ namespace achihapi.Controllers
 
                         // Now commit it!
                         tran.Commit();
+
+                        // Update the buffer
+                        var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
+                        this._cache.Remove(cacheKey);
                     }
                 }
             }
@@ -612,7 +617,11 @@ namespace achihapi.Controllers
             {
                 if (tran != null)
                     tran.Rollback();
+
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
+
                 strErrMsg = exp.Message;
                 if (errorCode == HttpStatusCode.OK)
                     errorCode = HttpStatusCode.InternalServerError;

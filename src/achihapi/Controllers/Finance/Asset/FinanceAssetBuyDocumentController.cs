@@ -8,6 +8,7 @@ using System.Data.SqlClient;
 using achihapi.Utilities;
 using Microsoft.AspNetCore.JsonPatch;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -15,6 +16,12 @@ namespace achihapi.Controllers
     [Route("api/FinanceAssetBuyDocument")]
     public class FinanceAssetBuyDocumentController : Controller
     {
+        private IMemoryCache _cache;
+        public FinanceAssetBuyDocumentController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         // GET: api/FinanceAssetBuyDocument
         [HttpGet]
         [Authorize]
@@ -245,6 +252,8 @@ namespace achihapi.Controllers
                         throw;
                     }
 
+                    tran = conn.BeginTransaction();
+
                     // First, craete the doc header => nNewDocID
                     queryString = HIHDBUtility.GetFinDocHeaderInsertString();
                     cmd = new SqlCommand(queryString, conn)
@@ -328,13 +337,21 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     tran.Commit();
+
+                    // Update the buffer
+                    var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
+                    this._cache.Remove(cacheKey);
                 }
             }
             catch (Exception exp)
             {
                 if (tran != null)
                     tran.Rollback();
+
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
+
                 strErrMsg = exp.Message;
                 if (errorCode == HttpStatusCode.OK)
                     errorCode = HttpStatusCode.InternalServerError;

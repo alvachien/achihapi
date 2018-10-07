@@ -8,6 +8,7 @@ using System.Data.SqlClient;
 using achihapi.Utilities;
 using System.Linq;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace achihapi.Controllers
 {
@@ -15,6 +16,12 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class FinanceADPDocumentController : Controller
     {
+        private IMemoryCache _cache;
+        public FinanceADPDocumentController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         // GET: api/financeadpdocument
         [HttpGet]
         public IActionResult Get([FromQuery]Int32 hid, Boolean skipPosted = true, DateTime? dtbgn = null, DateTime? dtend = null)
@@ -384,6 +391,10 @@ namespace achihapi.Controllers
                     }
 
                     tran.Commit();
+
+                    // Update the buffer
+                    var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
+                    this._cache.Remove(cacheKey);
                 }
             }
             catch (Exception exp)
