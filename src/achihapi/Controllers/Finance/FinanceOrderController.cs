@@ -27,7 +27,7 @@ namespace achihapi.Controllers
         // GET: api/financeorder
         [HttpGet]
         [Authorize]
-        [Produces(typeof(BaseListViewModel<FinanceOrderViewModel>))]
+        [Produces(typeof(List<FinanceOrderViewModel>))]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Boolean? incInv = null)
         {
             if (hid <= 0)
@@ -44,7 +44,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            BaseListViewModel<FinanceOrderViewModel> listVMs = null;
+            List<FinanceOrderViewModel> listVMs = null;
             SqlConnection conn = null;
             SqlCommand cmd = null;
             SqlDataReader reader = null;
@@ -55,13 +55,13 @@ namespace achihapi.Controllers
             try
             {
                 var cacheKey = String.Format(CacheKeys.FinOrderList, hid, incInv);
-                if (_cache.TryGetValue<BaseListViewModel<FinanceOrderViewModel>>(cacheKey, out listVMs))
+                if (_cache.TryGetValue<List<FinanceOrderViewModel>>(cacheKey, out listVMs))
                 {
                     // Do nothing
                 }
                 else
                 {
-                    listVMs = new BaseListViewModel<FinanceOrderViewModel>();
+                    listVMs = new List<FinanceOrderViewModel>();
 
                     using (conn = new SqlConnection(Startup.DBConnectionString))
                     {
@@ -78,46 +78,24 @@ namespace achihapi.Controllers
                             throw;
                         }
 
-                        queryString = @"SELECT count(*) FROM [dbo].[t_fin_order] WHERE [HID] = " + hid.ToString();
+                        queryString = this.getListQueryString(hid);
                         if (!incInv.HasValue || !incInv.Value)
                             queryString += " AND [VALID_FROM] <= GETDATE() AND [VALID_TO] >= GETDATE()";
-
                         cmd = new SqlCommand(queryString, conn);
                         reader = await cmd.ExecuteReaderAsync();
+
                         if (reader.HasRows)
                         {
                             while (reader.Read())
                             {
-                                listVMs.TotalCount = reader.GetInt32(0);
-                                break;
-                            }
-                        }
-                        reader.Dispose();
-                        reader = null;
-                        cmd.Dispose();
-                        cmd = null;
-
-                        if (listVMs.TotalCount > 0)
-                        {
-                            queryString = this.getListQueryString(hid);
-                            if (!incInv.HasValue || !incInv.Value)
-                                queryString += " AND [VALID_FROM] <= GETDATE() AND [VALID_TO] >= GETDATE()";
-                            cmd = new SqlCommand(queryString, conn);
-                            reader = await cmd.ExecuteReaderAsync();
-
-                            if (reader.HasRows)
-                            {
-                                while (reader.Read())
-                                {
-                                    FinanceOrderViewModel vm = new FinanceOrderViewModel();
-                                    this.onListDB2VM(reader, vm);
-                                    listVMs.Add(vm);
-                                }
+                                FinanceOrderViewModel vm = new FinanceOrderViewModel();
+                                this.onListDB2VM(reader, vm);
+                                listVMs.Add(vm);
                             }
                         }
                     }
 
-                    _cache.Set<BaseListViewModel<FinanceOrderViewModel>>(cacheKey, listVMs, TimeSpan.FromMinutes(20));
+                    _cache.Set<List<FinanceOrderViewModel>>(cacheKey, listVMs, TimeSpan.FromMinutes(20));
                 }
             }
             catch (Exception exp)

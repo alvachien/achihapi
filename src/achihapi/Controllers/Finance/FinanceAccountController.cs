@@ -26,7 +26,7 @@ namespace achihapi.Controllers
         // GET: api/financeaccount
         [HttpGet]
         [Authorize]
-        [Produces(typeof(BaseListViewModel<FinanceAccountUIViewModel>))]
+        [Produces(typeof(List<FinanceAccountUIViewModel>))]
         public async Task<IActionResult> Get([FromQuery]Int32 hid, Byte? status = null)
         {
             if (hid <= 0)
@@ -54,7 +54,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("No user found");
 
-            BaseListViewModel<FinanceAccountUIViewModel> listVm = null;
+            List<FinanceAccountUIViewModel> listVm = null;
             SqlConnection conn = null;
             SqlCommand cmd = null;
             SqlDataReader reader = null;
@@ -65,13 +65,13 @@ namespace achihapi.Controllers
             try
             {
                 var cacheKey = String.Format(CacheKeys.FinAccountList, hid, status);
-                if (_cache.TryGetValue<BaseListViewModel<FinanceAccountUIViewModel>>(cacheKey, out listVm))
+                if (_cache.TryGetValue<List<FinanceAccountUIViewModel>>(cacheKey, out listVm))
                 {
                     // Do nothing
                 }
                 else
                 {
-                    listVm = new BaseListViewModel<FinanceAccountUIViewModel>();
+                    listVm = new List<FinanceAccountUIViewModel>();
 
                     using (conn = new SqlConnection(Startup.DBConnectionString))
                     {
@@ -88,35 +88,20 @@ namespace achihapi.Controllers
                             throw;
                         }
 
-                        queryString = this.getQueryString(true, status, null, null, null, scopeFilter, hid);
+                        queryString = HIHDBUtility.getFinanceAccountHeaderQueryString(hid, status, String.Empty);
 
                         cmd = new SqlCommand(queryString, conn);
                         reader = cmd.ExecuteReader();
 
-                        // 1. Count
-                        if (reader.HasRows)
+                        while (reader.Read())
                         {
-                            while (reader.Read())
-                            {
-                                listVm.TotalCount = reader.GetInt32(0);
-                                break;
-                            }
-                            await reader.NextResultAsync();
-                        }
-
-                        // 2. Records
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                FinanceAccountUIViewModel vm = new FinanceAccountUIViewModel();
-                                HIHDBUtility.FinAccountHeader_DB2VM(reader, vm, 0);
-                                listVm.Add(vm);
-                            }
+                            FinanceAccountUIViewModel vm = new FinanceAccountUIViewModel();
+                            HIHDBUtility.FinAccountHeader_DB2VM(reader, vm, 0);
+                            listVm.Add(vm);
                         }
                     }
 
-                    _cache.Set<BaseListViewModel<FinanceAccountUIViewModel>>(cacheKey, listVm, TimeSpan.FromMinutes(20));
+                    _cache.Set<List<FinanceAccountUIViewModel>>(cacheKey, listVm, TimeSpan.FromMinutes(20));
                 }
             }
             catch (Exception exp)

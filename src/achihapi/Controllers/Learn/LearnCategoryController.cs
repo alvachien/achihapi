@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using achihapi.Utilities;
 using System.Net;
 using Microsoft.Extensions.Caching.Memory;
+using System.Collections.Generic;
 
 namespace achihapi.Controllers
 {
@@ -37,7 +38,7 @@ namespace achihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
 
-            BaseListViewModel<LearnCategoryViewModel> listVm = new BaseListViewModel<LearnCategoryViewModel>();
+            List<LearnCategoryViewModel> listVm = null;
             SqlConnection conn = null;
             SqlCommand cmd = null;
             SqlDataReader reader = null;
@@ -47,47 +48,50 @@ namespace achihapi.Controllers
 
             try
             {
-                queryString = this.getQueryString(true, top, skip, null, hid);
-
-                using (conn = new SqlConnection(Startup.DBConnectionString))
+                var cacheKey = String.Format(CacheKeys.LearnCtgyList, hid);
+                if (_cache.TryGetValue<List<LearnCategoryViewModel>>(cacheKey, out listVm))
                 {
-                    await conn.OpenAsync();
+                    // Do nothing
+                }
+                else
+                {
+                    listVm = new List<LearnCategoryViewModel>();
 
-                    // Check Home assignment with current user
-                    if (hid > 0)
+                    queryString = HIHDBUtility.getLearnCategoryQueryString() + " WHERE [HID] IS NULL OR [HID] = " + hid.ToString();
+
+                    using (conn = new SqlConnection(Startup.DBConnectionString))
                     {
-                        try
+                        await conn.OpenAsync();
+
+                        // Check Home assignment with current user
+                        if (hid > 0)
                         {
-                            HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                            try
+                            {
+                                HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                            }
+                            catch (Exception)
+                            {
+                                errorCode = HttpStatusCode.BadRequest;
+                                throw;
+                            }
                         }
-                        catch (Exception)
+
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = cmd.ExecuteReader();
+
+                        if (reader.HasRows)
                         {
-                            errorCode = HttpStatusCode.BadRequest;
-                            throw;
+                            while (reader.Read())
+                            {
+                                LearnCategoryViewModel vm = new LearnCategoryViewModel();
+                                HIHDBUtility.LearnCategory_DB2VM(reader, vm);
+                                listVm.Add(vm);
+                            }
                         }
                     }
 
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            listVm.TotalCount = reader.GetInt32(0);
-                            break;
-                        }
-                    }
-                    reader.NextResult();
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            LearnCategoryViewModel vm = new LearnCategoryViewModel();
-                            HIHDBUtility.LearnCategory_DB2VM(reader, vm);
-                            listVm.Add(vm);
-                        }
-                    }
+                    _cache.Set<List<LearnCategoryViewModel>>(cacheKey, listVm, TimeSpan.FromMinutes(20));
                 }
             }
             catch (Exception exp)
