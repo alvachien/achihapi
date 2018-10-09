@@ -91,6 +91,13 @@ namespace achihapi.ViewModels
         [Required]
         public Int32 RefDocForBuy { get; set; }
         public Int32? RefDocForSold { get; set; }
+
+        // Only for creation mode, will not save to DB!
+        public Boolean? LegacyAsset { get; set; }
+        public DateTime? AssetStartDate { get; set; }
+        public Decimal? AssetValueInBaseCurrency { get; set; }
+        public Int32? ControlCenterID { get; set; }
+        public Int32? OrderID { get; set; }
     }
 
     public enum LoanRepaymentMethod

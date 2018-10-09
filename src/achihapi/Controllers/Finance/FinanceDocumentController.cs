@@ -323,7 +323,7 @@ namespace achihapi.Controllers
             // Do the basic check!
             try
             {
-                BasicChecks(vm);
+                await FinanceDocumentBasicCheckAsync(vm);
             }
             catch (Exception exp)
             {
@@ -510,7 +510,7 @@ namespace achihapi.Controllers
             // Do the basic check!
             try
             {
-                BasicChecks(vm);
+                await FinanceDocumentBasicCheckAsync(vm);
             }
             catch(Exception exp)
             {
@@ -941,7 +941,7 @@ namespace achihapi.Controllers
         }
 
         // Checks
-        private void BasicChecks(FinanceDocumentUIViewModel vm)
+        internal static async Task FinanceDocumentBasicCheckAsync(FinanceDocumentUIViewModel vm)
         {
             // Header check!
             if (String.IsNullOrEmpty(vm.Desp))
@@ -969,6 +969,7 @@ namespace achihapi.Controllers
 
         internal static async Task FinanceDocumentBasicValidationAsync(FinanceDocumentUIViewModel vm, SqlConnection conn)
         {
+            // Then, go for other checks
             String strCheckString = @"SELECT TOP (1) [BASECURR] FROM [dbo].[t_homedef] WHERE [ID] = @hid;";
             SqlCommand cmdCheck = new SqlCommand(strCheckString, conn);
             cmdCheck.Parameters.AddWithValue("@hid", vm.HID);

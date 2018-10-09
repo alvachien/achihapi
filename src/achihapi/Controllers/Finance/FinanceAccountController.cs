@@ -488,12 +488,19 @@ namespace achihapi.Controllers
             if (vm == null 
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive
-                || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset
+                // || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
             {
                 // We are support creating ASSET account directly with initial value.
                 return BadRequest("No data is inputted or inputted data for Advance payment/receive/Loan");
+            }
+            else if(vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
+            {
+                if (vm.ExtraInfo_AS == null || vm.ExtraInfo_AS.LegacyAsset == null || vm.ExtraInfo_AS.AssetStartDate == null 
+                    || vm.ExtraInfo_AS.AssetValueInBaseCurrency == null
+                    || vm.ExtraInfo_AS.AssetValueInBaseCurrency.Value <= 0)
+                    return BadRequest("Asset account: wrong account data");
             }
             if (vm.Name != null)
                 vm.Name = vm.Name.Trim();
@@ -540,9 +547,10 @@ namespace achihapi.Controllers
             SqlDataReader reader = null;
             SqlTransaction tran = null;
             String queryString = "";
-            Int32 nNewID = -1;
+            Int32 nNewAccountID = -1;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
+            HomeDefViewModel vmHome = null;
 
             try
             {
@@ -553,15 +561,54 @@ namespace achihapi.Controllers
                 {
                     await conn.OpenAsync();
 
-                    // Check Home assignment with current user
-                    try
+                    // Check HID assignment
+                    if (vm.CtgyID != FinanceAccountCtgyViewModel.AccountCategory_Asset)
                     {
-                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                        try
+                        {
+                            HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
+                        }
+                        catch (Exception)
+                        {
+                            errorCode = HttpStatusCode.BadRequest;
+                            throw;
+                        }
                     }
-                    catch (Exception)
+                    else
                     {
-                        errorCode = HttpStatusCode.BadRequest;
-                        throw;
+                        // Check: HID, it requires more info than just check, so it implemented it 
+                        String strHIDCheck = HIHDBUtility.getHomeDefQueryString() + " WHERE [ID]= @hid AND [USER] = @user";
+                        cmd = new SqlCommand(strHIDCheck, conn);
+                        cmd.Parameters.AddWithValue("@hid", vm.HID);
+                        cmd.Parameters.AddWithValue("@user", usrName);
+                        reader = await cmd.ExecuteReaderAsync();
+                        if (!reader.HasRows)
+                        {
+                            errorCode = HttpStatusCode.BadRequest;
+                            throw new Exception("Not home found!");
+                        }
+                        else
+                        {
+                            while (reader.Read())
+                            {
+                                vmHome = new HomeDefViewModel();
+                                HIHDBUtility.HomeDef_DB2VM(reader, vmHome);
+
+                                // It shall be only one entry if found!
+                                break;
+                            }
+                        }
+
+                        reader.Dispose();
+                        reader = null;
+                        cmd.Dispose();
+                        cmd = null;
+
+                        if (vmHome == null || String.IsNullOrEmpty(vmHome.BaseCurrency) || vmHome.ID != vm.HID)
+                        {
+                            errorCode = HttpStatusCode.BadRequest;
+                            throw new Exception("Home Definition is invalid");
+                        }
                     }
 
                     // Check duplicate names
@@ -587,6 +634,7 @@ namespace achihapi.Controllers
                         cmd.Dispose();
                         cmd = null;
 
+                        // Begin the transaction
                         tran = conn.BeginTransaction();
 
                         // Now go ahead for the creating
@@ -602,14 +650,131 @@ namespace achihapi.Controllers
                         idparam.Direction = ParameterDirection.Output;
 
                         Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                        nNewID = (Int32)idparam.Value;
+                        nNewAccountID = (Int32)idparam.Value;
+
+                        // For legacy asset case
+                        if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
+                        {
+                            // Create faked 'buyin' doc manually
+                            FinanceDocumentUIViewModel vmFIDOC = new FinanceDocumentUIViewModel();
+                            Int32 nNewDocID = 0;
+                            vmFIDOC.Desp = vm.Comment;
+                            vmFIDOC.DocType = FinanceDocTypeViewModel.DocType_Normal;
+                            vmFIDOC.HID = vm.HID;
+                            vmFIDOC.TranCurr = vmHome.BaseCurrency;
+                            vmFIDOC.TranDate = vm.ExtraInfo_AS.AssetStartDate.Value;
+                            vmFIDOC.CreatedAt = DateTime.Now;
+
+                            FinanceDocumentItemUIViewModel vmItem = new FinanceDocumentItemUIViewModel
+                            {
+                                AccountID = nNewAccountID
+                            };
+                            if (vm.ExtraInfo_AS.ControlCenterID.HasValue)
+                                vmItem.ControlCenterID = vm.ExtraInfo_AS.ControlCenterID.Value;
+                            if (vm.ExtraInfo_AS.OrderID.HasValue)
+                                vmItem.OrderID = vm.ExtraInfo_AS.OrderID.Value;
+                            vmItem.Desp = vm.Comment;
+                            vmItem.ItemID = 1;
+                            vmItem.TranAmount = vm.ExtraInfo_AS.AssetValueInBaseCurrency.Value;
+                            vmItem.TranType = FinanceTranTypeViewModel.TranType_OpeningAsset;
+                            vmFIDOC.Items.Add(vmItem);
+
+                            // Do the checks
+                            try
+                            {
+                                await FinanceDocumentController.FinanceDocumentBasicCheckAsync(vmFIDOC);
+                            }
+                            catch (Exception)
+                            {
+                                errorCode = HttpStatusCode.BadRequest;
+                                throw;
+                            }
+
+                            // Do the validation
+                            try
+                            {
+                                await FinanceDocumentController.FinanceDocumentBasicValidationAsync(vmFIDOC, conn);
+                            }
+                            catch (Exception)
+                            {
+                                errorCode = HttpStatusCode.BadRequest;
+                                throw;
+                            }
+
+                            // Now go ahead for the creating
+                            queryString = HIHDBUtility.GetFinDocHeaderInsertString();
+
+                            // Header
+                            cmd = new SqlCommand(queryString, conn)
+                            {
+                                Transaction = tran
+                            };
+
+                            HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vmFIDOC, usrName);
+                            idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                            idparam.Direction = ParameterDirection.Output;
+
+                            nRst = await cmd.ExecuteNonQueryAsync();
+                            nNewDocID = (Int32)idparam.Value;
+                            vmFIDOC.ID = nNewDocID;
+                            cmd.Dispose();
+                            cmd = null;
+
+                            // Then, creating the items
+                            foreach (FinanceDocumentItemUIViewModel ivm in vmFIDOC.Items)
+                            {
+                                queryString = HIHDBUtility.GetFinDocItemInsertString();
+
+                                cmd = new SqlCommand(queryString, conn)
+                                {
+                                    Transaction = tran
+                                };
+                                HIHDBUtility.BindFinDocItemInsertParameter(cmd, ivm, nNewDocID);
+
+                                await cmd.ExecuteNonQueryAsync();
+                                cmd.Dispose();
+                                cmd = null;
+                            }
+
+                            // Go to Extra part creation
+                            vm.ExtraInfo_AS.AccountID = nNewAccountID;
+                            vm.ExtraInfo_AS.RefDocForBuy = nNewDocID;
+                            queryString = HIHDBUtility.GetFinanceAccountAssetInsertString();
+                            cmd = new SqlCommand(queryString, conn)
+                            {
+                                Transaction = tran
+                            };
+
+                            HIHDBUtility.BindFinAccountAssetInsertParameter(cmd, vm.ExtraInfo_AS);
+                            nRst = await cmd.ExecuteNonQueryAsync();
+                            cmd.Dispose();
+                            cmd = null;
+                        }
 
                         // Now commit it!
                         tran.Commit();
 
                         // Update the buffer
-                        var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
-                        this._cache.Remove(cacheKey);
+                        // Account List
+                        try
+                        {
+                            var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
+                            this._cache.Remove(cacheKey);
+                        }
+                        catch(Exception)
+                        {
+                            // Do nothing here.
+                        }
+                        // B.S.
+                        try
+                        {
+                            var cacheKey = String.Format(CacheKeys.FinReportBS, vm.HID);
+                            this._cache.Remove(cacheKey);
+                        }
+                        catch (Exception)
+                        {
+                            // Do nothing here.
+                        }
                     }
                 }
             }
@@ -665,7 +830,7 @@ namespace achihapi.Controllers
                 }
             }
 
-            vm.ID = nNewID;
+            vm.ID = nNewAccountID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
                 DateFormatString = HIHAPIConstants.DateFormatPattern,
