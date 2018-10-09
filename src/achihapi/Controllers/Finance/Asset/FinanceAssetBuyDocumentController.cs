@@ -345,13 +345,12 @@ namespace achihapi.Controllers
             }
             catch (Exception exp)
             {
-                if (tran != null)
-                    tran.Rollback();
-
 #if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
 #endif
 
+                if (tran != null)
+                    tran.Rollback();
                 strErrMsg = exp.Message;
                 if (errorCode == HttpStatusCode.OK)
                     errorCode = HttpStatusCode.InternalServerError;

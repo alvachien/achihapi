@@ -273,6 +273,7 @@ namespace achihapi.Controllers
                 strErrMsg = exp.Message;
                 if (errorCode == HttpStatusCode.OK)
                     errorCode = HttpStatusCode.InternalServerError;
+
                 if (tran != null)
                     tran.Rollback();
             }

@@ -780,12 +780,12 @@ namespace achihapi.Controllers
             }
             catch (Exception exp)
             {
-                if (tran != null)
-                    tran.Rollback();
-
 #if DEBUG
                 System.Diagnostics.Debug.WriteLine(exp.Message);
 #endif
+
+                if (tran != null)
+                    tran.Rollback();
 
                 strErrMsg = exp.Message;
                 if (errorCode == HttpStatusCode.OK)
@@ -1056,9 +1056,13 @@ namespace achihapi.Controllers
             }
             catch (Exception exp)
             {
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
+
                 if (tran != null)
                     tran.Rollback();
-                System.Diagnostics.Debug.WriteLine(exp.Message);
+
                 strErrMsg = exp.Message;
 
                 if (errorCode == HttpStatusCode.OK)
@@ -1242,10 +1246,12 @@ namespace achihapi.Controllers
             }
             catch (Exception exp)
             {
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
                 if (tran != null)
                     tran.Rollback();
 
-                System.Diagnostics.Debug.WriteLine(exp.Message);
                 strErrMsg = exp.Message;
 
                 if (errorCode == HttpStatusCode.OK)
@@ -1413,9 +1419,13 @@ namespace achihapi.Controllers
             }
             catch (Exception exp)
             {
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
+
                 if (tran != null)
                     tran.Rollback();
-                System.Diagnostics.Debug.WriteLine(exp.Message);
+
                 strErrMsg = exp.Message;
 
                 if (errorCode == HttpStatusCode.OK)
