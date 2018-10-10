@@ -634,25 +634,6 @@ namespace achihapi.Controllers
                         cmd.Dispose();
                         cmd = null;
 
-                        // Begin the transaction
-                        tran = conn.BeginTransaction();
-
-                        // Now go ahead for the creating
-                        queryString = HIHDBUtility.GetFinanceAccountHeaderInsertString();
-
-                        cmd = new SqlCommand(queryString, conn)
-                        {
-                            Transaction = tran
-                        };
-
-                        HIHDBUtility.BindFinAccountInsertParameter(cmd, vm, usrName);
-                        SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                        idparam.Direction = ParameterDirection.Output;
-
-                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                        nNewAccountID = (Int32)idparam.Value;
-
-                        // For legacy asset case
                         if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
                         {
                             // Create faked 'buyin' doc manually
@@ -667,7 +648,7 @@ namespace achihapi.Controllers
 
                             FinanceDocumentItemUIViewModel vmItem = new FinanceDocumentItemUIViewModel
                             {
-                                AccountID = nNewAccountID
+                                AccountID = -1  // For passing the check
                             };
                             if (vm.ExtraInfo_AS.ControlCenterID.HasValue)
                                 vmItem.ControlCenterID = vm.ExtraInfo_AS.ControlCenterID.Value;
@@ -693,7 +674,7 @@ namespace achihapi.Controllers
                             // Do the validation
                             try
                             {
-                                await FinanceDocumentController.FinanceDocumentBasicValidationAsync(vmFIDOC, conn);
+                                await FinanceDocumentController.FinanceDocumentBasicValidationAsync(vmFIDOC, conn, -1);
                             }
                             catch (Exception)
                             {
@@ -701,10 +682,26 @@ namespace achihapi.Controllers
                                 throw;
                             }
 
-                            // Now go ahead for the creating
-                            queryString = HIHDBUtility.GetFinDocHeaderInsertString();
+                            // Begin the transaction
+                            tran = conn.BeginTransaction();
 
-                            // Header
+                            // 1. Create Account Header
+                            queryString = HIHDBUtility.GetFinanceAccountHeaderInsertString();
+
+                            cmd = new SqlCommand(queryString, conn)
+                            {
+                                Transaction = tran
+                            };
+
+                            HIHDBUtility.BindFinAccountInsertParameter(cmd, vm, usrName);
+                            SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                            idparam.Direction = ParameterDirection.Output;
+
+                            Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                            nNewAccountID = (Int32)idparam.Value;
+
+                            // 2. Create the Doc header
+                            queryString = HIHDBUtility.GetFinDocHeaderInsertString();
                             cmd = new SqlCommand(queryString, conn)
                             {
                                 Transaction = tran
@@ -720,9 +717,10 @@ namespace achihapi.Controllers
                             cmd.Dispose();
                             cmd = null;
 
-                            // Then, creating the items
+                            // 3. Create the Doc items
                             foreach (FinanceDocumentItemUIViewModel ivm in vmFIDOC.Items)
                             {
+                                ivm.AccountID = nNewAccountID;
                                 queryString = HIHDBUtility.GetFinDocItemInsertString();
 
                                 cmd = new SqlCommand(queryString, conn)
@@ -736,7 +734,7 @@ namespace achihapi.Controllers
                                 cmd = null;
                             }
 
-                            // Go to Extra part creation
+                            // 4. Create Account Ext for Asset 
                             vm.ExtraInfo_AS.AccountID = nNewAccountID;
                             vm.ExtraInfo_AS.RefDocForBuy = nNewDocID;
                             queryString = HIHDBUtility.GetFinanceAccountAssetInsertString();
@@ -749,6 +747,26 @@ namespace achihapi.Controllers
                             nRst = await cmd.ExecuteNonQueryAsync();
                             cmd.Dispose();
                             cmd = null;
+                        }
+                        else
+                        {
+                            // Begin the transaction
+                            tran = conn.BeginTransaction();
+
+                            // Now go ahead for the creating
+                            queryString = HIHDBUtility.GetFinanceAccountHeaderInsertString();
+
+                            cmd = new SqlCommand(queryString, conn)
+                            {
+                                Transaction = tran
+                            };
+
+                            HIHDBUtility.BindFinAccountInsertParameter(cmd, vm, usrName);
+                            SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                            idparam.Direction = ParameterDirection.Output;
+
+                            Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                            nNewAccountID = (Int32)idparam.Value;
                         }
 
                         // Now commit it!

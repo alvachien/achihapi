@@ -978,7 +978,7 @@ namespace achihapi.Controllers
 
         }
 
-        internal static async Task FinanceDocumentBasicValidationAsync(FinanceDocumentUIViewModel vm, SqlConnection conn)
+        internal static async Task FinanceDocumentBasicValidationAsync(FinanceDocumentUIViewModel vm, SqlConnection conn, Int32? acntIDforSkipCheck = null)
         {
             // Then, go for other checks
             String strCheckString = @"SELECT TOP (1) [BASECURR] FROM [dbo].[t_homedef] WHERE [ID] = @hid;";
@@ -1065,17 +1065,24 @@ namespace achihapi.Controllers
             foreach (var item in vm.Items)
             {
                 // Account
-                strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_account] WHERE [HID] = @HID AND [ID] = @ID";
-                cmdCheck = new SqlCommand(strCheckString, conn);
-                cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
-                cmdCheck.Parameters.AddWithValue("@ID", item.AccountID);
-                reader = await cmdCheck.ExecuteReaderAsync();
-                if (!reader.HasRows)
-                    throw new Exception("No account found");
-                reader.Dispose();
-                reader = null;
-                cmdCheck.Dispose();
-                cmdCheck = null;
+                if (acntIDforSkipCheck.HasValue && acntIDforSkipCheck.Value == item.AccountID)
+                {
+                    // Do nothing
+                }
+                else
+                {
+                    strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_account] WHERE [HID] = @HID AND [ID] = @ID";
+                    cmdCheck = new SqlCommand(strCheckString, conn);
+                    cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
+                    cmdCheck.Parameters.AddWithValue("@ID", item.AccountID);
+                    reader = await cmdCheck.ExecuteReaderAsync();
+                    if (!reader.HasRows)
+                        throw new Exception("No account found");
+                    reader.Dispose();
+                    reader = null;
+                    cmdCheck.Dispose();
+                    cmdCheck = null;
+                }
 
                 // Transaction type
                 strCheckString = @"SELECT TOP (1) [ID], [EXPENSE] FROM [t_fin_tran_type] WHERE [ID] = @ID";//@"SELECT TOP (1) [ID], [EXPENSE] FROM [t_fin_tran_type] WHERE [HID] = @HID AND [ID] = @ID";
