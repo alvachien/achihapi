@@ -24,7 +24,8 @@ namespace achihapi.Controllers
         // Version 7 - 2018.09.11
         // Version 8 - 2018.09.15
         // Version 9 - 2018.09.16
-        public static Int32 CurrentVersion = 9;
+        // Version 10 - 2018.10.13
+        public static Int32 CurrentVersion = 10;
 
         // GET: api/DBVersionCheck
         [HttpGet]

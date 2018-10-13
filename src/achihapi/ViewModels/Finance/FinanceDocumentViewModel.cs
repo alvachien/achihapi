@@ -46,6 +46,36 @@ namespace achihapi.ViewModels
         public FinanceAccountViewModel AccountVM = new FinanceAccountViewModel();
     }
 
+    // Asset: Buyin
+    public sealed class FinanceAssetBuyinDocViewModel
+    {
+
+    }
+
+    // Asset: Soldout
+    public sealed class FinanceAssetSoldoutDocViewModel
+    {
+        [Required]
+        public Int32 HID { get; set; }
+        [Required]
+        public Int32 AssetAccountID { get; set; }
+        [Required]
+        public DateTime TranDate { get; set; }
+        [Required]
+        public Decimal TranAmount { get; set; }
+        [Required]
+        [StringLength(5)]
+        public String TranCurr { get; set; }
+        [Required]
+        [StringLength(45)]
+        public String Desp { get; set; }
+        public Int32? ControlCenterID { get; set; }
+        public Int32? OrderID { get; set; }
+
+        // Items
+        public List<FinanceDocumentItemUIViewModel> Items = new List<FinanceDocumentItemUIViewModel>();
+    }
+
     public sealed class FinanceLoanDocumentUIViewModel: FinanceDocumentUIViewModel
     {
         // Account -> Loan account

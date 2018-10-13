@@ -27,5 +27,6 @@ namespace achihapi.ViewModels
         public const Int16 DocType_LendTo = 10;
         public const Int16 DocType_Repay = 11;
         public const Int16 DocType_AdvanceReceive = 12;
+        public const Int16 DocType_Insurece = 13;
     }
 }

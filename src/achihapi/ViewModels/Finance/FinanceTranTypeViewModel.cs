@@ -34,5 +34,14 @@ namespace achihapi.ViewModels
 
         public const Int32 TranType_InterestOut = 55;
         public const Int32 TranType_InterestIn = 8;
+
+        public const Int32 TranType_AssetValueDecrease = 89;
+        public const Int32 TranType_AssetValueIncrease = 90;
+
+        public const Int32 TranType_AssetSoldout = 92;
+        public const Int32 TranType_AssetSoldoutIncome = 93;
+
+        public const Int32 TranType_InsuranceReturn = 36;
+        public const Int32 TranType_InsurancePaymentOut = 34;
     }
 }

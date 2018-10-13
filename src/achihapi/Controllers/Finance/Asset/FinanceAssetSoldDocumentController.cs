@@ -186,30 +186,22 @@ namespace achihapi.Controllers
         // POST: api/FinanceAssetSoldDocument
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Post([FromBody]FinanceAssetDocumentUIViewModel vm)
+        public async Task<IActionResult> Post([FromBody]FinanceAssetSoldoutDocViewModel vm)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (vm == null || vm.DocType != FinanceDocTypeViewModel.DocType_AssetSoldOut)
-            {
-                return BadRequest("No data is inputted");
-            }
+            // Perform checks
             if (vm.HID <= 0)
                 return BadRequest("Not HID inputted");
-
-            // Do basic checks
-            if (String.IsNullOrEmpty(vm.TranCurr) 
-                || vm.AccountVM.ID <= 0)
-                return BadRequest("Invalid input data");
-
-            foreach (var di in vm.Items)
-            {
-                if (di.TranAmount == 0 || di.AccountID <= 0 || di.TranType <= 0 || (di.ControlCenterID <= 0 && di.OrderID <= 0))
-                    return BadRequest("Invalid input data in items!");
-            }
+            if (vm.AssetAccountID <= 0)
+                return BadRequest("Asset Account is invalid");
+            if (vm.TranAmount <= 0)
+                return BadRequest("Amount is less than zero");
+            if (vm.Items.Count <= 0)
+                return BadRequest("No items inputted");
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -221,6 +213,41 @@ namespace achihapi.Controllers
             }
             if (String.IsNullOrEmpty(usrName))
                 return BadRequest("User cannot recognize");
+
+            // Construct the Doc.
+            var vmFIDoc = new FinanceDocumentUIViewModel();
+            vmFIDoc.DocType = FinanceDocTypeViewModel.DocType_AssetSoldOut;
+            vmFIDoc.Desp = vm.Desp;
+            vmFIDoc.TranDate = vm.TranDate;
+            vmFIDoc.HID = vm.HID;
+
+            Decimal totalAmt = 0;
+            var maxItemID = 0;
+            foreach (var di in vm.Items)
+            {
+                if (di.ItemID <= 0 || di.TranAmount == 0 || di.AccountID <= 0 
+                    || di.TranType != FinanceTranTypeViewModel.TranType_AssetSoldoutIncome
+                    || (di.ControlCenterID <= 0 && di.OrderID <= 0))
+                    return BadRequest("Invalid input data in items!");
+
+                totalAmt += di.TranAmount;
+                vmFIDoc.Items.Add(di);
+
+                if (maxItemID < di.ItemID)
+                    maxItemID = di.ItemID;
+            }
+            if (totalAmt != vm.TranAmount)
+                return BadRequest("Amount is not even");
+            var nitem = new FinanceDocumentItemUIViewModel();
+            nitem.ItemID = ++maxItemID;
+            nitem.AccountID = vm.AssetAccountID;
+            nitem.TranAmount = vm.TranAmount;
+            nitem.Desp = vmFIDoc.Desp;
+            nitem.TranType = FinanceTranTypeViewModel.TranType_AssetSoldout;
+            if (vm.ControlCenterID.HasValue)
+                nitem.ControlCenterID = vm.ControlCenterID.Value;
+            if (vm.OrderID.HasValue)
+                nitem.OrderID = vm.OrderID.Value;
 
             // Update the database
             SqlConnection conn = null;
@@ -234,7 +261,10 @@ namespace achihapi.Controllers
 
             try
             {
-                using(conn = new SqlConnection(Startup.DBConnectionString))
+                // Basic check again
+                await FinanceDocumentController.FinanceDocumentBasicCheckAsync(vmFIDoc);
+
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
                     await conn.OpenAsync();
 
@@ -249,6 +279,12 @@ namespace achihapi.Controllers
                         throw;
                     }
 
+                    // Perfrom the doc. validation
+                    await FinanceDocumentController.FinanceDocumentBasicValidationAsync(vmFIDoc, conn);
+
+                    // Todo: check account is asset?
+
+                    // Begin the modification
                     tran = conn.BeginTransaction();
 
                     // First, craete the doc header => nNewDocID
@@ -258,7 +294,7 @@ namespace achihapi.Controllers
                         Transaction = tran
                     };
 
-                    HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vm, usrName);
+                    HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vmFIDoc, usrName);
                     SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                     idparam.Direction = ParameterDirection.Output;
 
@@ -310,31 +346,36 @@ namespace achihapi.Controllers
                     };
 
                     // Close this account
-                    vm.AccountVM.Status = FinanceAccountStatus.Closed;
-                    HIHDBUtility.BindFinAccountStatusUpdateParameter(cmd, vm.AccountVM.Status, vm.AccountVM.ID, vm.AccountVM.HID, usrName);
+                    HIHDBUtility.BindFinAccountStatusUpdateParameter(cmd, FinanceAccountStatus.Closed, vm.AssetAccountID, vm.HID, usrName);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
 
                     // Fourth, Update the Asset account part for sold doc
                     queryString = HIHDBUtility.GetFinanceAccountAssetUpdateSoldDocString();
-                    //vm.AccountVM.ExtraInfo_AS.RefDocForSold = nNewDocID;
                     cmd = new SqlCommand(queryString, conn)
                     {
                         Transaction = tran
                     };
-                    HIHDBUtility.BindFinAccountAssetUpdateSoldDocParameter(cmd, nNewDocID, vm.AccountVM.ID);
+                    HIHDBUtility.BindFinAccountAssetUpdateSoldDocParameter(cmd, nNewDocID, vm.AssetAccountID);
                     nRst = await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
 
-                    // Fifth, the tag
-
+                    // Do the commit
                     tran.Commit();
 
                     // Update the buffer
-                    var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
-                    this._cache.Remove(cacheKey);
+                    // Account List
+                    try
+                    {
+                        var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
+                        this._cache.Remove(cacheKey);
+                    }
+                    catch (Exception)
+                    {
+                        // Do nothing here.
+                    }
                 }
             }
             catch (Exception exp)
@@ -389,14 +430,8 @@ namespace achihapi.Controllers
                 }
             }
 
-            vm.ID = nNewDocID;
-            var setting = new Newtonsoft.Json.JsonSerializerSettings
-            {
-                DateFormatString = HIHAPIConstants.DateFormatPattern,
-                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
-            };
-
-            return new JsonResult(vm, setting);
+            // Return nothing
+            return Ok(nNewDocID);
         }
         
         // PUT: api/FinanceAssetSoldDocument/5
