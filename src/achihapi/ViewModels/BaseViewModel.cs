@@ -10,6 +10,11 @@ namespace achihapi.ViewModels
 {
     public abstract class BaseViewModel
     {
+        public BaseViewModel()
+        {
+            this.CreatedAt = DateTime.Now;
+        }
+
         [StringLength(40)]
         public String CreatedBy { get; set;  }
         public DateTime CreatedAt { get; set; }

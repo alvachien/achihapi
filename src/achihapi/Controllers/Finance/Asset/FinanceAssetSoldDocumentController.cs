@@ -220,6 +220,7 @@ namespace achihapi.Controllers
             vmFIDoc.Desp = vm.Desp;
             vmFIDoc.TranDate = vm.TranDate;
             vmFIDoc.HID = vm.HID;
+            vmFIDoc.TranCurr = vm.TranCurr;
 
             Decimal totalAmt = 0;
             var maxItemID = 0;
@@ -248,6 +249,7 @@ namespace achihapi.Controllers
                 nitem.ControlCenterID = vm.ControlCenterID.Value;
             if (vm.OrderID.HasValue)
                 nitem.OrderID = vm.OrderID.Value;
+            vmFIDoc.Items.Add(nitem);
 
             // Update the database
             SqlConnection conn = null;
@@ -304,7 +306,7 @@ namespace achihapi.Controllers
                     cmd = null;
 
                     // Then, creating the items
-                    foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
+                    foreach (FinanceDocumentItemUIViewModel ivm in vmFIDoc.Items)
                     {
                         queryString = HIHDBUtility.GetFinDocItemInsertString();
                         cmd = new SqlCommand(queryString, conn)
@@ -384,12 +386,12 @@ namespace achihapi.Controllers
                 System.Diagnostics.Debug.WriteLine(exp.Message);
 #endif
 
-                if (tran != null)
-                    tran.Rollback();
-
                 strErrMsg = exp.Message;
                 if (errorCode == HttpStatusCode.OK)
                     errorCode = HttpStatusCode.InternalServerError;
+
+                if (tran != null)
+                    tran.Rollback();
             }
             finally
             {
