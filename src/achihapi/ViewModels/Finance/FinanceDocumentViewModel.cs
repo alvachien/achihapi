@@ -40,25 +40,11 @@ namespace achihapi.ViewModels
         public FinanceAccountViewModel AccountVM = new FinanceAccountViewModel();
     }
 
-    public sealed class FinanceAssetDocumentUIViewModel: FinanceDocumentUIViewModel
-    {
-        // Account -> Advance payment
-        public FinanceAccountViewModel AccountVM = new FinanceAccountViewModel();
-    }
-
-    // Asset: Buyin
-    public sealed class FinanceAssetBuyinDocViewModel
-    {
-
-    }
-
-    // Asset: Soldout
-    public sealed class FinanceAssetSoldoutDocViewModel
+    #region Asset related
+    public abstract class FinanceAssetDocumentCoreViewModel
     {
         [Required]
         public Int32 HID { get; set; }
-        [Required]
-        public Int32 AssetAccountID { get; set; }
         [Required]
         public DateTime TranDate { get; set; }
         [Required]
@@ -75,6 +61,23 @@ namespace achihapi.ViewModels
         // Items
         public List<FinanceDocumentItemUIViewModel> Items = new List<FinanceDocumentItemUIViewModel>();
     }
+
+    // Asset: Buyin
+    public sealed class FinanceAssetBuyinDocViewModel: FinanceAssetDocumentCoreViewModel
+    {
+        public Boolean? IsLegacy { get; set; }
+        public DateTime? LegacyDate { get; set; }
+        public String AccountOwner { get; set; }
+        public FinanceAccountExtASViewModel accountAsset { get; set; }
+    }
+
+    // Asset: Soldout
+    public sealed class FinanceAssetSoldoutDocViewModel: FinanceAssetDocumentCoreViewModel
+    {
+        [Required]
+        public Int32 AssetAccountID { get; set; }
+    }
+    #endregion
 
     public sealed class FinanceLoanDocumentUIViewModel: FinanceDocumentUIViewModel
     {

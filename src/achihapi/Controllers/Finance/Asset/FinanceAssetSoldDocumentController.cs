@@ -30,158 +30,158 @@ namespace achihapi.Controllers
             return BadRequest();
         }
 
-        // GET: api/FinanceAssetSoldDocument/5
-        [HttpGet("{id}")]
-        [Authorize]
-        public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
-        {
-            if (hid <= 0)
-                return BadRequest("Not HID inputted");
+        //// GET: api/FinanceAssetSoldDocument/5
+        //[HttpGet("{id}")]
+        //[Authorize]
+        //public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
+        //{
+        //    if (hid <= 0)
+        //        return BadRequest("Not HID inputted");
 
-            String usrName = String.Empty;
-            if (Startup.UnitTestMode)
-                usrName = UnitTestUtility.UnitTestUser;
-            else
-            {
-                var usrObj = HIHAPIUtility.GetUserClaim(this);
-                usrName = usrObj.Value;
-            }
-            if (String.IsNullOrEmpty(usrName))
-                return BadRequest("User cannot recognize");
+        //    String usrName = String.Empty;
+        //    if (Startup.UnitTestMode)
+        //        usrName = UnitTestUtility.UnitTestUser;
+        //    else
+        //    {
+        //        var usrObj = HIHAPIUtility.GetUserClaim(this);
+        //        usrName = usrObj.Value;
+        //    }
+        //    if (String.IsNullOrEmpty(usrName))
+        //        return BadRequest("User cannot recognize");
 
-            FinanceAssetDocumentUIViewModel vm = new FinanceAssetDocumentUIViewModel();
-            SqlConnection conn = null;
-            SqlCommand cmd = null;
-            SqlDataReader reader = null;
-            String queryString = "";
-            String strErrMsg = "";
-            HttpStatusCode errorCode = HttpStatusCode.OK;
+        //    FinanceAssetDocumentUIViewModel vm = new FinanceAssetDocumentUIViewModel();
+        //    SqlConnection conn = null;
+        //    SqlCommand cmd = null;
+        //    SqlDataReader reader = null;
+        //    String queryString = "";
+        //    String strErrMsg = "";
+        //    HttpStatusCode errorCode = HttpStatusCode.OK;
 
-            try
-            {
-                queryString = HIHDBUtility.getFinanceDocAssetQueryString(id, false, hid);
+        //    try
+        //    {
+        //        queryString = HIHDBUtility.getFinanceDocAssetQueryString(id, false, hid);
 
-                using(conn = new SqlConnection(Startup.DBConnectionString))
-                {
-                    await conn.OpenAsync();
+        //        using(conn = new SqlConnection(Startup.DBConnectionString))
+        //        {
+        //            await conn.OpenAsync();
 
-                    // Check Home assignment with current user
-                    try
-                    {
-                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                    }
-                    catch (Exception)
-                    {
-                        errorCode = HttpStatusCode.BadRequest;
-                        throw;
-                    }
+        //            // Check Home assignment with current user
+        //            try
+        //            {
+        //                HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+        //            }
+        //            catch (Exception)
+        //            {
+        //                errorCode = HttpStatusCode.BadRequest;
+        //                throw;
+        //            }
 
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
+        //            cmd = new SqlCommand(queryString, conn);
+        //            reader = cmd.ExecuteReader();
 
-                    if (!reader.HasRows)
-                    {
-                        errorCode = HttpStatusCode.NotFound;
-                        throw new Exception();
-                    }
+        //            if (!reader.HasRows)
+        //            {
+        //                errorCode = HttpStatusCode.NotFound;
+        //                throw new Exception();
+        //            }
 
-                    // Header
-                    while (reader.Read())
-                    {
-                        HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
-                    }
-                    await reader.NextResultAsync();
+        //            // Header
+        //            while (reader.Read())
+        //            {
+        //                HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
+        //            }
+        //            await reader.NextResultAsync();
 
-                    // Items
-                    while (reader.Read())
-                    {
-                        FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                        HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
+        //            // Items
+        //            while (reader.Read())
+        //            {
+        //                FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
+        //                HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
 
-                        vm.Items.Add(itemvm);
-                    }
-                    await reader.NextResultAsync();
+        //                vm.Items.Add(itemvm);
+        //            }
+        //            await reader.NextResultAsync();
 
-                    // Account
-                    while (reader.Read())
-                    {
-                        FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
-                        Int32 aidx = 0;
-                        aidx = HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
-                        vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
-                        HIHDBUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
-                        vm.AccountVM = vmAccount;
-                    }
-                    await reader.NextResultAsync();
+        //            // Account
+        //            while (reader.Read())
+        //            {
+        //                FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
+        //                Int32 aidx = 0;
+        //                aidx = HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+        //                vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+        //                HIHDBUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
+        //                vm.AccountVM = vmAccount;
+        //            }
+        //            await reader.NextResultAsync();
 
-                    // Tags
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            Int32 itemID = reader.GetInt32(0);
-                            String sterm = reader.GetString(1);
+        //            // Tags
+        //            if (reader.HasRows)
+        //            {
+        //                while (reader.Read())
+        //                {
+        //                    Int32 itemID = reader.GetInt32(0);
+        //                    String sterm = reader.GetString(1);
 
-                            foreach (var vitem in vm.Items)
-                            {
-                                if (vitem.ItemID == itemID)
-                                {
-                                    vitem.TagTerms.Add(sterm);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception exp)
-            {
-                System.Diagnostics.Debug.WriteLine(exp.Message);
-                strErrMsg = exp.Message;
-                if (errorCode == HttpStatusCode.OK)
-                    errorCode = HttpStatusCode.InternalServerError;
-            }
-            finally
-            {
-                if (reader != null)
-                {
-                    reader.Dispose();
-                    reader = null;
-                }
-                if (cmd != null)
-                {
-                    cmd.Dispose();
-                    cmd = null;
-                }
-                if (conn != null)
-                {
-                    conn.Dispose();
-                    conn = null;
-                }
-            }
+        //                    foreach (var vitem in vm.Items)
+        //                    {
+        //                        if (vitem.ItemID == itemID)
+        //                        {
+        //                            vitem.TagTerms.Add(sterm);
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception exp)
+        //    {
+        //        System.Diagnostics.Debug.WriteLine(exp.Message);
+        //        strErrMsg = exp.Message;
+        //        if (errorCode == HttpStatusCode.OK)
+        //            errorCode = HttpStatusCode.InternalServerError;
+        //    }
+        //    finally
+        //    {
+        //        if (reader != null)
+        //        {
+        //            reader.Dispose();
+        //            reader = null;
+        //        }
+        //        if (cmd != null)
+        //        {
+        //            cmd.Dispose();
+        //            cmd = null;
+        //        }
+        //        if (conn != null)
+        //        {
+        //            conn.Dispose();
+        //            conn = null;
+        //        }
+        //    }
 
-            if (errorCode != HttpStatusCode.OK)
-            {
-                switch (errorCode)
-                {
-                    case HttpStatusCode.Unauthorized:
-                        return Unauthorized();
-                    case HttpStatusCode.NotFound:
-                        return NotFound();
-                    case HttpStatusCode.BadRequest:
-                        return BadRequest();
-                    default:
-                        return StatusCode(500, strErrMsg);
-                }
-            }
+        //    if (errorCode != HttpStatusCode.OK)
+        //    {
+        //        switch (errorCode)
+        //        {
+        //            case HttpStatusCode.Unauthorized:
+        //                return Unauthorized();
+        //            case HttpStatusCode.NotFound:
+        //                return NotFound();
+        //            case HttpStatusCode.BadRequest:
+        //                return BadRequest();
+        //            default:
+        //                return StatusCode(500, strErrMsg);
+        //        }
+        //    }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings
-            {
-                DateFormatString = HIHAPIConstants.DateFormatPattern,
-                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
-            };
+        //    var setting = new Newtonsoft.Json.JsonSerializerSettings
+        //    {
+        //        DateFormatString = HIHAPIConstants.DateFormatPattern,
+        //        ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+        //    };
 
-            return new JsonResult(vm, setting);
-        }
+        //    return new JsonResult(vm, setting);
+        //}
 
         // POST: api/FinanceAssetSoldDocument
         [HttpPost]
@@ -445,201 +445,201 @@ namespace achihapi.Controllers
         }
 
         // PATCH: 
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> Patch(int id, [FromQuery]int hid, [FromBody]JsonPatchDocument<FinanceAssetDocumentUIViewModel> patch)
-        {
-            if (patch == null || id <= 0 || patch.Operations.Count <= 0)
-                return BadRequest("No data is inputted");
-            if (hid <= 0)
-                return BadRequest("No home is inputted");
+        //[HttpPatch("{id}")]
+        //public async Task<IActionResult> Patch(int id, [FromQuery]int hid, [FromBody]JsonPatchDocument<FinanceAssetDocumentUIViewModel> patch)
+        //{
+        //    if (patch == null || id <= 0 || patch.Operations.Count <= 0)
+        //        return BadRequest("No data is inputted");
+        //    if (hid <= 0)
+        //        return BadRequest("No home is inputted");
 
-            // Update the database
-            SqlConnection conn = null;
-            SqlCommand cmd = null;
-            SqlDataReader reader = null;
-            String queryString = "";
-            String strErrMsg = "";
-            Boolean headTranDateUpdate = false;
-            DateTime? headTranDate = null;
-            Boolean headDespUpdate = false;
-            String headDesp = null;
-            HttpStatusCode errorCode = HttpStatusCode.OK;
+        //    // Update the database
+        //    SqlConnection conn = null;
+        //    SqlCommand cmd = null;
+        //    SqlDataReader reader = null;
+        //    String queryString = "";
+        //    String strErrMsg = "";
+        //    Boolean headTranDateUpdate = false;
+        //    DateTime? headTranDate = null;
+        //    Boolean headDespUpdate = false;
+        //    String headDesp = null;
+        //    HttpStatusCode errorCode = HttpStatusCode.OK;
 
-            // Check the inputs.
-            // Allowed to change:
-            //  1. Header: Transaction date, Desp;
-            //  2. Item: Transaction amount, Desp, Control Center ID, Order ID,
-            foreach (var oper in patch.Operations)
-            {
-                switch (oper.path)
-                {
-                    case "/tranDate":
-                        headTranDateUpdate = true;
-                        headTranDate = (DateTime)oper.value;
-                        break;
+        //    // Check the inputs.
+        //    // Allowed to change:
+        //    //  1. Header: Transaction date, Desp;
+        //    //  2. Item: Transaction amount, Desp, Control Center ID, Order ID,
+        //    foreach (var oper in patch.Operations)
+        //    {
+        //        switch (oper.path)
+        //        {
+        //            case "/tranDate":
+        //                headTranDateUpdate = true;
+        //                headTranDate = (DateTime)oper.value;
+        //                break;
 
-                    case "/desp":
-                        headDespUpdate = true;
-                        headDesp = (String)oper.value;
-                        break;
+        //            case "/desp":
+        //                headDespUpdate = true;
+        //                headDesp = (String)oper.value;
+        //                break;
 
-                    default:
-                        return BadRequest("Unsupport field found");
-                }
-            }
+        //            default:
+        //                return BadRequest("Unsupport field found");
+        //        }
+        //    }
 
-            // User name
-            String usrName = String.Empty;
-            if (Startup.UnitTestMode)
-                usrName = UnitTestUtility.UnitTestUser;
-            else
-            {
-                var usrObj = HIHAPIUtility.GetUserClaim(this);
-                usrName = usrObj.Value;
-            }
-            if (String.IsNullOrEmpty(usrName))
-                return BadRequest("User cannot recognize");
+        //    // User name
+        //    String usrName = String.Empty;
+        //    if (Startup.UnitTestMode)
+        //        usrName = UnitTestUtility.UnitTestUser;
+        //    else
+        //    {
+        //        var usrObj = HIHAPIUtility.GetUserClaim(this);
+        //        usrName = usrObj.Value;
+        //    }
+        //    if (String.IsNullOrEmpty(usrName))
+        //        return BadRequest("User cannot recognize");
 
-            try
-            {
-                queryString = HIHDBUtility.GetFinDocHeaderExistCheckString(id);
+        //    try
+        //    {
+        //        queryString = HIHDBUtility.GetFinDocHeaderExistCheckString(id);
 
-                using(conn = new SqlConnection(Startup.DBConnectionString))
-                {
-                    await conn.OpenAsync();
+        //        using(conn = new SqlConnection(Startup.DBConnectionString))
+        //        {
+        //            await conn.OpenAsync();
 
-                    // Check Home assignment with current user
-                    try
-                    {
-                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
-                    }
-                    catch (Exception)
-                    {
-                        errorCode = HttpStatusCode.BadRequest;
-                        throw;
-                    }
+        //            // Check Home assignment with current user
+        //            try
+        //            {
+        //                HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+        //            }
+        //            catch (Exception)
+        //            {
+        //                errorCode = HttpStatusCode.BadRequest;
+        //                throw;
+        //            }
 
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-                    if (!reader.HasRows)
-                    {
-                        errorCode = HttpStatusCode.BadRequest;
-                        throw new Exception("Doc ID not exist");
-                    }
-                    else
-                    {
-                        reader.Close();
-                        cmd.Dispose();
-                        cmd = null;
+        //            cmd = new SqlCommand(queryString, conn);
+        //            reader = cmd.ExecuteReader();
+        //            if (!reader.HasRows)
+        //            {
+        //                errorCode = HttpStatusCode.BadRequest;
+        //                throw new Exception("Doc ID not exist");
+        //            }
+        //            else
+        //            {
+        //                reader.Close();
+        //                cmd.Dispose();
+        //                cmd = null;
 
-                        //var vm = new FinanceAssetDocumentUIViewModel();
+        //                //var vm = new FinanceAssetDocumentUIViewModel();
 
-                        //// Header
-                        //while (reader.Read())
-                        //{
-                        //    HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
-                        //}
-                        //reader.NextResult();
+        //                //// Header
+        //                //while (reader.Read())
+        //                //{
+        //                //    HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
+        //                //}
+        //                //reader.NextResult();
 
-                        //// Items
-                        //while (reader.Read())
-                        //{
-                        //    FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                        //    HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
+        //                //// Items
+        //                //while (reader.Read())
+        //                //{
+        //                //    FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
+        //                //    HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
 
-                        //    vm.Items.Add(itemvm);
-                        //}
-                        //reader.NextResult();
+        //                //    vm.Items.Add(itemvm);
+        //                //}
+        //                //reader.NextResult();
 
-                        //// Account
-                        //while (reader.Read())
-                        //{
-                        //    FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
-                        //    Int32 aidx = 0;
-                        //    aidx = HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
+        //                //// Account
+        //                //while (reader.Read())
+        //                //{
+        //                //    FinanceAccountUIViewModel vmAccount = new FinanceAccountUIViewModel();
+        //                //    Int32 aidx = 0;
+        //                //    aidx = HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
 
-                        //    vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
-                        //    HIHDBUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
+        //                //    vmAccount.ExtraInfo_AS = new FinanceAccountExtASViewModel();
+        //                //    HIHDBUtility.FinAccountAsset_DB2VM(reader, vmAccount.ExtraInfo_AS, aidx);
 
-                        //    vm.AccountVM = vmAccount;
-                        //}
-                        //reader.NextResult();
+        //                //    vm.AccountVM = vmAccount;
+        //                //}
+        //                //reader.NextResult();
 
-                        //reader.Dispose();
-                        //reader = null;
+        //                //reader.Dispose();
+        //                //reader = null;
 
-                        //cmd.Dispose();
-                        //cmd = null;
+        //                //cmd.Dispose();
+        //                //cmd = null;
 
-                        //// Now go ahead for the update
-                        ////var patched = vm.Copy();
-                        //patch.ApplyTo(vm, ModelState);
-                        //if (!ModelState.IsValid)
-                        //{
-                        //    return new BadRequestObjectResult(ModelState);
-                        //}
+        //                //// Now go ahead for the update
+        //                ////var patched = vm.Copy();
+        //                //patch.ApplyTo(vm, ModelState);
+        //                //if (!ModelState.IsValid)
+        //                //{
+        //                //    return new BadRequestObjectResult(ModelState);
+        //                //}
 
-                        // Optimized logic go ahead
-                        if (headTranDateUpdate || headDespUpdate)
-                        {
-                            queryString = HIHDBUtility.GetFinDocHeader_PatchString(headTranDateUpdate, headDespUpdate);
-                            cmd = new SqlCommand(queryString, conn);
-                            if (headTranDateUpdate)
-                                cmd.Parameters.AddWithValue("@TRANDATE", headTranDate);
-                            if (headDespUpdate)
-                                cmd.Parameters.AddWithValue("@DESP", headDesp);
-                            cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
-                            cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
-                            cmd.Parameters.AddWithValue("@ID", id);
+        //                // Optimized logic go ahead
+        //                if (headTranDateUpdate || headDespUpdate)
+        //                {
+        //                    queryString = HIHDBUtility.GetFinDocHeader_PatchString(headTranDateUpdate, headDespUpdate);
+        //                    cmd = new SqlCommand(queryString, conn);
+        //                    if (headTranDateUpdate)
+        //                        cmd.Parameters.AddWithValue("@TRANDATE", headTranDate);
+        //                    if (headDespUpdate)
+        //                        cmd.Parameters.AddWithValue("@DESP", headDesp);
+        //                    cmd.Parameters.AddWithValue("@UPDATEDAT", DateTime.Now);
+        //                    cmd.Parameters.AddWithValue("@UPDATEDBY", usrName);
+        //                    cmd.Parameters.AddWithValue("@ID", id);
 
-                            await cmd.ExecuteNonQueryAsync();
-                        }
-                    }
-                }
-            }
-            catch (Exception exp)
-            {
-                System.Diagnostics.Debug.WriteLine(exp.Message);
-                strErrMsg = exp.Message;
-                if (errorCode == HttpStatusCode.OK)
-                    errorCode = HttpStatusCode.InternalServerError;
-            }
-            finally
-            {
-                if (reader != null)
-                {
-                    reader.Dispose();
-                    reader = null;
-                }
-                if (cmd != null)
-                {
-                    cmd.Dispose();
-                    cmd = null;
-                }
-                if (conn != null)
-                {
-                    conn.Dispose();
-                    conn = null;
-                }
-            }
+        //                    await cmd.ExecuteNonQueryAsync();
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception exp)
+        //    {
+        //        System.Diagnostics.Debug.WriteLine(exp.Message);
+        //        strErrMsg = exp.Message;
+        //        if (errorCode == HttpStatusCode.OK)
+        //            errorCode = HttpStatusCode.InternalServerError;
+        //    }
+        //    finally
+        //    {
+        //        if (reader != null)
+        //        {
+        //            reader.Dispose();
+        //            reader = null;
+        //        }
+        //        if (cmd != null)
+        //        {
+        //            cmd.Dispose();
+        //            cmd = null;
+        //        }
+        //        if (conn != null)
+        //        {
+        //            conn.Dispose();
+        //            conn = null;
+        //        }
+        //    }
 
-            if (errorCode != HttpStatusCode.OK)
-            {
-                switch (errorCode)
-                {
-                    case HttpStatusCode.Unauthorized:
-                        return Unauthorized();
-                    case HttpStatusCode.NotFound:
-                        return NotFound();
-                    case HttpStatusCode.BadRequest:
-                        return BadRequest();
-                    default:
-                        return StatusCode(500, strErrMsg);
-                }
-            }
+        //    if (errorCode != HttpStatusCode.OK)
+        //    {
+        //        switch (errorCode)
+        //        {
+        //            case HttpStatusCode.Unauthorized:
+        //                return Unauthorized();
+        //            case HttpStatusCode.NotFound:
+        //                return NotFound();
+        //            case HttpStatusCode.BadRequest:
+        //                return BadRequest();
+        //            default:
+        //                return StatusCode(500, strErrMsg);
+        //        }
+        //    }
 
-            return Ok();
-        }
+        //    return Ok();
+        //}
 
         // DELETE: api/FinanceAssetSoldDocument/5
         [HttpDelete("{id}")]

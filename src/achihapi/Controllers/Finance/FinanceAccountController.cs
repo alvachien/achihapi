@@ -488,19 +488,11 @@ namespace achihapi.Controllers
             if (vm == null 
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive
-                // || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset
+                || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom
                 || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
             {
-                // We are support creating ASSET account directly with initial value.
-                return BadRequest("No data is inputted or inputted data for Advance payment/receive/Loan");
-            }
-            else if(vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
-            {
-                if (vm.ExtraInfo_AS == null || vm.ExtraInfo_AS.LegacyAsset == null || vm.ExtraInfo_AS.AssetStartDate == null 
-                    || vm.ExtraInfo_AS.AssetValueInBaseCurrency == null
-                    || vm.ExtraInfo_AS.AssetValueInBaseCurrency.Value <= 0)
-                    return BadRequest("Asset account: wrong account data");
+                return BadRequest("No data is inputted or inputted data for Advance payment/receive/Loan/Asset");
             }
             if (vm.Name != null)
                 vm.Name = vm.Name.Trim();
@@ -636,117 +628,117 @@ namespace achihapi.Controllers
 
                         if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
                         {
-                            // Create faked 'buyin' doc manually
-                            FinanceDocumentUIViewModel vmFIDOC = new FinanceDocumentUIViewModel();
-                            Int32 nNewDocID = 0;
-                            vmFIDOC.Desp = vm.Comment;
-                            vmFIDOC.DocType = FinanceDocTypeViewModel.DocType_Normal;
-                            vmFIDOC.HID = vm.HID;
-                            vmFIDOC.TranCurr = vmHome.BaseCurrency;
-                            vmFIDOC.TranDate = vm.ExtraInfo_AS.AssetStartDate.Value;
-                            vmFIDOC.CreatedAt = DateTime.Now;
+                            //// Create faked 'buyin' doc manually
+                            //FinanceDocumentUIViewModel vmFIDOC = new FinanceDocumentUIViewModel();
+                            //Int32 nNewDocID = 0;
+                            //vmFIDOC.Desp = vm.Comment;
+                            //vmFIDOC.DocType = FinanceDocTypeViewModel.DocType_Normal;
+                            //vmFIDOC.HID = vm.HID;
+                            //vmFIDOC.TranCurr = vmHome.BaseCurrency;
+                            //vmFIDOC.TranDate = vm.ExtraInfo_AS.AssetStartDate.Value;
+                            //vmFIDOC.CreatedAt = DateTime.Now;
 
-                            FinanceDocumentItemUIViewModel vmItem = new FinanceDocumentItemUIViewModel
-                            {
-                                AccountID = -1  // For passing the check
-                            };
-                            if (vm.ExtraInfo_AS.ControlCenterID.HasValue)
-                                vmItem.ControlCenterID = vm.ExtraInfo_AS.ControlCenterID.Value;
-                            if (vm.ExtraInfo_AS.OrderID.HasValue)
-                                vmItem.OrderID = vm.ExtraInfo_AS.OrderID.Value;
-                            vmItem.Desp = vm.Comment;
-                            vmItem.ItemID = 1;
-                            vmItem.TranAmount = vm.ExtraInfo_AS.AssetValueInBaseCurrency.Value;
-                            vmItem.TranType = FinanceTranTypeViewModel.TranType_OpeningAsset;
-                            vmFIDOC.Items.Add(vmItem);
+                            //FinanceDocumentItemUIViewModel vmItem = new FinanceDocumentItemUIViewModel
+                            //{
+                            //    AccountID = -1  // For passing the check
+                            //};
+                            //if (vm.ExtraInfo_AS.ControlCenterID.HasValue)
+                            //    vmItem.ControlCenterID = vm.ExtraInfo_AS.ControlCenterID.Value;
+                            //if (vm.ExtraInfo_AS.OrderID.HasValue)
+                            //    vmItem.OrderID = vm.ExtraInfo_AS.OrderID.Value;
+                            //vmItem.Desp = vm.Comment;
+                            //vmItem.ItemID = 1;
+                            //vmItem.TranAmount = vm.ExtraInfo_AS.AssetValueInBaseCurrency.Value;
+                            //vmItem.TranType = FinanceTranTypeViewModel.TranType_OpeningAsset;
+                            //vmFIDOC.Items.Add(vmItem);
 
-                            // Do the checks
-                            try
-                            {
-                                await FinanceDocumentController.FinanceDocumentBasicCheckAsync(vmFIDOC);
-                            }
-                            catch (Exception)
-                            {
-                                errorCode = HttpStatusCode.BadRequest;
-                                throw;
-                            }
+                            //// Do the checks
+                            //try
+                            //{
+                            //    await FinanceDocumentController.FinanceDocumentBasicCheckAsync(vmFIDOC);
+                            //}
+                            //catch (Exception)
+                            //{
+                            //    errorCode = HttpStatusCode.BadRequest;
+                            //    throw;
+                            //}
 
-                            // Do the validation
-                            try
-                            {
-                                await FinanceDocumentController.FinanceDocumentBasicValidationAsync(vmFIDOC, conn, -1);
-                            }
-                            catch (Exception)
-                            {
-                                errorCode = HttpStatusCode.BadRequest;
-                                throw;
-                            }
+                            //// Do the validation
+                            //try
+                            //{
+                            //    await FinanceDocumentController.FinanceDocumentBasicValidationAsync(vmFIDOC, conn, -1);
+                            //}
+                            //catch (Exception)
+                            //{
+                            //    errorCode = HttpStatusCode.BadRequest;
+                            //    throw;
+                            //}
 
-                            // Begin the transaction
-                            tran = conn.BeginTransaction();
+                            //// Begin the transaction
+                            //tran = conn.BeginTransaction();
 
-                            // 1. Create Account Header
-                            queryString = HIHDBUtility.GetFinanceAccountHeaderInsertString();
+                            //// 1. Create Account Header
+                            //queryString = HIHDBUtility.GetFinanceAccountHeaderInsertString();
 
-                            cmd = new SqlCommand(queryString, conn)
-                            {
-                                Transaction = tran
-                            };
+                            //cmd = new SqlCommand(queryString, conn)
+                            //{
+                            //    Transaction = tran
+                            //};
 
-                            HIHDBUtility.BindFinAccountInsertParameter(cmd, vm, usrName);
-                            SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                            idparam.Direction = ParameterDirection.Output;
+                            //HIHDBUtility.BindFinAccountInsertParameter(cmd, vm, usrName);
+                            //SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                            //idparam.Direction = ParameterDirection.Output;
 
-                            Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                            nNewAccountID = (Int32)idparam.Value;
+                            //Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                            //nNewAccountID = (Int32)idparam.Value;
 
-                            // 2. Create the Doc header
-                            queryString = HIHDBUtility.GetFinDocHeaderInsertString();
-                            cmd = new SqlCommand(queryString, conn)
-                            {
-                                Transaction = tran
-                            };
+                            //// 2. Create the Doc header
+                            //queryString = HIHDBUtility.GetFinDocHeaderInsertString();
+                            //cmd = new SqlCommand(queryString, conn)
+                            //{
+                            //    Transaction = tran
+                            //};
 
-                            HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vmFIDOC, usrName);
-                            idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                            idparam.Direction = ParameterDirection.Output;
+                            //HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vmFIDOC, usrName);
+                            //idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                            //idparam.Direction = ParameterDirection.Output;
 
-                            nRst = await cmd.ExecuteNonQueryAsync();
-                            nNewDocID = (Int32)idparam.Value;
-                            vmFIDOC.ID = nNewDocID;
-                            cmd.Dispose();
-                            cmd = null;
+                            //nRst = await cmd.ExecuteNonQueryAsync();
+                            //nNewDocID = (Int32)idparam.Value;
+                            //vmFIDOC.ID = nNewDocID;
+                            //cmd.Dispose();
+                            //cmd = null;
 
-                            // 3. Create the Doc items
-                            foreach (FinanceDocumentItemUIViewModel ivm in vmFIDOC.Items)
-                            {
-                                ivm.AccountID = nNewAccountID;
-                                queryString = HIHDBUtility.GetFinDocItemInsertString();
+                            //// 3. Create the Doc items
+                            //foreach (FinanceDocumentItemUIViewModel ivm in vmFIDOC.Items)
+                            //{
+                            //    ivm.AccountID = nNewAccountID;
+                            //    queryString = HIHDBUtility.GetFinDocItemInsertString();
 
-                                cmd = new SqlCommand(queryString, conn)
-                                {
-                                    Transaction = tran
-                                };
-                                HIHDBUtility.BindFinDocItemInsertParameter(cmd, ivm, nNewDocID);
+                            //    cmd = new SqlCommand(queryString, conn)
+                            //    {
+                            //        Transaction = tran
+                            //    };
+                            //    HIHDBUtility.BindFinDocItemInsertParameter(cmd, ivm, nNewDocID);
 
-                                await cmd.ExecuteNonQueryAsync();
-                                cmd.Dispose();
-                                cmd = null;
-                            }
+                            //    await cmd.ExecuteNonQueryAsync();
+                            //    cmd.Dispose();
+                            //    cmd = null;
+                            //}
 
-                            // 4. Create Account Ext for Asset 
-                            vm.ExtraInfo_AS.AccountID = nNewAccountID;
-                            vm.ExtraInfo_AS.RefDocForBuy = nNewDocID;
-                            queryString = HIHDBUtility.GetFinanceAccountAssetInsertString();
-                            cmd = new SqlCommand(queryString, conn)
-                            {
-                                Transaction = tran
-                            };
+                            //// 4. Create Account Ext for Asset 
+                            //vm.ExtraInfo_AS.AccountID = nNewAccountID;
+                            //vm.ExtraInfo_AS.RefDocForBuy = nNewDocID;
+                            //queryString = HIHDBUtility.GetFinanceAccountAssetInsertString();
+                            //cmd = new SqlCommand(queryString, conn)
+                            //{
+                            //    Transaction = tran
+                            //};
 
-                            HIHDBUtility.BindFinAccountAssetInsertParameter(cmd, vm.ExtraInfo_AS);
-                            nRst = await cmd.ExecuteNonQueryAsync();
-                            cmd.Dispose();
-                            cmd = null;
+                            //HIHDBUtility.BindFinAccountAssetInsertParameter(cmd, vm.ExtraInfo_AS);
+                            //nRst = await cmd.ExecuteNonQueryAsync();
+                            //cmd.Dispose();
+                            //cmd = null;
                         }
                         else
                         {
