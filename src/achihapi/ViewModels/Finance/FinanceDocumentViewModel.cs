@@ -66,8 +66,10 @@ namespace achihapi.ViewModels
     public sealed class FinanceAssetBuyinDocViewModel: FinanceAssetDocumentCoreViewModel
     {
         public Boolean? IsLegacy { get; set; }
-        public DateTime? LegacyDate { get; set; }
+        [Required]
+        [StringLength(40)]
         public String AccountOwner { get; set; }
+
         public FinanceAccountExtASViewModel accountAsset { get; set; }
     }
 

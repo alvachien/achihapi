@@ -249,9 +249,7 @@ namespace achihapi.Controllers
             var maxItemID = 0;
             if (vm.IsLegacy.HasValue && vm.IsLegacy.Value)
             {
-                // Legacy account
-                if (!vm.LegacyDate.HasValue || vm.LegacyDate.Value > vm.TranDate)
-                    return BadRequest("Invalid input data in legacy date!");
+                // Legacy account...
             }
             else
             {
