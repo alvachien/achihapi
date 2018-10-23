@@ -436,11 +436,12 @@ namespace achihapi.Controllers
                 System.Diagnostics.Debug.WriteLine(exp.Message);
 #endif
 
-                if (tran != null)
-                    tran.Rollback();
                 strErrMsg = exp.Message;
                 if (errorCode == HttpStatusCode.OK)
                     errorCode = HttpStatusCode.InternalServerError;
+
+                if (tran != null)
+                    tran.Rollback();
             }
             finally
             {
