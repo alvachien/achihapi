@@ -238,6 +238,17 @@ namespace achihapi.Controllers
                 if (vm.Items[0].TranType != FinanceTranTypeViewModel.TranType_AdvanceReceiveIn)
                     return BadRequest("Invalid tran. type for advance receive");
             }
+            foreach(var tmpdocitem in vm.AccountVM.ExtraInfo_ADP.DPTmpDocs)
+            {
+                if (!tmpdocitem.ControlCenterID.HasValue && !tmpdocitem.OrderID.HasValue)
+                {
+                    return BadRequest("Tmp Doc Item miss control center or order");
+                }
+                if (tmpdocitem.TranAmount == 0)
+                {
+                    return BadRequest("Tmp Doc Item miss amount");
+                }
+            }
 
             // Update the database
             SqlConnection conn = null;

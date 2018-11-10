@@ -243,7 +243,6 @@ namespace achihapi.Controllers
                             // It shall be only one entry if found!
                             break;
                         }
-
                     }
                     reader.Dispose();
                     reader = null;
@@ -255,6 +254,16 @@ namespace achihapi.Controllers
                     {
                         errorCode = HttpStatusCode.BadRequest;
                         throw new Exception("Tmp Doc not existed yet or has been posted");
+                    }
+                    if (!vmTmpDoc.ControlCenterID.HasValue && !vmTmpDoc.OrderID.HasValue)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Tmp doc lack of control center or order");
+                    }
+                    if (vmTmpDoc.TranAmount == 0)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw new Exception("Tmp doc lack of amount");
                     }
 
                     // Now go ahead for the creating
