@@ -2729,7 +2729,7 @@ namespace achihapi.Utilities
                 if (dtend.HasValue)
                     sql1 += " AND [StartTime] <= '" + dtend.Value.ToString("yyyy-MM-dd") + "' "; 
                 if (skipfinish.HasValue)
-                    sql1 += ( skipfinish.Value ? " AND [CompleteTime] IS NULL " : " [CompleteTime] IS NOT NULL ");
+                    sql1 += ( skipfinish.Value ? " AND [CompleteTime] IS NULL " : " AND [CompleteTime] IS NOT NULL ");
                 sb.AppendLine(sql1);
             }            
 
@@ -2758,7 +2758,7 @@ namespace achihapi.Utilities
                 if (dtend.HasValue)
                     sb.Append(" AND [StartTime] <= '" + dtend.Value.ToString("yyyy-MM-dd") + "' ");
                 if (skipfinish.HasValue)
-                    sb.Append(skipfinish.Value ? " AND [CompleteTime] IS NULL " : " [CompleteTime] IS NOT NULL ");
+                    sb.Append(skipfinish.Value ? " AND [CompleteTime] IS NULL " : " AND [CompleteTime] IS NOT NULL ");
                 if (top.HasValue)
                     sb.Append(" ORDER BY [StartTime] ASC OFFSET " + (skip.HasValue ? skip.Value.ToString() : "0") + " ROWS FETCH NEXT " + top.Value.ToString() + " ROWS ONLY;");
             }
