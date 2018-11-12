@@ -160,7 +160,7 @@ namespace achihapi.Controllers
         }
 
         // GET api/financecontrolcenter/5
-        [HttpGet("{ id}")]
+        [HttpGet("{id}")]
         [Authorize]
         public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
