@@ -79,6 +79,13 @@ namespace achihapi.ViewModels
         [Required]
         public Int32 AssetAccountID { get; set; }
     }
+
+    // Asset: value change
+    public sealed class FinanceAssetValueChangeViewModel : FinanceAssetDocumentCoreViewModel
+    {
+        [Required]
+        public Int32 AssetAccountID { get; set; }
+    }
     #endregion
 
     public sealed class FinanceLoanDocumentUIViewModel: FinanceDocumentUIViewModel
