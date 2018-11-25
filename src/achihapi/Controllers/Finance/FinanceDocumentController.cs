@@ -312,10 +312,11 @@ namespace achihapi.Controllers
                 || vm.DocType == FinanceDocTypeViewModel.DocType_AdvanceReceive
                 || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
                 || vm.DocType == FinanceDocTypeViewModel.DocType_AssetSoldOut
+                || vm.DocType == FinanceDocTypeViewModel.DocType_AssetValChg
                 || vm.DocType == FinanceDocTypeViewModel.DocType_BorrowFrom
                 || vm.DocType == FinanceDocTypeViewModel.DocType_LendTo)
             {
-                return BadRequest("No data is inputted or for Advancepay/Loan/Asset");
+                return BadRequest("No data is inputted or not supported Advancepay/Loan/Asset");
             }
             if (vm.HID <= 0)
                 return BadRequest("No Home ID inputted");
@@ -501,6 +502,7 @@ namespace achihapi.Controllers
                 || vm.DocType == FinanceDocTypeViewModel.DocType_AdvanceReceive
                 || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
                 || vm.DocType == FinanceDocTypeViewModel.DocType_AssetSoldOut
+                || vm.DocType == FinanceDocTypeViewModel.DocType_AssetValChg
                 || vm.DocType == FinanceDocTypeViewModel.DocType_BorrowFrom
                 || vm.DocType == FinanceDocTypeViewModel.DocType_LendTo)
             {

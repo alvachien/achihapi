@@ -124,6 +124,10 @@ namespace achihapi.Controllers
                     // Perfrom the doc. validation
                     await FinanceDocumentController.FinanceDocumentBasicValidationAsync(vmFIDoc, conn);
 
+                    // Additional checks
+                    // Todo: check account is a valid asset?
+                    // Todo: check the inputted date is valid > must be the later than all existing transactions;
+
                     // Begin the modification
                     tran = conn.BeginTransaction();
 
