@@ -285,8 +285,103 @@ namespace achihapi.Controllers
                     await FinanceDocumentController.FinanceDocumentBasicValidationAsync(vmFIDoc, conn);
 
                     // Additional checks
-                    // Todo: check account is a valid asset?
-                    // Todo: check the inputted date is valid > must be the later than all existing transactions;
+                    SqlCommand cmdAddCheck = null;
+                    SqlDataReader readerAddCheck = null;
+                    try
+                    {
+                        // Check 1: check account is a valid asset?
+                        String strsqls = @"SELECT 
+                                      [t_fin_account].[STATUS]
+                                      ,[t_fin_account_ext_as].[REFDOC_SOLD] AS [ASREFDOC_SOLD]
+                                  FROM [dbo].[t_fin_account]
+                                  INNER JOIN [dbo].[t_fin_account_ext_as]
+                                       ON [t_fin_account].[ID] = [t_fin_account_ext_as].[ACCOUNTID]
+                                  WHERE [t_fin_account].[ID] = " + vm.AssetAccountID.ToString()
+                                   + " AND [t_fin_account].[HID] = " + vm.HID.ToString();
+                        cmdAddCheck = new SqlCommand(strsqls, conn);
+                        readerAddCheck = await cmdAddCheck.ExecuteReaderAsync();
+                        
+                        if (readerAddCheck.HasRows)
+                        {
+
+                            while(readerAddCheck.Read())
+                            {
+                                if (!reader.IsDBNull(0))
+                                {
+                                    var acntStatus = (FinanceAccountStatus)reader.GetByte(0);
+                                    if (acntStatus != FinanceAccountStatus.Normal)
+                                    {
+                                        throw new Exception("Account status is not normal");
+                                    }
+                                }
+                                else
+                                {
+                                    throw new Exception("Account status is not normal");
+                                }
+
+                                if (!reader.IsDBNull(1))
+                                {
+                                    throw new Exception("Account has soldout doc already");
+                                }
+
+                                break;
+                            }
+                        }
+                        readerAddCheck.Close();
+                        readerAddCheck = null;
+                        cmdAddCheck.Dispose();
+                        cmdAddCheck = null;
+
+                        // Check 2: check the inputted date is valid > must be the later than all existing transactions;
+                        strsqls = @"SELECT MAX(t_fin_document.TRANDATE)
+                                    FROM [dbo].[t_fin_document_item]
+	                                INNER JOIN [dbo].[t_fin_document] 
+                                       ON [dbo].[t_fin_document_item].[DOCID] = [dbo].[t_fin_document].[ID]
+                                    WHERE [dbo].[t_fin_document_item].[ACCOUNTID] = " + vm.AssetAccountID.ToString();
+                        cmdAddCheck = new SqlCommand(strsqls, conn);
+                        readerAddCheck = await cmdAddCheck.ExecuteReaderAsync();
+
+                        if (readerAddCheck.HasRows)
+                        {
+                            while (readerAddCheck.Read())
+                            {
+                                var latestdate = reader.GetDateTime(0);
+                                if (vm.TranDate < latestdate)
+                                {
+                                    throw new Exception("Invalid date");
+                                }
+
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            throw new Exception("Invalid account - no doc items");
+                        }
+
+                        readerAddCheck.Close();
+                        readerAddCheck = null;
+                        cmdAddCheck.Dispose();
+                        cmdAddCheck = null;
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+                    finally
+                    {
+                        if (readerAddCheck != null)
+                        {
+                            readerAddCheck.Close();
+                            readerAddCheck = null;
+                        }
+                        if (cmdAddCheck != null)
+                        {
+                            cmdAddCheck.Dispose();
+                            cmdAddCheck = null;
+                        }
+                    }
 
                     // Begin the modification
                     tran = conn.BeginTransaction();
