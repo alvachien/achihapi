@@ -98,6 +98,7 @@ namespace achihapi.Controllers
             SqlTransaction tran = null;
             String queryString = "";
             Int32 nNewDocID = -1;
+            Decimal dCurrBalance = 0;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
@@ -186,9 +187,38 @@ namespace achihapi.Controllers
                             while (readerAddCheck.Read())
                             {
                                 var latestdate = reader.GetDateTime(0);
-                                if (vm.TranDate < latestdate)
+                                if (vm.TranDate.Date < latestdate.Date)
                                 {
                                     throw new Exception("Invalid date");
+                                }
+
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            throw new Exception("Invalid account - no doc items");
+                        }
+
+                        readerAddCheck.Close();
+                        readerAddCheck = null;
+                        cmdAddCheck.Dispose();
+                        cmdAddCheck = null;
+
+                        // Check 3. Fetch current balance
+                        strsqls = @"SELECT [balance]
+                            FROM [dbo].[v_fin_report_bs] WHERE [accountid] = " + vm.AssetAccountID.ToString();
+                        cmdAddCheck = new SqlCommand(strsqls, conn);
+                        readerAddCheck = await cmdAddCheck.ExecuteReaderAsync();
+
+                        if (readerAddCheck.HasRows)
+                        {
+                            while (readerAddCheck.Read())
+                            {
+                                dCurrBalance = reader.GetDecimal(0);
+                                if (dCurrBalance <= 0)
+                                {
+                                    throw new Exception("Balance is zero");
                                 }
 
                                 break;
