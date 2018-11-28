@@ -48,8 +48,6 @@ namespace achihapi.ViewModels
         [Required]
         public DateTime TranDate { get; set; }
         [Required]
-        public Decimal TranAmount { get; set; }
-        [Required]
         [StringLength(5)]
         public String TranCurr { get; set; }
         [Required]
@@ -65,6 +63,8 @@ namespace achihapi.ViewModels
     // Asset: Buyin
     public sealed class FinanceAssetBuyinDocViewModel: FinanceAssetDocumentCoreViewModel
     {
+        [Required]
+        public Decimal TranAmount { get; set; }
         public Boolean? IsLegacy { get; set; }
         [Required]
         [StringLength(40)]
@@ -76,6 +76,8 @@ namespace achihapi.ViewModels
     // Asset: Soldout
     public sealed class FinanceAssetSoldoutDocViewModel: FinanceAssetDocumentCoreViewModel
     {
+        [Required]
+        public Decimal TranAmount { get; set; }
         [Required]
         public Int32 AssetAccountID { get; set; }
     }

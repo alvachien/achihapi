@@ -268,6 +268,7 @@ namespace achihapi.Controllers
                     if (maxItemID < di.ItemID)
                         maxItemID = di.ItemID;
                 }
+
                 if (totalAmt != vm.TranAmount)
                     return BadRequest("Amount is not even");
             }

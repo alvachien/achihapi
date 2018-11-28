@@ -237,8 +237,9 @@ namespace achihapi.Controllers
                 if (maxItemID < di.ItemID)
                     maxItemID = di.ItemID;
             }
-            if (totalAmt != vm.TranAmount)
+            if (Decimal.Compare(totalAmt, vm.TranAmount) != 0)
                 return BadRequest("Amount is not even");
+
             var nitem = new FinanceDocumentItemUIViewModel();
             nitem.ItemID = ++maxItemID;
             nitem.AccountID = vm.AssetAccountID;
@@ -304,12 +305,11 @@ namespace achihapi.Controllers
                         
                         if (readerAddCheck.HasRows)
                         {
-
                             while(readerAddCheck.Read())
                             {
-                                if (!reader.IsDBNull(0))
+                                if (!readerAddCheck.IsDBNull(0))
                                 {
-                                    var acntStatus = (FinanceAccountStatus)reader.GetByte(0);
+                                    var acntStatus = (FinanceAccountStatus)readerAddCheck.GetByte(0);
                                     if (acntStatus != FinanceAccountStatus.Normal)
                                     {
                                         throw new Exception("Account status is not normal");
@@ -317,10 +317,11 @@ namespace achihapi.Controllers
                                 }
                                 else
                                 {
-                                    throw new Exception("Account status is not normal");
+                                    // Status is NULL stands for Active Status
+                                    // throw new Exception("Account status is not normal");
                                 }
 
-                                if (!reader.IsDBNull(1))
+                                if (!readerAddCheck.IsDBNull(1))
                                 {
                                     throw new Exception("Account has soldout doc already");
                                 }
@@ -346,7 +347,7 @@ namespace achihapi.Controllers
                         {
                             while (readerAddCheck.Read())
                             {
-                                var latestdate = reader.GetDateTime(0);
+                                var latestdate = readerAddCheck.GetDateTime(0);
                                 if (vm.TranDate.Date < latestdate.Date)
                                 {
                                     throw new Exception("Invalid date");
@@ -375,7 +376,7 @@ namespace achihapi.Controllers
                         {
                             while (readerAddCheck.Read())
                             {
-                                dCurrBalance = reader.GetDecimal(0);
+                                dCurrBalance = readerAddCheck.GetDecimal(0);
                                 if (dCurrBalance <= 0)
                                 {
                                     throw new Exception("Balance is zero");
@@ -393,6 +394,36 @@ namespace achihapi.Controllers
                         readerAddCheck = null;
                         cmdAddCheck.Dispose();
                         cmdAddCheck = null;
+
+                        var ncmprst = Decimal.Compare(dCurrBalance, vm.TranAmount);
+                        if (ncmprst > 0)
+                        {
+                            var nitem2 = new FinanceDocumentItemUIViewModel();
+                            nitem2.ItemID = ++maxItemID;
+                            nitem2.AccountID = vm.AssetAccountID;
+                            nitem2.TranAmount = Decimal.Subtract(dCurrBalance, vm.TranAmount);
+                            nitem2.Desp = vmFIDoc.Desp;
+                            nitem2.TranType = FinanceTranTypeViewModel.TranType_AssetValueDecrease;
+                            if (vm.ControlCenterID.HasValue)
+                                nitem2.ControlCenterID = vm.ControlCenterID.Value;
+                            if (vm.OrderID.HasValue)
+                                nitem2.OrderID = vm.OrderID.Value;
+                            vmFIDoc.Items.Add(nitem2);
+                        }
+                        else if(ncmprst < 0)
+                        {
+                            var nitem2 = new FinanceDocumentItemUIViewModel();
+                            nitem2.ItemID = ++maxItemID;
+                            nitem2.AccountID = vm.AssetAccountID;
+                            nitem2.TranAmount = Decimal.Subtract(vm.TranAmount, dCurrBalance);
+                            nitem2.Desp = vmFIDoc.Desp;
+                            nitem2.TranType = FinanceTranTypeViewModel.TranType_AssetValueIncrease;
+                            if (vm.ControlCenterID.HasValue)
+                                nitem2.ControlCenterID = vm.ControlCenterID.Value;
+                            if (vm.OrderID.HasValue)
+                                nitem2.OrderID = vm.OrderID.Value;
+                            vmFIDoc.Items.Add(nitem2);
+                        }
                     }
                     catch (Exception)
                     {

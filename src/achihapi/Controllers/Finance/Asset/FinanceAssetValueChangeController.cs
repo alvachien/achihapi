@@ -55,10 +55,8 @@ namespace achihapi.Controllers
                 return BadRequest("Not HID inputted");
             if (vm.AssetAccountID <= 0)
                 return BadRequest("Asset Account is invalid");
-            if (vm.TranAmount <= 0)
-                return BadRequest("Amount is less than zero");
-            if (vm.Items.Count <= 0)
-                return BadRequest("No items inputted");
+            if (vm.Items.Count != 1)
+                return BadRequest("Items count is not correct");
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -79,6 +77,8 @@ namespace achihapi.Controllers
             vmFIDoc.HID = vm.HID;
             vmFIDoc.TranCurr = vm.TranCurr;
 
+            Decimal totalAmount = 0;
+            Int32? rlTranType = null;
             foreach (var di in vm.Items)
             {
                 if (di.ItemID <= 0 || di.TranAmount == 0 
@@ -87,6 +87,20 @@ namespace achihapi.Controllers
                         && di.TranType != FinanceTranTypeViewModel.TranType_AssetValueDecrease)
                     || (di.ControlCenterID <= 0 && di.OrderID <= 0))
                     return BadRequest("Invalid input data in items!");
+
+                if (rlTranType == null)
+                {
+                    rlTranType = di.TranType;
+                }
+                else
+                {
+                    if (rlTranType.Value != di.TranType)
+                    {
+                        return BadRequest("Cannot support different trantype");
+                    }
+                }
+
+                totalAmount += di.TranAmount;
 
                 vmFIDoc.Items.Add(di);
             }
@@ -144,12 +158,11 @@ namespace achihapi.Controllers
 
                         if (readerAddCheck.HasRows)
                         {
-
                             while (readerAddCheck.Read())
                             {
-                                if (!reader.IsDBNull(0))
+                                if (!readerAddCheck.IsDBNull(0))
                                 {
-                                    var acntStatus = (FinanceAccountStatus)reader.GetByte(0);
+                                    var acntStatus = (FinanceAccountStatus)readerAddCheck.GetByte(0);
                                     if (acntStatus != FinanceAccountStatus.Normal)
                                     {
                                         throw new Exception("Account status is not normal");
@@ -157,10 +170,11 @@ namespace achihapi.Controllers
                                 }
                                 else
                                 {
-                                    throw new Exception("Account status is not normal");
+                                    // Status is NULL stands for Active Status
+                                    // throw new Exception("Account status is not normal");
                                 }
 
-                                if (!reader.IsDBNull(1))
+                                if (!readerAddCheck.IsDBNull(1))
                                 {
                                     throw new Exception("Account has soldout doc already");
                                 }
@@ -186,7 +200,7 @@ namespace achihapi.Controllers
                         {
                             while (readerAddCheck.Read())
                             {
-                                var latestdate = reader.GetDateTime(0);
+                                var latestdate = readerAddCheck.GetDateTime(0);
                                 if (vm.TranDate.Date < latestdate.Date)
                                 {
                                     throw new Exception("Invalid date");
@@ -215,7 +229,7 @@ namespace achihapi.Controllers
                         {
                             while (readerAddCheck.Read())
                             {
-                                dCurrBalance = reader.GetDecimal(0);
+                                dCurrBalance = readerAddCheck.GetDecimal(0);
                                 if (dCurrBalance <= 0)
                                 {
                                     throw new Exception("Balance is zero");
@@ -233,6 +247,27 @@ namespace achihapi.Controllers
                         readerAddCheck = null;
                         cmdAddCheck.Dispose();
                         cmdAddCheck = null;
+
+                        // Now check the balance with the inputted value
+                        var nCmpRst = Decimal.Compare(dCurrBalance, totalAmount);
+                        if (nCmpRst > 0)
+                        {
+                            if (rlTranType.Value != FinanceTranTypeViewModel.TranType_AssetValueDecrease)
+                            {
+                                throw new Exception("Tran type is wrong");
+                            }
+                        }
+                        else if (nCmpRst < 0)
+                        {
+                            if (rlTranType.Value != FinanceTranTypeViewModel.TranType_AssetValueIncrease)
+                            {
+                                throw new Exception("Tran type is wrong");
+                            }
+                        }
+                        else if (nCmpRst == 0)
+                        {
+                            throw new Exception("Current balance equals to new value");
+                        }
                     }
                     catch (Exception)
                     {
