@@ -977,7 +977,6 @@ namespace achihapi.Controllers
                 if (String.IsNullOrEmpty(item.Desp))
                     throw new Exception("Desp is a must for an item");
             }
-
         }
 
         internal static async Task FinanceDocumentBasicValidationAsync(FinanceDocumentUIViewModel vm, SqlConnection conn, Int32? acntIDforSkipCheck = null)

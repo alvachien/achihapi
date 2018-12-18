@@ -2589,6 +2589,73 @@ namespace achihapi.Utilities
         }
         #endregion
 
+        #region Finance Plan
+        internal static string GetFinPlanInsertString()
+        {
+            return @"INSERT INTO [dbo].[t_fin_plan] ([HID]
+                           ,[PTYPE]
+                           ,[ACCOUNTID]
+                           ,[ACNTCTGYID]
+                           ,[CCID]
+                           ,[TTID]
+                           ,[TGTDATE]
+                           ,[TGTBAL]
+                           ,[DESP]
+                           ,[CREATEDBY]
+                           ,[CREATEDAT])
+                     VALUES
+                           (@HID
+                           ,@PTYPE
+                           ,@ACCOUNTID
+                           ,@ACNTCTGYID
+                           ,@CCID
+                           ,@TTID
+                           ,@TGTDATE
+                           ,@TGTBAL
+                           ,@DESP
+                           ,@CREATEDBY
+                           ,@CREATEDAT)";
+        }
+        internal static string GetFinPlanUpdateString()
+        {
+            return @"UPDATE [dbo].[t_fin_plan]
+                       SET [PTYPE] = @PTYPE
+                          ,[ACCOUNTID] = @ACCOUNTID
+                          ,[ACNTCTGYID] = @ACNTCTGYID
+                          ,[CCID] = @CCID
+                          ,[TTID] = @TTID
+                          ,[TGTDATE] = @TGTDATE
+                          ,[TGTBAL] = @TGTBAL
+                          ,[DESP] = @DESP
+                          ,[UPDATEDBY] = @UPDATEDBY
+                          ,[UPDATEDAT] = @UPDATEDAT
+                     WHERE [ID] = @ID";
+        }
+        internal static string GetFinPlanDeleteString()
+        {
+            return @"DELETE FROM [dbo].[t_fin_plan]
+                    WHERE [ID] = @ID";
+        }
+        internal static string GetFinPlanSelectionString()
+        {
+            return @"SELECT [ID]
+                          ,[HID]
+                          ,[PTYPE]
+                          ,[ACCOUNTID]
+                          ,[ACNTCTGYID]
+                          ,[CCID]
+                          ,[TTID]
+                          ,[TGTDATE]
+                          ,[TGTBAL]
+                          ,[DESP]
+                          ,[CREATEDBY]
+                          ,[CREATEDAT]
+                          ,[UPDATEDBY]
+                          ,[UPDATEDAT]
+                      FROM [dbo].[t_fin_plan]";
+        }
+        #endregion
+
         #region Lib book category
         internal static string getLibBookCategoryQueryString()
         {
