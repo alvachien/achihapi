@@ -18,6 +18,7 @@ namespace achihapi.Controllers
         public static String FinAccount = "Fin_Account_{0}_{1}"; // Home ID, Account ID
         public static String FinOrderList = "Fin_OrderList_{0}_{1}"; // Home ID, Invalid flag
         public static String FinCCList = "Fin_CCList_{0}"; // Home Id
+        public static String FinPlanList = "Fin_PlanList_{0}"; // Home Id
 
         public static String FinReportBS = "Fin_Report_BS_{0}"; // Home ID
         public static String FinReportCC = "Fin_Report_CC_{0}"; // Home ID

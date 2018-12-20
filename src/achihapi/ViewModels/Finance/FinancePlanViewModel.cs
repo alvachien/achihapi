@@ -21,7 +21,12 @@ namespace achihapi.ViewModels
         public Int32 HID { get; set; }
         [Required]
         public FinancePlanTypeEnum PlanType { get; set; }
-        public Int32 AccountID { get; set; }
+        public Int32? AccountID { get; set; }
+        public Int32? AccountCategoryID { get; set; }
+        public Int32? ControlCenterID { get; set; }
+        public Int32? TranTypeID { get; set; }
+        [Required]
+        public DateTime StartDate { get; set; }
         [Required]
         public DateTime TargetDate { get; set; }
         [Required]

@@ -2598,8 +2598,10 @@ namespace achihapi.Utilities
                            ,[ACNTCTGYID]
                            ,[CCID]
                            ,[TTID]
+                           ,[STARTDATE]
                            ,[TGTDATE]
                            ,[TGTBAL]
+                           ,[TRANCURR]
                            ,[DESP]
                            ,[CREATEDBY]
                            ,[CREATEDAT])
@@ -2610,8 +2612,10 @@ namespace achihapi.Utilities
                            ,@ACNTCTGYID
                            ,@CCID
                            ,@TTID
+                           ,@STARTDATE
                            ,@TGTDATE
                            ,@TGTBAL
+                           ,@TRANCURR
                            ,@DESP
                            ,@CREATEDBY
                            ,@CREATEDAT)";
@@ -2624,8 +2628,10 @@ namespace achihapi.Utilities
                           ,[ACNTCTGYID] = @ACNTCTGYID
                           ,[CCID] = @CCID
                           ,[TTID] = @TTID
+                          ,[STARTDATE] = @STARTDATE
                           ,[TGTDATE] = @TGTDATE
                           ,[TGTBAL] = @TGTBAL
+                          ,[TRANCURR] = @TRANCURR
                           ,[DESP] = @DESP
                           ,[UPDATEDBY] = @UPDATEDBY
                           ,[UPDATEDAT] = @UPDATEDAT
@@ -2645,14 +2651,87 @@ namespace achihapi.Utilities
                           ,[ACNTCTGYID]
                           ,[CCID]
                           ,[TTID]
+                          ,[STARTDATE]
                           ,[TGTDATE]
                           ,[TGTBAL]
+                          ,[TRANCURR]
                           ,[DESP]
                           ,[CREATEDBY]
                           ,[CREATEDAT]
                           ,[UPDATEDBY]
                           ,[UPDATEDAT]
                       FROM [dbo].[t_fin_plan]";
+        }
+        internal static void FinPlan_DB2VM(SqlDataReader reader, FinancePlanViewModel vm)
+        {
+            System.Diagnostics.Debug.Assert(reader != null);
+            System.Diagnostics.Debug.Assert(vm != null);
+
+            // 0. ID
+            Int32 idx = 0;
+            vm.ID = reader.GetInt32(idx++);
+            // 1. HID
+            vm.HID = reader.GetInt32(idx++);
+            // 2. PTYPE
+            vm.PlanType = (FinancePlanTypeEnum)reader.GetInt16(idx++);
+            // 3. Account ID
+            if (!reader.IsDBNull(idx))
+            {
+                vm.AccountID = reader.GetInt32(idx++);
+            }
+            else
+                ++idx;
+            // 4. Account Category ID
+            if (!reader.IsDBNull(idx))
+            {
+                // TBD
+                ++idx;
+            }
+            else
+                ++idx;
+            // 5. Control Center ID
+            if (!reader.IsDBNull(5))
+            {
+                // TBD
+                ++idx;
+            }
+            else
+                ++idx;
+            // 6. Tran. type ID
+            if (!reader.IsDBNull(6))
+            {
+                // TBD.
+                ++idx;
+            }
+            else
+                ++idx;
+            // 7. Start date
+            vm.StartDate = reader.GetDateTime(idx++);
+            // 8. Target date
+            vm.TargetDate = reader.GetDateTime(idx++);
+            // 9. Target balance
+            vm.TargetBalance = reader.GetDecimal(idx++);
+            // 10. Currency
+            vm.TranCurr = reader.GetString(idx++);
+            // 11. Desp
+            vm.Description = reader.GetString(idx++);
+            // 12 -> Administrative fields
+            if (!reader.IsDBNull(idx))
+                vm.CreatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.CreatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedBy = reader.GetString(idx++);
+            else
+                ++idx;
+            if (!reader.IsDBNull(idx))
+                vm.UpdatedAt = reader.GetDateTime(idx++);
+            else
+                ++idx;
         }
         #endregion
 
