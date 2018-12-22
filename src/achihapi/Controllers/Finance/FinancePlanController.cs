@@ -158,10 +158,112 @@ namespace achihapi.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get([FromRoute]int id, [FromQuery]Int32 hid = 0)
         {
-            if (hid <= 0)
-                return BadRequest("Not HID inputted");
+            if (hid <= 0 || id <= 0)
+                return BadRequest("Invalid ID or HID inputted");
 
-            return NoContent();
+            String usrName = String.Empty;
+            if (Startup.UnitTestMode)
+                usrName = UnitTestUtility.UnitTestUser;
+            else
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+            }
+            if (String.IsNullOrEmpty(usrName))
+                return BadRequest("User cannot recognize");
+
+            FinancePlanViewModel vm = new FinancePlanViewModel();
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            String queryString = "";
+            String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
+
+            try
+            {
+                queryString = HIHDBUtility.GetFinPlanSelectionString() + " WHERE [ID] = " + id.ToString() + " AND [HID] = " + hid.ToString();
+
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
+
+                    // Check Home assignment with current user
+                    try
+                    {
+                        HIHAPIUtility.CheckHIDAssignment(conn, hid, usrName);
+                    }
+                    catch (Exception)
+                    {
+                        errorCode = HttpStatusCode.BadRequest;
+                        throw;
+                    }
+
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = await cmd.ExecuteReaderAsync();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            HIHDBUtility.FinPlan_DB2VM(reader, vm);
+                            break; // Should only one result!!!
+                        }
+                    }
+                    else
+                    {
+                        errorCode = HttpStatusCode.NotFound;
+                        throw new Exception();
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+                strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
+            }
+            finally
+            {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
+                if (conn != null)
+                {
+                    conn.Dispose();
+                    conn = null;
+                }
+            }
+
+            if (errorCode != HttpStatusCode.OK)
+            {
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
+            }
+
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = HIHAPIConstants.DateFormatPattern,
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+
+            return new JsonResult(vm, setting);
         }
 
         // POST: api/FinancePlan
@@ -209,16 +311,13 @@ namespace achihapi.Controllers
             SqlDataReader reader = null;
             SqlTransaction tran = null;
             String queryString = "";
-            Int32 nNewAccountID = -1;
+            Int32 nNewPlanID = -1;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
             HomeDefViewModel vmHome = null;
 
             try
             {
-                queryString = @"SELECT [ID]
-                  FROM [dbo].[t_fin_account] WHERE [HID] = " + vm.HID.ToString() + " AND [Name] = N'" + vm.Name + "'";
-
                 using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
                     await conn.OpenAsync();
@@ -236,116 +335,81 @@ namespace achihapi.Controllers
 
                     if (vm.PlanType == FinancePlanTypeEnum.Account)
                     {
-                        // Check the 
-                    }
-                    else
-                    {
-                        // Check: HID, it requires more info than just check, so it implemented it 
-                        String strHIDCheck = HIHDBUtility.getHomeDefQueryString() + " WHERE [ID]= @hid AND [USER] = @user";
-                        cmd = new SqlCommand(strHIDCheck, conn);
-                        cmd.Parameters.AddWithValue("@hid", vm.HID);
-                        cmd.Parameters.AddWithValue("@user", usrName);
-                        reader = await cmd.ExecuteReaderAsync();
+                        // Check the account
+                        queryString = @"SELECT [ID], [Status]
+                            FROM [dbo].[t_fin_account] WHERE [ID] = " + vm.AccountID.Value.ToString() + " AND [HID] = " + vm.HID.ToString();
+
+                        cmd = new SqlCommand(queryString, conn);
+                        reader = cmd.ExecuteReader();
                         if (!reader.HasRows)
                         {
                             errorCode = HttpStatusCode.BadRequest;
-                            throw new Exception("Not home found!");
+                            throw new Exception("Account doesnot exist: " + vm.AccountID.Value.ToString());
                         }
                         else
                         {
-                            while (reader.Read())
+                            // Check the status
+                            if (!reader.IsDBNull(1))
                             {
-                                vmHome = new HomeDefViewModel();
-                                HIHDBUtility.HomeDef_DB2VM(reader, vmHome);
-
-                                // It shall be only one entry if found!
-                                break;
+                                FinanceAccountStatus nAccountStatus = (FinanceAccountStatus)reader.GetByte(1);
+                                if (nAccountStatus == FinanceAccountStatus.Frozen
+                                    || nAccountStatus == FinanceAccountStatus.Closed)
+                                {
+                                    errorCode = HttpStatusCode.BadRequest;
+                                    throw new Exception("Account status is invalid: " + vm.AccountID.Value.ToString());
+                                }
                             }
                         }
-
                         reader.Dispose();
                         reader = null;
                         cmd.Dispose();
                         cmd = null;
 
-                        if (vmHome == null || String.IsNullOrEmpty(vmHome.BaseCurrency) || vmHome.ID != vm.HID)
+                        // Now create the DB entry
+                        // Begin the transaction
+                        tran = conn.BeginTransaction();
+
+                        // Now go ahead for the creating
+                        queryString = HIHDBUtility.GetFinPlanInsertString();
+
+                        cmd = new SqlCommand(queryString, conn)
                         {
-                            errorCode = HttpStatusCode.BadRequest;
-                            throw new Exception("Home Definition is invalid");
-                        }
-                    }
+                            Transaction = tran
+                        };
 
-                    // Check duplicate names
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-                    if (reader.HasRows)
-                    {
-                        Int32 nDuplicatedID = -1;
-                        while (reader.Read())
-                        {
-                            nDuplicatedID = reader.GetInt32(0);
-                            break;
-                        }
+                        vm.CreatedBy = usrName;
+                        vm.CreatedAt = DateTime.Now;
+                        HIHDBUtility.BindFinPlanInsertParameter(cmd, vm);
+                        SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                        idparam.Direction = ParameterDirection.Output;
 
-                        errorCode = HttpStatusCode.BadRequest;
-                        throw new Exception("Account already exists: " + nDuplicatedID.ToString());
-                    }
-                    else
-                    {
-                        reader.Dispose();
-                        reader = null;
-
-                        cmd.Dispose();
-                        cmd = null;
-
-                        if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
-                        {
-                        }
-                        else
-                        {
-                            // Begin the transaction
-                            tran = conn.BeginTransaction();
-
-                            // Now go ahead for the creating
-                            queryString = HIHDBUtility.GetFinanceAccountHeaderInsertString();
-
-                            cmd = new SqlCommand(queryString, conn)
-                            {
-                                Transaction = tran
-                            };
-
-                            HIHDBUtility.BindFinAccountInsertParameter(cmd, vm, usrName);
-                            SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                            idparam.Direction = ParameterDirection.Output;
-
-                            Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                            nNewAccountID = (Int32)idparam.Value;
-                        }
+                        Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                        nNewPlanID = (Int32)idparam.Value;
 
                         // Now commit it!
                         tran.Commit();
+                    }
+                    else if (vm.PlanType == FinancePlanTypeEnum.AccountCategory)
+                    {
+                    }
+                    else if (vm.PlanType == FinancePlanTypeEnum.ControlCenter)
+                    {
+                    }
+                    else if (vm.PlanType == FinancePlanTypeEnum.TranType)
+                    {
+                    }
 
-                        // Update the buffer
-                        // Account List
-                        try
-                        {
-                            var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
-                            this._cache.Remove(cacheKey);
-                        }
-                        catch (Exception)
-                        {
-                            // Do nothing here.
-                        }
-                        // B.S.
-                        try
-                        {
-                            var cacheKey = String.Format(CacheKeys.FinReportBS, vm.HID);
-                            this._cache.Remove(cacheKey);
-                        }
-                        catch (Exception)
-                        {
-                            // Do nothing here.
-                        }
+
+                    // Update the buffer
+                    // Account List
+                    try
+                    {
+                        var cacheKey = String.Format(CacheKeys.FinPlanList, vm.HID, null);
+                        this._cache.Remove(cacheKey);
+                    }
+                    catch (Exception)
+                    {
+                        // Do nothing here.
                     }
                 }
             }
@@ -401,7 +465,7 @@ namespace achihapi.Controllers
                 }
             }
 
-            vm.ID = nNewAccountID;
+            vm.ID = nNewPlanID;
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
                 DateFormatString = HIHAPIConstants.DateFormatPattern,

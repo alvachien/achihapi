@@ -2618,7 +2618,53 @@ namespace achihapi.Utilities
                            ,@TRANCURR
                            ,@DESP
                            ,@CREATEDBY
-                           ,@CREATEDAT)";
+                           ,@CREATEDAT); 
+                     SELECT @Identity = SCOPE_IDENTITY();";
+        }
+        internal static void BindFinPlanInsertParameter(SqlCommand cmd, FinancePlanViewModel vm)
+        {
+            cmd.Parameters.AddWithValue("@HID", vm.HID);
+            cmd.Parameters.AddWithValue("@PTYPE", vm.PlanType);
+            switch(vm.PlanType)
+            {
+                case FinancePlanTypeEnum.Account:
+                    cmd.Parameters.AddWithValue("@ACCOUNTID", vm.AccountID.Value);
+                    cmd.Parameters.AddWithValue("@ACNTCTGYID", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@CCID", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@TTID", DBNull.Value);
+                    break;
+
+                case FinancePlanTypeEnum.AccountCategory:
+                    cmd.Parameters.AddWithValue("@ACCOUNTID", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ACNTCTGYID", vm.AccountCategoryID.Value);
+                    cmd.Parameters.AddWithValue("@CCID", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@TTID", DBNull.Value);
+                    break;
+
+                case FinancePlanTypeEnum.ControlCenter:
+                    cmd.Parameters.AddWithValue("@ACCOUNTID", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ACNTCTGYID", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@CCID", vm.ControlCenterID.Value);
+                    cmd.Parameters.AddWithValue("@TTID", DBNull.Value);
+                    break;
+
+                case FinancePlanTypeEnum.TranType:
+                    cmd.Parameters.AddWithValue("@ACCOUNTID", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ACNTCTGYID", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@CCID", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@TTID", vm.TranTypeID.Value);
+                    break;
+
+                default:
+                    break;
+            }
+            cmd.Parameters.AddWithValue("@STARTDATE", vm.StartDate);
+            cmd.Parameters.AddWithValue("@TGTDATE", vm.TargetDate);
+            cmd.Parameters.AddWithValue("@TGTBAL", vm.TargetBalance);
+            cmd.Parameters.AddWithValue("@TRANCURR", vm.TranCurr);
+            cmd.Parameters.AddWithValue("@DESP", vm.Description);
+            cmd.Parameters.AddWithValue("@CREATEDBY", vm.CreatedBy);
+            cmd.Parameters.AddWithValue("@CREATEDAT", DateTime.Now);
         }
         internal static string GetFinPlanUpdateString()
         {
