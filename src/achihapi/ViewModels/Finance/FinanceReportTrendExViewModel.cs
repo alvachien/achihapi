@@ -12,7 +12,7 @@ namespace achihapi.ViewModels
         Monthly     = 3
     }
 
-    public class FinanceReportTrendExViewModel
+    public sealed class FinanceReportTrendExViewModel
     {
         public DateTime? TranDate { get; set; }
         public Int32? TranWeek { get; set; }

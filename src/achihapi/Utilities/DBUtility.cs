@@ -2501,6 +2501,43 @@ namespace achihapi.Utilities
         }
         #endregion
 
+        #region Finance Doc create frequency - by user
+        internal static string getFinDocCreatedFrequenciesByUserQueryString(FinanceDocCreatedFrequencyType frqType, Int32 hid, DateTime dtBgn, DateTime dtEnd)
+        {
+            String strSql = String.Empty;
+            switch(frqType)
+            {
+                case FinanceDocCreatedFrequencyType.Monthly:
+                    strSql = @"SELECT CREATEDATYEAR, CREATEDATMONTH, CREATEDBY, COUNT(ID) AS DOCAMOUNT
+	                            FROM (
+	                            SELECT 
+	                            YEAR(CREATEDAT) AS CREATEDATYEAR, DATENAME(MONTH, CREATEDAT) AS CREATEDATMONTH, ID, CREATEDBY
+	                            FROM 
+	                            t_fin_document
+	                            WHERE CREATEDAT IS NOT NULL AND CREATEDBY IS NOT NULL
+	                            AND CREATEDAT > '2018-05-01'
+	                            ) AS A
+                            GROUP BY CREATEDATYEAR, CREATEDATMONTH, CREATEDBY";
+                    break;
+ 
+                case FinanceDocCreatedFrequencyType.Weekly:
+                default:
+                    strSql = @"SELECT CREATEDATYEAR, CREATEDATWEEK, CREATEDBY, COUNT(ID) AS DOCAMOUNT
+	                            FROM (
+	                            SELECT 
+	                            YEAR(CREATEDAT) AS CREATEDATYEAR, DATENAME(WEEK, CREATEDAT) AS CREATEDATWEEK, ID, CREATEDBY
+	                            FROM 
+	                            t_fin_document
+	                            WHERE CREATEDAT IS NOT NULL AND CREATEDBY IS NOT NULL
+	                            AND CREATEDAT > '2018-05-01'
+	                            ) AS A
+                            GROUP BY CREATEDATYEAR, CREATEDATWEEK, CREATEDBY";
+                    break;
+            }
+            return strSql;
+        }
+        #endregion
+
         #region Order header
         internal static string GetFinOrderInsertString()
         {

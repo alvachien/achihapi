@@ -24,6 +24,8 @@ namespace achihapi.Controllers
         public static String FinReportCC = "Fin_Report_CC_{0}"; // Home ID
         public static String FinReportOrder = "Fin_Report_Order_{0}"; // Home ID
 
+        public static String FinDocCrtFrqByUser = "Fin_DocCreate_ByUser_{0}"; // Home ID
+
         // Learning part
         public static String LearnCtgyList = "Learn_CtgyList_{0}"; // Home ID
     }
