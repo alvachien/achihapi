@@ -2514,9 +2514,9 @@ namespace achihapi.Utilities
 	                            YEAR(CREATEDAT) AS CREATEDATYEAR, DATENAME(MONTH, CREATEDAT) AS CREATEDATMONTH, ID, CREATEDBY
 	                            FROM 
 	                            t_fin_document
-	                            WHERE CREATEDAT IS NOT NULL AND CREATEDBY IS NOT NULL
-	                            AND CREATEDAT > '2018-05-01'
-	                            ) AS A
+	                            WHERE HID = " + hid.ToString() + " AND CREATEDAT IS NOT NULL AND CREATEDBY IS NOT NULL "
+	                            + " AND CREATEDAT >= " + dtBgn.ToShortDateString() + " AND CREATEDAT <= " + dtEnd.ToShortDateString() 
+	                            + @" ) AS A
                             GROUP BY CREATEDATYEAR, CREATEDATMONTH, CREATEDBY";
                     break;
  
@@ -2527,14 +2527,33 @@ namespace achihapi.Utilities
 	                            SELECT 
 	                            YEAR(CREATEDAT) AS CREATEDATYEAR, DATENAME(WEEK, CREATEDAT) AS CREATEDATWEEK, ID, CREATEDBY
 	                            FROM 
-	                            t_fin_document
-	                            WHERE CREATEDAT IS NOT NULL AND CREATEDBY IS NOT NULL
-	                            AND CREATEDAT > '2018-05-01'
-	                            ) AS A
+	                            WHERE HID = " + hid.ToString() + " AND CREATEDAT IS NOT NULL AND CREATEDBY IS NOT NULL "
+                                + " AND CREATEDAT >= " + dtBgn.ToShortDateString() + " AND CREATEDAT <= " + dtEnd.ToShortDateString()
+                                + @" ) AS A
                             GROUP BY CREATEDATYEAR, CREATEDATWEEK, CREATEDBY";
                     break;
             }
             return strSql;
+        }
+        internal static void FinDocCreatedFrequenciesByUser_DB2VM(FinanceDocCreatedFrequencyType frqType, SqlDataReader reader, FinanceDocCreatedFrequenciesByUserViewModel vm)
+        {
+            switch(frqType)
+            {
+                case FinanceDocCreatedFrequencyType.Monthly:
+                    vm.Year = reader.GetInt32(0);
+                    vm.Month = reader.GetInt32(1);
+                    vm.UserID = reader.GetString(2);
+                    vm.AmountOfDocuments = reader.GetInt32(3);
+                    break;
+
+                case FinanceDocCreatedFrequencyType.Weekly:
+                default:
+                    vm.Year = reader.GetInt32(0);
+                    vm.Week = reader.GetInt32(1);
+                    vm.UserID = reader.GetString(2);
+                    vm.AmountOfDocuments = reader.GetInt32(3);
+                    break;
+            }
         }
         #endregion
 

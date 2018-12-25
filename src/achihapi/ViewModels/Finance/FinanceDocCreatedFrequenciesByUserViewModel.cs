@@ -7,9 +7,8 @@ namespace achihapi.ViewModels
 {
     public enum FinanceDocCreatedFrequencyType : Byte
     {
-        Daily   = 1,
-        Weekly  = 2,
-        Monthly = 3
+        Weekly  = 1,
+        Monthly = 2
     }
 
     public sealed class FinanceDocCreatedFrequenciesByUserViewModel

@@ -32,12 +32,17 @@ namespace achihapi.Controllers
                 return BadRequest("HID is missing");
 
             FinanceDocCreatedFrequencyType frqtype = FinanceDocCreatedFrequencyType.Weekly;
+            DateTime dtBgn = DateTime.Today;
             if (nfrqtype == 1)
-                frqtype = FinanceDocCreatedFrequencyType.Daily;
-            else if (nfrqtype == 2)
+            {
                 frqtype = FinanceDocCreatedFrequencyType.Weekly;
-            else if (nfrqtype == 3)
+                dtBgn = dtBgn.AddMonths(-1);
+            }
+            else if (nfrqtype == 2)
+            {
                 frqtype = FinanceDocCreatedFrequencyType.Monthly;
+                dtBgn = dtBgn.AddYears(-1);
+            }
             else
                 return BadRequest("Frequence type is not supported");
 
@@ -95,15 +100,14 @@ namespace achihapi.Controllers
                             throw;
                         }
 
-                        queryString = HIHDBUtility.GetFinPlanSelectionString() + " WHERE [HID] = " + hid.ToString();
-
+                        queryString = HIHDBUtility.getFinDocCreatedFrequenciesByUserQueryString(frqtype, hid, dtBgn, DateTime.Today);
                         cmd = new SqlCommand(queryString, conn);
                         reader = cmd.ExecuteReader();
 
                         while (reader.Read())
                         {
                             FinanceDocCreatedFrequenciesByUserViewModel vm = new FinanceDocCreatedFrequenciesByUserViewModel();
-                            // HIHDBUtility.FinPlan_DB2VM(reader, vm);
+                            HIHDBUtility.FinDocCreatedFrequenciesByUser_DB2VM(frqtype, reader, vm);
                             listVm.Add(vm);
                         }
                     }
