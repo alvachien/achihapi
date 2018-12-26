@@ -2512,11 +2512,10 @@ namespace achihapi.Utilities
 	                            FROM (
 	                            SELECT 
 	                            YEAR(CREATEDAT) AS CREATEDATYEAR, DATENAME(MONTH, CREATEDAT) AS CREATEDATMONTH, ID, CREATEDBY
-	                            FROM 
-	                            t_fin_document
+	                            FROM t_fin_document
 	                            WHERE HID = " + hid.ToString() + " AND CREATEDAT IS NOT NULL AND CREATEDBY IS NOT NULL "
-	                            + " AND CREATEDAT >= " + dtBgn.ToShortDateString() + " AND CREATEDAT <= " + dtEnd.ToShortDateString() 
-	                            + @" ) AS A
+	                            + " AND CREATEDAT >= '" + dtBgn.ToString("yyyy-MM-dd") + "' AND CREATEDAT <= '" + dtEnd.ToString("yyyy-MM-dd") + "'"
+                                + @" ) AS A
                             GROUP BY CREATEDATYEAR, CREATEDATMONTH, CREATEDBY";
                     break;
  
@@ -2526,9 +2525,9 @@ namespace achihapi.Utilities
 	                            FROM (
 	                            SELECT 
 	                            YEAR(CREATEDAT) AS CREATEDATYEAR, DATENAME(WEEK, CREATEDAT) AS CREATEDATWEEK, ID, CREATEDBY
-	                            FROM 
+	                            FROM t_fin_document
 	                            WHERE HID = " + hid.ToString() + " AND CREATEDAT IS NOT NULL AND CREATEDBY IS NOT NULL "
-                                + " AND CREATEDAT >= " + dtBgn.ToShortDateString() + " AND CREATEDAT <= " + dtEnd.ToShortDateString()
+                                + " AND CREATEDAT >= '" + dtBgn.ToString("yyyy-MM-dd") + "' AND CREATEDAT <= '" + dtEnd.ToString("yyyy-MM-dd") + "'"
                                 + @" ) AS A
                             GROUP BY CREATEDATYEAR, CREATEDATWEEK, CREATEDBY";
                     break;
@@ -2541,7 +2540,7 @@ namespace achihapi.Utilities
             {
                 case FinanceDocCreatedFrequencyType.Monthly:
                     vm.Year = reader.GetInt32(0);
-                    vm.Month = reader.GetInt32(1);
+                    vm.Month = reader.GetString(1);
                     vm.UserID = reader.GetString(2);
                     vm.AmountOfDocuments = reader.GetInt32(3);
                     break;
@@ -2549,7 +2548,7 @@ namespace achihapi.Utilities
                 case FinanceDocCreatedFrequencyType.Weekly:
                 default:
                     vm.Year = reader.GetInt32(0);
-                    vm.Week = reader.GetInt32(1);
+                    vm.Week = reader.GetString(1);
                     vm.UserID = reader.GetString(2);
                     vm.AmountOfDocuments = reader.GetInt32(3);
                     break;

@@ -101,6 +101,11 @@ namespace achihapi.Controllers
                         }
 
                         queryString = HIHDBUtility.getFinDocCreatedFrequenciesByUserQueryString(frqtype, hid, dtBgn, DateTime.Today);
+
+#if DEBUG
+                        System.Diagnostics.Debug.WriteLine("FinanceDocCreatedFrequenciesByUserController, SQL generated: " + queryString);
+#endif
+
                         cmd = new SqlCommand(queryString, conn);
                         reader = cmd.ExecuteReader();
 
