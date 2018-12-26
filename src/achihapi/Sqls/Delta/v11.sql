@@ -36,6 +36,6 @@ ON DELETE CASCADE
 ALTER TABLE [dbo].[t_fin_plan] CHECK CONSTRAINT [FK_t_fin_plan_HID];
 
 -- Set the version
-INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (10,'2018.12.20');
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (11,'2018.12.20');
 
 -- The end.
