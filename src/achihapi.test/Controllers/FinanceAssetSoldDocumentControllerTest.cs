@@ -111,7 +111,7 @@ namespace achihapi.test.Controllers
 
             services.AddSingleton(manager);
         }
-
+        /*
         [TestMethod]
         public async Task Post_InvalidCase1_EmptyInput()
         {
@@ -256,5 +256,6 @@ namespace achihapi.test.Controllers
                 conn.Close();
             }
         }
+        */
     }
 }

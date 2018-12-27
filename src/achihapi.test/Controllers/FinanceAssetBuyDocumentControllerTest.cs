@@ -30,6 +30,7 @@ namespace achihapi.test.Controllers
     [TestClass]
     public class FinanceAssetBuyDocumentControllerTest
     {
+        /*
         private static HttpClient _client;
         private static TestServer _server;
         private static String _contentRoot;
@@ -501,5 +502,6 @@ namespace achihapi.test.Controllers
                 conn.Close();
             }
         }
+        */
     }
 }

@@ -623,6 +623,38 @@ namespace achihapi.test
         }
 
         [TestMethod]
+        public void ADPTmpGenerateTest_Week2()
+        {
+            List<ADPGenerateResult> results = null;
+            var startdate = new DateTime(2019, 1, 5);
+            var enddate = new DateTime(2020, 1, 31);
+
+            ADPGenerateViewModel vm = new ADPGenerateViewModel
+            {
+                StartDate = startdate.Date,
+                EndDate = enddate.Date,
+                RptType = RepeatFrequency.Week,
+                TotalAmount = 10000,
+                Desp = "Test_Week"
+            };
+
+            results = FinanceCalcUtility.GenerateAdvancePaymentTmps(vm);
+
+            // Total count
+            Assert.AreEqual(results.Count, 55);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.AreEqual(vm.StartDate.AddDays(i), rst.TranDate);
+                i += 7;
+
+                // Desp
+                Assert.AreNotEqual(String.Empty, rst.Desp);
+            }
+        }
+
+        [TestMethod]
         public void ADPTmpGenerateTest_Fortnight()
         {
             List<ADPGenerateResult> results = null;

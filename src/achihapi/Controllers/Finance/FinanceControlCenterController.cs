@@ -391,6 +391,17 @@ namespace achihapi.Controllers
 
                         Int32 nRst = await cmd.ExecuteNonQueryAsync();
                         nNewID = (Int32)idparam.Value;
+
+                        // Update the buffer
+                        try
+                        {
+                            var cacheKey = String.Format(CacheKeys.FinCCList, vm.HID);
+                            this._cache.Remove(cacheKey);
+                        }
+                        catch (Exception)
+                        {
+                            // Do nothing here.
+                        }
                     }
                 }
             }
@@ -551,6 +562,17 @@ namespace achihapi.Controllers
                         cmd.Parameters.AddWithValue("@ID", id);
 
                         Int32 nRst = await cmd.ExecuteNonQueryAsync();
+
+                        // Update the buffer
+                        try
+                        {
+                            var cacheKey = String.Format(CacheKeys.FinCCList, vm.HID);
+                            this._cache.Remove(cacheKey);
+                        }
+                        catch (Exception)
+                        {
+                            // Do nothing here.
+                        }
                     }
                 }
             }
@@ -672,6 +694,17 @@ namespace achihapi.Controllers
                         Int32 nRst = await cmd.ExecuteNonQueryAsync();
                         cmd.Dispose();
                         cmd = null;
+
+                        // Update the buffer
+                        try
+                        {
+                            var cacheKey = String.Format(CacheKeys.FinCCList, hid);
+                            this._cache.Remove(cacheKey);
+                        }
+                        catch (Exception)
+                        {
+                            // Do nothing here.
+                        }
                     }
                 }
             }

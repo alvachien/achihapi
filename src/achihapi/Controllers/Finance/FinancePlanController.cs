@@ -388,6 +388,17 @@ namespace achihapi.Controllers
 
                         // Now commit it!
                         tran.Commit();
+
+                        // Update the buffer
+                        try
+                        {
+                            var cacheKey = String.Format(CacheKeys.FinPlanList, vm.HID);
+                            this._cache.Remove(cacheKey);
+                        }
+                        catch (Exception)
+                        {
+                            // Do nothing here.
+                        }
                     }
                     else if (vm.PlanType == FinancePlanTypeEnum.AccountCategory)
                     {

@@ -406,6 +406,22 @@ namespace achihapi.Controllers
                         }
 
                         tran.Commit();
+
+                        // Update the buffer
+                        // Order List
+                        try
+                        {
+                            // Include invalid
+                            var cacheKey = String.Format(CacheKeys.FinOrderList, vm.HID, true);
+                            this._cache.Remove(cacheKey);
+                            // Exclude invalid
+                            var cacheKey2 = String.Format(CacheKeys.FinOrderList, vm.HID, false);
+                            this._cache.Remove(cacheKey2);
+                        }
+                        catch (Exception)
+                        {
+                            // Do nothing here.
+                        }
                     }
                 }
             }
@@ -615,6 +631,21 @@ namespace achihapi.Controllers
                         }
 
                         tran.Commit();
+
+                        // Order List
+                        try
+                        {
+                            // Include invalid
+                            var cacheKey = String.Format(CacheKeys.FinOrderList, vm.HID, true);
+                            this._cache.Remove(cacheKey);
+                            // Exclude invalid
+                            var cacheKey2 = String.Format(CacheKeys.FinOrderList, vm.HID, false);
+                            this._cache.Remove(cacheKey2);
+                        }
+                        catch (Exception)
+                        {
+                            // Do nothing here.
+                        }
                     }
                 }
             }
@@ -766,6 +797,21 @@ namespace achihapi.Controllers
                         cmd = null;
 
                         tran.Commit();
+
+                        // Order List
+                        try
+                        {
+                            // Include invalid
+                            var cacheKey = String.Format(CacheKeys.FinOrderList, hid, true);
+                            this._cache.Remove(cacheKey);
+                            // Exclude invalid
+                            var cacheKey2 = String.Format(CacheKeys.FinOrderList, hid, false);
+                            this._cache.Remove(cacheKey2);
+                        }
+                        catch (Exception)
+                        {
+                            // Do nothing here.
+                        }
                     }
                 }
             }

@@ -1062,6 +1062,18 @@ namespace achihapi.Controllers
 
                     // Now commit it!
                     tran.Commit();
+
+                    // Update the buffer
+                    // Account List
+                    try
+                    {
+                        var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
+                        this._cache.Remove(cacheKey);
+                    }
+                    catch (Exception)
+                    {
+                        // Do nothing here.
+                    }
                 }
             }
             catch (Exception exp)
@@ -1251,6 +1263,18 @@ namespace achihapi.Controllers
                         }
 
                         tran.Commit();
+
+                        // Update the buffer
+                        // Account List
+                        try
+                        {
+                            var cacheKey = String.Format(CacheKeys.FinAccountList, hid, null);
+                            this._cache.Remove(cacheKey);
+                        }
+                        catch (Exception)
+                        {
+                            // Do nothing here.
+                        }
                     }
                 }
             }
@@ -1425,6 +1449,18 @@ namespace achihapi.Controllers
 
                     // Now commit it!
                     tran.Commit();
+
+                    // Update the buffer
+                    // Account List
+                    try
+                    {
+                        var cacheKey = String.Format(CacheKeys.FinAccountList, hid, null);
+                        this._cache.Remove(cacheKey);
+                    }
+                    catch (Exception)
+                    {
+                        // Do nothing here.
+                    }
                 }
             }
             catch (Exception exp)
