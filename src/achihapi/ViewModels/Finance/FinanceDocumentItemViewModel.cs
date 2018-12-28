@@ -15,6 +15,8 @@ namespace achihapi.ViewModels
         [Required]
         public Decimal TranAmount { get; set; }
         public Boolean UseCurr2 { get; set; }
+        // The following fields had better be replaced with Nullable<Int32>
+        //  It has been kept as following due to the efforts reason;
         public Int32 ControlCenterID { get; set; }
         public Int32 OrderID { get; set; }
         [StringLength(45)]

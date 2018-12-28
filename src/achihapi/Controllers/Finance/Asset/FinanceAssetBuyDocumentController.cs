@@ -206,7 +206,7 @@ namespace achihapi.Controllers
                 || (vm.IsLegacy.HasValue && vm.IsLegacy.Value && vm.Items.Count > 0) 
                 || ((!vm.IsLegacy.HasValue || (vm.IsLegacy.HasValue && !vm.IsLegacy.Value)) && vm.Items.Count <= 0)
                 )
-                return BadRequest("Invalid input data");
+                return BadRequest("Invalid input data");            
 
             foreach(var di in vm.Items)
             {

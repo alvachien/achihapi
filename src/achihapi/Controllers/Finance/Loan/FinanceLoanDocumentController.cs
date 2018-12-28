@@ -225,13 +225,31 @@ namespace achihapi.Controllers
                 return BadRequest("User cannot recognize");
 
             // Check the items
-            if (vm.Items.Count != 1 || vm.AccountVM.ExtraInfo_Loan.LoanTmpDocs.Count <= 0)
+            if (vm.Items.Count != 1) 
             {
-                return BadRequest("Only two items allowed or no template docs");
+                return BadRequest("Only one item doc is supported by far");
             }
             if (vm.AccountVM == null || vm.AccountVM.ExtraInfo_Loan == null)
             {
                 return BadRequest("No account info!");
+            }
+            if (vm.AccountVM.ExtraInfo_Loan.LoanTmpDocs.Count <= 0)
+            {
+                return BadRequest("No template docs defined!");
+            }
+            else
+            {
+                foreach(var tdoc in vm.AccountVM.ExtraInfo_Loan.LoanTmpDocs)
+                {
+                    if (!tdoc.ControlCenterID.HasValue && !tdoc.OrderID.HasValue)
+                    {
+                        return BadRequest("Either control center or order shall be specified in Loan Template doc");
+                    }
+                    if (tdoc.TranAmount <= 0)
+                    {
+                        return BadRequest("Amount is zero!");
+                    }
+                }
             }
 
             // Update the database
