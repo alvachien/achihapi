@@ -410,6 +410,7 @@ namespace achihapi.Controllers
                     tran.Commit();
 
                     // Update the buffer
+                    // Account list
                     var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
                     this._cache.Remove(cacheKey);
                 }

@@ -1124,10 +1124,11 @@ namespace achihapi.Controllers
                 // Order
                 if (item.OrderID > 0)
                 {
-                    strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_order] WHERE [HID] = @HID AND [ID] = @ID";
+                    strCheckString = @"SELECT TOP (1) [ID] FROM [t_fin_order] WHERE [HID] = @HID AND [ID] = @ID AND (@VALIDDATE BETWEEN [VALID_FROM] AND [VALID_TO])";
                     cmdCheck = new SqlCommand(strCheckString, conn);
                     cmdCheck.Parameters.AddWithValue("@HID", vm.HID);
                     cmdCheck.Parameters.AddWithValue("@ID", item.OrderID);
+                    cmdCheck.Parameters.AddWithValue("@VALIDDATE", vm.TranDate);
                     reader = await cmdCheck.ExecuteReaderAsync();
                     if (!reader.HasRows)
                         throw new Exception("No order found");

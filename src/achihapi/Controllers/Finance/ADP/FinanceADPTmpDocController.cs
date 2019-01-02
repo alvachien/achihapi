@@ -16,6 +16,12 @@ namespace achihapi.Controllers
     [Route("api/FinanceADPTmpDoc")]
     public class FinanceADPTmpDocController : Controller
     {
+        private IMemoryCache _cache;
+        public FinanceADPTmpDocController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         // GET: api/FinanceADPTmpDoc
         [HttpGet]
         [Authorize]
@@ -345,6 +351,10 @@ namespace achihapi.Controllers
                     await cmd.ExecuteNonQueryAsync();
 
                     tran.Commit();
+
+                    // Update the buffer of the relevant Account!
+                    var cacheAccountKey = String.Format(CacheKeys.FinAccount, hid, vmTmpDoc.AccountID);
+                    this._cache.Remove(cacheAccountKey);
                 }
             }
             catch (Exception exp)

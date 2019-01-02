@@ -536,6 +536,16 @@ namespace achihapi.Controllers
                     {
                         // Do nothing here.
                     }
+                    // Account itself
+                    try
+                    {
+                        var cacheKey = String.Format(CacheKeys.FinAccount, vm.HID, vm.AssetAccountID);
+                        this._cache.Remove(cacheKey);
+                    }
+                    catch (Exception)
+                    {
+                        // Do nothing here.
+                    }
                 }
             }
             catch (Exception exp)
