@@ -498,13 +498,8 @@ namespace achihapi.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (vm == null || vm.DocType == FinanceDocTypeViewModel.DocType_AdvancePayment
-                || vm.DocType == FinanceDocTypeViewModel.DocType_AdvanceReceive
-                || vm.DocType == FinanceDocTypeViewModel.DocType_AssetBuyIn
-                || vm.DocType == FinanceDocTypeViewModel.DocType_AssetSoldOut
-                || vm.DocType == FinanceDocTypeViewModel.DocType_AssetValChg
-                || vm.DocType == FinanceDocTypeViewModel.DocType_BorrowFrom
-                || vm.DocType == FinanceDocTypeViewModel.DocType_LendTo)
+            // For document update, it accepts all documents now.
+            if (vm == null)
             {
                 return BadRequest("No data is inputted or for Advancepay/Loan/Asset");
             }
