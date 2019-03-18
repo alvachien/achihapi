@@ -182,8 +182,6 @@ namespace achihapi.Controllers
             FinanceDocumentUIViewModel vm = new FinanceDocumentUIViewModel();
 
             SqlConnection conn = null;
-            SqlCommand cmd = null;
-            SqlDataReader reader = null;
             String queryString = "";
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
@@ -207,50 +205,16 @@ namespace achihapi.Controllers
                         throw;
                     }
 
-                    cmd = new SqlCommand(queryString, conn);
-                    reader = cmd.ExecuteReader();
-
-                    if (reader.HasRows)
+                    // Read the doc out
+                    try
                     {
-                        // Header
-                        while (reader.Read())
-                        {
-                            HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
-                        }
-                        reader.NextResult();
-
-                        // Items
-                        while (reader.Read())
-                        {
-                            FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
-                            HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
-
-                            vm.Items.Add(itemvm);
-                        }
-                        reader.NextResult();
-
-                        // Tags
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                Int32 itemID = reader.GetInt32(0);
-                                String sterm = reader.GetString(1);
-
-                                foreach (var vitem in vm.Items)
-                                {
-                                    if (vitem.ItemID == itemID)
-                                    {
-                                        vitem.TagTerms.Add(sterm);
-                                    }
-                                }
-                            }
-                        }
+                        ReadFinanceDocument(id, hid, conn, vm);
                     }
-                    else
+                    catch(Exception)
                     {
                         errorCode = HttpStatusCode.NotFound;
-                        throw new Exception();
+
+                        throw;
                     }
                 }
             }
@@ -263,16 +227,6 @@ namespace achihapi.Controllers
             }
             finally
             {
-                if (reader != null)
-                {
-                    reader.Dispose();
-                    reader = null;
-                }
-                if (cmd != null)
-                {
-                    cmd.Dispose();
-                    cmd = null;
-                }
                 if (conn != null)
                 {
                     conn.Dispose();
@@ -552,6 +506,19 @@ namespace achihapi.Controllers
                     {
                         return BadRequest(exp.Message);
                     }
+
+                    // Old doc
+                    var vmOld = new FinanceDocumentUIViewModel();
+                    try
+                    {
+                        ReadFinanceDocument(id, vm.HID, conn, vmOld);
+                    }
+                    catch(Exception exp)
+                    {
+                        return BadRequest(exp.Message);
+                    }
+
+                    // Workout the delta
 
                     tran = conn.BeginTransaction();
 
@@ -946,6 +913,77 @@ namespace achihapi.Controllers
             }
 
             return Ok();
+        }
+
+        // Read the doc
+        public static void ReadFinanceDocument(Int32 docid, Int32 hid, SqlConnection conn, FinanceDocumentUIViewModel vm)
+        {
+            var queryString = HIHDBUtility.getFinanceDocQueryString(docid, hid);
+
+            SqlCommand cmd = new SqlCommand(queryString, conn);
+            SqlDataReader reader = cmd.ExecuteReader();
+
+            try
+            {
+                if (reader.HasRows)
+                {
+                    // Header
+                    while (reader.Read())
+                    {
+                        HIHDBUtility.FinDocHeader_DB2VM(reader, vm);
+                    }
+                    reader.NextResult();
+
+                    // Items
+                    while (reader.Read())
+                    {
+                        FinanceDocumentItemUIViewModel itemvm = new FinanceDocumentItemUIViewModel();
+                        HIHDBUtility.FinDocItem_DB2VM(reader, itemvm);
+
+                        vm.Items.Add(itemvm);
+                    }
+                    reader.NextResult();
+
+                    // Tags
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            Int32 itemID = reader.GetInt32(0);
+                            String sterm = reader.GetString(1);
+
+                            foreach (var vitem in vm.Items)
+                            {
+                                if (vitem.ItemID == itemID)
+                                {
+                                    vitem.TagTerms.Add(sterm);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    throw new Exception();
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                if (reader != null)
+                {
+                    reader.Close();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
+            }
         }
 
         // Checks
