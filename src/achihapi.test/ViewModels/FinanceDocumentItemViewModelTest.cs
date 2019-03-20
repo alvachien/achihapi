@@ -240,5 +240,20 @@ namespace achihapi.test.ViewModels
             Assert.IsTrue(rst.ContainsKey("OrderID"));
             Assert.AreEqual((Int32)rst["OrderID"], 1);
         }
+
+        [TestMethod]
+        public void GetDBInsertString()
+        {
+            var item1 = new FinanceDocumentItemUIViewModel();
+            item1.DocID = 1;
+            item1.AccountID = 2;
+            item1.ControlCenterID = 3;
+            item1.Desp = "Item 1";
+            item1.ItemID = 1;
+            item1.TranAmount = 100;
+
+            var sqlstr = item1.GetDocItemInsertString();
+            Assert.IsTrue(sqlstr.Length > 0);
+        }
     }
 }

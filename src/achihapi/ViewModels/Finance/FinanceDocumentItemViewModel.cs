@@ -51,6 +51,41 @@ namespace achihapi.ViewModels
 
             return true;
         }
+
+        public string GetDocItemInsertString()
+        {
+            Dictionary<String, Object> dictvals = new Dictionary<string, Object>();
+
+            Type t = typeof(FinanceDocumentItemViewModel);
+            PropertyInfo[] tProperties = t.GetProperties();
+            foreach (PropertyInfo item in tProperties)
+            {
+                if (item.Name == "DocID" || item.Name == "ItemID" || item.Name == "AccountID"
+                    || item.Name == "TranType" || item.Name == "TranAmount")
+                {
+                    dictvals.Add(item.Name, item.GetValue(this));
+                }
+                else if (item.Name == "UseCurr2")
+                {
+                    if (UseCurr2) dictvals.Add(item.Name, true);
+                }
+                else if (item.Name == "ControlCenterID" || item.Name == "OrderID")
+                {
+                    Int32 nid = (Int32)item.GetValue(this);
+                    if (nid > 0)
+                        dictvals.Add(item.Name, nid);
+                }
+                else if (item.Name == "Desp")
+                {
+                    dictvals.Add(item.Name, "N'" + Desp + "'");
+                }
+            }
+
+            String strcolumns = string.Join(',', dictvals.Keys);
+            String strvalues = string.Join(',', dictvals.Values);
+
+            return @"INSERT INTO [dbo].[t_fin_document_item] (" + strcolumns + " VALUES(" + strvalues + ")"; 
+        }
     }
 
     public class FinanceDocumentItemUIViewModel : FinanceDocumentItemViewModel
@@ -81,8 +116,8 @@ namespace achihapi.ViewModels
             foreach (var prop in parentProperties)
                 dictParentProperties.Add(prop.Name, null);
 
-            PropertyInfo[] PropertyList = t.GetProperties();
-            foreach (PropertyInfo item in PropertyList)
+            PropertyInfo[] listProperties = t.GetProperties();
+            foreach (PropertyInfo item in listProperties)
             {
                 // Only care about the properties in the parent class
                 if (!dictParentProperties.ContainsKey(item.Name))
@@ -92,8 +127,8 @@ namespace achihapi.ViewModels
 
                 if (item.Name != "TagTerms")
                 {
-                    object oldValue = item.GetValue(oldItem, null);
-                    object newValue = item.GetValue(newItem, null);
+                    object oldValue = item.GetValue(oldItem);
+                    object newValue = item.GetValue(newItem);
                     if (!Object.Equals(oldValue, newValue))
                     {
                         dictDelta.Add(item.Name, newValue);
