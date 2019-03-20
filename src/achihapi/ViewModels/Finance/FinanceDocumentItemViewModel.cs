@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 
 namespace achihapi.ViewModels
 {
@@ -29,6 +30,27 @@ namespace achihapi.ViewModels
         {
             this.TagTerms = new List<String>();
         }
+
+        public Boolean IsValid()
+        {
+            if (ItemID <= 0) return false;
+            if (AccountID <= 0) return false;
+            if (TranType <= 0) return false;
+            if (TranAmount == 0) return false;
+            if (ControlCenterID <= 0)
+            {
+                if (OrderID <= 0)
+                    return false;
+            }
+            else
+            {
+                if (OrderID > 0)
+                    return false;
+            }
+            if (String.IsNullOrEmpty(Desp)) return false;
+
+            return true;
+        }
     }
 
     public class FinanceDocumentItemUIViewModel : FinanceDocumentItemViewModel
@@ -40,6 +62,51 @@ namespace achihapi.ViewModels
 
         public DateTime TranDate { get; set; }
         public String DocDesp { get; set; }
+
+        public static Dictionary<String, Object> WorkoutDeltaUpdate(FinanceDocumentItemUIViewModel oldItem, FinanceDocumentItemUIViewModel newItem)
+        {
+            Dictionary<String, Object> dictDelta = new Dictionary<string, Object>();
+            if (oldItem == null || newItem == null 
+                || Object.ReferenceEquals(oldItem, newItem)
+                || oldItem.DocID != newItem.DocID
+                || oldItem.ItemID != newItem.ItemID)
+            {
+                throw new ArgumentException("Invalid inputted parameters Or DocID/ItemID is different!");
+            }
+
+            Type t = typeof(FinanceDocumentItemUIViewModel);
+            Type parent = typeof(FinanceDocumentItemViewModel);
+            PropertyInfo[] parentProperties = parent.GetProperties();
+            Dictionary<String, Object> dictParentProperties = new Dictionary<string, object>();
+            foreach (var prop in parentProperties)
+                dictParentProperties.Add(prop.Name, null);
+
+            PropertyInfo[] PropertyList = t.GetProperties();
+            foreach (PropertyInfo item in PropertyList)
+            {
+                // Only care about the properties in the parent class
+                if (!dictParentProperties.ContainsKey(item.Name))
+                    continue;
+                if (item.Name == "DocID")
+                    continue;
+
+                if (item.Name != "TagTerms")
+                {
+                    object oldValue = item.GetValue(oldItem, null);
+                    object newValue = item.GetValue(newItem, null);
+                    if (!Object.Equals(oldValue, newValue))
+                    {
+                        dictDelta.Add(item.Name, newValue);
+                    }
+                }
+                else
+                {
+                    // For tags term, need be process separately.
+                }
+            }
+
+            return dictDelta;
+        }
     }
 
     public sealed class FinanceDocumentItemWithBalanceUIViewModel : FinanceDocumentItemUIViewModel

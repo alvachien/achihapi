@@ -9,6 +9,8 @@ using System.Data.SqlClient;
 using achihapi.Utilities;
 using System.Net;
 using Microsoft.Extensions.Caching.Memory;
+using System.Linq;
+using System.Reflection;
 
 namespace achihapi.Controllers
 {
@@ -519,7 +521,21 @@ namespace achihapi.Controllers
                     }
 
                     // Workout the delta
+                    var diffs = FinanceDocumentUIViewModel.WorkoutDeltaForUpdate(vmOld, vm);
+                    List<String> listSqls = new List<string>();
+                    String strHeader = "";
+                    foreach(var diff in diffs)
+                    {
+                        if (!diff.Key.StartsWith("Items"))
+                        {
+                            if (diff.Value is DateTime)
+                                strHeader += " [" + diff.Key.ToString() + "] = " + ((DateTime)diff.Value).ToString("YYYY-MM-SS");
+                            else 
+                                strHeader += " [" + diff.Key.ToString() + "] = " + diff.Value.ToString();
+                        }
+                    }
 
+                    // Start the DB update
                     tran = conn.BeginTransaction();
 
                     // Now go ahead for the updating
