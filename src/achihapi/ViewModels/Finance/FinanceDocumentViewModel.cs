@@ -75,7 +75,7 @@ namespace achihapi.ViewModels
             return true;
         }
 
-        public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceDocumentUIViewModel oldDoc, FinanceDocumentUIViewModel newDoc)
+        public static Dictionary<String, Object> WorkoutDeltaForHeaderUpdate(FinanceDocumentUIViewModel oldDoc, FinanceDocumentUIViewModel newDoc)
         {
             Dictionary<String, Object> dictDelta = new Dictionary<string, Object>();
 
@@ -97,8 +97,10 @@ namespace achihapi.ViewModels
             foreach (var prop in parentProperties)
                 dictParentProperties.Add(prop.Name, null);
 
-            PropertyInfo[] PropertyList = t.GetProperties();
-            foreach (PropertyInfo item in PropertyList)
+            PropertyInfo[] listProperties = t.GetProperties();
+            var listSortedProperties = listProperties.OrderBy(o => o.Name);
+
+            foreach (PropertyInfo item in listSortedProperties)
             {
                 if (dictParentProperties.ContainsKey(item.Name))
                     continue;
@@ -112,17 +114,74 @@ namespace achihapi.ViewModels
 
                 object oldValue = item.GetValue(oldDoc, null);
                 object newValue = item.GetValue(newDoc, null);
-                if (!Object.Equals(oldValue, newValue))
+                if (item.PropertyType == typeof(Decimal))
                 {
-                    dictDelta.Add(item.Name, newValue);
+                    if (Decimal.Compare((Decimal)oldValue, (Decimal)newValue) != 0) dictDelta.Add(item.Name, newValue);
                 }
+                else if(item.PropertyType == typeof(String))
+                {
+                    if (String.CompareOrdinal((string)oldValue, (string)newValue) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else if(item.PropertyType == typeof(DateTime))
+                {
+                    if (DateTime.Compare(((DateTime)oldValue).Date, ((DateTime)newValue).Date) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else 
+                {
+                    if (!Object.Equals(oldValue, newValue))
+                        dictDelta.Add(item.Name, newValue);
+                }
+            }
+            return dictDelta;
+        }
+        public static String WorkoutDeltaForHeaderUpdateSqlString(FinanceDocumentUIViewModel oldDoc, FinanceDocumentUIViewModel newDoc)
+        {
+            var diffs = WorkoutDeltaForHeaderUpdate(oldDoc, newDoc);
+
+            List<String> listHeaderSqls = new List<string>();
+            foreach (var diff in diffs)
+            {
+                if (diff.Value is DateTime)
+                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
+                else if (diff.Value is Boolean)
+                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
+                else if (diff.Value is String)
+                {
+                    if (String.IsNullOrEmpty((string)diff.Value) && diff.Key == "TranCurr2")
+                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = NULL");
+                    else
+                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = N'" + diff.Value + "'");
+                }                    
+                else if(diff.Value is Decimal)
+                {
+                    if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                    {
+                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = NULL");
+                    }
+                    else
+                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + diff.Value.ToString());
+                }
+                else
+                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + diff.Value.ToString());
+            }
+
+            return @"UPDATE [dbo].[t_fin_document] SET " + string.Join(",", listHeaderSqls) + " WHERE [ID] = " + oldDoc.ID.ToString();
+        }
+        public static Dictionary<Int32, Object> WorkoutDeltaForItemUpdate(FinanceDocumentUIViewModel oldDoc, FinanceDocumentUIViewModel newDoc)
+        {
+            Dictionary<Int32, Object> dictDelta = new Dictionary<Int32, Object>();
+
+            if (oldDoc == null || newDoc == null || Object.ReferenceEquals(oldDoc, newDoc)
+                || oldDoc.ID != newDoc.ID || oldDoc.HID != newDoc.HID || oldDoc.DocType != newDoc.DocType)
+            {
+                throw new ArgumentException("Invalid inputted parameter Or ID/HID/DocType change is not allowed");
+            }
+            if (!oldDoc.IsValid() || !newDoc.IsValid())
+            {
+                throw new Exception("Document is invalid");
             }
 
             // Items
-            // Sort it
-            // List<FinanceDocumentItemUIViewModel> oItems = oldDoc.Items.OrderBy(o => o.ItemID).ToList();
-            // List<FinanceDocumentItemUIViewModel> nItems = newDoc.Items.OrderBy(o => o.ItemID).ToList();
-
             Dictionary<Int32, Int32> itemids = new Dictionary<int, Int32>();
             oldDoc.Items.ForEach(o => itemids.Add(o.ItemID, 1));
             newDoc.Items.ForEach(o =>
@@ -142,7 +201,7 @@ namespace achihapi.ViewModels
                 {
                     // ONLY left, DELETE
                     var item = oldDoc.Items.Find(o => o.ItemID == itemid.Key);
-                    dictDelta.Add("Items" + itemid.Key.ToString(), null);
+                    dictDelta.Add(itemid.Key, null);
                 }
                 else if(itemid.Value == 2)
                 {
@@ -151,17 +210,37 @@ namespace achihapi.ViewModels
 
                     var diffs = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdate(item1, item2);
                     if (diffs.Count > 0)
-                        dictDelta.Add("Items" + itemid.Key.ToString(), diffs);
+                        dictDelta.Add(itemid.Key, diffs);
                 }
                 else if(itemid.Value == 3)
                 {
                     // Only right, INSERT!
                     var item = newDoc.Items.Find(o => o.ItemID == itemid.Key);
-                    dictDelta.Add("Items" + itemid.Key.ToString(), item);
+                    dictDelta.Add(itemid.Key, item);
                 }
             }
 
             return dictDelta;
+        }
+        public static List<String> WorkoutDeltaForItemUpdateSqlString(FinanceDocumentUIViewModel oldDoc, FinanceDocumentUIViewModel newDoc)
+        {
+            var diffs = WorkoutDeltaForItemUpdate(oldDoc, newDoc);
+            List<String> listItemSqls = new List<string>();
+
+            foreach(var diff in diffs)
+            {
+                if (diff.Value == null)
+                    listItemSqls.Add(@"DELETE [dbo].[t_fin_document_item] WHERE [DOCID] = " + oldDoc.ID.ToString() + " AND [ITEMID] = " + diff.Key.ToString());
+                else if (diff.Value is FinanceDocumentItemUIViewModel)
+                    listItemSqls.Add((diff.Value as FinanceDocumentItemUIViewModel).GetDocItemInsertString());
+                else
+                {
+                    // listItemSqls
+                    listItemSqls.Add(FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(oldDoc.Items.Find(o => o.ItemID == diff.Key),
+                        newDoc.Items.Find(o => o.ItemID == diff.Key)));
+                }
+            }
+            return listItemSqls;
         }
     }
 

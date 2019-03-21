@@ -4,10 +4,10 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <ApplicationIcon />
     <StartupObject />
-    <Version>1.6.1</Version>
+    <Version>0.8.5</Version>
     <Authors>Alva Chien</Authors>
     <Product>H.I.H.</Product>
-    <Copyright>(C) Copyright by Alva Chien</Copyright>
+    <Copyright>(C) Alva Chien</Copyright>
     <PackageProjectUrl>https://github.com/alvachien/achihapi</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/alvachien/achihapi/blob/master/LICENSE</PackageLicenseUrl>
     <Description>Web API for Home Info. Hub</Description>

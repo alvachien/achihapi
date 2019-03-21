@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using System.Linq;
 
 namespace achihapi.ViewModels
 {
@@ -12,6 +13,7 @@ namespace achihapi.ViewModels
         public Int32 ItemID { get; set; }
         [Required]
         public Int32 AccountID { get; set; }
+        [Required]
         public Int32 TranType { get; set; }
         [Required]
         public Decimal TranAmount { get; set; }
@@ -54,7 +56,7 @@ namespace achihapi.ViewModels
 
         public string GetDocItemInsertString()
         {
-            Dictionary<String, Object> dictvals = new Dictionary<string, Object>();
+            Dictionary<String, String> dictvals = new Dictionary<string, String>();
 
             Type t = typeof(FinanceDocumentItemViewModel);
             PropertyInfo[] tProperties = t.GetProperties();
@@ -63,17 +65,17 @@ namespace achihapi.ViewModels
                 if (item.Name == "DocID" || item.Name == "ItemID" || item.Name == "AccountID"
                     || item.Name == "TranType" || item.Name == "TranAmount")
                 {
-                    dictvals.Add(item.Name, item.GetValue(this));
+                    dictvals.Add(item.Name, item.GetValue(this).ToString());
                 }
                 else if (item.Name == "UseCurr2")
                 {
-                    if (UseCurr2) dictvals.Add(item.Name, true);
+                    if (UseCurr2) dictvals.Add(item.Name, "1");
                 }
                 else if (item.Name == "ControlCenterID" || item.Name == "OrderID")
                 {
                     Int32 nid = (Int32)item.GetValue(this);
                     if (nid > 0)
-                        dictvals.Add(item.Name, nid);
+                        dictvals.Add(item.Name, nid.ToString());
                 }
                 else if (item.Name == "Desp")
                 {
@@ -81,10 +83,24 @@ namespace achihapi.ViewModels
                 }
             }
 
-            String strcolumns = string.Join(',', dictvals.Keys);
-            String strvalues = string.Join(',', dictvals.Values);
+            return @"INSERT INTO [dbo].[t_fin_document_item] (" + string.Join(',', dictvals.Keys) + ") VALUES(" + string.Join(',', dictvals.Values) + ")"; 
+        }
+        public List<String> GetDocItemTagInsertString(Int32 hid)
+        {
+            List<String> listSqls = new List<string>();
+            foreach (var term in TagTerms)
+            {
+                listSqls.Add(@"INSERT INTO [dbo].[t_tag] ([HID],[TagType],[TagID],[TagSubID],[Term]) VALUES (" 
+                    + string.Join(",", new string[] {
+                        hid.ToString(),
+                        ((Int32)(HIHTagTypeEnum.FinanceDocumentItem)).ToString(),
+                        DocID.ToString(),
+                        ItemID.ToString(),
+                        "N'" + term + "'"})
+                    + ")");
+            }
 
-            return @"INSERT INTO [dbo].[t_fin_document_item] (" + strcolumns + " VALUES(" + strvalues + ")"; 
+            return listSqls;
         }
     }
 
@@ -117,7 +133,9 @@ namespace achihapi.ViewModels
                 dictParentProperties.Add(prop.Name, null);
 
             PropertyInfo[] listProperties = t.GetProperties();
-            foreach (PropertyInfo item in listProperties)
+            var listSortedProperties = listProperties.OrderBy(o => o.Name);
+
+            foreach (PropertyInfo item in listSortedProperties)
             {
                 // Only care about the properties in the parent class
                 if (!dictParentProperties.ContainsKey(item.Name))
@@ -129,18 +147,59 @@ namespace achihapi.ViewModels
                 {
                     object oldValue = item.GetValue(oldItem);
                     object newValue = item.GetValue(newItem);
-                    if (!Object.Equals(oldValue, newValue))
+
+                    if (item.PropertyType == typeof(Decimal))
                     {
-                        dictDelta.Add(item.Name, newValue);
+                        if (Decimal.Compare((Decimal)oldValue, (Decimal)newValue) != 0) dictDelta.Add(item.Name, newValue);
                     }
-                }
-                else
-                {
-                    // For tags term, need be process separately.
+                    else if (item.PropertyType == typeof(String))
+                    {
+                        if (String.CompareOrdinal((string)oldValue, (string)newValue) != 0) dictDelta.Add(item.Name, newValue);
+                    }
+                    else
+                    {
+                        if (!Object.Equals(oldValue, newValue))
+                            dictDelta.Add(item.Name, newValue);
+                    }
                 }
             }
 
             return dictDelta;
+        }
+        public static String WorkoutDeltaUpdateSqlStrings(FinanceDocumentItemUIViewModel oldItem, FinanceDocumentItemUIViewModel newItem)
+        {
+            String strSqls = "";
+
+            List<String> listSqls = new List<string>();
+            var diffs = WorkoutDeltaUpdate(oldItem, newItem);
+
+            foreach (var diff in diffs)
+            {
+                if (diff.Value is DateTime)
+                    listSqls.Add(" [" + diff.Key.ToString() + "] = " + ((DateTime)diff.Value).ToString("YYYY-MM-SS"));
+                else if (diff.Value is Boolean)
+                    listSqls.Add(" [" + diff.Key.ToString() + "] = " + (((Boolean)diff.Value) ? "1" : "0"));
+                else if (diff.Value is String)
+                    listSqls.Add(" [" + diff.Key.ToString() + "] = N'" + diff.Value + "'");
+                else if (diff.Value is Int32)
+                {
+                    if ((diff.Key == "ControlCenterID" || diff.Key == "OrderID") && (Int32)diff.Value == 0)
+                    {
+                        listSqls.Add(" [" + diff.Key.ToString() + "] = NULL");
+                    }
+                    else
+                        listSqls.Add(" [" + diff.Key.ToString() + "] = " + diff.Value.ToString());
+                }
+                else
+                    listSqls.Add(" [" + diff.Key.ToString() + "] = " + diff.Value.ToString());
+            }
+            if (listSqls.Count > 0)
+            {
+                strSqls = @"UPDATE [dbo].[t_fin_document_item] SET " + string.Join(",", listSqls) 
+                    + " WHERE [DocID] = " + oldItem.DocID.ToString() + " AND [ItemID] = " + oldItem.ItemID.ToString();
+            }
+
+            return strSqls;
         }
     }
 

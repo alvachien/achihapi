@@ -521,44 +521,44 @@ namespace achihapi.Controllers
                     }
 
                     // Workout the delta
-                    var diffs = FinanceDocumentUIViewModel.WorkoutDeltaForUpdate(vmOld, vm);
+                    //var diffs = FinanceDocumentUIViewModel.WorkoutDeltaForUpdate(vmOld, vm);
 
-                    // Generate the SQL strings
-                    List<String> listRealSqls = new List<string>();
-                    List<String> listHeaderSqls = new List<string>();
-                    foreach(var diff in diffs)
-                    {
-                        if (!diff.Key.StartsWith("Items"))
-                        {
-                            if (diff.Value is DateTime)
-                                listHeaderSqls.Add(" [" + diff.Key.ToString() + "] = " + ((DateTime)diff.Value).ToString("YYYY-MM-SS"));
-                            else
-                                listHeaderSqls.Add(" [" + diff.Key.ToString() + "] = " + diff.Value.ToString());
-                        }
-                        else
-                        {
-                            Int32 itemid = Int32.Parse(diff.Key.Substring(5));
-                            if (diff.Value == null)
-                            {
-                                // Delete
-                                listRealSqls.Add(@"DELETE [dbo].[t_fin_document_item] WHERE [DOCID] = " + id.ToString() + " AND [ITEMID] = " + itemid.ToString());
-                            }
-                            else if (diff.Value is FinanceDocumentItemUIViewModel)
-                            {
-                                // Insert
-                                var strsql = HIHDBUtility.GetFinDocItemInsertString();
-                            }
-                            else if (diff.Value is Dictionary<String, Object>)
-                            {
-
-                            }
-                        }
-                    }
-                    if (listHeaderSqls.Count > 0)
-                    {
-                        listRealSqls.Add(@"UPDATE [dbo].[t_fin_document]
-                                       SET " +  string.Join(",", listHeaderSqls) + " WHERE [ID] = " + id.ToString());
-                    }
+                    //// Generate the SQL strings
+                    //List<String> listRealSqls = new List<string>();
+                    //List<String> listHeaderSqls = new List<string>();
+                    //foreach(var diff in diffs)
+                    //{
+                    //    if (!diff.Key.StartsWith("Items"))
+                    //    {
+                    //        if (diff.Value is DateTime)
+                    //            listHeaderSqls.Add(" [" + diff.Key.ToString() + "] = " + ((DateTime)diff.Value).ToString("YYYY-MM-SS"));
+                    //        else
+                    //            listHeaderSqls.Add(" [" + diff.Key.ToString() + "] = " + diff.Value.ToString());
+                    //    }
+                    //    else
+                    //    {
+                    //        Int32 itemid = Int32.Parse(diff.Key.Substring(5));
+                    //        if (diff.Value == null)
+                    //        {
+                    //            // Delete
+                    //            listRealSqls.Add(@"DELETE [dbo].[t_fin_document_item] WHERE [DOCID] = " + id.ToString() + " AND [ITEMID] = " + itemid.ToString());
+                    //        }
+                    //        else if (diff.Value is FinanceDocumentItemUIViewModel)
+                    //        {
+                    //            // Insert
+                    //            listRealSqls.Add((diff.Value as FinanceDocumentItemUIViewModel).GetDocItemInsertString());
+                    //        }
+                    //        else if (diff.Value is Dictionary<String, Object>)
+                    //        {
+                    //            // Update
+                    //        }
+                    //    }
+                    //}
+                    //if (listHeaderSqls.Count > 0)
+                    //{
+                    //    listRealSqls.Add(@"UPDATE [dbo].[t_fin_document]
+                    //                   SET " +  string.Join(",", listHeaderSqls) + " WHERE [ID] = " + id.ToString());
+                    //}
 
                     // Start the DB update
                     tran = conn.BeginTransaction();
