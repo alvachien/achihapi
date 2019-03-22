@@ -520,45 +520,12 @@ namespace achihapi.Controllers
                         return BadRequest(exp.Message);
                     }
 
-                    // Workout the delta
-                    //var diffs = FinanceDocumentUIViewModel.WorkoutDeltaForUpdate(vmOld, vm);
+                    // Existed Tags
+                    
 
-                    //// Generate the SQL strings
-                    //List<String> listRealSqls = new List<string>();
-                    //List<String> listHeaderSqls = new List<string>();
-                    //foreach(var diff in diffs)
-                    //{
-                    //    if (!diff.Key.StartsWith("Items"))
-                    //    {
-                    //        if (diff.Value is DateTime)
-                    //            listHeaderSqls.Add(" [" + diff.Key.ToString() + "] = " + ((DateTime)diff.Value).ToString("YYYY-MM-SS"));
-                    //        else
-                    //            listHeaderSqls.Add(" [" + diff.Key.ToString() + "] = " + diff.Value.ToString());
-                    //    }
-                    //    else
-                    //    {
-                    //        Int32 itemid = Int32.Parse(diff.Key.Substring(5));
-                    //        if (diff.Value == null)
-                    //        {
-                    //            // Delete
-                    //            listRealSqls.Add(@"DELETE [dbo].[t_fin_document_item] WHERE [DOCID] = " + id.ToString() + " AND [ITEMID] = " + itemid.ToString());
-                    //        }
-                    //        else if (diff.Value is FinanceDocumentItemUIViewModel)
-                    //        {
-                    //            // Insert
-                    //            listRealSqls.Add((diff.Value as FinanceDocumentItemUIViewModel).GetDocItemInsertString());
-                    //        }
-                    //        else if (diff.Value is Dictionary<String, Object>)
-                    //        {
-                    //            // Update
-                    //        }
-                    //    }
-                    //}
-                    //if (listHeaderSqls.Count > 0)
-                    //{
-                    //    listRealSqls.Add(@"UPDATE [dbo].[t_fin_document]
-                    //                   SET " +  string.Join(",", listHeaderSqls) + " WHERE [ID] = " + id.ToString());
-                    //}
+                    // Workout the delta
+                    var headerSql = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(vmOld, vm);
+                    var itemSqls = FinanceDocumentUIViewModel.WorkoutDeltaForItemUpdateSqlString(vmOld, vm);
 
                     // Start the DB update
                     tran = conn.BeginTransaction();
@@ -957,7 +924,7 @@ namespace achihapi.Controllers
         }
 
         // Read the doc
-        public static void ReadFinanceDocument(Int32 docid, Int32 hid, SqlConnection conn, FinanceDocumentUIViewModel vm)
+        internal static void ReadFinanceDocument(Int32 docid, Int32 hid, SqlConnection conn, FinanceDocumentUIViewModel vm)
         {
             var queryString = HIHDBUtility.getFinanceDocQueryString(docid, hid);
 
@@ -1026,6 +993,7 @@ namespace achihapi.Controllers
                 }
             }
         }
+
 
         // Checks
         internal static async Task FinanceDocumentBasicCheckAsync(FinanceDocumentUIViewModel vm)

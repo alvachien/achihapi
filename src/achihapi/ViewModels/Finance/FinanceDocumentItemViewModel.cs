@@ -162,11 +162,63 @@ namespace achihapi.ViewModels
                             dictDelta.Add(item.Name, newValue);
                     }
                 }
+                else
+                {
+                    // TagTerms
+                    if (oldItem.TagTerms.Count == 0 && newItem.TagTerms.Count > 0)
+                    {
+                        // Just add the new tags
+                        dictDelta.Add(item.Name, newItem.TagTerms);
+                    }
+                    else if(oldItem.TagTerms.Count > 0 && newItem.TagTerms.Count == 0)
+                    {
+                        // Just delete the existing tags
+                        dictDelta.Add(item.Name, null);
+                    }
+                    else if(oldItem.TagTerms.Count > 0 && newItem.TagTerms.Count > 0)
+                    {
+                        Dictionary<String, Int32> tagids = new Dictionary<String, Int32>();
+                        oldItem.TagTerms.ForEach(o => tagids.Add(o, 1));
+                        newItem.TagTerms.ForEach(o =>
+                        {
+                            if (tagids.ContainsKey(o))
+                                tagids[o] = 2;
+                            else
+                                tagids.Add(o, 3);
+                        });
+
+                        Dictionary<String, Object> dictTagDelta = new Dictionary<string, Object>();
+                        List<String> listDeletes = new List<string>();
+                        List<String> listInserts = new List<string>();
+                        foreach(var tagid in tagids)
+                        {
+                            if (tagid.Value == 1)
+                            {
+                                // Need be delete
+                                listDeletes.Add(tagid.Key);
+                            }
+                            else if(tagid.Value == 3)
+                            {
+                                // Need be insert
+                                listInserts.Add(tagid.Key);
+                            }
+                        }
+
+                        if (listInserts.Count > 0 || listDeletes.Count > 0)
+                        {
+                            if (listDeletes.Count > 0)
+                                dictTagDelta.Add("DELETE", listDeletes);
+                            if (listInserts.Count > 0)
+                                dictTagDelta.Add("INSERT", listInserts);
+                            dictDelta.Add(item.Name, dictTagDelta);
+                        }
+                    }
+                }
             }
 
             return dictDelta;
         }
-        public static String WorkoutDeltaUpdateSqlStrings(FinanceDocumentItemUIViewModel oldItem, FinanceDocumentItemUIViewModel newItem)
+        public static String WorkoutDeltaUpdateSqlStrings(FinanceDocumentItemUIViewModel oldItem, FinanceDocumentItemUIViewModel newItem, Int32 hid)
         {
             String strSqls = "";
 
@@ -175,23 +227,84 @@ namespace achihapi.ViewModels
 
             foreach (var diff in diffs)
             {
-                if (diff.Value is DateTime)
-                    listSqls.Add(" [" + diff.Key.ToString() + "] = " + ((DateTime)diff.Value).ToString("YYYY-MM-SS"));
-                else if (diff.Value is Boolean)
-                    listSqls.Add(" [" + diff.Key.ToString() + "] = " + (((Boolean)diff.Value) ? "1" : "0"));
-                else if (diff.Value is String)
-                    listSqls.Add(" [" + diff.Key.ToString() + "] = N'" + diff.Value + "'");
-                else if (diff.Value is Int32)
+                if (diff.Key != "TagTerms")
                 {
-                    if ((diff.Key == "ControlCenterID" || diff.Key == "OrderID") && (Int32)diff.Value == 0)
+                    if (diff.Value is DateTime)
+                        listSqls.Add(" [" + diff.Key.ToString() + "] = " + ((DateTime)diff.Value).ToString("YYYY-MM-SS"));
+                    else if (diff.Value is Boolean)
+                        listSqls.Add(" [" + diff.Key.ToString() + "] = " + (((Boolean)diff.Value) ? "1" : "0"));
+                    else if (diff.Value is String)
+                        listSqls.Add(" [" + diff.Key.ToString() + "] = N'" + diff.Value + "'");
+                    else if (diff.Value is Int32)
                     {
-                        listSqls.Add(" [" + diff.Key.ToString() + "] = NULL");
+                        if ((diff.Key == "ControlCenterID" || diff.Key == "OrderID") && (Int32)diff.Value == 0)
+                        {
+                            listSqls.Add(" [" + diff.Key.ToString() + "] = NULL");
+                        }
+                        else
+                            listSqls.Add(" [" + diff.Key.ToString() + "] = " + diff.Value.ToString());
                     }
                     else
                         listSqls.Add(" [" + diff.Key.ToString() + "] = " + diff.Value.ToString());
-                }
+                } 
                 else
-                    listSqls.Add(" [" + diff.Key.ToString() + "] = " + diff.Value.ToString());
+                {
+                    if (diff.Value == null)
+                    {
+                        // Delete
+                        listSqls.Add(@"DELETE FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString()
+                            + " AND [TagType] = " + ((Int32)(HIHTagTypeEnum.FinanceDocumentItem)).ToString()
+                            + " AND [TagID] = " + oldItem.DocID.ToString()
+                            + " AND [TagSubID] = " + oldItem.ItemID.ToString());
+                    }
+                    else if (diff.Value is List<String>)
+                    {
+                        // Insert
+                        foreach(var term in (List<String>)diff.Value)
+                        {
+                            listSqls.Add(@"INSERT INTO [dbo].[t_tag] ([HID],[TagType],[TagID],[TagSubID],[Term]) VALUES ("
+                                + string.Join(",", new string[] {
+                                    hid.ToString(),
+                                    ((Int32)(HIHTagTypeEnum.FinanceDocumentItem)).ToString(),
+                                    oldItem.DocID.ToString(),
+                                    oldItem.ItemID.ToString(),
+                                    "N'" + term + "'"})
+                                + ")");
+                        }
+                    }
+                    else
+                    {
+                        var dictStrs = (Dictionary<String, List<String>>)diff.Value;
+                        foreach (var dictstr in dictStrs)
+                        {
+                            if (dictstr.Key == "Delete")
+                            {
+                                foreach(var term in dictstr.Value)
+                                {
+                                    listSqls.Add(@"DELETE FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString()
+                                        + " AND [TagType] = " + ((Int32)(HIHTagTypeEnum.FinanceDocumentItem)).ToString()
+                                        + " AND [TagID] = " + oldItem.DocID.ToString()
+                                        + " AND [TagSubID] = " + oldItem.ItemID.ToString()
+                                        + " AND [Term] = N'" + term + "')");
+                                }
+                            }
+                            else if (dictstr.Key == "Insert")
+                            {
+                                foreach (var term in dictstr.Value)
+                                {
+                                    listSqls.Add(@"INSERT INTO [dbo].[t_tag] ([HID],[TagType],[TagID],[TagSubID],[Term]) VALUES ("
+                                        + string.Join(",", new string[] {
+                                                hid.ToString(),
+                                                ((Int32)(HIHTagTypeEnum.FinanceDocumentItem)).ToString(),
+                                                oldItem.DocID.ToString(),
+                                                oldItem.ItemID.ToString(),
+                                                "N'" + term + "'"})
+                                        + ")");
+                                }
+                            }
+                        }
+                    }
+                }
             }
             if (listSqls.Count > 0)
             {

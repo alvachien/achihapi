@@ -230,14 +230,32 @@ namespace achihapi.ViewModels
             foreach(var diff in diffs)
             {
                 if (diff.Value == null)
-                    listItemSqls.Add(@"DELETE [dbo].[t_fin_document_item] WHERE [DOCID] = " + oldDoc.ID.ToString() + " AND [ITEMID] = " + diff.Key.ToString());
+                {
+                    var oitem = oldDoc.Items.Find(o => o.ItemID == diff.Key);
+                    listItemSqls.Add(@"DELETE FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + oldDoc.ID.ToString() + " AND [ITEMID] = " + diff.Key.ToString());
+                    // If there are tags, need delete them too
+                    if (oitem.TagTerms.Count > 0)
+                    {
+                        listItemSqls.Add(@"DELETE FROM [dbo].[t_tag] WHERE [HID] = " + oldDoc.HID.ToString() 
+                            + " AND [TagType] = " + ((Int32)(HIHTagTypeEnum.FinanceDocumentItem)).ToString()
+                            + " AND [TagID] = " + oldDoc.ID.ToString()
+                            + " AND [TagSubID] = " + diff.Key.ToString());
+                    }
+                }
                 else if (diff.Value is FinanceDocumentItemUIViewModel)
+                {
                     listItemSqls.Add((diff.Value as FinanceDocumentItemUIViewModel).GetDocItemInsertString());
+                    // Tags
+                    if ((diff.Value as FinanceDocumentItemUIViewModel).TagTerms.Count > 0)
+                    {
+                        listItemSqls.AddRange((diff.Value as FinanceDocumentItemUIViewModel).GetDocItemTagInsertString(oldDoc.HID));
+                    }
+                }
                 else
                 {
                     // listItemSqls
                     listItemSqls.Add(FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(oldDoc.Items.Find(o => o.ItemID == diff.Key),
-                        newDoc.Items.Find(o => o.ItemID == diff.Key)));
+                        newDoc.Items.Find(o => o.ItemID == diff.Key), oldDoc.HID));
                 }
             }
             return listItemSqls;

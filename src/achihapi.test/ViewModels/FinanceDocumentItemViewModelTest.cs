@@ -123,7 +123,7 @@ namespace achihapi.test.ViewModels
             item2.TranAmount = 100;
             item2.TranType = 9;
 
-            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2);
+            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2, 2);
             Assert.IsTrue(rst.Length > 0);
             Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET  [Desp] = N'Item 2' WHERE [DocID] = 1 AND [ItemID] = 1", rst);
         }
@@ -177,7 +177,7 @@ namespace achihapi.test.ViewModels
             item2.ItemID = 1;
             item2.TranAmount = 100;
 
-            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2);
+            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2, 2);
             Assert.IsTrue(rst.Length > 0);
             Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET  [TranType] = 3 WHERE [DocID] = 1 AND [ItemID] = 1", rst);
         }
@@ -232,7 +232,7 @@ namespace achihapi.test.ViewModels
             item2.TranAmount = 100;
             item2.TranType = 9;
 
-            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2);
+            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2, 2);
             Assert.IsTrue(rst.Length > 0);
             Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET  [AccountID] = 3 WHERE [DocID] = 1 AND [ItemID] = 1", rst);
         }
@@ -288,7 +288,7 @@ namespace achihapi.test.ViewModels
             item2.TranAmount = 200.1M;
             item2.TranType = 9;
 
-            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2);
+            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2, 2);
             Assert.IsTrue(rst.Length > 0);
             Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET  [AccountID] = 3, [Desp] = N'Item 2', [TranAmount] = 200.1 WHERE [DocID] = 1 AND [ItemID] = 1", rst);
         }
@@ -342,7 +342,7 @@ namespace achihapi.test.ViewModels
             item2.TranAmount = 100;
             item2.TranType = 9;
 
-            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2);
+            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2, 2);
             Assert.IsTrue(rst.Length > 0);
             Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET  [ControlCenterID] = 2, [Desp] = N'Item 2' WHERE [DocID] = 1 AND [ItemID] = 1", rst);
         }
@@ -399,7 +399,7 @@ namespace achihapi.test.ViewModels
             item2.TranAmount = 100;
             item2.TranType = 9;
 
-            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2);
+            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2, 2);
             Assert.IsTrue(rst.Length > 0);
             Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET  [ControlCenterID] = NULL, [Desp] = N'Item 2', [OrderID] = 1 WHERE [DocID] = 1 AND [ItemID] = 1", rst);
         }
@@ -428,6 +428,101 @@ namespace achihapi.test.ViewModels
             Assert.AreEqual(1, rst.Count);
             Assert.IsTrue(rst.ContainsKey("UseCurr2"));
             Assert.IsTrue((Boolean)rst["UseCurr2"]);
+        }
+
+        [TestMethod]
+        public void DeltaUpdate_InsertTags()
+        {
+            var item1 = new FinanceDocumentItemUIViewModel();
+            item1.DocID = 1;
+            item1.AccountID = 2;
+            item1.ControlCenterID = 3;
+            item1.Desp = "Item 1";
+            item1.ItemID = 1;
+            item1.TranAmount = 100;
+
+            var item2 = new FinanceDocumentItemUIViewModel();
+            item2.DocID = 1;
+            item2.AccountID = 2;
+            item2.ControlCenterID = 3;
+            item2.Desp = "Item 1";
+            item2.ItemID = 1;
+            item2.TranAmount = 100;
+            item2.TagTerms.Add("test1");
+            item2.TagTerms.Add("test2");
+
+            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdate(item1, item2);
+            Assert.AreEqual(1, rst.Count);
+            Assert.IsTrue(rst.ContainsKey("TagTerms"));
+            Assert.IsTrue(rst["TagTerms"] is List<String>);
+            Assert.IsTrue(((List<String>)rst["TagTerms"]).Count == 2);
+            Assert.IsTrue(((List<String>)rst["TagTerms"]).Find(o => o == "test1") != null);
+            Assert.IsTrue(((List<String>)rst["TagTerms"]).Find(o => o == "test2") != null);
+        }
+
+        [TestMethod]
+        public void DeltaUpdate_DeleteTags()
+        {
+            var item1 = new FinanceDocumentItemUIViewModel();
+            item1.DocID = 1;
+            item1.AccountID = 2;
+            item1.ControlCenterID = 3;
+            item1.Desp = "Item 1";
+            item1.ItemID = 1;
+            item1.TranAmount = 100;
+            item1.TagTerms.Add("test1");
+            item1.TagTerms.Add("test2");
+
+            var item2 = new FinanceDocumentItemUIViewModel();
+            item2.DocID = 1;
+            item2.AccountID = 2;
+            item2.ControlCenterID = 3;
+            item2.Desp = "Item 1";
+            item2.ItemID = 1;
+            item2.TranAmount = 100;
+
+            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdate(item1, item2);
+            Assert.AreEqual(1, rst.Count);
+            Assert.IsTrue(rst.ContainsKey("TagTerms"));
+            Assert.IsTrue(rst["TagTerms"] == null);
+        }
+
+        [TestMethod]
+        public void DeltaUpdate_UpdateTags()
+        {
+            var item1 = new FinanceDocumentItemUIViewModel();
+            item1.DocID = 1;
+            item1.AccountID = 2;
+            item1.ControlCenterID = 3;
+            item1.Desp = "Item 1";
+            item1.ItemID = 1;
+            item1.TranAmount = 100;
+            item1.TagTerms.Add("test1");
+
+            var item2 = new FinanceDocumentItemUIViewModel();
+            item2.DocID = 1;
+            item2.AccountID = 2;
+            item2.ControlCenterID = 3;
+            item2.Desp = "Item 1";
+            item2.ItemID = 1;
+            item2.TranAmount = 100;
+            item2.TagTerms.Add("test2");
+
+            var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdate(item1, item2);
+            Assert.AreEqual(1, rst.Count);
+            Assert.IsTrue(rst.ContainsKey("TagTerms"));
+            Assert.IsTrue(rst["TagTerms"] is Dictionary<String, Object>);
+            var termRst = (Dictionary<String, Object>)rst["TagTerms"];
+            Assert.IsTrue(termRst.Count == 2);
+            Assert.IsTrue(termRst.ContainsKey("DELETE"));
+            Assert.IsTrue(termRst.ContainsKey("INSERT"));
+            Assert.IsTrue(termRst["DELETE"] is List<String>);
+            var subRst = (List<String>)termRst["DELETE"];
+            Assert.IsTrue(subRst.Count == 1);
+            Assert.IsTrue(subRst[0] == "test1");
+            subRst = (List<String>)termRst["INSERT"];
+            Assert.IsTrue(subRst.Count == 1);
+            Assert.IsTrue(subRst[0] == "test2");
         }
 
         [TestMethod]
