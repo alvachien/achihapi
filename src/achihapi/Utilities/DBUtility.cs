@@ -2774,7 +2774,7 @@ namespace achihapi.Utilities
             // 1. HID
             vm.HID = reader.GetInt32(idx++);
             // 2. PTYPE
-            vm.PlanType = (FinancePlanTypeEnum)reader.GetInt16(idx++);
+            vm.PlanType = (FinancePlanTypeEnum)reader.GetByte(idx++);
             // 3. Account ID
             if (!reader.IsDBNull(idx))
             {

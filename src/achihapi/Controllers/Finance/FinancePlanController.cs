@@ -314,7 +314,6 @@ namespace achihapi.Controllers
             Int32 nNewPlanID = -1;
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
-            HomeDefViewModel vmHome = null;
 
             try
             {
@@ -349,6 +348,7 @@ namespace achihapi.Controllers
                         else
                         {
                             // Check the status
+                            await reader.ReadAsync();
                             if (!reader.IsDBNull(1))
                             {
                                 FinanceAccountStatus nAccountStatus = (FinanceAccountStatus)reader.GetByte(1);
