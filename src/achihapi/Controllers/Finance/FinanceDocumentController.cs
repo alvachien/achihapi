@@ -478,7 +478,6 @@ namespace achihapi.Controllers
             SqlCommand cmd = null;
             SqlDataReader reader = null;
             SqlTransaction tran = null;
-            String queryString = "";
             String strErrMsg = "";
             HttpStatusCode errorCode = HttpStatusCode.OK;
 
@@ -520,78 +519,34 @@ namespace achihapi.Controllers
                         return BadRequest(exp.Message);
                     }
 
-                    // Existed Tags
-                    
-
                     // Workout the delta
                     var headerSql = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(vmOld, vm);
                     var itemSqls = FinanceDocumentUIViewModel.WorkoutDeltaForItemUpdateSqlString(vmOld, vm);
+                    System.Diagnostics.Debug.WriteLine(headerSql);
+                    foreach(var linesql in itemSqls)
+                    {
+                        System.Diagnostics.Debug.WriteLine(linesql);
+                    }
 
                     // Start the DB update
                     tran = conn.BeginTransaction();
 
-                    // Now go ahead for the updating
-                    queryString = HIHDBUtility.GetFinDocHeaderUpdateString();
-
-                    cmd = new SqlCommand(queryString, conn)
-                    {
-                        Transaction = tran
-                    };
-
-                    // Step 1, Update Header
-                    HIHDBUtility.BindFinDocHeaderUpdateParameter(cmd, vm, usrName);
-                    await cmd.ExecuteNonQueryAsync();
-
-                    // Step 2, Delete all items
-                    queryString = @"DELETE FROM [dbo].[t_fin_document_item] WHERE [DOCID] = " + id.ToString();
-                    cmd = new SqlCommand(queryString, conn, tran);
+                    // Now go ahead for the header updating
+                    cmd = new SqlCommand(headerSql, conn, tran);
                     await cmd.ExecuteNonQueryAsync();
                     cmd.Dispose();
                     cmd = null;
 
-                    // Step 3 , Re-create the items
-                    foreach (FinanceDocumentItemUIViewModel ivm in vm.Items)
+                    // Then line tems updating
+                    foreach (var isql in itemSqls)
                     {
-                        queryString = HIHDBUtility.GetFinDocItemInsertString();
-
-                        cmd = new SqlCommand(queryString, conn)
-                        {
-                            Transaction = tran
-                        };
-                        HIHDBUtility.BindFinDocItemInsertParameter(cmd, ivm, vm.ID);
-
-                        await cmd.ExecuteNonQueryAsync();
-
-                        cmd.Dispose();
-                        cmd = null;
-
-                        // Delete tag if exist
-                        queryString = HIHDBUtility.GetTagDeleteString(true);
-                        cmd = new SqlCommand(queryString, conn, tran);
-                        HIHDBUtility.BindTagDeleteParameter(cmd, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, vm.ID, ivm.ItemID);
+                        cmd = new SqlCommand(isql, conn, tran);
                         await cmd.ExecuteNonQueryAsync();
                         cmd.Dispose();
                         cmd = null;
-
-                        // Tags
-                        if (ivm.TagTerms.Count > 0)
-                        {
-                            // Create tags
-                            foreach (var term in ivm.TagTerms)
-                            {
-                                queryString = HIHDBUtility.GetTagInsertString();
-
-                                cmd = new SqlCommand(queryString, conn, tran);
-                                HIHDBUtility.BindTagInsertParameter(cmd, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, vm.ID, term, ivm.ItemID);
-
-                                await cmd.ExecuteNonQueryAsync();
-
-                                cmd.Dispose();
-                                cmd = null;
-                            }
-                        }
                     }
 
+                    // Commit it
                     tran.Commit();
                 }
             }

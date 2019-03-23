@@ -124,8 +124,8 @@ namespace achihapi.test.ViewModels
             item2.TranType = 9;
 
             var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2, 2);
-            Assert.IsTrue(rst.Length > 0);
-            Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET  [Desp] = N'Item 2' WHERE [DocID] = 1 AND [ItemID] = 1", rst);
+            Assert.IsTrue(rst.Count == 1);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET [Desp] = N'Item 2' WHERE [DocID] = 1 AND [ItemID] = 1", rst[0]);
         }
 
 
@@ -178,8 +178,8 @@ namespace achihapi.test.ViewModels
             item2.TranAmount = 100;
 
             var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2, 2);
-            Assert.IsTrue(rst.Length > 0);
-            Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET  [TranType] = 3 WHERE [DocID] = 1 AND [ItemID] = 1", rst);
+            Assert.IsTrue(rst.Count == 1);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET [TranType] = 3 WHERE [DocID] = 1 AND [ItemID] = 1", rst[0]);
         }
 
         [TestMethod]
@@ -233,8 +233,8 @@ namespace achihapi.test.ViewModels
             item2.TranType = 9;
 
             var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2, 2);
-            Assert.IsTrue(rst.Length > 0);
-            Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET  [AccountID] = 3 WHERE [DocID] = 1 AND [ItemID] = 1", rst);
+            Assert.IsTrue(rst.Count == 1);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET [AccountID] = 3 WHERE [DocID] = 1 AND [ItemID] = 1", rst[0]);
         }
 
         [TestMethod]
@@ -289,8 +289,8 @@ namespace achihapi.test.ViewModels
             item2.TranType = 9;
 
             var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2, 2);
-            Assert.IsTrue(rst.Length > 0);
-            Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET  [AccountID] = 3, [Desp] = N'Item 2', [TranAmount] = 200.1 WHERE [DocID] = 1 AND [ItemID] = 1", rst);
+            Assert.IsTrue(rst.Count == 1);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET [AccountID] = 3, [Desp] = N'Item 2', [TranAmount] = 200.1 WHERE [DocID] = 1 AND [ItemID] = 1", rst[0]);
         }
 
         [TestMethod]
@@ -343,8 +343,8 @@ namespace achihapi.test.ViewModels
             item2.TranType = 9;
 
             var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2, 2);
-            Assert.IsTrue(rst.Length > 0);
-            Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET  [ControlCenterID] = 2, [Desp] = N'Item 2' WHERE [DocID] = 1 AND [ItemID] = 1", rst);
+            Assert.IsTrue(rst.Count == 1);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET [ControlCenterID] = 2, [Desp] = N'Item 2' WHERE [DocID] = 1 AND [ItemID] = 1", rst[0]);
         }
 
         [TestMethod]
@@ -400,8 +400,8 @@ namespace achihapi.test.ViewModels
             item2.TranType = 9;
 
             var rst = FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(item1, item2, 2);
-            Assert.IsTrue(rst.Length > 0);
-            Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET  [ControlCenterID] = NULL, [Desp] = N'Item 2', [OrderID] = 1 WHERE [DocID] = 1 AND [ItemID] = 1", rst);
+            Assert.IsTrue(rst.Count == 1);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_document_item] SET [ControlCenterID] = NULL, [Desp] = N'Item 2', [OrderID] = 1 WHERE [DocID] = 1 AND [ItemID] = 1", rst[0]);
         }
 
         [TestMethod]
@@ -514,13 +514,13 @@ namespace achihapi.test.ViewModels
             Assert.IsTrue(rst["TagTerms"] is Dictionary<String, Object>);
             var termRst = (Dictionary<String, Object>)rst["TagTerms"];
             Assert.IsTrue(termRst.Count == 2);
-            Assert.IsTrue(termRst.ContainsKey("DELETE"));
-            Assert.IsTrue(termRst.ContainsKey("INSERT"));
-            Assert.IsTrue(termRst["DELETE"] is List<String>);
-            var subRst = (List<String>)termRst["DELETE"];
+            Assert.IsTrue(termRst.ContainsKey("D"));
+            Assert.IsTrue(termRst.ContainsKey("I"));
+            Assert.IsTrue(termRst["D"] is List<String>);
+            var subRst = (List<String>)termRst["D"];
             Assert.IsTrue(subRst.Count == 1);
             Assert.IsTrue(subRst[0] == "test1");
-            subRst = (List<String>)termRst["INSERT"];
+            subRst = (List<String>)termRst["I"];
             Assert.IsTrue(subRst.Count == 1);
             Assert.IsTrue(subRst[0] == "test2");
         }

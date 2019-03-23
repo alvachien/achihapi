@@ -254,7 +254,7 @@ namespace achihapi.ViewModels
                 else
                 {
                     // listItemSqls
-                    listItemSqls.Add(FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(oldDoc.Items.Find(o => o.ItemID == diff.Key),
+                    listItemSqls.AddRange(FinanceDocumentItemUIViewModel.WorkoutDeltaUpdateSqlStrings(oldDoc.Items.Find(o => o.ItemID == diff.Key),
                         newDoc.Items.Find(o => o.ItemID == diff.Key), oldDoc.HID));
                 }
             }

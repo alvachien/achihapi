@@ -1040,7 +1040,7 @@ namespace achihapi.test.ViewModels
 
             var rst = FinanceDocumentUIViewModel.WorkoutDeltaForItemUpdateSqlString(doc1, doc2);
             Assert.AreEqual(3, rst.Count);
-            Assert.IsTrue(rst[0].StartsWith("UPDATE"));
+            Assert.IsTrue(rst[2].StartsWith("UPDATE"));
         }
     }
 }

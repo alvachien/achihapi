@@ -207,9 +207,9 @@ namespace achihapi.ViewModels
                         if (listInserts.Count > 0 || listDeletes.Count > 0)
                         {
                             if (listDeletes.Count > 0)
-                                dictTagDelta.Add("DELETE", listDeletes);
+                                dictTagDelta.Add("D", listDeletes);
                             if (listInserts.Count > 0)
-                                dictTagDelta.Add("INSERT", listInserts);
+                                dictTagDelta.Add("I", listInserts);
                             dictDelta.Add(item.Name, dictTagDelta);
                         }
                     }
@@ -218,11 +218,10 @@ namespace achihapi.ViewModels
 
             return dictDelta;
         }
-        public static String WorkoutDeltaUpdateSqlStrings(FinanceDocumentItemUIViewModel oldItem, FinanceDocumentItemUIViewModel newItem, Int32 hid)
+        public static List<String> WorkoutDeltaUpdateSqlStrings(FinanceDocumentItemUIViewModel oldItem, FinanceDocumentItemUIViewModel newItem, Int32 hid)
         {
-            String strSqls = "";
-
-            List<String> listSqls = new List<string>();
+            List<String> listRst = new List<string>();
+            List<String> listProp = new List<string>();
             var diffs = WorkoutDeltaUpdate(oldItem, newItem);
 
             foreach (var diff in diffs)
@@ -230,29 +229,29 @@ namespace achihapi.ViewModels
                 if (diff.Key != "TagTerms")
                 {
                     if (diff.Value is DateTime)
-                        listSqls.Add(" [" + diff.Key.ToString() + "] = " + ((DateTime)diff.Value).ToString("YYYY-MM-SS"));
+                        listProp.Add("[" + diff.Key.ToString() + "] = " + ((DateTime)diff.Value).ToString("YYYY-MM-SS"));
                     else if (diff.Value is Boolean)
-                        listSqls.Add(" [" + diff.Key.ToString() + "] = " + (((Boolean)diff.Value) ? "1" : "0"));
+                        listProp.Add("[" + diff.Key.ToString() + "] = " + (((Boolean)diff.Value) ? "1" : "0"));
                     else if (diff.Value is String)
-                        listSqls.Add(" [" + diff.Key.ToString() + "] = N'" + diff.Value + "'");
+                        listProp.Add("[" + diff.Key.ToString() + "] = N'" + diff.Value + "'");
                     else if (diff.Value is Int32)
                     {
                         if ((diff.Key == "ControlCenterID" || diff.Key == "OrderID") && (Int32)diff.Value == 0)
                         {
-                            listSqls.Add(" [" + diff.Key.ToString() + "] = NULL");
+                            listProp.Add("[" + diff.Key.ToString() + "] = NULL");
                         }
                         else
-                            listSqls.Add(" [" + diff.Key.ToString() + "] = " + diff.Value.ToString());
+                            listProp.Add("[" + diff.Key.ToString() + "] = " + diff.Value.ToString());
                     }
                     else
-                        listSqls.Add(" [" + diff.Key.ToString() + "] = " + diff.Value.ToString());
+                        listProp.Add("[" + diff.Key.ToString() + "] = " + diff.Value.ToString());
                 } 
                 else
                 {
                     if (diff.Value == null)
                     {
                         // Delete
-                        listSqls.Add(@"DELETE FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString()
+                        listRst.Add(@"DELETE FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString()
                             + " AND [TagType] = " + ((Int32)(HIHTagTypeEnum.FinanceDocumentItem)).ToString()
                             + " AND [TagID] = " + oldItem.DocID.ToString()
                             + " AND [TagSubID] = " + oldItem.ItemID.ToString());
@@ -262,7 +261,7 @@ namespace achihapi.ViewModels
                         // Insert
                         foreach(var term in (List<String>)diff.Value)
                         {
-                            listSqls.Add(@"INSERT INTO [dbo].[t_tag] ([HID],[TagType],[TagID],[TagSubID],[Term]) VALUES ("
+                            listRst.Add(@"INSERT INTO [dbo].[t_tag] ([HID],[TagType],[TagID],[TagSubID],[Term]) VALUES ("
                                 + string.Join(",", new string[] {
                                     hid.ToString(),
                                     ((Int32)(HIHTagTypeEnum.FinanceDocumentItem)).ToString(),
@@ -274,25 +273,27 @@ namespace achihapi.ViewModels
                     }
                     else
                     {
-                        var dictStrs = (Dictionary<String, List<String>>)diff.Value;
+                        var dictStrs = (Dictionary<String,Object>)diff.Value;
                         foreach (var dictstr in dictStrs)
                         {
-                            if (dictstr.Key == "Delete")
+                            if (dictstr.Key == "D")
                             {
-                                foreach(var term in dictstr.Value)
+                                var listterms = (List<String>)dictstr.Value;
+                                foreach(var term in listterms)
                                 {
-                                    listSqls.Add(@"DELETE FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString()
+                                    listRst.Add(@"DELETE FROM [dbo].[t_tag] WHERE [HID] = " + hid.ToString()
                                         + " AND [TagType] = " + ((Int32)(HIHTagTypeEnum.FinanceDocumentItem)).ToString()
                                         + " AND [TagID] = " + oldItem.DocID.ToString()
                                         + " AND [TagSubID] = " + oldItem.ItemID.ToString()
                                         + " AND [Term] = N'" + term + "')");
                                 }
                             }
-                            else if (dictstr.Key == "Insert")
+                            else if (dictstr.Key == "I")
                             {
-                                foreach (var term in dictstr.Value)
+                                var listterms = (List<String>)dictstr.Value;
+                                foreach (var term in listterms)
                                 {
-                                    listSqls.Add(@"INSERT INTO [dbo].[t_tag] ([HID],[TagType],[TagID],[TagSubID],[Term]) VALUES ("
+                                    listRst.Add(@"INSERT INTO [dbo].[t_tag] ([HID],[TagType],[TagID],[TagSubID],[Term]) VALUES ("
                                         + string.Join(",", new string[] {
                                                 hid.ToString(),
                                                 ((Int32)(HIHTagTypeEnum.FinanceDocumentItem)).ToString(),
@@ -306,13 +307,13 @@ namespace achihapi.ViewModels
                     }
                 }
             }
-            if (listSqls.Count > 0)
+            if (listProp.Count > 0)
             {
-                strSqls = @"UPDATE [dbo].[t_fin_document_item] SET " + string.Join(",", listSqls) 
-                    + " WHERE [DocID] = " + oldItem.DocID.ToString() + " AND [ItemID] = " + oldItem.ItemID.ToString();
+                listRst.Add(@"UPDATE [dbo].[t_fin_document_item] SET " + string.Join(", ", listProp) 
+                    + " WHERE [DocID] = " + oldItem.DocID.ToString() + " AND [ItemID] = " + oldItem.ItemID.ToString());
             }
 
-            return strSqls;
+            return listRst;
         }
     }
 
