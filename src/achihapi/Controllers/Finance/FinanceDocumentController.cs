@@ -519,6 +519,70 @@ namespace achihapi.Controllers
                         return BadRequest(exp.Message);
                     }
 
+                    // Perform the check!
+                    if (vmOld.ID != vm.ID || vmOld.HID != vm.HID || vmOld.DocType != vm.DocType)
+                    {
+                        return BadRequest("Doc ID/HID/Doc Type mismatched");
+                    }
+                    else
+                    {
+                        var diffHeader = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(vmOld, vm);
+                        switch (vmOld.DocType)
+                        {
+                            case FinanceDocTypeViewModel.DocType_Normal:
+                                break;
+
+                            default:
+                                {
+                                    if (diffHeader.Count > 2)
+                                    {
+                                        return BadRequest("No supported fields in header found");
+                                    }
+                                    else if (diffHeader.Count == 1)
+                                    {
+                                        if (!diffHeader.ContainsKey("Desp"))
+                                        {
+                                            return BadRequest("No supported fields in header found");
+                                        }
+                                    }
+
+                                    var diffItems = FinanceDocumentUIViewModel.WorkoutDeltaForItemUpdate(vmOld, vm);
+                                    if (diffItems.Count > 0)
+                                    {
+                                        foreach(var ditem in diffItems)
+                                        {
+                                            if (ditem.Value == null)
+                                            {
+                                                return BadRequest("No supported line item operation");
+                                            }
+                                            else if (ditem.Value is FinanceDocumentItemUIViewModel)
+                                            {
+                                                return BadRequest("No supported line item operation");
+                                            }
+                                            else
+                                            {
+                                                var diffitem = ditem.Value as Dictionary<String, Object>;
+                                                Dictionary<String, Object> dictAllowed = new Dictionary<string, object>();
+                                                dictAllowed.Add("Desp", null);
+                                                dictAllowed.Add("ControlCenterID", null);
+                                                dictAllowed.Add("OrderID", null);
+                                                dictAllowed.Add("TagTerm", null);
+                                                foreach(var dkey in diffitem.Keys)
+                                                {
+                                                    if (!dictAllowed.ContainsKey(dkey))
+                                                    {
+                                                        return BadRequest("Non supported field in line item found");
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                        }
+
+                    }
+
                     // Workout the delta
                     var headerSql = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(vmOld, vm);
                     var itemSqls = FinanceDocumentUIViewModel.WorkoutDeltaForItemUpdateSqlString(vmOld, vm);
