@@ -165,7 +165,9 @@ namespace achihapi.ViewModels
                     listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + diff.Value.ToString());
             }
 
-            return @"UPDATE [dbo].[t_fin_document] SET " + string.Join(",", listHeaderSqls) + " WHERE [ID] = " + oldDoc.ID.ToString();
+            return listHeaderSqls.Count == 0? 
+                String.Empty : 
+                (@"UPDATE [dbo].[t_fin_document] SET " + string.Join(",", listHeaderSqls) + " WHERE [ID] = " + oldDoc.ID.ToString());
         }
         public static Dictionary<Int32, Object> WorkoutDeltaForItemUpdate(FinanceDocumentUIViewModel oldDoc, FinanceDocumentUIViewModel newDoc)
         {

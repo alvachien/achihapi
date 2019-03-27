@@ -586,28 +586,29 @@ namespace achihapi.Controllers
                     // Workout the delta
                     var headerSql = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(vmOld, vm);
                     var itemSqls = FinanceDocumentUIViewModel.WorkoutDeltaForItemUpdateSqlString(vmOld, vm);
-                    System.Diagnostics.Debug.WriteLine(headerSql);
-                    foreach(var linesql in itemSqls)
-                    {
-                        System.Diagnostics.Debug.WriteLine(linesql);
-                    }
 
                     // Start the DB update
                     tran = conn.BeginTransaction();
 
                     // Now go ahead for the header updating
-                    cmd = new SqlCommand(headerSql, conn, tran);
-                    await cmd.ExecuteNonQueryAsync();
-                    cmd.Dispose();
-                    cmd = null;
+                    if (!String.IsNullOrEmpty(headerSql))
+                    {
+                        cmd = new SqlCommand(headerSql, conn, tran);
+                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Dispose();
+                        cmd = null;
+                    }
 
                     // Then line tems updating
                     foreach (var isql in itemSqls)
                     {
-                        cmd = new SqlCommand(isql, conn, tran);
-                        await cmd.ExecuteNonQueryAsync();
-                        cmd.Dispose();
-                        cmd = null;
+                        if (!String.IsNullOrEmpty(isql))
+                        {
+                            cmd = new SqlCommand(isql, conn, tran);
+                            await cmd.ExecuteNonQueryAsync();
+                            cmd.Dispose();
+                            cmd = null;
+                        }
                     }
 
                     // Commit it

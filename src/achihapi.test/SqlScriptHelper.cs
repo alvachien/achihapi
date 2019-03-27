@@ -75,11 +75,13 @@ namespace achihapi.test
             DELETE FROM [dbo].[t_fin_order] WHERE [ID] > 0;  DBCC CHECKIDENT('t_fin_order', RESEED, 1);
             ";
 
-        internal const string EventHabitController_Cleanup = @"DELETE FROM [dbo].[t_event_habit] WHERE [ID] > 0; 
+        internal const string EventHabitController_Cleanup = @"
+            DELETE FROM [dbo].[t_event_habit] WHERE [ID] > 0; 
             DBCC CHECKIDENT('t_event_habit', RESEED, 1); 
             DBCC CHECKIDENT('t_event_habit_detail', RESEED, 1);";
 
-        internal const string EventHabitCheckInController_Cleanup = @"DELETE FROM [dbo].[t_event_habit] WHERE [ID] > 0; 
+        internal const string EventHabitCheckInController_Cleanup = @"
+            DELETE FROM [dbo].[t_event_habit] WHERE [ID] > 0; 
             DELETE FROM [dbo].[t_event_habit_checkin] WHERE [ID] > 0;
             DBCC CHECKIDENT('t_event_habit', RESEED, 1); 
             DBCC CHECKIDENT('t_event_habit_detail', RESEED, 1);
