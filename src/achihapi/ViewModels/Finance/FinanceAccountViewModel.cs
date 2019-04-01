@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Reflection;
 
 namespace achihapi.ViewModels
 {
@@ -32,6 +34,94 @@ namespace achihapi.ViewModels
         public FinanceAccountExtASViewModel ExtraInfo_AS { get; set; }
         // Ext Loan
         public FinanceAccountExtLoanViewModel ExtraInfo_Loan { get; set; }
+
+        public Boolean IsValid()
+        {
+            if (String.IsNullOrEmpty(Name))
+                return false;
+            if (CtgyID <= 0)
+                return false;
+            if (CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment || CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive)
+            {
+                if (ExtraInfo_ADP == null)
+                    return false;
+                if (!ExtraInfo_ADP.IsValid())
+                    return false;
+            }
+            if (CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
+            {
+                if (ExtraInfo_AS == null)
+                    return false;
+                if (!ExtraInfo_AS.IsValid())
+                    return false;
+            }
+            if (CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom || CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
+            {
+                if (ExtraInfo_Loan == null)
+                    return false;
+                if (!ExtraInfo_Loan.IsValid())
+                    return false;
+            }
+            return true;
+        }
+
+        public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountViewModel oldAcnt, FinanceAccountViewModel newAcnt)
+        {
+            Dictionary<String, Object> dictDelta = new Dictionary<string, Object>();
+            if (oldAcnt == null || newAcnt == null || Object.ReferenceEquals(oldAcnt, newAcnt)
+                || oldAcnt.ID != newAcnt.ID || oldAcnt.HID != newAcnt.HID || oldAcnt.CtgyID != newAcnt.CtgyID)
+            {
+                throw new ArgumentException("Invalid inputted parameter Or ID/HID/Category change is not allowed");
+            }
+            if (!oldAcnt.IsValid() || !newAcnt.IsValid())
+            {
+                throw new Exception("Account is invalid");
+            }
+
+            // Header
+            Type t = typeof(FinanceAccountViewModel);
+            Type parent = typeof(BaseViewModel);
+            PropertyInfo[] parentProperties = parent.GetProperties();
+            Dictionary<String, Object> dictParentProperties = new Dictionary<string, object>();
+            foreach (var prop in parentProperties)
+                dictParentProperties.Add(prop.Name, null);
+
+            PropertyInfo[] listProperties = t.GetProperties();
+            var listSortedProperties = listProperties.OrderBy(o => o.Name);
+
+            foreach (PropertyInfo item in listSortedProperties)
+            {
+                if (dictParentProperties.ContainsKey(item.Name))
+                    continue;
+
+                if (item.Name == "ID" || item.Name == "HID" || item.Name.StartsWith("ExtraInfo_"))
+                {
+                    continue;
+                }
+
+                object oldValue = item.GetValue(oldAcnt, null);
+                object newValue = item.GetValue(newAcnt, null);
+
+                if (item.PropertyType == typeof(Decimal))
+                {
+                    if (Decimal.Compare((Decimal)oldValue, (Decimal)newValue) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else if (item.PropertyType == typeof(String))
+                {
+                    if (String.CompareOrdinal((string)oldValue, (string)newValue) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else if (item.PropertyType == typeof(DateTime))
+                {
+                    if (DateTime.Compare(((DateTime)oldValue).Date, ((DateTime)newValue).Date) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else
+                {
+                    if (!Object.Equals(oldValue, newValue))
+                        dictDelta.Add(item.Name, newValue);
+                }
+            }
+            return dictDelta;
+        }
     }
 
     public class FinanceAccountUIViewModel : FinanceAccountViewModel
@@ -42,18 +132,19 @@ namespace achihapi.ViewModels
     public abstract class FinanceAccountExtViewModel
     {
         public Int32 AccountID { get; set; }
+        public abstract bool IsValid();   
     }
 
     public enum RepeatFrequency : Byte
     {
-        Month = 0,
-        Fortnight = 1,
-        Week = 2,
-        Day = 3,
-        Quarter = 4,
-        HalfYear = 5,
-        Year = 6,
-        Manual = 7,
+        Month       = 0,
+        Fortnight   = 1,
+        Week        = 2,
+        Day         = 3,
+        Quarter     = 4,
+        HalfYear    = 5,
+        Year        = 6,
+        Manual      = 7,
     }
 
     // Account extra: advance payment
@@ -77,6 +168,17 @@ namespace achihapi.ViewModels
         {
             this.DPTmpDocs = new List<FinanceTmpDocDPViewModel>();
         }
+        public override Boolean IsValid()
+        {
+            if (EndDate.Date.CompareTo(StartDate.Date) <= 0)
+                return false;
+            if (String.IsNullOrEmpty(Comment))
+                return false;
+            if (DPTmpDocs.Count <= 0)
+                return false;
+
+            return true;
+        }
     }
 
     // Account extra: Assert
@@ -91,13 +193,29 @@ namespace achihapi.ViewModels
         [Required]
         public Int32 RefDocForBuy { get; set; }
         public Int32? RefDocForSold { get; set; }
+
+        public FinanceAccountExtASViewModel()
+        {
+        }
+
+        public override bool IsValid()
+        {
+            if (String.IsNullOrEmpty(Name))
+                return false;
+            if (RefDocForBuy <= 0)
+                return false;
+            if (CategoryID <= 0)
+                return false;
+
+            return true;
+        }
     }
 
     public enum LoanRepaymentMethod
     {
-        EqualPrincipalAndInterset = 1,  // Equal principal & interest
-        EqualPrincipal = 2,  // Equal principal
-        DueRepayment = 3  // Due repayment
+        EqualPrincipalAndInterset   = 1,  // Equal principal & interest
+        EqualPrincipal              = 2,  // Equal principal
+        DueRepayment                = 3  // Due repayment
     }
 
     // Account extra: Loan (Borrow from, or Lend to)
@@ -128,6 +246,15 @@ namespace achihapi.ViewModels
             //this.IsLendOut = false;
             this.LoanTmpDocs = new List<FinanceTmpDocLoanViewModel>();
         }
+        public override bool IsValid()
+        {
+            if (RefDocID <= 0)
+                return false;
+            if (LoanTmpDocs.Count < 0)
+                return false;
+
+            return true;
+        }
     }
 
     // Account extra: Creditcard
@@ -145,5 +272,14 @@ namespace achihapi.ViewModels
         [StringLength(100)]
         public String Others { get; set; }
         public DateTime? ValidDate { get; set; }
+
+        public FinanceAccountExtCCViewModel()
+        {
+        }
+
+        public override bool IsValid()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
