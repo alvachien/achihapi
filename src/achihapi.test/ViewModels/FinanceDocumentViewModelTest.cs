@@ -12,7 +12,7 @@ namespace achihapi.test.ViewModels
         [ExpectedException(typeof(ArgumentException))]
         public void DeltaForHeaderUpdate_NullInput()
         {
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(null, null);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(null, null, "user1");
         }
 
         [TestMethod]
@@ -36,7 +36,7 @@ namespace achihapi.test.ViewModels
             item1.TranAmount = 100;
             doc1.Items.Add(item1);
 
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc1);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc1, "user1");
         }
 
         [TestMethod]
@@ -59,7 +59,7 @@ namespace achihapi.test.ViewModels
             doc2.ID = 2;
             doc2.HID = 1;
 
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc2);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc2, "user1");
         }
 
         [TestMethod]
@@ -82,7 +82,7 @@ namespace achihapi.test.ViewModels
             doc2.ID = 1;
             doc2.HID = 2;
 
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc2);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc2, "user1");
         }
 
         [TestMethod]
@@ -105,7 +105,7 @@ namespace achihapi.test.ViewModels
             doc2.ID = 1;
             doc2.HID = 1;
 
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc2);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc2, "user1");
         }
 
         [TestMethod]
@@ -145,10 +145,11 @@ namespace achihapi.test.ViewModels
             item1.TranAmount = 100;
             doc2.Items.Add(item1);
 
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc2);
-            Assert.AreEqual(1, rst.Count);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc2, "user1");
+            Assert.AreEqual(3, rst.Count);
             Assert.IsTrue(rst.ContainsKey("Desp"));
         }
+
         [TestMethod]
         public void DeltaForHeaderUpd_Sql_Desp()
         {
@@ -186,9 +187,10 @@ namespace achihapi.test.ViewModels
             item1.TranAmount = 100;
             doc2.Items.Add(item1);
 
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(doc1, doc2);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(doc1, doc2, "user1");
+            var tday = DateTime.Today.ToString("yyyy-MM-dd");
             Assert.IsTrue(rst.Length > 0);
-            Assert.IsTrue(rst == "UPDATE [dbo].[t_fin_document] SET [Desp] = N'Test2' WHERE [ID] = 1");
+            Assert.IsTrue(rst == "UPDATE [dbo].[t_fin_document] SET [Desp] = N'Test2',[UpdatedAt] = '" + tday +"',[UpdatedBy] = N'user1' WHERE [ID] = 1");
         }
 
         [TestMethod]
@@ -228,13 +230,14 @@ namespace achihapi.test.ViewModels
             item1.TranAmount = 100;
             doc2.Items.Add(item1);
 
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc2);
-            Assert.AreEqual(2, rst.Count);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc2, "user1");
+            Assert.AreEqual(4, rst.Count);
             Assert.IsTrue(rst.ContainsKey("Desp"));
             Assert.IsTrue(String.CompareOrdinal(rst["Desp"] as String, "Test2") == 0);
             Assert.IsTrue(rst.ContainsKey("TranDate"));
             Assert.IsTrue(rst["TranDate"] is DateTime);
         }
+
         [TestMethod]
         public void DeltaForHeaderUpd_Sql_DespAndDate()
         {
@@ -272,10 +275,11 @@ namespace achihapi.test.ViewModels
             item1.TranAmount = 100;
             doc2.Items.Add(item1);
 
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(doc1, doc2);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(doc1, doc2, "user1");
             var todaystr = doc2.TranDate.ToString("yyyy-MM-dd");
+            var tday = DateTime.Today.ToString("yyyy-MM-dd");
             Assert.IsTrue(rst.Length > 0);
-            Assert.AreEqual("UPDATE [dbo].[t_fin_document] SET [Desp] = N'Test2',[TranDate] = '" + todaystr + "' WHERE [ID] = 1", rst);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_document] SET [Desp] = N'Test2',[TranDate] = '" + todaystr + "',[UpdatedAt] = '" + tday + "',[UpdatedBy] = N'user1' WHERE [ID] = 1", rst);
         }
 
         [TestMethod]
@@ -317,13 +321,14 @@ namespace achihapi.test.ViewModels
             item1.TranAmount = 100;
             doc2.Items.Add(item1);
 
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc2);
-            Assert.AreEqual(3, rst.Count);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc1, doc2, "user1");
+            Assert.AreEqual(5, rst.Count);
             Assert.IsTrue(rst.ContainsKey("TranCurr"));
             Assert.IsTrue(String.CompareOrdinal(rst["TranCurr"] as String, "USD") == 0);
             Assert.IsTrue(rst.ContainsKey("ExgRate"));
             Assert.IsTrue(rst.ContainsKey("ExgRate_Plan"));
         }
+
         [TestMethod]
         public void DeltaForHeaderUpd_Sql_CurrAndExchangeRate()
         {
@@ -363,9 +368,10 @@ namespace achihapi.test.ViewModels
             item1.TranAmount = 100;
             doc2.Items.Add(item1);
 
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(doc1, doc2);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(doc1, doc2, "user1");
+            var tday = DateTime.Today.ToString("yyyy-MM-dd");
             Assert.IsTrue(rst.Length > 0);
-            Assert.AreEqual("UPDATE [dbo].[t_fin_document] SET [ExgRate] = 645.23,[ExgRate_Plan] = 1,[TranCurr] = N'USD' WHERE [ID] = 1", rst);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_document] SET [ExgRate] = 645.23,[ExgRate_Plan] = 1,[TranCurr] = N'USD',[UpdatedAt] = '" + tday + "',[UpdatedBy] = N'user1' WHERE [ID] = 1", rst);
         }
 
         [TestMethod]
@@ -407,13 +413,14 @@ namespace achihapi.test.ViewModels
             item1.TranAmount = 100;
             doc2.Items.Add(item1);
 
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc2, doc1);
-            Assert.AreEqual(3, rst.Count);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(doc2, doc1, "user1");
+            Assert.AreEqual(5, rst.Count);
             Assert.IsTrue(rst.ContainsKey("TranCurr"));
             Assert.IsTrue(String.CompareOrdinal(rst["TranCurr"] as String, "CNY") == 0);
             Assert.IsTrue(rst.ContainsKey("ExgRate"));
             Assert.IsTrue(rst.ContainsKey("ExgRate_Plan"));
         }
+
         [TestMethod]
         public void DeltaForHeaderUpd_Sql_CurrAndExchangeRate2()
         {
@@ -453,9 +460,10 @@ namespace achihapi.test.ViewModels
             item1.TranAmount = 100;
             doc2.Items.Add(item1);
 
-            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(doc2, doc1);
+            var rst = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(doc2, doc1, "user1");
+            var tday = DateTime.Today.ToString("yyyy-MM-dd");
             Assert.IsTrue(rst.Length > 0);
-            Assert.AreEqual("UPDATE [dbo].[t_fin_document] SET [ExgRate] = NULL,[ExgRate_Plan] = NULL,[TranCurr] = N'CNY' WHERE [ID] = 1", rst);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_document] SET [ExgRate] = NULL,[ExgRate_Plan] = NULL,[TranCurr] = N'CNY',[UpdatedAt] = '" + tday + "',[UpdatedBy] = N'user1' WHERE [ID] = 1", rst);
         }
 
         [TestMethod]
@@ -509,6 +517,7 @@ namespace achihapi.test.ViewModels
             Assert.IsTrue(rst.ContainsKey(2));
             Assert.IsTrue(rst[2] is FinanceDocumentItemUIViewModel);
         }
+
         [TestMethod]
         public void DeltaUpdateForItemUpdate_AddItemWithTag()
         {
@@ -561,6 +570,7 @@ namespace achihapi.test.ViewModels
             Assert.AreEqual(1, rst.Count);
             Assert.IsTrue(rst.ContainsKey(2));
         }
+
         [TestMethod]
         public void DeltaUpdateForItemUpdate_Sql_AddItem()
         {
@@ -611,6 +621,7 @@ namespace achihapi.test.ViewModels
             Assert.AreEqual(1, rst.Count);
             Assert.IsTrue(rst[0].StartsWith("INSERT INTO"));
         }
+
         [TestMethod]
         public void DeltaUpdateForItemUpdate_Sql_AddItemWithTag()
         {

@@ -526,7 +526,7 @@ namespace achihapi.Controllers
                     }
                     else
                     {
-                        var diffHeader = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(vmOld, vm);
+                        var diffHeader = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdate(vmOld, vm, usrName);
                         switch (vmOld.DocType)
                         {
                             case FinanceDocTypeViewModel.DocType_Normal:
@@ -584,7 +584,7 @@ namespace achihapi.Controllers
                     }
 
                     // Workout the delta
-                    var headerSql = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(vmOld, vm);
+                    var headerSql = FinanceDocumentUIViewModel.WorkoutDeltaForHeaderUpdateSqlString(vmOld, vm, usrName);
                     var itemSqls = FinanceDocumentUIViewModel.WorkoutDeltaForItemUpdateSqlString(vmOld, vm);
 
                     // Start the DB update

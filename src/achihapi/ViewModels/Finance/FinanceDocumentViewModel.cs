@@ -75,7 +75,8 @@ namespace achihapi.ViewModels
             return true;
         }
 
-        public static Dictionary<String, Object> WorkoutDeltaForHeaderUpdate(FinanceDocumentUIViewModel oldDoc, FinanceDocumentUIViewModel newDoc)
+        public static Dictionary<String, Object> WorkoutDeltaForHeaderUpdate(FinanceDocumentUIViewModel oldDoc, 
+            FinanceDocumentUIViewModel newDoc, String usrName)
         {
             Dictionary<String, Object> dictDelta = new Dictionary<string, Object>();
 
@@ -126,17 +127,24 @@ namespace achihapi.ViewModels
                 {
                     if (DateTime.Compare(((DateTime)oldValue).Date, ((DateTime)newValue).Date) != 0) dictDelta.Add(item.Name, newValue);
                 }
-                else 
+                else
                 {
                     if (!Object.Equals(oldValue, newValue))
                         dictDelta.Add(item.Name, newValue);
                 }
             }
+            if (dictDelta.Count > 0)
+            {
+                dictDelta.Add("UpdatedAt", DateTime.Today);
+                dictDelta.Add("UpdatedBy", usrName);
+            }
             return dictDelta;
         }
-        public static String WorkoutDeltaForHeaderUpdateSqlString(FinanceDocumentUIViewModel oldDoc, FinanceDocumentUIViewModel newDoc)
+        public static String WorkoutDeltaForHeaderUpdateSqlString(FinanceDocumentUIViewModel oldDoc, 
+            FinanceDocumentUIViewModel newDoc,
+            String usrName)
         {
-            var diffs = WorkoutDeltaForHeaderUpdate(oldDoc, newDoc);
+            var diffs = WorkoutDeltaForHeaderUpdate(oldDoc, newDoc, usrName);
 
             List<String> listHeaderSqls = new List<string>();
             foreach (var diff in diffs)

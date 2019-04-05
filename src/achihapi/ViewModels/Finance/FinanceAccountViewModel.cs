@@ -65,7 +65,9 @@ namespace achihapi.ViewModels
             return true;
         }
 
-        public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountViewModel oldAcnt, FinanceAccountViewModel newAcnt)
+        public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountViewModel oldAcnt, 
+            FinanceAccountViewModel newAcnt,
+            String usrName)
         {
             Dictionary<String, Object> dictDelta = new Dictionary<string, Object>();
             if (oldAcnt == null || newAcnt == null || Object.ReferenceEquals(oldAcnt, newAcnt)
@@ -91,10 +93,9 @@ namespace achihapi.ViewModels
 
             foreach (PropertyInfo item in listSortedProperties)
             {
-                if (dictParentProperties.ContainsKey(item.Name))
-                    continue;
-
-                if (item.Name == "ID" || item.Name == "HID" || item.Name.StartsWith("ExtraInfo_"))
+                if (dictParentProperties.ContainsKey(item.Name) 
+                    || item.Name == "ID" || item.Name == "HID"
+                    || item.Name.StartsWith("ExtraInfo_"))
                 {
                     continue;
                 }
@@ -114,13 +115,61 @@ namespace achihapi.ViewModels
                 {
                     if (DateTime.Compare(((DateTime)oldValue).Date, ((DateTime)newValue).Date) != 0) dictDelta.Add(item.Name, newValue);
                 }
+                else if (item.PropertyType == typeof(FinanceAccountStatus))
+                {
+                    if ((FinanceAccountStatus)oldValue != (FinanceAccountStatus)newValue)
+                        dictDelta.Add(item.Name, (Byte)newValue);
+                }
                 else
                 {
                     if (!Object.Equals(oldValue, newValue))
                         dictDelta.Add(item.Name, newValue);
                 }
             }
+            if (dictDelta.Count > 0)
+            {
+                dictDelta.Add("UpdatedAt", DateTime.Today);
+                dictDelta.Add("UpdatedBy", usrName);
+            }
             return dictDelta;
+        }
+
+        public static string WorkoutDeltaStringForUpdate(FinanceAccountViewModel oldAcnt, 
+            FinanceAccountViewModel newAcnt,
+            String usrName)
+        {
+            var diffs = WorkoutDeltaForUpdate(oldAcnt, newAcnt, usrName);
+
+            List<String> listHeaderSqls = new List<string>();
+            foreach (var diff in diffs)
+            {
+                if (diff.Value is DateTime)
+                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
+                else if (diff.Value is Boolean)
+                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
+                else if (diff.Value is String)
+                {
+                    if (String.IsNullOrEmpty((string)diff.Value) && diff.Key == "TranCurr2")
+                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = NULL");
+                    else
+                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = N'" + diff.Value + "'");
+                }
+                else if (diff.Value is Decimal)
+                {
+                    if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                    {
+                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = NULL");
+                    }
+                    else
+                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + diff.Value.ToString());
+                }
+                else
+                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + diff.Value.ToString());
+            }
+
+            return listHeaderSqls.Count == 0 ?
+                String.Empty :
+                (@"UPDATE [dbo].[t_fin_account] SET " + string.Join(",", listHeaderSqls) + " WHERE [ID] = " + oldAcnt.ID.ToString());
         }
     }
 
@@ -132,7 +181,7 @@ namespace achihapi.ViewModels
     public abstract class FinanceAccountExtViewModel
     {
         public Int32 AccountID { get; set; }
-        public abstract bool IsValid();   
+        public abstract bool IsValid();
     }
 
     public enum RepeatFrequency : Byte
@@ -179,6 +228,49 @@ namespace achihapi.ViewModels
 
             return true;
         }
+        public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountExtDPViewModel oldAcnt,
+            FinanceAccountExtDPViewModel newAcnt)
+        {
+            Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
+
+            Type t = typeof(FinanceAccountExtDPViewModel);
+            PropertyInfo[] listProperties = t.GetProperties();
+            var listSortedProperties = listProperties.OrderBy(o => o.Name);
+
+            foreach (PropertyInfo item in listSortedProperties)
+            {
+                if (item.Name == "Direct" || item.Name == "DefrrDays" || item.Name == "DPTmpDocs")
+                {
+                    continue;
+                }
+
+                object oldValue = item.GetValue(oldAcnt, null);
+                object newValue = item.GetValue(newAcnt, null);
+                if (item.PropertyType == typeof(Decimal))
+                {
+                    if (Decimal.Compare((Decimal)oldValue, (Decimal)newValue) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else if (item.PropertyType == typeof(String))
+                {
+                    if (String.CompareOrdinal((string)oldValue, (string)newValue) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else if (item.PropertyType == typeof(DateTime))
+                {
+                    if (DateTime.Compare(((DateTime)oldValue).Date, ((DateTime)newValue).Date) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else if(item.PropertyType == typeof(RepeatFrequency))
+                {
+                    if ((RepeatFrequency)oldValue != (RepeatFrequency)newValue) dictDelta.Add(item.Name, (Byte)newValue);
+                }
+                else
+                {
+                    if (!Object.Equals(oldValue, newValue))
+                        dictDelta.Add(item.Name, newValue);
+                }
+            }
+
+            return dictDelta;
+        }
     }
 
     // Account extra: Assert
@@ -194,7 +286,7 @@ namespace achihapi.ViewModels
         public Int32 RefDocForBuy { get; set; }
         public Int32? RefDocForSold { get; set; }
 
-        public FinanceAccountExtASViewModel()
+        public FinanceAccountExtASViewModel(): base()
         {
         }
 
@@ -208,6 +300,81 @@ namespace achihapi.ViewModels
                 return false;
 
             return true;
+        }
+        public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountExtASViewModel oldAcnt,
+            FinanceAccountExtASViewModel newAcnt)
+        {
+            Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
+
+            Type t = typeof(FinanceAccountExtASViewModel);
+            PropertyInfo[] listProperties = t.GetProperties();
+            var listSortedProperties = listProperties.OrderBy(o => o.Name);
+
+            foreach (PropertyInfo item in listSortedProperties)
+            {
+                if (item.Name == "CategoryID")
+                {
+                    if (oldAcnt.CategoryID != newAcnt.CategoryID)
+                    {
+                        dictDelta.Add("CTGYID", newAcnt.CategoryID);
+                    }
+                }
+                else if (item.Name == "RefDocForBuy")
+                {
+                    if (oldAcnt.RefDocForBuy != newAcnt.RefDocForBuy)
+                    {
+                        dictDelta.Add("REFDOC_BUY", newAcnt.RefDocForBuy);
+                    }
+                }
+                else if (item.Name == "RefDocForSold")
+                {
+                    if (oldAcnt.RefDocForSold.HasValue)
+                    {
+                        if (newAcnt.RefDocForSold.HasValue)
+                        {
+                            if (oldAcnt.RefDocForSold.Value != newAcnt.RefDocForSold.Value)
+                            {
+                                dictDelta.Add("REFDOC_SOLD", newAcnt.RefDocForSold.Value);
+                            }
+                        }
+                        else
+                        {
+                            dictDelta.Add("REFDOC_SOLD", null);
+                        }
+                    }
+                    else
+                    {
+                        if (newAcnt.RefDocForSold.HasValue)
+                        {
+                            dictDelta.Add("REFDOC_SOLD", newAcnt.RefDocForSold.Value);
+                        }
+                    }
+                }
+                else
+                {
+                    object oldValue = item.GetValue(oldAcnt, null);
+                    object newValue = item.GetValue(newAcnt, null);
+                    if (item.PropertyType == typeof(Decimal))
+                    {
+                        if (Decimal.Compare((Decimal)oldValue, (Decimal)newValue) != 0) dictDelta.Add(item.Name, newValue);
+                    }
+                    else if (item.PropertyType == typeof(String))
+                    {
+                        if (String.CompareOrdinal((string)oldValue, (string)newValue) != 0) dictDelta.Add(item.Name, newValue);
+                    }
+                    else if (item.PropertyType == typeof(DateTime))
+                    {
+                        if (DateTime.Compare(((DateTime)oldValue).Date, ((DateTime)newValue).Date) != 0) dictDelta.Add(item.Name, newValue);
+                    }
+                    else
+                    {
+                        if (!Object.Equals(oldValue, newValue))
+                            dictDelta.Add(item.Name, newValue);
+                    }
+                }
+            }
+
+            return dictDelta;
         }
     }
 
@@ -254,6 +421,13 @@ namespace achihapi.ViewModels
                 return false;
 
             return true;
+        }
+
+        public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountExtLoanViewModel oldAcnt,
+            FinanceAccountExtLoanViewModel newAcnt)
+        {
+            Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
+            return dictDelta;
         }
     }
 
