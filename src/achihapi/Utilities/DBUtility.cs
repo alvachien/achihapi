@@ -894,7 +894,7 @@ namespace achihapi.Utilities
                       ,[RPTTYPE] = @RPTTYPE
                       ,[REFDOCID] = @REFDOCID
                       ,[COMMENT] = @COMMENT
-                 WHERE [ACCOUNTID] = <ACCOUNTID, int,>";
+                 WHERE [ACCOUNTID] = @ACCOUNTID";
         }
         internal static void BindFinAccountADPUpdateParamter(SqlCommand cmd, FinanceAccountExtDPViewModel vm)
         {

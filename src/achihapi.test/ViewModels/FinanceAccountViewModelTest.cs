@@ -139,7 +139,7 @@ namespace achihapi.test.ViewModels
             var rst = FinanceAccountViewModel.WorkoutDeltaStringForUpdate(acc1, acc2, "user1");
             var tday = DateTime.Today.ToString("yyyy-MM-dd");
             Assert.IsTrue(rst.Length > 0);
-            Assert.AreEqual("UPDATE [dbo].[t_fin_account] SET [Name] = N'Account 3',[UpdatedAt] = '" + tday + "',[UpdatedBy] = N'user1' WHERE [ID] = 2", rst);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_account] SET [NAME] = N'Account 3',[UPDATEDAT] = '" + tday + "',[UPDATEDBY] = N'user1' WHERE [ID] = 2", rst);
         }
 
         [TestMethod]
@@ -185,7 +185,7 @@ namespace achihapi.test.ViewModels
             var rst = FinanceAccountViewModel.WorkoutDeltaStringForUpdate(acc1, acc2, "user1");
             var tday = DateTime.Today.ToString("yyyy-MM-dd");
             Assert.IsTrue(rst.Length > 0);
-            Assert.AreEqual("UPDATE [dbo].[t_fin_account] SET [Comment] = N'Comment 2',[UpdatedAt] = '" + tday + "',[UpdatedBy] = N'user1' WHERE [ID] = 2", rst);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_account] SET [COMMENT] = N'Comment 2',[UPDATEDAT] = '" + tday + "',[UPDATEDBY] = N'user1' WHERE [ID] = 2", rst);
         }
 
         [TestMethod]
@@ -232,7 +232,7 @@ namespace achihapi.test.ViewModels
             var rst = FinanceAccountViewModel.WorkoutDeltaStringForUpdate(acc1, acc2, "user1");
             var tday = DateTime.Today.ToString("yyyy-MM-dd");
             Assert.IsTrue(rst.Length > 0);
-            Assert.AreEqual("UPDATE [dbo].[t_fin_account] SET [Status] = 1,[UpdatedAt] = '" + tday + "',[UpdatedBy] = N'user1' WHERE [ID] = 2", rst);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_account] SET [STATUS] = 1,[UPDATEDAT] = '" + tday + "',[UPDATEDBY] = N'user1' WHERE [ID] = 2", rst);
         }
     }
 }

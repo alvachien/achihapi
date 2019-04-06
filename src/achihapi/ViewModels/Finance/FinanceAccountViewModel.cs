@@ -6,6 +6,7 @@ using System.Reflection;
 
 namespace achihapi.ViewModels
 {
+    // Account status
     public enum FinanceAccountStatus : Byte
     {
         Normal = 0,
@@ -13,6 +14,7 @@ namespace achihapi.ViewModels
         Frozen = 2
     }
 
+    // Account view model
     public class FinanceAccountViewModel : BaseViewModel
     {
         public Int32 ID { get; set; }
@@ -64,7 +66,31 @@ namespace achihapi.ViewModels
             }
             return true;
         }
+        public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
 
+        public FinanceAccountViewModel(): base()
+        {
+        }
+        static FinanceAccountViewModel()
+        {
+            dictFieldNames.Add("ID", "ID");
+            dictFieldNames.Add("HID", "HID");
+            dictFieldNames.Add("CtgyID", "CTGYID");
+            dictFieldNames.Add("Name", "NAME");
+            dictFieldNames.Add("Comment", "COMMENT");
+            dictFieldNames.Add("Owner", "OWNER");
+            dictFieldNames.Add("Status", "STATUS");
+
+            dictFieldNames.Add("UpdatedAt", "UPDATEDAT");
+            dictFieldNames.Add("UpdatedBy", "UPDATEDBY");
+        }
+        public String GetDBFieldName(String strField)
+        {
+            if (!dictFieldNames.ContainsKey(strField))
+                return strField;
+
+            return dictFieldNames[strField];
+        }
         public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountViewModel oldAcnt, 
             FinanceAccountViewModel newAcnt,
             String usrName)
@@ -143,28 +169,30 @@ namespace achihapi.ViewModels
             List<String> listHeaderSqls = new List<string>();
             foreach (var diff in diffs)
             {
+                var dbfield = newAcnt.GetDBFieldName(diff.Key);
+
                 if (diff.Value is DateTime)
-                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
+                    listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
                 else if (diff.Value is Boolean)
-                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
+                    listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
                 else if (diff.Value is String)
                 {
-                    if (String.IsNullOrEmpty((string)diff.Value) && diff.Key == "TranCurr2")
-                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = NULL");
+                    if (String.IsNullOrEmpty((string)diff.Value))
+                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
                     else
-                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = N'" + diff.Value + "'");
+                        listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
                 }
                 else if (diff.Value is Decimal)
                 {
                     if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
                     {
-                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = NULL");
+                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
                     }
                     else
-                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + diff.Value.ToString());
+                        listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
                 }
                 else
-                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + diff.Value.ToString());
+                    listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
             }
 
             return listHeaderSqls.Count == 0 ?
@@ -182,6 +210,7 @@ namespace achihapi.ViewModels
     {
         public Int32 AccountID { get; set; }
         public abstract bool IsValid();
+        public abstract string GetDBFieldName(string field);
     }
 
     public enum RepeatFrequency : Byte
@@ -213,9 +242,28 @@ namespace achihapi.ViewModels
         // Tmp. docs
         public List<FinanceTmpDocDPViewModel> DPTmpDocs { get; }
 
-        public FinanceAccountExtDPViewModel()
+        public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
+        public FinanceAccountExtDPViewModel(): base()
         {
             this.DPTmpDocs = new List<FinanceTmpDocDPViewModel>();
+        }
+        static FinanceAccountExtDPViewModel()
+        {
+            dictFieldNames.Add("AccountID", "ACCOUNTID");
+            dictFieldNames.Add("Direct", "DIRECT");
+            dictFieldNames.Add("StartDate", "STARTDATE");
+            dictFieldNames.Add("EndDate", "ENDDATE");
+            dictFieldNames.Add("RptType", "RPTTYPE");
+            dictFieldNames.Add("RefDocID", "REFDOCID");
+            dictFieldNames.Add("DefrrDays", "DEFRRDAYS");
+            dictFieldNames.Add("Comment", "COMMENT");
+        }
+        public override String GetDBFieldName(String strField)
+        {
+            if (!dictFieldNames.ContainsKey(strField))
+                return strField;
+
+            return dictFieldNames[strField];
         }
         public override Boolean IsValid()
         {
@@ -271,6 +319,44 @@ namespace achihapi.ViewModels
 
             return dictDelta;
         }
+        public static string WorkoutDeltaStringForUpdate(FinanceAccountExtDPViewModel oldAcnt,
+            FinanceAccountExtDPViewModel newAcnt)
+        {
+            var diffs = WorkoutDeltaForUpdate(oldAcnt, newAcnt);
+
+            List<String> listHeaderSqls = new List<string>();
+            foreach (var diff in diffs)
+            {
+                var dbfield = newAcnt.GetDBFieldName(diff.Key);
+
+                if (diff.Value is DateTime)
+                    listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
+                else if (diff.Value is Boolean)
+                    listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
+                else if (diff.Value is String)
+                {
+                    if (String.IsNullOrEmpty((string)diff.Value))
+                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                    else
+                        listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                }
+                else if (diff.Value is Decimal)
+                {
+                    if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                    {
+                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                    }
+                    else
+                        listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
+                }
+                else
+                    listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
+            }
+
+            return listHeaderSqls.Count == 0 ?
+                String.Empty :
+                (@"UPDATE [dbo].[t_fin_account_ext_dp] SET " + string.Join(",", listHeaderSqls) + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
+        }
     }
 
     // Account extra: Assert
@@ -289,6 +375,23 @@ namespace achihapi.ViewModels
         public FinanceAccountExtASViewModel(): base()
         {
         }
+        public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
+        static FinanceAccountExtASViewModel()
+        {
+            dictFieldNames.Add("AccountID", "ACCOUNTID");
+            dictFieldNames.Add("CategoryID", "CTGYID");
+            dictFieldNames.Add("Name", "NAME");
+            dictFieldNames.Add("Comment", "COMMENT");
+            dictFieldNames.Add("RefDocForBuy", "REFDOC_BUY");
+            dictFieldNames.Add("RefDocForSold", "REFDOC_SOLD");
+        }
+        public override String GetDBFieldName(String strField)
+        {
+            if (!dictFieldNames.ContainsKey(strField))
+                return strField;
+
+            return dictFieldNames[strField];
+        }
 
         public override bool IsValid()
         {
@@ -301,6 +404,7 @@ namespace achihapi.ViewModels
 
             return true;
         }
+
         public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountExtASViewModel oldAcnt,
             FinanceAccountExtASViewModel newAcnt)
         {
@@ -312,21 +416,7 @@ namespace achihapi.ViewModels
 
             foreach (PropertyInfo item in listSortedProperties)
             {
-                if (item.Name == "CategoryID")
-                {
-                    if (oldAcnt.CategoryID != newAcnt.CategoryID)
-                    {
-                        dictDelta.Add("CTGYID", newAcnt.CategoryID);
-                    }
-                }
-                else if (item.Name == "RefDocForBuy")
-                {
-                    if (oldAcnt.RefDocForBuy != newAcnt.RefDocForBuy)
-                    {
-                        dictDelta.Add("REFDOC_BUY", newAcnt.RefDocForBuy);
-                    }
-                }
-                else if (item.Name == "RefDocForSold")
+                if (item.Name == "RefDocForSold")
                 {
                     if (oldAcnt.RefDocForSold.HasValue)
                     {
@@ -352,6 +442,8 @@ namespace achihapi.ViewModels
                 }
                 else
                 {
+                    var dbfield = newAcnt.GetDBFieldName(item.Name);
+
                     object oldValue = item.GetValue(oldAcnt, null);
                     object newValue = item.GetValue(newAcnt, null);
                     if (item.PropertyType == typeof(Decimal))
@@ -376,8 +468,47 @@ namespace achihapi.ViewModels
 
             return dictDelta;
         }
+        public static string WorkoutDeltaStringForUpdate(FinanceAccountExtASViewModel oldAcnt,
+            FinanceAccountExtASViewModel newAcnt)
+        {
+            var diffs = WorkoutDeltaForUpdate(oldAcnt, newAcnt);
+
+            List<String> listHeaderSqls = new List<string>();
+            foreach (var diff in diffs)
+            {
+                var dbfield = newAcnt.GetDBFieldName(diff.Key);
+
+                if (diff.Value is DateTime)
+                    listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
+                else if (diff.Value is Boolean)
+                    listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
+                else if (diff.Value is String)
+                {
+                    if (String.IsNullOrEmpty((string)diff.Value))
+                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                    else
+                        listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                }
+                else if (diff.Value is Decimal)
+                {
+                    if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                    {
+                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                    }
+                    else
+                        listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
+                }
+                else
+                    listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
+            }
+
+            return listHeaderSqls.Count == 0 ?
+                String.Empty :
+                (@"UPDATE [dbo].[t_fin_account_ext_as] SET " + string.Join(",", listHeaderSqls) + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
+        }
     }
 
+    // Loan repayment method
     public enum LoanRepaymentMethod
     {
         EqualPrincipalAndInterset   = 1,  // Equal principal & interest
@@ -407,12 +538,36 @@ namespace achihapi.ViewModels
         // Tmp. docs
         public List<FinanceTmpDocLoanViewModel> LoanTmpDocs { get; }
 
-        public FinanceAccountExtLoanViewModel()
+        public FinanceAccountExtLoanViewModel(): base()
         {
             //// Default
             //this.IsLendOut = false;
             this.LoanTmpDocs = new List<FinanceTmpDocLoanViewModel>();
         }
+
+        public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
+        static FinanceAccountExtLoanViewModel()
+        {
+            dictFieldNames.Add("AccountID", "ACCOUNTID");
+            dictFieldNames.Add("StartDate", "STARTDATE");
+            dictFieldNames.Add("AnnualRate", "ANNUALRATE");
+            dictFieldNames.Add("InterestFree", "INTERESTFREE");
+            dictFieldNames.Add("RepaymentMethod", "REPAYMETHOD");
+            dictFieldNames.Add("TotalMonths", "TOTALMONTH");
+            dictFieldNames.Add("RefDocID", "REFDOCID");
+            dictFieldNames.Add("Others", "OTHERS");
+            dictFieldNames.Add("EndDate", "ENDDATE");
+            dictFieldNames.Add("PayingAccount", "PAYINGACCOUNT");
+            dictFieldNames.Add("Partner", "PARTNER");
+        }
+        public override String GetDBFieldName(String strField)
+        {
+            if (!dictFieldNames.ContainsKey(strField))
+                return String.Empty;
+
+            return dictFieldNames[strField];
+        }
+
         public override bool IsValid()
         {
             if (RefDocID <= 0)
@@ -427,7 +582,75 @@ namespace achihapi.ViewModels
             FinanceAccountExtLoanViewModel newAcnt)
         {
             Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
+            Type t = typeof(FinanceAccountExtASViewModel);
+            PropertyInfo[] listProperties = t.GetProperties();
+            var listSortedProperties = listProperties.OrderBy(o => o.Name);
+
+            foreach (PropertyInfo item in listSortedProperties)
+            {
+                var dbfield = newAcnt.GetDBFieldName(item.Name);
+
+                object oldValue = item.GetValue(oldAcnt, null);
+                object newValue = item.GetValue(newAcnt, null);
+                if (item.PropertyType == typeof(Decimal))
+                {
+                    if (Decimal.Compare((Decimal)oldValue, (Decimal)newValue) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else if (item.PropertyType == typeof(String))
+                {
+                    if (String.CompareOrdinal((string)oldValue, (string)newValue) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else if (item.PropertyType == typeof(DateTime))
+                {
+                    if (DateTime.Compare(((DateTime)oldValue).Date, ((DateTime)newValue).Date) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else
+                {
+                    if (!Object.Equals(oldValue, newValue))
+                        dictDelta.Add(item.Name, newValue);
+                }
+            }
+
             return dictDelta;
+        }
+        public static string WorkoutDeltaStringForUpdate(FinanceAccountExtLoanViewModel oldAcnt,
+            FinanceAccountExtLoanViewModel newAcnt)
+        {
+            var diffs = WorkoutDeltaForUpdate(oldAcnt, newAcnt);
+
+            List<String> listHeaderSqls = new List<string>();
+            foreach (var diff in diffs)
+            {
+                var dbfield = newAcnt.GetDBFieldName(diff.Key);
+
+                if (diff.Value is DateTime)
+                    listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
+                else if (diff.Value is Boolean)
+                    listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
+                else if (diff.Value is String)
+                {
+                    if (String.IsNullOrEmpty((string)diff.Value))
+                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                    else
+                        listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                }
+                else if (diff.Value is Decimal)
+                {
+                    if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                    {
+                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                    }
+                    else
+                        listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
+                }
+                else
+                    listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
+            }
+
+            return listHeaderSqls.Count == 0 ?
+                String.Empty :
+                (@"UPDATE [dbo].[t_fin_account_ext_loan] SET " + string.Join(",", listHeaderSqls) 
+                    + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
         }
     }
 
@@ -447,8 +670,26 @@ namespace achihapi.ViewModels
         public String Others { get; set; }
         public DateTime? ValidDate { get; set; }
 
+        public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
         public FinanceAccountExtCCViewModel()
         {
+        }
+        static FinanceAccountExtCCViewModel()
+        {
+            dictFieldNames.Add("AccountID", "ACCOUNTID");
+            dictFieldNames.Add("BillDayInMonth", "BILLDAYINMONTH");
+            dictFieldNames.Add("LastPayDayInMonth", "LASTPAYDAYINMONTH");
+            dictFieldNames.Add("CardNumber", "CARDNUMBER");
+            dictFieldNames.Add("Bank", "BANK");
+            dictFieldNames.Add("Others", "OTHERS");
+            dictFieldNames.Add("ValidDate", "VALIDDATE");
+        }
+        public override String GetDBFieldName(String strField)
+        {
+            if (!dictFieldNames.ContainsKey(strField))
+                return strField;
+
+            return dictFieldNames[strField];
         }
 
         public override bool IsValid()
