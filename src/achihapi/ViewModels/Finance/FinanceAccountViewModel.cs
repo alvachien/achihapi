@@ -271,8 +271,8 @@ namespace achihapi.ViewModels
                 return false;
             if (String.IsNullOrEmpty(Comment))
                 return false;
-            if (DPTmpDocs.Count <= 0)
-                return false;
+            //if (DPTmpDocs.Count <= 0)
+            //    return false;
 
             return true;
         }
@@ -280,6 +280,15 @@ namespace achihapi.ViewModels
             FinanceAccountExtDPViewModel newAcnt)
         {
             Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
+            if (oldAcnt == null || newAcnt == null || Object.ReferenceEquals(oldAcnt, newAcnt)
+                || oldAcnt.AccountID != newAcnt.AccountID)
+            {
+                throw new ArgumentException("Invalid inputted parameter Or AccountID change is not allowed");
+            }
+            if (!oldAcnt.IsValid() || !newAcnt.IsValid())
+            {
+                throw new Exception("Account info is invalid");
+            }
 
             Type t = typeof(FinanceAccountExtDPViewModel);
             PropertyInfo[] listProperties = t.GetProperties();
@@ -409,6 +418,15 @@ namespace achihapi.ViewModels
             FinanceAccountExtASViewModel newAcnt)
         {
             Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
+            if (oldAcnt == null || newAcnt == null || Object.ReferenceEquals(oldAcnt, newAcnt)
+                || oldAcnt.AccountID != newAcnt.AccountID)
+            {
+                throw new ArgumentException("Invalid inputted parameter Or AccountID change is not allowed");
+            }
+            if (!oldAcnt.IsValid() || !newAcnt.IsValid())
+            {
+                throw new Exception("Account info is invalid");
+            }
 
             Type t = typeof(FinanceAccountExtASViewModel);
             PropertyInfo[] listProperties = t.GetProperties();
@@ -424,26 +442,24 @@ namespace achihapi.ViewModels
                         {
                             if (oldAcnt.RefDocForSold.Value != newAcnt.RefDocForSold.Value)
                             {
-                                dictDelta.Add("REFDOC_SOLD", newAcnt.RefDocForSold.Value);
+                                dictDelta.Add(item.Name, newAcnt.RefDocForSold.Value);
                             }
                         }
                         else
                         {
-                            dictDelta.Add("REFDOC_SOLD", null);
+                            dictDelta.Add(item.Name, null);
                         }
                     }
                     else
                     {
                         if (newAcnt.RefDocForSold.HasValue)
                         {
-                            dictDelta.Add("REFDOC_SOLD", newAcnt.RefDocForSold.Value);
+                            dictDelta.Add(item.Name, newAcnt.RefDocForSold.Value);
                         }
                     }
                 }
                 else
                 {
-                    var dbfield = newAcnt.GetDBFieldName(item.Name);
-
                     object oldValue = item.GetValue(oldAcnt, null);
                     object newValue = item.GetValue(newAcnt, null);
                     if (item.PropertyType == typeof(Decimal))
@@ -572,8 +588,8 @@ namespace achihapi.ViewModels
         {
             if (RefDocID <= 0)
                 return false;
-            if (LoanTmpDocs.Count < 0)
-                return false;
+            //if (LoanTmpDocs.Count < 0)
+            //    return false;
 
             return true;
         }
@@ -582,14 +598,22 @@ namespace achihapi.ViewModels
             FinanceAccountExtLoanViewModel newAcnt)
         {
             Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
+            if (oldAcnt == null || newAcnt == null || Object.ReferenceEquals(oldAcnt, newAcnt)
+                || oldAcnt.AccountID != newAcnt.AccountID)
+            {
+                throw new ArgumentException("Invalid inputted parameter Or AccountID change is not allowed");
+            }
+            if (!oldAcnt.IsValid() || !newAcnt.IsValid())
+            {
+                throw new Exception("Account info is invalid");
+            }
+
             Type t = typeof(FinanceAccountExtASViewModel);
             PropertyInfo[] listProperties = t.GetProperties();
             var listSortedProperties = listProperties.OrderBy(o => o.Name);
 
             foreach (PropertyInfo item in listSortedProperties)
             {
-                var dbfield = newAcnt.GetDBFieldName(item.Name);
-
                 object oldValue = item.GetValue(oldAcnt, null);
                 object newValue = item.GetValue(newAcnt, null);
                 if (item.PropertyType == typeof(Decimal))
