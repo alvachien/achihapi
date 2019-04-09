@@ -13,44 +13,7 @@ namespace achihapi.Utilities
             // Input checks
             if (datInput == null)
                 throw new Exception("Input the data!");
-            if (datInput.InterestFreeLoan && datInput.InterestRate != 0)
-                throw new Exception("Cannot input interest rate for Interest-Free loan");
-            if (datInput.InterestRate < 0)
-                throw new Exception("Interest rate can not be negative");
-            if (datInput.TotalAmount <= 0)
-                throw new Exception("Total amount must large than zero!");
-            if (datInput.RepaymentMethod == LoanRepaymentMethod.EqualPrincipal
-                || datInput.RepaymentMethod == LoanRepaymentMethod.EqualPrincipalAndInterset)
-            {
-                if (datInput.TotalMonths <= 0)
-                    throw new Exception("Total months must large than zero");
-            }
-            else if (datInput.RepaymentMethod == LoanRepaymentMethod.DueRepayment)
-            {
-                if (!datInput.EndDate.HasValue)
-                    throw new Exception("End date must input");
-            }
-            else
-                throw new Exception("Not supported method");
-            if (datInput.StartDate == null)
-                throw new Exception("Start date is must");
-            if(datInput.FirstRepayDate.HasValue && datInput.RepayDayInMonth.HasValue)
-            {
-                if (datInput.FirstRepayDate.Value.Day != datInput.RepayDayInMonth.Value)
-                    throw new Exception("Inconsistency in first payment data and repay day");
-            }
-            if (datInput.RepayDayInMonth.HasValue)
-            {
-                if (datInput.RepayDayInMonth.Value <= 0 || datInput.RepayDayInMonth.Value >= 29)
-                    throw new Exception("Invalid repay. date");
-            }
-            if (datInput.FirstRepayDate.HasValue)
-            {
-                var nInitDays = (int)(datInput.FirstRepayDate.Value.Date - datInput.StartDate.Date).TotalDays;
-                // Check the dates
-                if (nInitDays < 30 || nInitDays > 60)
-                    throw new Exception("First repayment day is invalid");
-            }
+            datInput.doVerify();
 
             var realStartDate = datInput.StartDate;
             if (datInput.FirstRepayDate.HasValue)

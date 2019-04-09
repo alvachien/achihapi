@@ -39,6 +39,8 @@ namespace achihapi.ViewModels
 
         public Boolean IsValid()
         {
+            if (HID <= 0)
+                return false;
             if (String.IsNullOrEmpty(Name))
                 return false;
             if (CtgyID <= 0)
@@ -558,6 +560,7 @@ namespace achihapi.ViewModels
         {
             //// Default
             //this.IsLendOut = false;
+            this.StartDate = DateTime.Today;
             this.LoanTmpDocs = new List<FinanceTmpDocLoanViewModel>();
         }
 
@@ -590,6 +593,26 @@ namespace achihapi.ViewModels
                 return false;
             //if (LoanTmpDocs.Count < 0)
             //    return false;
+            if (InterestFree.HasValue && InterestFree.Value == true && AnnualRate.HasValue && AnnualRate.Value >= 0)
+                return false; // throw new Exception("Cannot input interest rate for Interest-Free loan");
+            if (AnnualRate.HasValue && AnnualRate.Value < 0)
+                return false; // throw new Exception("Interest rate can not be negative");
+            if (RepaymentMethod.HasValue)
+            {
+                if ( RepaymentMethod.Value == LoanRepaymentMethod.EqualPrincipal
+                    || RepaymentMethod.Value == LoanRepaymentMethod.EqualPrincipalAndInterset)
+                {
+                    if (!TotalMonths.HasValue || (TotalMonths.HasValue && TotalMonths.Value <= 0))
+                        return false; //  throw new Exception("Total months must large than zero");
+                }
+                else if (RepaymentMethod.Value == LoanRepaymentMethod.DueRepayment)
+                {
+                    if (!EndDate.HasValue)
+                        return false; //  throw new Exception("End date must input");
+                }
+                else
+                    return false; //  throw new Exception("Not supported method");
+            }
 
             return true;
         }
@@ -608,15 +631,70 @@ namespace achihapi.ViewModels
                 throw new Exception("Account info is invalid");
             }
 
-            Type t = typeof(FinanceAccountExtASViewModel);
+            Type t = typeof(FinanceAccountExtLoanViewModel);
             PropertyInfo[] listProperties = t.GetProperties();
             var listSortedProperties = listProperties.OrderBy(o => o.Name);
 
             foreach (PropertyInfo item in listSortedProperties)
             {
+                if (item.Name == "LoanTmpDocs")
+                {
+                    continue;
+                }
+
                 object oldValue = item.GetValue(oldAcnt, null);
                 object newValue = item.GetValue(newAcnt, null);
-                if (item.PropertyType == typeof(Decimal))
+                if (item.PropertyType == typeof(Nullable<Decimal>))
+                {
+                    if (Nullable.Compare<Decimal>(oldValue as Nullable<Decimal>, newValue as Nullable<Decimal>) != 0)
+                    {
+                        if (newValue != null)
+                            dictDelta.Add(item.Name, (newValue as Nullable<Decimal>).Value);
+                        else
+                            dictDelta.Add(item.Name, null);
+                    }
+                }
+                else if (item.PropertyType == typeof(Nullable<DateTime>))
+                {
+                    if (Nullable.Compare<DateTime>(oldValue as Nullable<DateTime>, newValue as Nullable<DateTime>) != 0)
+                    {
+                        if (newValue != null)
+                            dictDelta.Add(item.Name, (newValue as Nullable<DateTime>).Value);
+                        else
+                            dictDelta.Add(item.Name, null);
+                    }
+                }
+                else if (item.PropertyType == typeof(Nullable<Boolean>))
+                {
+                    if (Nullable.Compare<Boolean>(oldValue as Nullable<Boolean>, newValue as Nullable<Boolean>) != 0)
+                    {
+                        if (newValue != null)
+                            dictDelta.Add(item.Name, (newValue as Nullable<Boolean>).Value ? 1 : 0);
+                        else
+                            dictDelta.Add(item.Name, null);
+                    }
+                }
+                else if (item.PropertyType == typeof(Nullable<Int32>))
+                {
+                    if (Nullable.Compare<Int32>(oldValue as Nullable<Int32>, newValue as Nullable<Int32>) != 0)
+                    {
+                        if (newValue != null)
+                            dictDelta.Add(item.Name, (newValue as Nullable<Int32>).Value);
+                        else
+                            dictDelta.Add(item.Name, null);
+                    }
+                }
+                else if (item.PropertyType == typeof(Nullable<Int16>))
+                {
+                    if (Nullable.Compare<Int16>(oldValue as Nullable<Int16>, newValue as Nullable<Int16>) != 0)
+                    {
+                        if (newValue != null)
+                            dictDelta.Add(item.Name, (newValue as Nullable<Int16>).Value);
+                        else
+                            dictDelta.Add(item.Name, null);
+                    }
+                }
+                else if (item.PropertyType == typeof(Decimal))
                 {
                     if (Decimal.Compare((Decimal)oldValue, (Decimal)newValue) != 0) dictDelta.Add(item.Name, newValue);
                 }
@@ -667,8 +745,20 @@ namespace achihapi.ViewModels
                     else
                         listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
                 }
+                else if (diff.Value is Boolean)
+                {
+                    if ((bool)diff.Value)
+                        listHeaderSqls.Add("[" + dbfield + "] = 1");
+                    else
+                        listHeaderSqls.Add("[" + dbfield + "] = 0");
+                }
                 else
-                    listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
+                {
+                    if (diff.Value == null)
+                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                    else
+                        listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
+                }
             }
 
             return listHeaderSqls.Count == 0 ?

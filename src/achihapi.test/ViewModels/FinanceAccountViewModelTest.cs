@@ -741,5 +741,130 @@ namespace achihapi.test.ViewModels
 
             var rst = FinanceAccountExtLoanViewModel.WorkoutDeltaForUpdate(ac1, ac2);
         }
+
+        [TestMethod]
+        public void ExtraLoan_DeltaUpdate_Others()
+        {
+            var ac1 = new FinanceAccountExtLoanViewModel();
+            ac1.AccountID = 1;
+            ac1.InterestFree = true;
+            ac1.Others = "Others";
+            ac1.RefDocID = 101;
+
+            var ac2 = new FinanceAccountExtLoanViewModel();
+            ac2.AccountID = 1;
+            ac2.InterestFree = true;
+            ac2.Others = "Others 2";
+            ac2.RefDocID = 101;
+
+            var rst = FinanceAccountExtLoanViewModel.WorkoutDeltaForUpdate(ac1, ac2);
+            Assert.AreEqual(1, rst.Count);
+            Assert.IsTrue(rst.ContainsKey("Others"));
+        }
+        [TestMethod]
+        public void ExtraLoan_DeltaUpdate_Sql_Others()
+        {
+            var ac1 = new FinanceAccountExtLoanViewModel();
+            ac1.AccountID = 1;
+            ac1.InterestFree = true;
+            ac1.Others = "Others";
+            ac1.RefDocID = 101;
+
+            var ac2 = new FinanceAccountExtLoanViewModel();
+            ac2.AccountID = 1;
+            ac2.InterestFree = true;
+            ac2.Others = "Others 2";
+            ac2.RefDocID = 101;
+
+            var rst = FinanceAccountExtLoanViewModel.WorkoutDeltaStringForUpdate(ac1, ac2);
+            Assert.IsTrue(rst.Length > 0);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_account_ext_loan] SET [OTHERS] = N'Others 2' WHERE [ACCOUNTID] = 1", rst);
+        }
+
+        [TestMethod]
+        public void ExtraLoan_DeltaUpdate_AddInterest()
+        {
+            var ac1 = new FinanceAccountExtLoanViewModel();
+            ac1.AccountID = 1;
+            ac1.InterestFree = true;
+            ac1.Others = "Others";
+            ac1.RefDocID = 101;
+
+            var ac2 = new FinanceAccountExtLoanViewModel();
+            ac2.AccountID = 1;
+            ac2.AnnualRate = 2.3M;
+            ac2.Others = "Others";
+            ac2.RefDocID = 101;
+            ac2.TotalMonths = 36;
+
+            var rst = FinanceAccountExtLoanViewModel.WorkoutDeltaForUpdate(ac1, ac2);
+            Assert.AreEqual(3, rst.Count);
+            Assert.IsTrue(rst.ContainsKey("InterestFree"));
+            Assert.IsTrue(rst.ContainsKey("AnnualRate"));
+            Assert.IsTrue(rst.ContainsKey("TotalMonths"));
+        }
+        [TestMethod]
+        public void ExtraLoan_DeltaUpdate_Sql_AddInterest()
+        {
+            var ac1 = new FinanceAccountExtLoanViewModel();
+            ac1.AccountID = 1;
+            ac1.InterestFree = true;
+            ac1.Others = "Others";
+            ac1.RefDocID = 101;
+
+            var ac2 = new FinanceAccountExtLoanViewModel();
+            ac2.AccountID = 1;
+            ac2.AnnualRate = 2.3M;
+            ac2.Others = "Others";
+            ac2.RefDocID = 101;
+            ac2.TotalMonths = 36;
+
+            var rst = FinanceAccountExtLoanViewModel.WorkoutDeltaStringForUpdate(ac1, ac2);
+            Assert.IsTrue(rst.Length > 0);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_account_ext_loan] SET [ANNUALRATE] = 2.3,[INTERESTFREE] = NULL,[TOTALMONTH] = 36 WHERE [ACCOUNTID] = 1", rst);
+        }
+
+        [TestMethod]
+        public void ExtraLoan_DeltaUpdate_RemoveInterest()
+        {
+            var ac1 = new FinanceAccountExtLoanViewModel();
+            ac1.AccountID = 1;
+            ac1.InterestFree = true;
+            ac1.Others = "Others";
+            ac1.RefDocID = 101;
+
+            var ac2 = new FinanceAccountExtLoanViewModel();
+            ac2.AccountID = 1;
+            ac2.AnnualRate = 2.3M;
+            ac2.Others = "Others";
+            ac2.RefDocID = 101;
+            ac2.TotalMonths = 36;
+
+            var rst = FinanceAccountExtLoanViewModel.WorkoutDeltaForUpdate(ac2, ac1);
+            Assert.AreEqual(3, rst.Count);
+            Assert.IsTrue(rst.ContainsKey("InterestFree"));
+            Assert.IsTrue(rst.ContainsKey("AnnualRate"));
+            Assert.IsTrue(rst.ContainsKey("TotalMonths"));
+        }
+        [TestMethod]
+        public void ExtraLoan_DeltaUpdate_Sql_RemoveInterest()
+        {
+            var ac1 = new FinanceAccountExtLoanViewModel();
+            ac1.AccountID = 1;
+            ac1.InterestFree = true;
+            ac1.Others = "Others";
+            ac1.RefDocID = 101;
+
+            var ac2 = new FinanceAccountExtLoanViewModel();
+            ac2.AccountID = 1;
+            ac2.AnnualRate = 2.3M;
+            ac2.Others = "Others";
+            ac2.RefDocID = 101;
+            ac2.TotalMonths = 36;
+
+            var rst = FinanceAccountExtLoanViewModel.WorkoutDeltaStringForUpdate(ac2, ac1);
+            Assert.IsTrue(rst.Length > 0);
+            Assert.AreEqual("UPDATE [dbo].[t_fin_account_ext_loan] SET [ANNUALRATE] = NULL,[INTERESTFREE] = 1,[TOTALMONTH] = NULL WHERE [ACCOUNTID] = 1", rst);
+        }
     }
 }
