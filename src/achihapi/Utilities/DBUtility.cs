@@ -1661,7 +1661,7 @@ namespace achihapi.Utilities
             //    ++idx;
             itemvm.TranAmount = reader.GetDecimal(idx++);
             if (!reader.IsDBNull(idx))
-                itemvm.UseCurr2 = reader.GetBoolean(idx++);
+                itemvm.UseCurr2 = (reader.GetByte(idx++) == 1);
             else
                 ++idx;
             if (!reader.IsDBNull(idx))

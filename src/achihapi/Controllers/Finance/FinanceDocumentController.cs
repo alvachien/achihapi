@@ -534,16 +534,19 @@ namespace achihapi.Controllers
 
                             default:
                                 {
-                                    if (diffHeader.Count > 2)
+                                    var keyidx = diffHeader.Keys.ToList().FindIndex(key =>
+                                    {
+                                        if (String.CompareOrdinal(key, "Desp") != 0
+                                            && String.CompareOrdinal(key, "UpdatedBy") != 0
+                                            && String.CompareOrdinal(key, "UpdatedAt") != 0)
+                                        {
+                                            return true;
+                                        }
+                                        return false;
+                                    });
+                                    if (keyidx != -1)
                                     {
                                         return BadRequest("No supported fields in header found");
-                                    }
-                                    else if (diffHeader.Count == 1)
-                                    {
-                                        if (!diffHeader.ContainsKey("Desp"))
-                                        {
-                                            return BadRequest("No supported fields in header found");
-                                        }
                                     }
 
                                     var diffItems = FinanceDocumentUIViewModel.WorkoutDeltaForItemUpdate(vmOld, vm);
