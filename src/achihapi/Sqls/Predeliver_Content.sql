@@ -453,6 +453,14 @@ SET IDENTITY_INSERT dbo.[t_fin_account_ctgy] OFF;
 
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (10,'2018.11.3');
 
+-------------------------------------------------------------------------------------------------------------------
+-- Updated at 2018.12.20
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (11,'2018.12.20');
+
+-------------------------------------------------------------------------------------------------------------------
+-- Updated at 2019.4.20
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (12,'2019.4.20');
+
 ---------------------------------
 -- TODO...
 
