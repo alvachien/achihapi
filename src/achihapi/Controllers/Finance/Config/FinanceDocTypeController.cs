@@ -151,7 +151,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }
@@ -241,7 +241,7 @@ namespace achihapi.Controllers
             //        case HttpStatusCode.NotFound:
             //            return NotFound();
             //        case HttpStatusCode.BadRequest:
-            //            return BadRequest();
+            //            return BadRequest(strErrMsg);
             //        default:
             //            return StatusCode(500, strErrMsg);
             //    }
@@ -252,7 +252,7 @@ namespace achihapi.Controllers
             //    DateFormatString = HIHAPIConstants.DateFormatPattern,
             //    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             //};
-            
+
             //return new JsonResult(vm, setting);
         }
 

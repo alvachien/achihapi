@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <ApplicationIcon />
     <StartupObject />
-    <Version>0.8.7</Version>
+    <Version>0.8.8</Version>
     <Authors>Alva Chien</Authors>
     <Product>H.I.H.</Product>
     <Copyright>(C) Alva Chien</Copyright>

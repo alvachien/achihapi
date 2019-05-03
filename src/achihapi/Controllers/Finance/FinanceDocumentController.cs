@@ -147,7 +147,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }
@@ -245,7 +245,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }
@@ -280,7 +280,7 @@ namespace achihapi.Controllers
             // Do the basic check!
             try
             {
-                await FinanceDocumentBasicCheckAsync(vm);
+                FinanceDocumentBasicCheck(vm);
             }
             catch (Exception exp)
             {
@@ -428,7 +428,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }
@@ -467,7 +467,7 @@ namespace achihapi.Controllers
             // Do the basic check!
             try
             {
-                await FinanceDocumentBasicCheckAsync(vm);
+                FinanceDocumentBasicCheck(vm);
             }
             catch(Exception exp)
             {
@@ -664,7 +664,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }
@@ -937,7 +937,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }
@@ -1019,7 +1019,7 @@ namespace achihapi.Controllers
 
 
         // Checks
-        internal static async Task FinanceDocumentBasicCheckAsync(FinanceDocumentUIViewModel vm)
+        internal static void FinanceDocumentBasicCheck(FinanceDocumentUIViewModel vm)
         {
             // Header check!
             if (String.IsNullOrEmpty(vm.Desp))
@@ -1266,7 +1266,8 @@ namespace achihapi.Controllers
 
             if (vm.DocType == FinanceDocTypeViewModel.DocType_Transfer || vm.DocType == FinanceDocTypeViewModel.DocType_CurrExchange)
             {
-                if (totalamount != 0)
+                // Tolerance - 0.02
+                if (Math.Abs(totalamount) > 0.02M)
                 {
                     throw new Exception("Amount must be zero");
                 }

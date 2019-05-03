@@ -141,7 +141,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }
@@ -264,7 +264,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }
@@ -635,7 +635,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }
@@ -704,7 +704,6 @@ namespace achihapi.Controllers
             SqlConnection conn = null;
             SqlCommand cmd = null;
             SqlDataReader reader = null;
-            String queryString = "";
             String strErrMsg = "";
             SqlTransaction tran = null;
             HttpStatusCode errorCode = HttpStatusCode.OK;
@@ -841,7 +840,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }
@@ -1042,7 +1041,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }
@@ -1228,7 +1227,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }

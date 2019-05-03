@@ -168,7 +168,7 @@ namespace achihapi.Controllers
         //            case HttpStatusCode.NotFound:
         //                return NotFound();
         //            case HttpStatusCode.BadRequest:
-        //                return BadRequest();
+        //                return BadRequest(strErrMsg);
         //            default:
         //                return StatusCode(500, strErrMsg);
         //        }
@@ -266,7 +266,7 @@ namespace achihapi.Controllers
             try
             {
                 // Basic check again
-                await FinanceDocumentController.FinanceDocumentBasicCheckAsync(vmFIDoc);
+                FinanceDocumentController.FinanceDocumentBasicCheck(vmFIDoc);
 
                 using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
@@ -594,7 +594,7 @@ namespace achihapi.Controllers
                     case HttpStatusCode.NotFound:
                         return NotFound();
                     case HttpStatusCode.BadRequest:
-                        return BadRequest();
+                        return BadRequest(strErrMsg);
                     default:
                         return StatusCode(500, strErrMsg);
                 }
@@ -800,7 +800,7 @@ namespace achihapi.Controllers
         //            case HttpStatusCode.NotFound:
         //                return NotFound();
         //            case HttpStatusCode.BadRequest:
-        //                return BadRequest();
+        //                return BadRequest(strErrMsg);
         //            default:
         //                return StatusCode(500, strErrMsg);
         //        }
