@@ -912,7 +912,7 @@ namespace achihapi.Controllers
                     {
                         while (reader.Read())
                         {
-                            HIHDBUtility.FinAccount_DB2VM(reader, vmAccount);
+                            HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, 0);
 
                             // It should return one entry only!
                             // Nevertheless, ensure the code only execute once in API layer to keep toilence of dirty DB data;
@@ -933,13 +933,54 @@ namespace achihapi.Controllers
                     // Optimization logic for Status change
                     if (patch.Operations.Count == 1 && patch.Operations[0].path == "/status")
                     {
+                        FinanceAccountStatus newstatus = (FinanceAccountStatus)Byte.Parse((string)patch.Operations[0].value);
+
+                        // Need check the balance
+                        if (newstatus == FinanceAccountStatus.Closed)
+                        {
+                            queryString = @"SELECT [balance]
+                                          FROM [dbo].[v_fin_report_bs] WHERE [HID] = " + hid.ToString() + " AND [ACCOUNTID] = " + id.ToString();
+                            var cmdbal = new SqlCommand(queryString, conn);
+                            var readerbal = await cmdbal.ExecuteReaderAsync();
+                            Decimal dmcbal = 0;
+                            var chkfail = false;
+
+                            if (readerbal.HasRows)
+                            {
+                                while (readerbal.Read())
+                                {
+                                    dmcbal = readerbal.GetDecimal(0);
+
+                                    if (Math.Abs(dmcbal) > 0.02M)
+                                    {
+                                        chkfail = true;
+                                    }
+
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                chkfail = true;
+                            }
+
+                            readerbal.Close();
+                            readerbal = null;
+                            cmdbal.Dispose();
+                            cmdbal = null;
+
+                            if (chkfail)
+                            {
+                                throw new Exception("Balance is not zero!");
+                            }
+                        }
+
                         // Only update the status
                         tran = conn.BeginTransaction();
 
                         queryString = HIHDBUtility.GetFinanceAccountStatusUpdateString();
                         cmd = new SqlCommand(queryString, conn, tran);
 
-                        FinanceAccountStatus newstatus = (FinanceAccountStatus)Byte.Parse((string)patch.Operations[0].value);
                         vmAccount.Status = newstatus;
                         HIHDBUtility.BindFinAccountStatusUpdateParameter(cmd, newstatus, id, hid, usrName);
                         await cmd.ExecuteNonQueryAsync();
