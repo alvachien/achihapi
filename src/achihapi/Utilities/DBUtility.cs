@@ -627,8 +627,11 @@ namespace achihapi.Utilities
 
             if (!String.IsNullOrEmpty(strOwner))
             {
-                if (bwhere)
+                if (!bwhere)
+                {
+                    bwhere = true;
                     strSQL += " WHERE ";
+                }
                 else
                     strSQL += " AND ";
 
@@ -808,20 +811,14 @@ namespace achihapi.Utilities
         #region Finance Account Extra: ADP
         internal static string getFinanceAccountADPQueryString(Int32 acntid)
         {
-            return @"SELECT [t_fin_account_ext_dp].[DIRECT]
-                      ,[t_fin_account_ext_dp].[STARTDATE]
-                      ,[t_fin_account_ext_dp].[ENDDATE]
-                      ,[t_fin_account_ext_dp].[RPTTYPE]
-                      ,[t_fin_account_ext_dp].[REFDOCID]
-                      ,[t_fin_account_ext_dp].[DEFRRDAYS]
-                      ,[t_fin_account_ext_dp].[COMMENT]
-                FROM [t_fin_account_ext_dp]
-                WHERE [t_fin_account_ext_dp].[ACCOUNTID] = " + acntid.ToString();
+            return @"SELECT [ACCOUNTID], [DIRECT],[STARTDATE],[ENDDATE],[RPTTYPE],[REFDOCID],[DEFRRDAYS],[COMMENT]
+                FROM [t_fin_account_ext_dp] WHERE [ACCOUNTID] = " + acntid.ToString();
         }
 
         internal static void FinAccountADP_DB2VM(SqlDataReader reader, FinanceAccountExtDPViewModel vmdp, Int32 idx)
         {
             // Advance payment
+            vmdp.AccountID = reader.GetInt32(idx++);
             if (!reader.IsDBNull(idx))
                 vmdp.Direct = reader.GetBoolean(idx++);
             else
@@ -912,17 +909,14 @@ namespace achihapi.Utilities
         #region Finance Account Extra: Asset
         internal static string getFinanceAccountAssetQueryString(Int32 acntid)
         {
-            return @" SELECT [t_fin_account_ext_as].[CTGYID]
-                      ,[t_fin_account_ext_as].[NAME]
-                      ,[t_fin_account_ext_as].[REFDOC_BUY]
-                      ,[t_fin_account_ext_as].[REFDOC_SOLD]
-                      ,[t_fin_account_ext_as].[COMMENT]
+            return @" SELECT [ACCOUNTID], [CTGYID],[NAME],[REFDOC_BUY],[REFDOC_SOLD],[COMMENT]
                         FROM [t_fin_account_ext_as]
-                        WHERE [t_fin_account_ext_as].[ACCOUNTID] = " + acntid.ToString();
+                        WHERE [ACCOUNTID] = " + acntid.ToString();
         }
 
         internal static void FinAccountAsset_DB2VM(SqlDataReader reader, FinanceAccountExtASViewModel vmas, Int32 idx)
         {
+            vmas.AccountID = reader.GetInt32(idx++);
             if (!reader.IsDBNull(idx))
                 vmas.CategoryID = reader.GetInt32(idx++);
             else
@@ -1011,22 +1005,15 @@ namespace achihapi.Utilities
         #region Finance Account Extra: Loan
         internal static string getFinanceAccountLoanQueryString(Int32 acntid)
         {
-            return @"SELECT [t_fin_account_ext_loan].[STARTDATE]
-                      ,[t_fin_account_ext_loan].[ANNUALRATE]
-                      ,[t_fin_account_ext_loan].[INTERESTFREE]
-                      ,[t_fin_account_ext_loan].[REPAYMETHOD]
-                      ,[t_fin_account_ext_loan].[TOTALMONTH]
-                      ,[t_fin_account_ext_loan].[REFDOCID]
-                      ,[t_fin_account_ext_loan].[OTHERS]
-                      ,[t_fin_account_ext_loan].[EndDate]
-                      ,[t_fin_account_ext_loan].[PAYINGACCOUNT]
-                      ,[t_fin_account_ext_loan].[PARTNER]
+            return @"SELECT [ACCOUNTID],[STARTDATE],[ANNUALRATE],[INTERESTFREE],[REPAYMETHOD],[TOTALMONTH],[REFDOCID]
+                      ,[OTHERS],[EndDate],[PAYINGACCOUNT],[PARTNER]
                     FROM [t_fin_account_ext_loan]
-                    WHERE [t_fin_account_ext_loan].[ACCOUNTID] = " + acntid.ToString();
+                    WHERE [ACCOUNTID] = " + acntid.ToString();
         }
 
         internal static void FinAccountLoan_DB2VM(SqlDataReader reader, FinanceAccountExtLoanViewModel vmdp, Int32 idx)
         {
+            vmdp.AccountID = reader.GetInt32(idx++);
             if (!reader.IsDBNull(idx))
                 vmdp.StartDate = reader.GetDateTime(idx++);
             else

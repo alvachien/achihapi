@@ -743,18 +743,24 @@ namespace achihapi.Controllers
                     if (!String.IsNullOrEmpty(hdrsql)) listsqls.Add(hdrsql);
                     if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvancePayment || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_AdvanceReceive)
                     {
+                        if (vm.ExtraInfo_ADP.AccountID <= 0)
+                            vm.ExtraInfo_ADP.AccountID = vmOld.ExtraInfo_ADP.AccountID;
                         var itemsql = FinanceAccountExtDPViewModel.WorkoutDeltaStringForUpdate(vmOld.ExtraInfo_ADP,
                             vm.ExtraInfo_ADP);
                         if (!String.IsNullOrEmpty(itemsql)) listsqls.Add(itemsql);
                     }
                     if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_Asset)
                     {
+                        if (vm.ExtraInfo_AS.AccountID <= 0)
+                            vm.ExtraInfo_AS.AccountID = vmOld.ExtraInfo_AS.AccountID;
                         var itemsql = FinanceAccountExtASViewModel.WorkoutDeltaStringForUpdate(vmOld.ExtraInfo_AS,
                             vm.ExtraInfo_AS);
                         if (!String.IsNullOrEmpty(itemsql)) listsqls.Add(itemsql);
                     }
                     if (vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom || vm.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
                     {
+                        if (vm.ExtraInfo_Loan.AccountID <= 0)
+                            vm.ExtraInfo_Loan.AccountID = vmOld.ExtraInfo_Loan.AccountID;
                         var itemsql = FinanceAccountExtLoanViewModel.WorkoutDeltaStringForUpdate(vmOld.ExtraInfo_Loan,
                             vm.ExtraInfo_Loan);
                         if (!String.IsNullOrEmpty(itemsql)) listsqls.Add(itemsql);
@@ -785,6 +791,9 @@ namespace achihapi.Controllers
                     try
                     {
                         var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
+                        this._cache.Remove(cacheKey);
+
+                        cacheKey = String.Format(CacheKeys.FinAccount, vm.HID, id);
                         this._cache.Remove(cacheKey);
                     }
                     catch (Exception)
@@ -987,6 +996,9 @@ namespace achihapi.Controllers
                         {
                             var cacheKey = String.Format(CacheKeys.FinAccountList, hid, null);
                             this._cache.Remove(cacheKey);
+
+                            cacheKey = String.Format(CacheKeys.FinAccount, hid, id);
+                            this._cache.Remove(cacheKey);
                         }
                         catch (Exception)
                         {
@@ -1172,6 +1184,9 @@ namespace achihapi.Controllers
                     try
                     {
                         var cacheKey = String.Format(CacheKeys.FinAccountList, hid, null);
+                        this._cache.Remove(cacheKey);
+
+                        cacheKey = String.Format(CacheKeys.FinAccount, hid, id);
                         this._cache.Remove(cacheKey);
                     }
                     catch (Exception)

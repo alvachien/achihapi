@@ -173,28 +173,35 @@ namespace achihapi.ViewModels
             {
                 var dbfield = newAcnt.GetDBFieldName(diff.Key);
 
-                if (diff.Value is DateTime)
-                    listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
-                else if (diff.Value is Boolean)
-                    listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
-                else if (diff.Value is String)
+                if (diff.Value == null)
                 {
-                    if (String.IsNullOrEmpty((string)diff.Value))
-                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
-                    else
-                        listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                    listHeaderSqls.Add("[" + dbfield + "] = NULL");
                 }
-                else if (diff.Value is Decimal)
+                else
                 {
-                    if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                    if (diff.Value is DateTime)
+                        listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
+                    else if (diff.Value is Boolean)
+                        listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
+                    else if (diff.Value is String)
                     {
-                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                        if (String.IsNullOrEmpty((string)diff.Value))
+                            listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                        else
+                            listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                    }
+                    else if (diff.Value is Decimal)
+                    {
+                        if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                        {
+                            listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                        }
+                        else
+                            listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
                     }
                     else
                         listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
                 }
-                else
-                    listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
             }
 
             return listHeaderSqls.Count == 0 ?
@@ -340,28 +347,35 @@ namespace achihapi.ViewModels
             {
                 var dbfield = newAcnt.GetDBFieldName(diff.Key);
 
-                if (diff.Value is DateTime)
-                    listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
-                else if (diff.Value is Boolean)
-                    listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
-                else if (diff.Value is String)
+                if (diff.Value == null)
                 {
-                    if (String.IsNullOrEmpty((string)diff.Value))
-                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
-                    else
-                        listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                    listHeaderSqls.Add("[" + dbfield + "] = NULL");
                 }
-                else if (diff.Value is Decimal)
+                else
                 {
-                    if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                    if (diff.Value is DateTime)
+                        listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
+                    else if (diff.Value is Boolean)
+                        listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
+                    else if (diff.Value is String)
                     {
-                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                        if (String.IsNullOrEmpty((string)diff.Value))
+                            listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                        else
+                            listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                    }
+                    else if (diff.Value is Decimal)
+                    {
+                        if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                        {
+                            listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                        }
+                        else
+                            listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
                     }
                     else
                         listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
                 }
-                else
-                    listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
             }
 
             return listHeaderSqls.Count == 0 ?
@@ -496,28 +510,35 @@ namespace achihapi.ViewModels
             {
                 var dbfield = newAcnt.GetDBFieldName(diff.Key);
 
-                if (diff.Value is DateTime)
-                    listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
-                else if (diff.Value is Boolean)
-                    listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
-                else if (diff.Value is String)
+                if (diff.Value == null)
                 {
-                    if (String.IsNullOrEmpty((string)diff.Value))
-                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
-                    else
-                        listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                    listHeaderSqls.Add("[" + dbfield + "] = NULL");
                 }
-                else if (diff.Value is Decimal)
+                else
                 {
-                    if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                    if (diff.Value is DateTime)
+                        listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
+                    else if (diff.Value is Boolean)
+                        listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
+                    else if (diff.Value is String)
                     {
-                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                        if (String.IsNullOrEmpty((string)diff.Value))
+                            listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                        else
+                            listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                    }
+                    else if (diff.Value is Decimal)
+                    {
+                        if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                        {
+                            listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                        }
+                        else
+                            listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
                     }
                     else
                         listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
                 }
-                else
-                    listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
             }
 
             return listHeaderSqls.Count == 0 ?

@@ -149,28 +149,35 @@ namespace achihapi.ViewModels
             List<String> listHeaderSqls = new List<string>();
             foreach (var diff in diffs)
             {
-                if (diff.Value is DateTime)
-                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
-                else if (diff.Value is Boolean)
-                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
-                else if (diff.Value is String)
+                if (diff.Value == null)
                 {
-                    if (String.IsNullOrEmpty((string)diff.Value) && diff.Key == "TranCurr2")
-                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = NULL");
-                    else
-                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = N'" + diff.Value + "'");
-                }                    
-                else if(diff.Value is Decimal)
+                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = NULL");
+                }
+                else
                 {
-                    if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                    if (diff.Value is DateTime)
+                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
+                    else if (diff.Value is Boolean)
+                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
+                    else if (diff.Value is String)
                     {
-                        listHeaderSqls.Add("[" + diff.Key.ToString() + "] = NULL");
+                        if (String.IsNullOrEmpty((string)diff.Value) && diff.Key == "TranCurr2")
+                            listHeaderSqls.Add("[" + diff.Key.ToString() + "] = NULL");
+                        else
+                            listHeaderSqls.Add("[" + diff.Key.ToString() + "] = N'" + diff.Value + "'");
+                    }
+                    else if (diff.Value is Decimal)
+                    {
+                        if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                        {
+                            listHeaderSqls.Add("[" + diff.Key.ToString() + "] = NULL");
+                        }
+                        else
+                            listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + diff.Value.ToString());
                     }
                     else
                         listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + diff.Value.ToString());
                 }
-                else
-                    listHeaderSqls.Add("[" + diff.Key.ToString() + "] = " + diff.Value.ToString());
             }
 
             return listHeaderSqls.Count == 0? 
