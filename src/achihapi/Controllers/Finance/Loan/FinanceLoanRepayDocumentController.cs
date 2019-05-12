@@ -51,6 +51,7 @@ namespace achihapi.Controllers
             // The post here is:
             // 1. Post a repayment document with the content from this template doc
             // 2. Update the template doc with REFDOCID
+            // 3. If the account balance is zero, close the account;
 
             // Basic check
             if (hid <= 0 || (tmpdocid.HasValue && tmpdocid.Value <= 0)
