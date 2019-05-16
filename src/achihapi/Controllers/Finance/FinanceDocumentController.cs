@@ -18,6 +18,12 @@ namespace achihapi.Controllers
     [Route("api/[controller]")]
     public class FinanceDocumentController : Controller
     {
+        private IMemoryCache _cache;
+        public FinanceDocumentController(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
+
         // GET: api/financedocument
         [HttpGet]
         [Authorize]
@@ -704,7 +710,8 @@ namespace achihapi.Controllers
             SqlDataReader reader = null;
             SqlTransaction tran = null;
             String queryString = "";
-            Int32 accID = -1, tmpdocID = -1;
+            Int32 accID = -1, tmpdocID = -1, relAccID = -1;
+            FinanceAccountStatus relAccStatus = FinanceAccountStatus.Normal;
             List<Int32> listPostedID = new List<Int32>();
             HttpStatusCode errorCode = HttpStatusCode.OK;
             String strErrMsg = "";
@@ -752,8 +759,8 @@ namespace achihapi.Controllers
                     if (accID == -1)
                     {
                         // Check current document is referenced in template doc
-                        queryString = @"SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [REFDOCID] = " + id.ToString()
-                                + @" UNION ALL SELECT [DOCID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_loan] WHERE [REFDOCID] = " + id.ToString();
+                        queryString = @"SELECT [DOCID],[ACCOUNTID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [REFDOCID] = " + id.ToString()
+                                + @" UNION ALL SELECT [DOCID],[ACCOUNTID],[REFDOCID] FROM [dbo].[t_fin_tmpdoc_loan] WHERE [REFDOCID] = " + id.ToString();
 
                         cmd = new SqlCommand(queryString, conn);
                         reader = cmd.ExecuteReader();
@@ -762,6 +769,7 @@ namespace achihapi.Controllers
                             while (reader.Read())
                             {
                                 tmpdocID = reader.GetInt32(0);
+                                relAccID = reader.GetInt32(1);
                                 break; // One doc shall be reference to one tmp. doc at maximum
                             }
                         }
@@ -770,9 +778,33 @@ namespace achihapi.Controllers
                         reader = null;
                         cmd.Dispose();
                         cmd = null;
+
+                        if (tmpdocID != -1 && relAccID != -1)
+                        {
+                            queryString = @"SELECT [status] FROM [t_fin_account] WHERE [accountid] = " + relAccID.ToString();
+                            cmd = new SqlCommand(queryString, conn);
+                            reader = cmd.ExecuteReader();
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    relAccStatus = (FinanceAccountStatus)reader.GetByte(0);
+                                    break; // One doc shall be reference to one tmp. doc at maximum
+                                }
+                            }
+
+                            reader.Dispose();
+                            reader = null;
+                            cmd.Dispose();
+                            cmd = null;
+                        }
                     }
                     else
                     {
+                        errorCode = HttpStatusCode.BadRequest;
+                        strErrMsg = "Document with account created cannot be deleted";
+                        throw new Exception(strErrMsg);
+
                         // Need fetch out the document posted already
                         queryString = @"SELECT [REFDOCID] FROM [dbo].[t_fin_tmpdoc_dp] WHERE [ACCOUNTID] = " + accID.ToString()
                                 + @" AND [REFDOCID] IS NOT NULL UNION ALL SELECT [REFDOCID] FROM [dbo].[t_fin_tmpdoc_loan] WHERE [ACCOUNTID] = " + accID.ToString()
@@ -886,9 +918,36 @@ namespace achihapi.Controllers
                         await cmd.ExecuteNonQueryAsync();
                         cmd.Dispose();
                         cmd = null;
+
+                        // Reset the account
+                        if (relAccID != -1 && relAccStatus == FinanceAccountStatus.Closed)
+                        {
+                            queryString = HIHDBUtility.GetFinanceAccountStatusUpdateString();
+                            SqlCommand cmdAccount = new SqlCommand(queryString, conn, tran);
+                            HIHDBUtility.BindFinAccountStatusUpdateParameter(cmdAccount, FinanceAccountStatus.Normal, relAccID, hid, usrName);
+                            await cmdAccount.ExecuteNonQueryAsync();
+                            cmdAccount.Dispose();
+                            cmdAccount = null;
+                        }
                     }
 
                     tran.Commit();
+
+                    if (relAccID != -1 && relAccStatus == FinanceAccountStatus.Closed)
+                    {
+                        try
+                        {
+                            var cacheKey = String.Format(CacheKeys.FinAccountList, hid, null);
+                            this._cache.Remove(cacheKey);
+
+                            cacheKey = String.Format(CacheKeys.FinAccount, hid, relAccID);
+                            this._cache.Remove(cacheKey);
+                        }
+                        catch (Exception)
+                        {
+                            // Do nothing here.
+                        }
+                    }
                 }
             }
             catch (Exception exp)

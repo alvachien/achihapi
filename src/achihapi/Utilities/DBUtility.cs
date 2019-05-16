@@ -1985,35 +1985,15 @@ namespace achihapi.Utilities
         }
         internal static string GetFinanceLoanAccountQueryString(Int32 hid, Int32 acntid)
         {
-            return @"SELECT [t_fin_account].[ID]
-                            ,[t_fin_account].[HID]
-                            ,[t_fin_account].[CTGYID]
-                            ,[t_fin_account].[NAME]
-                            ,[t_fin_account].[COMMENT]
-                            ,[t_fin_account].[OWNER]
-                            ,[t_fin_account].[STATUS]
-                            ,[t_fin_account].[CREATEDBY]
-                            ,[t_fin_account].[CREATEDAT]
-                            ,[t_fin_account].[UPDATEDBY]
-                            ,[t_fin_account].[UPDATEDAT]
-                            ,[t_fin_account_ext_loan].[ACCOUNTID]
-                            ,[t_fin_account_ext_loan].[STARTDATE]
-                            ,[t_fin_account_ext_loan].[ANNUALRATE]
-                            ,[t_fin_account_ext_loan].[INTERESTFREE]
-                            ,[t_fin_account_ext_loan].[REPAYMETHOD]
-                            ,[t_fin_account_ext_loan].[TOTALMONTH]
-                            ,[t_fin_account_ext_loan].[REFDOCID]
-                            ,[t_fin_account_ext_loan].[OTHERS]
-                            ,[t_fin_account_ext_loan].[ENDDATE]
-                            ,[t_fin_account_ext_loan].[PAYINGACCOUNT]
-                            ,[t_fin_account_ext_loan].[PARTNER]
-                        FROM [dbo].[t_fin_account]
-                        LEFT OUTER JOIN [dbo].[t_fin_account_ext_loan]
-                            ON [t_fin_account].[ID] = [t_fin_account_ext_loan].[ACCOUNTID]
-                        WHERE [t_fin_account].[CTGYID] IN ( "
-                        + FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom.ToString()
-                        + ", " + FinanceAccountCtgyViewModel.AccountCategory_LendTo.ToString()
-                        + " ) AND [t_fin_account].[ID] = " + acntid.ToString(); 
+            return @"SELECT [ID],[HID],[CTGYID],[NAME],[COMMENT],[OWNER],[STATUS],[CREATEDBY],[CREATEDAT],[UPDATEDBY],[UPDATEDAT] FROM [t_fin_account]
+                        WHERE [ID] = " 
+                        + acntid.ToString()
+                        + @"; SELECT [ACCOUNTID],[STARTDATE],[ANNUALRATE],[INTERESTFREE],[REPAYMETHOD],[TOTALMONTH],[REFDOCID],[OTHERS],[ENDDATE]
+                            ,[PAYINGACCOUNT],[PARTNER]
+                        FROM [t_fin_account_ext_loan]
+                        WHERE [ACCOUNTID] = " + acntid.ToString()
+                        + @"; SELECT[balance]
+                            FROM [v_fin_report_bs] WHERE [accountid] = " + acntid.ToString(); 
         }
 
         internal static string GetFinanceDocLoanQueryString(Int32 nid, Int32 hid)

@@ -68,6 +68,7 @@ namespace achihapi.Controllers
             String queryString = String.Empty;
             String strErrMsg = String.Empty;
             HttpStatusCode errorCode = HttpStatusCode.OK;
+            Decimal acntBalance = 0M;
 
             String usrName = String.Empty;
             if (Startup.UnitTestMode)
@@ -147,16 +148,41 @@ namespace achihapi.Controllers
                     if (!reader.HasRows)
                     {
                         errorCode = HttpStatusCode.BadRequest;
-                        throw new Exception("Invalid Doc ID inputted: " + tmpdocid.ToString());
+                        throw new Exception("Loan account read failed based on Doc ID inputted: " + tmpdocid.ToString());
                     }
                     else
                     {
-                        while (reader.Read())
+                        if (reader.HasRows)
                         {
-                            Int32 aidx = 0;
-                            aidx = HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, aidx);
-                            vmAccount.ExtraInfo_Loan = new FinanceAccountExtLoanViewModel();
-                            HIHDBUtility.FinAccountLoan_DB2VM(reader, vmAccount.ExtraInfo_Loan, aidx);
+                            while (reader.Read())
+                            {
+                                HIHDBUtility.FinAccountHeader_DB2VM(reader, vmAccount, 0);
+                                break;
+                            }
+                        }
+                        reader.NextResult();
+
+                        vmAccount.ExtraInfo_Loan = new FinanceAccountExtLoanViewModel();
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                HIHDBUtility.FinAccountLoan_DB2VM(reader, vmAccount.ExtraInfo_Loan, 0);
+                                break;
+                            }
+                        }
+                        reader.NextResult();
+
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                if (!reader.IsDBNull(0))
+                                {
+                                    acntBalance = reader.GetDecimal(0);
+                                }
+                                break;
+                            }
                         }
                     }
                     reader.Dispose();
@@ -204,6 +230,15 @@ namespace achihapi.Controllers
                         decimal totalIn = repaydoc.Items.Where(item => item.TranType == FinanceTranTypeViewModel.TranType_RepaymentIn).Sum(item2 => item2.TranAmount);
                         //decimal totalintOut = repaydoc.Items.Where(item => (item.TranType == FinanceTranTypeViewModel.TranType_InterestOut)).Sum(item2 => item2.TranAmount);
 
+                        // New account balance
+                        if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_BorrowFrom)
+                        {
+                            acntBalance += totalOut;
+                        }
+                        else if (vmAccount.CtgyID == FinanceAccountCtgyViewModel.AccountCategory_LendTo)
+                        {
+                            acntBalance -= totalIn;
+                        }
                         if (totalOut != totalIn)
                         {
                             throw new Exception("Amount is not equal!");
@@ -235,6 +270,8 @@ namespace achihapi.Controllers
                     Int32 nRst = await cmd.ExecuteNonQueryAsync();
                     nNewDocID = (Int32)idparam.Value;
                     repaydoc.ID = nNewDocID;
+                    cmd.Dispose();
+                    cmd = null;
 
                     // Then, creating the items
                     foreach (FinanceDocumentItemUIViewModel ivm in repaydoc.Items)
@@ -248,6 +285,8 @@ namespace achihapi.Controllers
                         HIHDBUtility.BindFinDocItemInsertParameter(cmd2, ivm, nNewDocID);
 
                         await cmd2.ExecuteNonQueryAsync();
+                        cmd2.Dispose();
+                        cmd2 = null;
                     }
 
                     // Then, update the template doc
@@ -266,12 +305,36 @@ namespace achihapi.Controllers
                     cmdTmpDoc.Parameters.AddWithValue("@HID", hid);
                     cmdTmpDoc.Parameters.AddWithValue("@DOCID", tmpdocid);
                     await cmdTmpDoc.ExecuteNonQueryAsync();
+                    cmdTmpDoc.Dispose();
+                    cmdTmpDoc = null;
+
+                    // Incase balance is zero, update the account status
+                    if (Decimal.Compare(acntBalance, 0) == 0)
+                    {
+                        queryString = HIHDBUtility.GetFinanceAccountStatusUpdateString();
+                        SqlCommand cmdAccount = new SqlCommand(queryString, conn, tran);
+                        HIHDBUtility.BindFinAccountStatusUpdateParameter(cmdAccount, FinanceAccountStatus.Closed, loanAccountID, hid, usrName);
+                        await cmdAccount.ExecuteNonQueryAsync();
+                        cmdAccount.Dispose();
+                        cmdAccount = null;
+                    }
 
                     tran.Commit();
 
                     // Update the buffer of the relevant Account!
-                    var cacheAccountKey = String.Format(CacheKeys.FinAccount, hid, vmAccount.ID);
-                    this._cache.Remove(cacheAccountKey);
+                    // Account List
+                    try
+                    {
+                        var cacheKey = String.Format(CacheKeys.FinAccountList, hid, null);
+                        this._cache.Remove(cacheKey);
+
+                        cacheKey = String.Format(CacheKeys.FinAccount, hid, loanAccountID);
+                        this._cache.Remove(cacheKey);
+                    }
+                    catch (Exception)
+                    {
+                        // Do nothing here.
+                    }
                 }
             }
             catch (Exception exp)

@@ -1114,6 +1114,10 @@ namespace achihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Delete(int id, [FromQuery]Int32 hid = 0)
         {
+            return Forbid();
+
+            // TBD: Need checks!
+
             String usrName = "";
             String scopeValue = "";
             try
@@ -1182,7 +1186,7 @@ namespace achihapi.Controllers
                                 if (String.CompareOrdinal(strOwner, usrName) != 0)
                                 {
                                     errorCode = HttpStatusCode.BadRequest;
-                                    throw new Exception("Current user can only delete the account with owner");
+                                    throw new Exception("Only account owner can delete account!");
                                 }
                             }
 
