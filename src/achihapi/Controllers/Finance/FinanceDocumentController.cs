@@ -333,7 +333,6 @@ namespace achihapi.Controllers
 
                     tran = conn.BeginTransaction();
 
-
                     // Now go ahead for the creating
                     queryString = HIHDBUtility.GetFinDocHeaderInsertString();
 

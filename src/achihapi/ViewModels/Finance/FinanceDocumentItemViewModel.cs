@@ -342,4 +342,53 @@ namespace achihapi.ViewModels
             return this.ContentList.GetEnumerator();
         }
     }
+
+    public sealed class FinanceNormalDocMassCreateViewModel
+    {
+        [Required]
+        public DateTime TranDate { get; set; }
+        [Required]
+        public Int32 AccountID { get; set; }
+        [Required]
+        public Int32 TranType { get; set; }
+        [Required]
+        public Decimal TranAmount { get; set; }
+        [Required]
+        public String TranCurrency { get; set; }
+
+        public Int32? ControlCenterID { get; set; }
+        public Int32? OrderID { get; set; }
+        [StringLength(45)]
+        public String Desp { get; set; }
+
+        // Tag
+        public List<String> TagTerms { get; }
+
+        public Boolean IsValid()
+        {
+            if (AccountID <= 0) return false;
+            if (TranType <= 0) return false;
+            if (TranAmount == 0) return false;
+            if (String.IsNullOrEmpty(TranCurrency))
+                return false;
+            if (!ControlCenterID.HasValue || ControlCenterID.Value <= 0)
+            {
+                if (!OrderID.HasValue || OrderID.Value <= 0)
+                    return false;
+            }
+            else
+            {
+                if (OrderID.HasValue && OrderID.Value > 0)
+                    return false;
+            }
+            if (String.IsNullOrEmpty(Desp)) return false;
+
+            return true;
+        }
+
+        public FinanceNormalDocMassCreateViewModel()
+        {
+            this.TagTerms = new List<string>();
+        }
+    }
 }
