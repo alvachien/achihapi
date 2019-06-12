@@ -21,6 +21,9 @@ namespace achihapi.ViewModels
         [StringLength(40)]
         public String UpdatedBy { get; set; }
         public DateTime UpdatedAt { get; set; }
+
+        // Last error
+        public String LastError { get; protected set; }
     }
 
     public class BaseListViewModel<T> where T : BaseViewModel

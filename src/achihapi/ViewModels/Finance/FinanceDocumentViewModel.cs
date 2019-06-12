@@ -29,11 +29,28 @@ namespace achihapi.ViewModels
 
         public virtual Boolean IsValid()
         {
-            if (HID <= 0) return false;
-            if (DocType <= 0) return false;
-            if (String.IsNullOrEmpty(TranCurr)) return false;
-            if (String.IsNullOrEmpty(Desp)) return false;
+            if (HID <= 0)
+            {
+                LastError = "Invalid HID";
+                return false;
+            }
+            if (DocType <= 0)
+            {
+                LastError = "Invalid Document Type";
+                return false;
+            }
+            if (String.IsNullOrEmpty(TranCurr))
+            {
+                LastError = "Invalid Tran. Currency";
+                return false;
+            }
+            if (String.IsNullOrEmpty(Desp))
+            {
+                LastError = "Invalid Description";
+                return false;
+            }
 
+            LastError = "";
             return true;
         }
     }
@@ -48,7 +65,11 @@ namespace achihapi.ViewModels
         public override Boolean IsValid()
         {
             if (!base.IsValid()) return false;
-            if (Items.Count <= 0) return false;
+            if (Items.Count <= 0)
+            {
+                LastError = "No Items";
+                return false;
+            }
 
             Dictionary<Int32, Object> itemids = new Dictionary<int, object>();
             Boolean bErrorOccurred = false;
@@ -58,11 +79,13 @@ namespace achihapi.ViewModels
                 {
                     if (!o.IsValid())
                     {
+                        LastError = o.LastError;
                         bErrorOccurred = true;
                     }
 
                     if (itemids.ContainsKey(o.ItemID))
                     {
+                        LastError = "Duplicated Item ID";
                         bErrorOccurred = true;
                     } else
                     {
@@ -72,6 +95,7 @@ namespace achihapi.ViewModels
             });
             if (bErrorOccurred) return false;
 
+            LastError = "";
             return true;
         }
 

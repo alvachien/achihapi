@@ -28,6 +28,8 @@ namespace achihapi.ViewModels
         // Tag
         public List<String> TagTerms { get; }
 
+        public String LastError { get; protected set; }
+
         public FinanceDocumentItemViewModel()
         {
             this.TagTerms = new List<String>();
@@ -35,22 +37,49 @@ namespace achihapi.ViewModels
 
         public Boolean IsValid()
         {
-            if (ItemID <= 0) return false;
-            if (AccountID <= 0) return false;
-            if (TranType <= 0) return false;
-            if (TranAmount == 0) return false;
+            if (ItemID <= 0)
+            {
+                LastError = "Invalid Item ID";
+                return false;
+            }
+            if (AccountID <= 0)
+            {
+                LastError = "Invalid Account";
+                return false;
+            }
+            if (TranType <= 0)
+            {
+                LastError = "Invalid Tran. type";
+                return false;
+            }
+            if (TranAmount == 0)
+            {
+                LastError = "Invalid amount";
+                return false;
+            }
             if (ControlCenterID <= 0)
             {
                 if (OrderID <= 0)
+                {
+                    LastError = "Invalid controlling info";
                     return false;
+                }
             }
             else
             {
                 if (OrderID > 0)
+                {
+                    LastError = "Invalid controlling info";
                     return false;
+                }
             }
-            if (String.IsNullOrEmpty(Desp)) return false;
+            if (String.IsNullOrEmpty(Desp))
+            {
+                LastError = "Invalid Desp";
+                return false;
+            }
 
+            LastError = "";
             return true;
         }
 
@@ -364,25 +393,53 @@ namespace achihapi.ViewModels
         // Tag
         public List<String> TagTerms { get; }
 
+        public String LastError { get; private set; }
+
         public Boolean IsValid()
         {
-            if (AccountID <= 0) return false;
-            if (TranType <= 0) return false;
-            if (TranAmount == 0) return false;
-            if (String.IsNullOrEmpty(TranCurrency))
+            if (AccountID <= 0)
+            {
+                LastError = "Invalid Account";
                 return false;
+            }
+            if (TranType <= 0)
+            {
+                LastError = "Invalid Tran. Type";
+                return false;
+            }
+            if (TranAmount == 0)
+            {
+                LastError = "Invalid Amount";
+                return false;
+            }
+            if (String.IsNullOrEmpty(TranCurrency))
+            {
+                LastError = "Invalid Currency";
+                return false;
+            }
             if (!ControlCenterID.HasValue || ControlCenterID.Value <= 0)
             {
                 if (!OrderID.HasValue || OrderID.Value <= 0)
+                {
+                    LastError = "Invalid controlling";
                     return false;
+                }
             }
             else
             {
                 if (OrderID.HasValue && OrderID.Value > 0)
+                {
+                    LastError = "Invalid controlling";
                     return false;
+                }
             }
-            if (String.IsNullOrEmpty(Desp)) return false;
+            if (String.IsNullOrEmpty(Desp))
+            {
+                LastError = "Invalid Desp";
+                return false;
+            }
 
+            LastError = "";
             return true;
         }
 

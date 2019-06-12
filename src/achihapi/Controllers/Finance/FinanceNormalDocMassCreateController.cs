@@ -48,6 +48,12 @@ namespace achihapi.Controllers
             {
                 return BadRequest("Items must input");
             }
+            foreach (var mi in items)
+            {
+                if (!mi.IsValid())
+                    return BadRequest(mi.LastError);
+            }
+
             List<FinanceDocumentUIViewModel> listDocs = new List<FinanceDocumentUIViewModel>();
             foreach (var docheader in items.GroupBy(info => info.TranDate.Date)
                         .Select(group => new {
@@ -56,7 +62,9 @@ namespace achihapi.Controllers
                         })
                         .OrderBy(x => x.TranDate))
             {
-                Console.WriteLine("{0} {1}", docheader.TranDate, docheader.Count);
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine("{0} {1}", docheader.TranDate, docheader.Count);
+#endif
 
                 var docvm = new FinanceDocumentUIViewModel();
                 docvm.Desp = docheader.TranDate.Date.ToShortDateString();
@@ -77,10 +85,18 @@ namespace achihapi.Controllers
                         di.ControlCenterID = docitem.ControlCenterID.Value;
                     if (docitem.OrderID.HasValue)
                         di.OrderID = docitem.OrderID.Value;
+                    if (String.IsNullOrEmpty(docvm.TranCurr))
+                        docvm.TranCurr = docitem.TranCurrency;
                     di.TranAmount = docitem.TranAmount;
                     di.TranType = docitem.TranType;
                     di.Desp = docitem.Desp;
+                    docvm.Items.Add(di);
                 }
+                if (!docvm.IsValid())
+                {
+                    return BadRequest("Document is invalid: " + docvm.LastError);
+                }
+
                 listDocs.Add(docvm);
             }
 
