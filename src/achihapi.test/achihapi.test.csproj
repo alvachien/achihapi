@@ -5,7 +5,7 @@
 
     <IsPackable>false</IsPackable>
 
-    <Version>1.2.0</Version>
+    <Version>0.8.14</Version>
 
     <Authors>Alva Chien</Authors>
 
@@ -13,7 +13,7 @@
 
     <Description>Home Info. Hub</Description>
 
-    <Copyright>(C) Copyright by Alva Chien</Copyright>
+    <Copyright>(C) Alva Chien, 2019</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
