@@ -25,7 +25,7 @@ namespace achihapi.Utilities
                         var tspans = datInput.EndDate.Date - datInput.StartDate.Date;
                         var tdays = (Int32)tspans.Days;
 
-                        for (int i = 0; i < tdays; i++)
+                        for (int i = 0; i <= tdays; i++)
                         {
                             listResults.Add(new RepeatFrequencyDateViewModel
                             {
@@ -47,7 +47,7 @@ namespace achihapi.Utilities
 
                         var tfortnights = tdays / 14;
 
-                        for (int i = 0; i < tfortnights; i++)
+                        for (int i = 0; i <= tfortnights; i++)
                         {
                             listResults.Add(new RepeatFrequencyDateViewModel
                             {
@@ -74,7 +74,7 @@ namespace achihapi.Utilities
                         var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
                         var nhalfyear = nmonths / 6;
 
-                        for (int i = 0; i < nhalfyear; i++)
+                        for (int i = 0; i <= nhalfyear; i++)
                         {
                             listResults.Add(new RepeatFrequencyDateViewModel
                             {
@@ -100,7 +100,7 @@ namespace achihapi.Utilities
                     {
                         var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
 
-                        for (int i = 0; i < nmonths; i++)
+                        for (int i = 0; i <= nmonths; i++)
                         {
                             listResults.Add(new RepeatFrequencyDateViewModel
                             {
@@ -127,7 +127,7 @@ namespace achihapi.Utilities
                         var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
                         var nquarters = nmonths / 3;
 
-                        for (int i = 0; i < nquarters; i++)
+                        for (int i = 0; i <= nquarters; i++)
                         {
                             listResults.Add(new RepeatFrequencyDateViewModel
                             {
@@ -156,7 +156,7 @@ namespace achihapi.Utilities
 
                         var tweeks = tdays / 7;
 
-                        for (int i = 0; i < tweeks; i++)
+                        for (int i = 0; i <= tweeks; i++)
                         {
                             listResults.Add(new RepeatFrequencyDateViewModel
                             {
@@ -182,7 +182,7 @@ namespace achihapi.Utilities
                     {
                         var nyears = datInput.EndDate.Year - datInput.StartDate.Year;
 
-                        for (int i = 0; i < nyears; i++)
+                        for (int i = 0; i <= nyears; i++)
                         {
                             listResults.Add(new RepeatFrequencyDateViewModel
                             {

@@ -19,7 +19,7 @@ namespace achihapi.test
             RepeatFrequencyDateInput vm = new RepeatFrequencyDateInput
             {
                 StartDate = new DateTime(startyear, 1, 1),
-                EndDate = new DateTime(endyear, 1, 1),
+                EndDate = new DateTime(startyear, 12, 31),
                 RptType = RepeatFrequency.Month
             };
             List<RepeatFrequencyDateViewModel> results = CommonUtility.GetDates(vm);
@@ -94,7 +94,7 @@ namespace achihapi.test
         public void GetDates_Week()
         {
             var startdate = new DateTime(2020, 1, 1);
-            var enddate = startdate.AddDays(70);
+            var enddate = startdate.AddDays(69);
             RepeatFrequencyDateInput vm = new RepeatFrequencyDateInput
             {
                 StartDate = startdate,
@@ -119,7 +119,7 @@ namespace achihapi.test
         public void GetDates_Fortnight()
         {
             var startdate = new DateTime(2020, 1, 1);
-            var enddate = startdate.AddDays(70);
+            var enddate = startdate.AddDays(69);
             RepeatFrequencyDateInput vm = new RepeatFrequencyDateInput
             {
                 StartDate = startdate,
@@ -144,7 +144,7 @@ namespace achihapi.test
         public void GetDates_Quarter()
         {
             var startdate = new DateTime(2020, 1, 1);
-            var enddate = startdate.AddDays(183);
+            var enddate = startdate.AddDays(100);
             RepeatFrequencyDateInput vm = new RepeatFrequencyDateInput
             {
                 StartDate = startdate,
@@ -163,6 +163,37 @@ namespace achihapi.test
                 TimeSpan ts = results[i].EndDate.Subtract(results[i].StartDate);
                 Assert.AreEqual(90, ts.TotalDays);
             }
+        }
+
+        [TestMethod]
+        public void GetDates_Day()
+        {
+            var startdate = new DateTime(2020, 1, 6);
+            var enddate = new DateTime(2020, 1, 10);
+            RepeatFrequencyDateInput vm = new RepeatFrequencyDateInput
+            {
+                StartDate = startdate,
+                EndDate = enddate,
+                RptType = RepeatFrequency.Day
+            };
+            List<RepeatFrequencyDateViewModel> results = CommonUtility.GetDates(vm);
+
+            Assert.AreEqual(5, results.Count);
+
+            Assert.AreEqual(startdate, results[0].StartDate.Date);
+            Assert.AreEqual(startdate, results[0].EndDate.Date);
+
+            Assert.AreEqual(new DateTime(2020, 1, 7), results[1].StartDate.Date);
+            Assert.AreEqual(new DateTime(2020, 1, 7), results[1].EndDate.Date);
+
+            Assert.AreEqual(new DateTime(2020, 1, 8), results[2].StartDate.Date);
+            Assert.AreEqual(new DateTime(2020, 1, 8), results[2].EndDate.Date);
+
+            Assert.AreEqual(new DateTime(2020, 1, 9), results[3].StartDate.Date);
+            Assert.AreEqual(new DateTime(2020, 1, 9), results[3].EndDate.Date);
+
+            Assert.AreEqual(enddate, results[4].StartDate.Date);
+            Assert.AreEqual(enddate, results[4].EndDate.Date);
         }
     }
 }
