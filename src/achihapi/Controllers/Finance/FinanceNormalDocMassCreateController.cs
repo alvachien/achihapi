@@ -67,7 +67,8 @@ namespace achihapi.Controllers
 #endif
 
                 var docvm = new FinanceDocumentUIViewModel();
-                docvm.Desp = docheader.TranDate.Date.ToShortDateString();
+                if(String.IsNullOrEmpty(docvm.Desp))
+                    docvm.Desp = docheader.TranDate.Date.ToShortDateString();
                 docvm.DocType = FinanceDocTypeViewModel.DocType_Normal;
                 docvm.HID = hid;
                 // docvm.TranCurr = item.
