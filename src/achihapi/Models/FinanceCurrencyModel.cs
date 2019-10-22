@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations;
 
-namespace achihapi.ViewModels
+namespace achihapi.Models
 {
-    public class FinanceCurrencyViewModel : BaseViewModel
+    public class FinanceCurrencyModel : BaseModel
     {
         [Required]
         [Key]

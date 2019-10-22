@@ -1,8 +1,13 @@
 ﻿# Design
 
+## OData
+Add OData into this project.
+[Official doc](https://docs.microsoft.com/en-us/odata/webapi/netcore)
+
+## Cache
 Due to the fact that Response Cache shall not be used in Authorized data, the Response Cache shall not be used.
 
-## Without Response Cache enabled
+### Without Response Cache enabled
 Here comes the list of the Cache key which used in controller:
 Fin_Currency, 1200 seconds;
 Fin_AcntCtgyList_{0}, 1200 seconds; Where {0} is home id;
@@ -18,8 +23,8 @@ HomeDefList_{0}_{1}_{2}, 600 seconds; Where {0} is User ID, {1} is Top, {2} is S
 HomeDef_{0}, 600 seconds; Where {0} is home id;
 LearnCtgyList_{0}, 1200 seconds; Where {0} is home id;
 
-## With Response Cache enabled [NOT USED]
-### Controllers with Response Cache enabled
+### With Response Cache enabled [NOT USED]
+#### Controllers with Response Cache enabled
 FinanceCurrencyController
 LanguageController
 FinanceAccountCategoryController
@@ -28,8 +33,8 @@ FinanceDocTypeController
 FinanceTranTypeController
 LearnCategoryController
 
-### Controlles with In-Memory Cache enabled
+#### Controlles with In-Memory Cache enabled
 FinanceReportBSController
 
 
-# Others
+## Others
