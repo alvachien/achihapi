@@ -74,6 +74,11 @@ namespace hihapi
             }
 
             services.AddOData();
+
+            // Response Caching
+            services.AddResponseCaching();
+            // Memory cache
+            services.AddMemoryCache();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -94,6 +99,7 @@ namespace hihapi
 
             ODataModelBuilder modelBuilder = new ODataConventionModelBuilder(app.ApplicationServices);
             modelBuilder.EntitySet<Currency>("Currencies");
+            modelBuilder.EntitySet<Language>("Languages");
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();
@@ -106,6 +112,8 @@ namespace hihapi
 
                     routeBuilder.MapODataServiceRoute("ODataRoute", "api", model);
                 });
+
+            app.UseResponseCaching();
         }
     }
 }

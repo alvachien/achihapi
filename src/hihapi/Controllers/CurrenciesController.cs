@@ -24,7 +24,7 @@ namespace hihapi.Controllers
 
         /// GET: /Currencies
         /// <summary>
-        /// Adds support for getting knowledges, for example:
+        /// Adds support for getting currencies, for example:
         /// 
         /// GET /Currencies
         /// GET /Currencies?$filter=Curr eq 'Dollar'

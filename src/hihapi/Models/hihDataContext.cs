@@ -14,6 +14,7 @@ namespace hihapi.Models
         }
 
         public DbSet<Currency> Currencies { get; set; }
+        public DbSet<Language> Languages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -21,6 +22,12 @@ namespace hihapi.Models
             {
                 entity.Property(e => e.Curr)
                     .HasColumnName("CURR")
+                    .ValueGeneratedNever();
+            });
+            modelBuilder.Entity<Language>(entity =>
+            {
+                entity.Property(e => e.Lcid)
+                    .HasColumnName("LCID")
                     .ValueGeneratedNever();
             });
         }
