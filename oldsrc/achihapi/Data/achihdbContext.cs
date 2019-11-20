@@ -15,7 +15,6 @@ namespace achihapi.Models
         {
         }
 
-        public virtual DbSet<TDbversion> TDbversion { get; set; }
         public virtual DbSet<TEvent> TEvent { get; set; }
         public virtual DbSet<TEventHabit> TEventHabit { get; set; }
         public virtual DbSet<TEventHabitCheckin> TEventHabitCheckin { get; set; }
@@ -61,23 +60,6 @@ namespace achihapi.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<TDbversion>(entity =>
-            {
-                entity.HasKey(e => e.VersionId);
-
-                entity.ToTable("t_dbversion");
-
-                entity.Property(e => e.VersionId)
-                    .HasColumnName("VersionID")
-                    .ValueGeneratedNever();
-
-                entity.Property(e => e.AppliedDate)
-                    .HasColumnType("datetime")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.ReleasedDate).HasColumnType("datetime");
-            });
-
             modelBuilder.Entity<TEvent>(entity =>
             {
                 entity.ToTable("t_event");
@@ -1097,98 +1079,6 @@ namespace achihapi.Models
                     .HasForeignKey(d => d.Hid)
                     .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("FK_t_fin_trantype_HID");
-            });
-
-            modelBuilder.Entity<THomedef>(entity =>
-            {
-                entity.ToTable("t_homedef");
-
-                entity.HasIndex(e => e.Name)
-                    .HasName("UK_t_homedef_NAME")
-                    .IsUnique();
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.Basecurr)
-                    .IsRequired()
-                    .HasColumnName("BASECURR")
-                    .HasMaxLength(5);
-
-                entity.Property(e => e.Createdat)
-                    .HasColumnName("CREATEDAT")
-                    .HasColumnType("date");
-
-                entity.Property(e => e.Createdby)
-                    .IsRequired()
-                    .HasColumnName("CREATEDBY")
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Details)
-                    .HasColumnName("DETAILS")
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Host)
-                    .IsRequired()
-                    .HasColumnName("HOST")
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasColumnName("NAME")
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Updatedat)
-                    .HasColumnName("UPDATEDAT")
-                    .HasColumnType("date");
-
-                entity.Property(e => e.Updatedby)
-                    .HasColumnName("UPDATEDBY")
-                    .HasMaxLength(50);
-            });
-
-            modelBuilder.Entity<THomemem>(entity =>
-            {
-                entity.HasKey(e => new { e.Hid, e.User });
-
-                entity.ToTable("t_homemem");
-
-                entity.HasIndex(e => new { e.Hid, e.User })
-                    .HasName("UK_t_homemem_USER")
-                    .IsUnique();
-
-                entity.Property(e => e.Hid).HasColumnName("HID");
-
-                entity.Property(e => e.User)
-                    .HasColumnName("USER")
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Createdat)
-                    .HasColumnName("CREATEDAT")
-                    .HasColumnType("date");
-
-                entity.Property(e => e.Createdby)
-                    .IsRequired()
-                    .HasColumnName("CREATEDBY")
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Displayas)
-                    .HasColumnName("DISPLAYAS")
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Relt).HasColumnName("RELT");
-
-                entity.Property(e => e.Updatedat)
-                    .HasColumnName("UPDATEDAT")
-                    .HasColumnType("date");
-
-                entity.Property(e => e.Updatedby)
-                    .HasColumnName("UPDATEDBY")
-                    .HasMaxLength(50);
-
-                entity.HasOne(d => d.H)
-                    .WithMany(p => p.THomemem)
-                    .HasForeignKey(d => d.Hid)
-                    .HasConstraintName("FK_t_homemem_HID");
             });
 
             modelBuilder.Entity<THomemsg>(entity =>
