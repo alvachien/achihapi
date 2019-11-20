@@ -15,6 +15,8 @@ namespace hihapi.Models
 
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Language> Languages { get; set; }
+        public DbSet<HomeDefine> HomeDefines { get; set; }
+        public DbSet<HomeMember> HomeMembers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,6 +31,27 @@ namespace hihapi.Models
                 entity.Property(e => e.Lcid)
                     .HasColumnName("LCID")
                     .ValueGeneratedNever();
+            });
+            modelBuilder.Entity<HomeDefine>(entity => 
+            {
+                entity.Property(e => e.ID).ValueGeneratedOnAdd();
+
+                entity.HasIndex(e => e.Name)
+                    .HasName("UK_t_homedef_NAME")
+                    .IsUnique();
+            });
+            modelBuilder.Entity<HomeMember>(entity => 
+            {
+                entity.HasKey(e => new { e.HomeID, e.User });
+
+                entity.HasIndex(e => new { e.HomeID, e.User })
+                    .HasName("UK_t_homemem_USER")
+                    .IsUnique();
+
+                entity.HasOne(d => d.HomeDefinition)
+                    .WithMany(p => p.HomeMembers)
+                    .HasForeignKey(d => d.HomeID)
+                    .HasConstraintName("FK_t_homemem_HID");
             });
         }
     }

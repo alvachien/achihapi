@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace hihapi.Models
 {
-    [Table("TFinCurrency")]
+    [Table("T_FIN_CURRENCY")]
     public partial class Currency : BaseModel
     {
         [Key]

@@ -36,7 +36,8 @@ namespace hihapi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            this.ConnectionString = Configuration["hihapi.ConnectionString"];
+            this.ConnectionString = Configuration["hihapi:ConnectionString"];
+            System.Diagnostics.Debug.WriteLine(this.ConnectionString);
 
             if (Environment.EnvironmentName != "IntegrationTest")
             {
@@ -100,6 +101,8 @@ namespace hihapi
             ODataModelBuilder modelBuilder = new ODataConventionModelBuilder(app.ApplicationServices);
             modelBuilder.EntitySet<Currency>("Currencies");
             modelBuilder.EntitySet<Language>("Languages");
+            modelBuilder.EntitySet<HomeDefine>("HomeDefines");
+            modelBuilder.EntitySet<HomeMember>("HomeMembers");
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();

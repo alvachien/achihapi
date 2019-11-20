@@ -5,8 +5,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace hihapi.Models
 {
-    [Table("TLanguage")]
-    public partial class Language : BaseModel
+    [Table("T_LANGUAGE")]
+    public partial class Language
     {        
         [Key]
         [Required]
