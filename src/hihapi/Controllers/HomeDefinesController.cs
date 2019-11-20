@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using hihapi.Models;
+using hihapi.Utilities;
+using Microsoft.Net.Http;
 
 namespace hihapi.Controllers
 {
@@ -32,9 +34,44 @@ namespace hihapi.Controllers
         /// 
         /// <remarks>
         [EnableQuery]
-        public IQueryable<HomeDefine> Get()
+        public IActionResult Get()
         {
-            return _context.HomeDefines;
+            DbSet<HomeMember> listRst;
+
+            String scopeFilter = String.Empty;
+
+            String usrName = "";
+            try
+            {
+                var usrObj = HIHAPIUtility.GetUserClaim(this);
+                usrName = usrObj.Value;
+
+                // Disabled scope check just make it work, 2017.10.1
+                scopeFilter = usrName;
+
+                //var scopeObj = HIHAPIUtility.GetScopeClaim(this, HIHAPIConstants.HomeDefScope);
+
+                //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
+                //if (String.IsNullOrEmpty(scopeFilter))
+                //    scopeFilter = usrName;
+            }
+            catch
+            {
+                scopeFilter = String.Empty;
+            }
+
+            if (String.IsNullOrEmpty(scopeFilter))
+            {
+                return BadRequest();
+            }
+
+            var rst = (from hd in _context.HomeDefines
+                    join hm in _context.HomeMembers
+                        on hd.ID equals hm.HomeID
+                    where hm.User == scopeFilter
+                    select hd);
+
+            return Ok(rst);
         }
     }
 }

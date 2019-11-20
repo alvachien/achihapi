@@ -30,7 +30,6 @@ namespace achihapi.Models
         public virtual DbSet<TFinAccountExtLoanH> TFinAccountExtLoanH { get; set; }
         public virtual DbSet<TFinAssetCtgy> TFinAssetCtgy { get; set; }
         public virtual DbSet<TFinControlcenter> TFinControlcenter { get; set; }
-        public virtual DbSet<TFinCurrency> TFinCurrency { get; set; }
         public virtual DbSet<TFinDocType> TFinDocType { get; set; }
         public virtual DbSet<TFinDocument> TFinDocument { get; set; }
         public virtual DbSet<TFinDocumentItem> TFinDocumentItem { get; set; }
@@ -43,7 +42,6 @@ namespace achihapi.Models
         public virtual DbSet<THomedef> THomedef { get; set; }
         public virtual DbSet<THomemem> THomemem { get; set; }
         public virtual DbSet<THomemsg> THomemsg { get; set; }
-        public virtual DbSet<TLanguage> TLanguage { get; set; }
         public virtual DbSet<TLearnCtgy> TLearnCtgy { get; set; }
         public virtual DbSet<TLearnEnsent> TLearnEnsent { get; set; }
         public virtual DbSet<TLearnEnsentexp> TLearnEnsentexp { get; set; }
@@ -667,45 +665,6 @@ namespace achihapi.Models
                     .HasConstraintName("FK_t_fin_cc_HID");
             });
 
-            modelBuilder.Entity<TFinCurrency>(entity =>
-            {
-                entity.HasKey(e => e.Curr);
-
-                entity.ToTable("t_fin_currency");
-
-                entity.Property(e => e.Curr)
-                    .HasColumnName("CURR")
-                    .HasMaxLength(5)
-                    .ValueGeneratedNever();
-
-                entity.Property(e => e.Createdat)
-                    .HasColumnName("CREATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Createdby)
-                    .HasColumnName("CREATEDBY")
-                    .HasMaxLength(40);
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasColumnName("NAME")
-                    .HasMaxLength(45);
-
-                entity.Property(e => e.Symbol)
-                    .HasColumnName("SYMBOL")
-                    .HasMaxLength(30);
-
-                entity.Property(e => e.Updatedat)
-                    .HasColumnName("UPDATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Updatedby)
-                    .HasColumnName("UPDATEDBY")
-                    .HasMaxLength(40);
-            });
-
             modelBuilder.Entity<TFinDocType>(entity =>
             {
                 entity.ToTable("t_fin_doc_type");
@@ -1278,36 +1237,6 @@ namespace achihapi.Models
                     .WithMany(p => p.THomemsg)
                     .HasForeignKey(d => d.Hid)
                     .HasConstraintName("FK_t_homemsg_HID");
-            });
-
-            modelBuilder.Entity<TLanguage>(entity =>
-            {
-                entity.HasKey(e => e.Lcid);
-
-                entity.ToTable("t_language");
-
-                entity.Property(e => e.Lcid)
-                    .HasColumnName("LCID")
-                    .ValueGeneratedNever();
-
-                entity.Property(e => e.Appflag)
-                    .HasColumnName("APPFLAG")
-                    .HasDefaultValueSql("((0))");
-
-                entity.Property(e => e.Enname)
-                    .IsRequired()
-                    .HasColumnName("ENNAME")
-                    .HasMaxLength(100);
-
-                entity.Property(e => e.Isoname)
-                    .IsRequired()
-                    .HasColumnName("ISONAME")
-                    .HasMaxLength(20);
-
-                entity.Property(e => e.Navname)
-                    .IsRequired()
-                    .HasColumnName("NAVNAME")
-                    .HasMaxLength(100);
             });
 
             modelBuilder.Entity<TLearnCtgy>(entity =>
