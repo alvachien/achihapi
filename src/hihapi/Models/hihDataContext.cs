@@ -17,14 +17,20 @@ namespace hihapi.Models
         public DbSet<Language> Languages { get; set; }
         public DbSet<HomeDefine> HomeDefines { get; set; }
         public DbSet<HomeMember> HomeMembers { get; set; }
+        public DbSet<DBVersion> DBVersions { get; set; }
+        public DbSet<FinanceAccountCategory> FinAccountCategories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<DBVersion>(entity =>
+            {
+            });
+
             modelBuilder.Entity<Currency>(entity =>
             {
-                entity.Property(e => e.Curr)
-                    .HasColumnName("CURR")
-                    .ValueGeneratedNever();
+                // entity.Property(e => e.Curr)
+                //     .HasColumnName("CURR")
+                //     .ValueGeneratedNever();
             });
             modelBuilder.Entity<Language>(entity =>
             {
@@ -52,6 +58,11 @@ namespace hihapi.Models
                     .WithMany(p => p.HomeMembers)
                     .HasForeignKey(d => d.HomeID)
                     .HasConstraintName("FK_t_homemem_HID");
+            });
+
+            modelBuilder.Entity<FinanceAccountCategory>(entity =>
+            {
+
             });
         }
     }

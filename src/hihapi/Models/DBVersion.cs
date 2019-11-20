@@ -11,7 +11,15 @@ namespace hihapi.Models
         [Key]
         [Column("VERSIONID", TypeName="INT")]
         public Int32 VersionID { get; set; }
+        
+        [Required]
+        [Column("RELEASEDDATE")]
+        [DataType(DataType.Date)]
         public DateTime ReleasedDate { get; set; }
+
+        [Required]
+        [Column("APPLIEDDATE")]
+        [DataType(DataType.Date)]
         public DateTime AppliedDate { get; set; }
     }
 }

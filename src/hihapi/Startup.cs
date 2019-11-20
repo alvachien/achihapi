@@ -99,10 +99,12 @@ namespace hihapi
             app.UseAuthentication();
 
             ODataModelBuilder modelBuilder = new ODataConventionModelBuilder(app.ApplicationServices);
+            modelBuilder.EntitySet<DBVersion>("DBVersions");
             modelBuilder.EntitySet<Currency>("Currencies");
             modelBuilder.EntitySet<Language>("Languages");
             modelBuilder.EntitySet<HomeDefine>("HomeDefines");
             modelBuilder.EntitySet<HomeMember>("HomeMembers");
+            modelBuilder.EntitySet<FinanceAccountCategory>("FinanceAccountCategories");
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();
