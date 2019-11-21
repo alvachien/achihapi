@@ -36,7 +36,7 @@ namespace hihapi.Controllers
         [EnableQuery]
         public IActionResult Get()
         {
-            DbSet<HomeMember> listRst;
+            DbSet<HomeMember> listRst = null;
 
             String scopeFilter = String.Empty;
 

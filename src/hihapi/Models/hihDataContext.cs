@@ -19,6 +19,9 @@ namespace hihapi.Models
         public DbSet<HomeMember> HomeMembers { get; set; }
         public DbSet<DBVersion> DBVersions { get; set; }
         public DbSet<FinanceAccountCategory> FinAccountCategories { get; set; }
+        public DbSet<FinanceAssetCategory> FinAssetCategories { get; set; }
+        public DbSet<FinanceDocumentType> FinDocumentTypes { get; set; }
+        public DbSet<FinanceTransactionType> FinTransactionType { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -62,7 +65,18 @@ namespace hihapi.Models
 
             modelBuilder.Entity<FinanceAccountCategory>(entity =>
             {
+            });
 
+            modelBuilder.Entity<FinanceAssetCategory>(entity =>
+            {
+            });
+
+            modelBuilder.Entity<FinanceDocumentType>(entity =>
+            {
+            });
+
+            modelBuilder.Entity<FinanceTransactionType>(entity => 
+            {
             });
         }
     }

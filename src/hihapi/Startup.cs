@@ -105,6 +105,9 @@ namespace hihapi
             modelBuilder.EntitySet<HomeDefine>("HomeDefines");
             modelBuilder.EntitySet<HomeMember>("HomeMembers");
             modelBuilder.EntitySet<FinanceAccountCategory>("FinanceAccountCategories");
+            modelBuilder.EntitySet<FinanceAssetCategory>("FinanceAssetCategories");
+            modelBuilder.EntitySet<FinanceDocumentType>("FinanceDocumentTypes");
+            modelBuilder.EntitySet<FinanceTransactionType>("FinanceTransactionTypes");
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();

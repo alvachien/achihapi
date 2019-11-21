@@ -15,6 +15,12 @@ namespace hihapi.Controllers
 {
     public class FinanceAccountCategoriesController: ODataController
     {
+        public const Int32 AccountCategory_AdvancePayment = 8;
+        public const Int32 AccountCategory_Asset = 7;
+        public const Int32 AccountCategory_BorrowFrom = 9;
+        public const Int32 AccountCategory_LendTo = 10;
+        public const Int32 AccountCategory_AdvanceReceive = 11;
+        public const Int32 AccountCategory_Insurance = 12;
         private readonly hihDataContext _context;
 
         public FinanceAccountCategoriesController(hihDataContext context)
@@ -22,11 +28,11 @@ namespace hihapi.Controllers
             _context = context;
         }
         
-        /// GET: /DBVersions
+        /// GET: /FinanceAccountCategories
         [EnableQuery]
         public IQueryable<FinanceAccountCategory> Get()
         {
-            return _context.;
+            return _context.FinAccountCategories;
         }
     }
 }
