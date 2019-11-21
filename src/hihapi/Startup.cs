@@ -23,6 +23,8 @@ namespace hihapi
 {
     public class Startup
     {
+        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
         public Startup(IConfiguration configuration, IHostingEnvironment env)
         {
             Configuration = configuration;
@@ -56,21 +58,34 @@ namespace hihapi
                 services.AddAuthentication("Bearer")
                     .AddJwtBearer("Bearer", options =>
                     {
-                        options.Authority = "http://localhost:5005";
-                        options.RequireHttpsMetadata = false;
+                        options.Authority = "http://localhost:41016";
+                        options.RequireHttpsMetadata = false;                        
 
-                        options.Audience = "knowledgebuilder.api";
+                        options.Audience = "api.hih";
                     });
+
+                services.AddCors(options =>
+                {
+                    options.AddPolicy(MyAllowSpecificOrigins, builder =>
+                    {
+                        builder.WithOrigins(
+                            "http://localhost:29521" // AC HIH
+                        )
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                    });
+                });
             }
             else if (Environment.IsProduction())
             {
                 services.AddAuthentication("Bearer")
                     .AddJwtBearer("Bearer", options =>
                     {
-                        options.Authority = "http://localhost:5005";
+                        options.Authority = "http://118.178.58.187:5100";
                         options.RequireHttpsMetadata = false;
 
-                        options.Audience = "knowledgebuilder.api";
+                        options.Audience = "api.hih";
                     });
             }
 
@@ -97,6 +112,7 @@ namespace hihapi
 
             // app.UseHttpsRedirection();
             app.UseAuthentication();
+            app.UseCors(MyAllowSpecificOrigins);
 
             ODataModelBuilder modelBuilder = new ODataConventionModelBuilder(app.ApplicationServices);
             modelBuilder.EntitySet<DBVersion>("DBVersions");

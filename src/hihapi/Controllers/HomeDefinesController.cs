@@ -12,9 +12,11 @@ using Newtonsoft.Json.Linq;
 using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.Net.Http;
+using Microsoft.AspNetCore.Authorization;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public class HomeDefinesController : ODataController
     {
         private readonly hihDataContext _context;
