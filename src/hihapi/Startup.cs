@@ -18,6 +18,7 @@ using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Batch;
 using hihapi.Models;
 using Microsoft.AspNetCore.Routing;
+using IdentityServer4.AccessTokenValidation;
 
 namespace hihapi
 {
@@ -55,14 +56,28 @@ namespace hihapi
             }
             else if (Environment.IsDevelopment())
             {                
-                services.AddAuthentication("Bearer")
-                    .AddJwtBearer("Bearer", options =>
-                    {
-                        options.Authority = "http://localhost:41016";
-                        options.RequireHttpsMetadata = false;                        
+                // services.AddAuthentication("Bearer")
+                //     .AddJwtBearer("Bearer", options =>
+                //     {
+                //         options.Authority = "http://localhost:41016";
+                //         options.RequireHttpsMetadata = false;                        
 
-                        options.Audience = "api.hih";
-                    });
+                //         options.Audience = "api.hih";
+                //     });
+                services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                    .AddIdentityServerAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme,
+                        jwtOptions =>
+                        {
+                            // jwt bearer options
+                            jwtOptions.Authority = "http://localhost:41016";
+                            jwtOptions.Audience = "api.hih";
+                            jwtOptions.RequireHttpsMetadata = false;
+                            jwtOptions.SaveToken = true;
+                        },
+                        referenceOptions =>
+                        {
+                            // oauth2 introspection options
+                        });
 
                 services.AddCors(options =>
                 {
