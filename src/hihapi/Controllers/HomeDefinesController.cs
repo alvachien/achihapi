@@ -13,6 +13,7 @@ using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.Net.Http;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace hihapi.Controllers
 {
@@ -20,6 +21,9 @@ namespace hihapi.Controllers
     public class HomeDefinesController : ODataController
     {
         private readonly hihDataContext _context;
+        // public static string SubjectId(this ClaimsPrincipal user) { 
+        //     return user?.Claims?.FirstOrDefault(c => c.Type.Equals(ClaimTypes.NameIdentifier, StringComparison.OrdinalIgnoreCase))?.Value; 
+        // }
 
         public HomeDefinesController(hihDataContext context)
         {
@@ -45,8 +49,9 @@ namespace hihapi.Controllers
             String usrName = "";
             try
             {
-                var usrObj = HIHAPIUtility.GetUserClaim(this);
-                usrName = usrObj.Value;
+                usrName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;                
+                //var usrObj = HIHAPIUtility.GetUserClaim(this);
+                //usrName = usrObj.Value;
 
                 // Disabled scope check just make it work, 2017.10.1
                 scopeFilter = usrName;
