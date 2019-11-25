@@ -49,7 +49,7 @@ namespace hihapi.Controllers
             String usrName = "";
             try
             {
-                usrName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;                
+                usrName = HIHAPIUtility.GetUserID(this);
                 //var usrObj = HIHAPIUtility.GetUserClaim(this);
                 //usrName = usrObj.Value;
 

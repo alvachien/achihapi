@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 
 namespace hihapi.Controllers
@@ -24,6 +25,7 @@ namespace hihapi.Controllers
         
         /// GET: /FinanceAssertCategories
         [EnableQuery]
+        [Authorize]
         public IQueryable<FinanceDocumentType> Get()
         {
             return _context.FinDocumentTypes;

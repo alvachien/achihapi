@@ -9,7 +9,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
+using hihapi.Utilities;
 
 namespace hihapi.Controllers
 {
@@ -30,8 +32,33 @@ namespace hihapi.Controllers
         
         /// GET: /FinanceAccountCategories
         [EnableQuery]
+        [Authorize]
         public IQueryable<FinanceAccountCategory> Get()
         {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+            }
+            catch
+            {
+                // Do nothing
+            }
+
+            if (String.IsNullOrEmpty(usrName))
+                return _context.FinAccountCategories.Where(p => p.HID == null);
+
+            var rst = from acntctgy in _context.FinAccountCategories
+                join hmem in _context.HomeMembers
+                on new {    
+                    acntctgy.HID == null || acntctgy.HID
+                    key2: acntctgy.HID                    
+                } equals new {
+                    key1: true,
+                    key2: 
+                }
+                select acntctgy;
+
             return _context.FinAccountCategories;
         }
     }

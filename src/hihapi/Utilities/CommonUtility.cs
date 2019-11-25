@@ -1,4 +1,7 @@
 using System;
+using System.Linq;
+using System.Security.Claims;
+using hihapi.Models;
 
 namespace hihapi.Utilities
 {
@@ -21,41 +24,53 @@ namespace hihapi.Utilities
 
     internal static class HIHAPIUtility
     {
-        internal static System.Security.Claims.Claim GetUserClaim(Microsoft.AspNetCore.Mvc.ControllerBase ctrl)
+        internal static String GetUserID(Microsoft.AspNetCore.Mvc.ControllerBase ctrl)
         {
-            var usrObj = ctrl.User.FindFirst(c => c.Type == "sub");
-            if (usrObj == null)
-                throw new Exception();
-
-            return usrObj;
+            return ctrl.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
 
-        internal static System.Security.Claims.Claim GetScopeClaim(Microsoft.AspNetCore.Mvc.ControllerBase ctrl, String strScope)
+        internal static void CheckHIDAssignment(hihDataContext context, Int32 hid, String usrName)
         {
-            var scopeObj = ctrl.User.FindFirst(c => c.Type == strScope);
-            if (scopeObj == null)
-                throw new Exception();
-
-            return scopeObj;
+            var ncnt = context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (ncnt <= 0)
+                throw new Exception("No Home Definition found");
         }
 
-        internal static String GetScopeSQLFilter(String scopeStr, String usrStr)
-        {
-            if (String.CompareOrdinal(scopeStr, HIHAPIConstants.All) == 0)
-            {
-                scopeStr = String.Empty;
-            }
-            else if (String.CompareOrdinal(scopeStr, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
-            {
-                scopeStr = usrStr;
-            }
-            else if (String.CompareOrdinal(scopeStr, HIHAPIConstants.OnlyOwnerFullControl) == 0)
-            {
-                scopeStr = usrStr;
-            }
+        // internal static System.Security.Claims.Claim GetUserClaim(Microsoft.AspNetCore.Mvc.ControllerBase ctrl)
+        // {
+        //     var usrObj = ctrl.User.FindFirst(c => c.Type == "sub");
+        //     if (usrObj == null)
+        //         throw new Exception();
 
-            return scopeStr;
-        }
+        //     return usrObj;
+        // }
+
+        // internal static System.Security.Claims.Claim GetScopeClaim(Microsoft.AspNetCore.Mvc.ControllerBase ctrl, String strScope)
+        // {
+        //     var scopeObj = ctrl.User.FindFirst(c => c.Type == strScope);
+        //     if (scopeObj == null)
+        //         throw new Exception();
+
+        //     return scopeObj;
+        // }
+
+        // internal static String GetScopeSQLFilter(String scopeStr, String usrStr)
+        // {
+        //     if (String.CompareOrdinal(scopeStr, HIHAPIConstants.All) == 0)
+        //     {
+        //         scopeStr = String.Empty;
+        //     }
+        //     else if (String.CompareOrdinal(scopeStr, HIHAPIConstants.OnlyOwnerAndDispaly) == 0)
+        //     {
+        //         scopeStr = usrStr;
+        //     }
+        //     else if (String.CompareOrdinal(scopeStr, HIHAPIConstants.OnlyOwnerFullControl) == 0)
+        //     {
+        //         scopeStr = usrStr;
+        //     }
+
+        //     return scopeStr;
+        // }
 
 //         internal static void CheckHIDAssignment(SqlConnection conn, Int32 hid, String usrName)
 //         {
