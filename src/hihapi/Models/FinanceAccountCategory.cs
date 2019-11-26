@@ -9,11 +9,11 @@ namespace hihapi.Models
     public partial class FinanceAccountCategory : BaseModel
     {
         [Key]
-        [Required]
-        [Column("ID", TypeName="INT")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("ID", TypeName="int")]
         public Int32 ID { get; set; }
 
-        [Column("HID", TypeName="INT")]
+        [Column("HID", TypeName="int")]
         public Int32? HID { get; set; }
 
         [Required]

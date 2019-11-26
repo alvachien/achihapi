@@ -9,20 +9,24 @@ namespace hihapi.Models
     public partial class HomeDefine : BaseModel
     {
         [Key]
-        [Required]
-        [Column("ID", TypeName = "INT")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("ID", TypeName = "int")]
         public Int32 ID { get; set; }
+
         [Required]
         [MaxLength(50)]
         [Column("NAME", TypeName = "NVARCHAR(50)")]
         public String Name { get; set; }
+
         [MaxLength(50)]
         [Column("DETAILS", TypeName = "NVARCHAR(50)")]
         public String Details { get; set; }
+
         [Required]
         [MaxLength(50)]
         [Column("HOST", TypeName = "NVARCHAR(50)")]
         public String Host { get; set; }
+        
         [Required]
         [MaxLength(5)]
         [Column("BASECURR", TypeName = "NVARCHAR(5)")]

@@ -35,7 +35,8 @@ namespace hihapi.Models
         public const Int32 TranType_InsurancePaymentOut = 34;
 
         [Key]
-        [Column("ID", TypeName="INT")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("ID", TypeName="int")]
         public Int32 ID { get; set; }
 
         [Column("HID", TypeName="INT")]

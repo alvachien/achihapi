@@ -9,8 +9,7 @@ namespace hihapi.Models
     public partial class HomeMember : BaseModel
     {
         [Key]
-        [Required]
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "int")]
         public Int32 HomeID { get; set; }
 
         [Key]

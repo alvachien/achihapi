@@ -48,18 +48,12 @@ namespace hihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return _context.FinAccountCategories.Where(p => p.HID == null);
 
-            var rst = from acntctgy in _context.FinAccountCategories
-                join hmem in _context.HomeMembers
-                on new {    
-                    acntctgy.HID == null || acntctgy.HID
-                    key2: acntctgy.HID                    
-                } equals new {
-                    key1: true,
-                    key2: 
-                }
+            var rst = 
+                from hmem in _context.HomeMembers.Where(p => p.User == usrName)
+                from acntctgy in _context.FinAccountCategories.Where(p => p.HID == null || p.HID == hmem.HomeID)
                 select acntctgy;
 
-            return _context.FinAccountCategories;
+            return rst;
         }
     }
 }
