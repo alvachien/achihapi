@@ -9,8 +9,7 @@ namespace hihapi.Models
     public partial class HomeDefine : BaseModel
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("ID", TypeName = "int")]
+        [Column("ID", TypeName = "INT")]
         public Int32 ID { get; set; }
 
         [Required]

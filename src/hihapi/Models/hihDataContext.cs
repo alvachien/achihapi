@@ -13,6 +13,9 @@ namespace hihapi.Models
         { 
         }
 
+        // Testing mode
+        public static Boolean TestingMode { get; set; }
+
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Language> Languages { get; set; }
         public DbSet<HomeDefine> HomeDefines { get; set; }
@@ -27,6 +30,8 @@ namespace hihapi.Models
         {
             modelBuilder.Entity<DBVersion>(entity =>
             {
+                entity.Property(e => e.VersionID)
+                    .ValueGeneratedNever();
             });
 
             modelBuilder.Entity<Currency>(entity =>
@@ -41,15 +46,23 @@ namespace hihapi.Models
                     .HasColumnName("LCID")
                     .ValueGeneratedNever();
             });
-            modelBuilder.Entity<HomeDefine>(entity => 
+            modelBuilder.Entity<HomeDefine>(entity =>
             {
-                entity.Property(e => e.ID).ValueGeneratedOnAdd();
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.ID)
+                        .ValueGeneratedOnAdd();
+                }
+                else
+                {
+                    entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                }
 
                 entity.HasIndex(e => e.Name)
                     .HasName("UK_t_homedef_NAME")
                     .IsUnique();
             });
-            modelBuilder.Entity<HomeMember>(entity => 
+            modelBuilder.Entity<HomeMember>(entity =>
             {
                 entity.HasKey(e => new { e.HomeID, e.User });
 
@@ -65,18 +78,58 @@ namespace hihapi.Models
 
             modelBuilder.Entity<FinanceAccountCategory>(entity =>
             {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.ID)
+                        .ValueGeneratedOnAdd();
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                }
             });
 
             modelBuilder.Entity<FinanceAssetCategory>(entity =>
             {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.ID)
+                        .ValueGeneratedOnAdd();
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                }
             });
 
             modelBuilder.Entity<FinanceDocumentType>(entity =>
             {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.ID)
+                        .ValueGeneratedOnAdd();
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                }
             });
 
-            modelBuilder.Entity<FinanceTransactionType>(entity => 
+            modelBuilder.Entity<FinanceTransactionType>(entity =>
             {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.ID)
+                        .ValueGeneratedOnAdd();
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                }
             });
         }
     }

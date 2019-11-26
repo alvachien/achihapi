@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNet.OData.Results;
 
-namespace hihapi.test
+namespace hihapi.test.UnitTests
 {
     public class CurrenciesControllerTest
     {

@@ -23,7 +23,6 @@ namespace hihapi.Models
         public const Int16 DocType_Insurece = 14;
 
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("ID", TypeName="int")]
         public Int16 ID { get; set; }
 

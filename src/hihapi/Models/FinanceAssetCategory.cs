@@ -9,7 +9,6 @@ namespace hihapi.Models
     public partial class FinanceAssetCategory : BaseModel
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("ID", TypeName="int")]
         public Int32 ID { get; set; }
 

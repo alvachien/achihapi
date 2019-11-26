@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Xunit;
 using System.Linq;
 using Microsoft.Data.Sqlite;
@@ -12,7 +12,7 @@ using Microsoft.AspNet.OData.Results;
 
 namespace hihapi.test.UnitTests
 {
-    public class FinanceAccountCategoriesControllerTest
+    public class HomeDefinesControllerTest
     {
         [Fact]
         public async Task Test_Read_Create_ReRead()
@@ -33,29 +33,6 @@ namespace hihapi.test.UnitTests
                 using (var context = new hihDataContext(options))
                 {
                     context.Database.EnsureCreated();
-
-                    // Add system
-                    context.FinAccountCategories.Add(new FinanceAccountCategory() {
-                        HID = null,
-                        Name = "Test 1",
-                        AssetFlag = true,
-                        Comment = "Test 1"
-                    });
-                    // Add Home defined
-                    context.FinAccountCategories.Add(new FinanceAccountCategory() {
-                        HID = 1,
-                        Name = "HID 1.Test 1",
-                        AssetFlag = true,
-                        Comment = "Test 1"
-                    });
-                    await context.SaveChangesAsync();
-
-                    FinanceAccountCategoriesController control = new FinanceAccountCategoriesController(context);
-                    // For non-home case
-                    var items = control.Get();
-                    Assert.Single(items);
-                    var firstitem = items.ElementAt(0);
-                    Assert.Equal(1, firstitem.ID);
                 }
             }
             finally
@@ -67,3 +44,4 @@ namespace hihapi.test.UnitTests
         }
     }
 }
+
