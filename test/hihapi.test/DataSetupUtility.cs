@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using hihapi.Models;
 
@@ -9,10 +9,14 @@ namespace hihapi.test
         internal static List<DBVersion> listDBVersion = new List<DBVersion>();
         internal static List<HomeDefine> listHomeDefine = new List<HomeDefine>();
         internal static List<HomeMember> listHomeMember = new List<HomeMember>();
+        internal static List<Currency> listCurrency = new List<Currency>();
+        internal static List<Language> listLanguage = new List<Language>();
 
         static DataSetupUtility()
         {
             SetupTable_DBVersion();
+            SetupTable_Currency();
+            SetupTable_Language();
         }
 
         public static void InitializeDbForTests(hihDataContext db)
@@ -31,6 +35,14 @@ namespace hihapi.test
         public static void InitialTable_DBVersion(hihDataContext db)
         {
             db.DBVersions.AddRange(listDBVersion);
+        }
+        public static void InitialTable_Currency(hihDataContext db)
+        {
+            db.Currencies.AddRange(listCurrency);
+        }
+        public static void InitialTable_Language(hihDataContext db)
+        {
+            db.Languages.AddRange(listLanguage);
         }
 
         public static void SetupTable_HomeDefineAndMember()
@@ -228,6 +240,25 @@ namespace hihapi.test
                 VersionID = 12,
                 ReleasedDate = new DateTime(2019, 4, 20)
             });
+        }
+
+        private static void SetupTable_Currency()
+        {
+            listCurrency.Add(new Currency() { Curr = "CNY", Name = "Sys.Currency.CNY", Symbol = "¥" });
+            listCurrency.Add(new Currency() { Curr = "EUR", Name = "Sys.Currency.EUR", Symbol = "€" });
+            listCurrency.Add(new Currency() { Curr = "HKD", Name = "Sys.Currency.HKD", Symbol = "HK$" });
+            listCurrency.Add(new Currency() { Curr = "JPY", Name = "Sys.Currency.JPY", Symbol = "¥" });
+            listCurrency.Add(new Currency() { Curr = "KRW", Name = "Sys.Currency.KRW", Symbol = "₩" });
+            listCurrency.Add(new Currency() { Curr = "TWD", Name = "Sys.Currency.TWD", Symbol = "TW$" });
+            listCurrency.Add(new Currency() { Curr = "USD", Name = "Sys.Currency.USD", Symbol = "$" });
+        }
+
+        private static void SetupTable_Language()
+        {
+            listLanguage.Add(new Language() { Lcid = 4, ISOName = "zh-Hans", EnglishName = "Chinese (Simplified)", NativeName = "简体中文", AppFlag = true });
+            listLanguage.Add(new Language() { Lcid = 9, ISOName = "en", EnglishName = "English", NativeName = "English", AppFlag = true });
+            listLanguage.Add(new Language() { Lcid = 17, ISOName = "ja", EnglishName = "Japanese", NativeName = "日本语", AppFlag = false });
+            listLanguage.Add(new Language() { Lcid = 31748, ISOName = "zh-Hant", EnglishName = "Chinese (Traditional)", NativeName = "繁體中文", AppFlag = false });
         }
     }
 }
