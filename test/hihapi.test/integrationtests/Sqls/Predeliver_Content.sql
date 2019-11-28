@@ -35,37 +35,6 @@ INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (15,13,N'�
 
 SET IDENTITY_INSERT dbo.[t_learn_ctgy] OFF;
 
--- Content for FIN account category, updated at 2017.9.10
---SET IDENTITY_INSERT dbo.[t_fin_account_ctgy] ON;
-
---INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (1,N'现金',1,NULL);
---INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (2,N'存储卡',1,NULL);
---INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (3,N'信用卡',1,NULL);
---INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (4,N'应付账款',0,NULL);
---INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (5,N'应收账款',1,NULL);
---INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (6,N'金融账户',1,N'如支付宝等');
---INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (7,N'重大资产',1,NULL);
---INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (8,N'预付款账户',1,NULL);
---INSERT INTO dbo.[t_fin_account_ctgy] ([ID],[NAME],[ASSETFLAG],[COMMENT]) VALUES (9,N'预收款账户',1,NULL);
-
---SET IDENTITY_INSERT dbo.[t_fin_account_ctgy] OFF;
-
--- Content for FIN  Doc Type, updated at 2017.9.10
---SET IDENTITY_INSERT dbo.[t_fin_doc_type] ON;
-
---INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (1,N'普通收支',N'普通');
---INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (2,N'转账', N'转账');
---INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (3,N'货币兑换', N'兑换不同的货币');
---INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (4,N'分期付款', N'分期付款');
---INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (5,N'预付款', N'预付款');
---INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (6,N'预收款', N'预收款');
---INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (7,N'借入款', N'借入款项');
---INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (8,N'借出款', N'借出款项');
---INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (9,N'资产购入', N'重大资产购入类');
---INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (10,N'资产售出', N'重大资产售出类');
-
---SET IDENTITY_INSERT dbo.[t_fin_doc_type] OFF;
-
 
 -- Content for FIN Tran Type, updated 2017.9.10
 SET IDENTITY_INSERT dbo.[t_fin_tran_type] ON;

@@ -17,6 +17,8 @@ namespace hihapi.test.UnitTests
         [Fact]
         public async Task Test_Read_Create_ReRead()
         {
+            hihDataContext.TestingMode = true;
+
             // In-memory database only exists while the connection is open
             var connection = new SqliteConnection("DataSource=:memory:");
             connection.Open();
@@ -31,12 +33,23 @@ namespace hihapi.test.UnitTests
                 using (var context = new hihDataContext(options))
                 {
                     context.Database.EnsureCreated();
+                    DataSetupUtility.InitialTable_DBVersion(context);
+                    await context.SaveChangesAsync();
+
+                    DBVersionsController control = new DBVersionsController(context);
+                    var version = control.Get();
+                    Assert.NotEmpty(version);
+                    var cnt1 = DataSetupUtility.listDBVersion.Count();
+                    var cnt2 = version.Count();
+                    Assert.Equal(cnt1, cnt2);
                 }
             }
             finally
             {
                 connection.Close();
             }
+
+            hihDataContext.TestingMode = false;
         }
     }
 }

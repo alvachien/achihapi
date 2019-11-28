@@ -17,6 +17,8 @@ namespace hihapi.test.UnitTests
         [Fact]
         public async Task Test_Read_Create_ReRead()
         {
+            hihDataContext.TestingMode = true;
+
             // In-memory database only exists while the connection is open
             var connection = new SqliteConnection("DataSource=:memory:");
             connection.Open();
@@ -71,6 +73,8 @@ namespace hihapi.test.UnitTests
             {
                 connection.Close();
             }
+
+            hihDataContext.TestingMode = false;
         }
     }
 }

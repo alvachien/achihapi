@@ -51,11 +51,15 @@ namespace hihapi.Models
                 if (!TestingMode)
                 {
                     entity.Property(e => e.ID)
+                        .UseSqlServerIdentityColumn()
                         .ValueGeneratedOnAdd();
                 }
                 else
                 {
-                    entity.Property(e => e.ID).HasConversion(v => v, v => v);
+//                    entity.Property(e => e.ID).HasConversion(v => v, v => v);            
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
                 }
 
                 entity.HasIndex(e => e.Name)
@@ -81,12 +85,16 @@ namespace hihapi.Models
                 if (!TestingMode)
                 {
                     entity.Property(e => e.ID)
+                        .UseSqlServerIdentityColumn()
                         .ValueGeneratedOnAdd();
                 }
                 else
                 {
                     // Workaround for Sqlite in testing mode
-                    entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
                 }
             });
 
@@ -95,12 +103,16 @@ namespace hihapi.Models
                 if (!TestingMode)
                 {
                     entity.Property(e => e.ID)
+                        .UseSqlServerIdentityColumn()
                         .ValueGeneratedOnAdd();
                 }
                 else
                 {
                     // Workaround for Sqlite in testing mode
-                    entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
                 }
             });
 
@@ -109,12 +121,16 @@ namespace hihapi.Models
                 if (!TestingMode)
                 {
                     entity.Property(e => e.ID)
+                        .UseSqlServerIdentityColumn()
                         .ValueGeneratedOnAdd();
                 }
                 else
                 {
                     // Workaround for Sqlite in testing mode
-                    entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
                 }
             });
 
@@ -123,12 +139,16 @@ namespace hihapi.Models
                 if (!TestingMode)
                 {
                     entity.Property(e => e.ID)
+                        .UseSqlServerIdentityColumn()
                         .ValueGeneratedOnAdd();
                 }
                 else
                 {
                     // Workaround for Sqlite in testing mode
-                    entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
                 }
             });
         }

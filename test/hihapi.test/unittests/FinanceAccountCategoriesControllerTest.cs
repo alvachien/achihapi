@@ -54,8 +54,9 @@ namespace hihapi.test.UnitTests
                     // For non-home case
                     var items = control.Get();
                     Assert.Single(items);
-                    var firstitem = items.ElementAt(0);
+                    var firstitem = await items.FirstOrDefaultAsync<FinanceAccountCategory>();
                     Assert.Equal(1, firstitem.ID);
+                    Assert.Null(firstitem.HID);
                 }
             }
             finally
