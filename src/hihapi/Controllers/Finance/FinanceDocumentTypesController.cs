@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
+using hihapi.Utilities;
 
 namespace hihapi.Controllers
 {
@@ -23,11 +24,31 @@ namespace hihapi.Controllers
             _context = context;
         }
         
-        /// GET: /FinanceAssertCategories
+        /// GET: /FinanceDocumentTypes
         [EnableQuery]
         [Authorize]
-        public IQueryable<FinanceDocumentType> Get()
+        public IQueryable<FinanceDocumentType> Get(Int32? hid = null)
         {
+            if (hid.HasValue)
+            {
+                String usrName = String.Empty;
+                try
+                {
+                    usrName = HIHAPIUtility.GetUserID(this);
+                }
+                catch
+                {
+                    // Do nothing
+                }
+
+                var rst = 
+                    from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid.Value)
+                    from ctgy in _context.FinDocumentTypes.Where(p => p.HID == null || p.HID == hmem.HomeID)
+                    select ctgy;
+
+                return rst;
+            }
+
             return _context.FinDocumentTypes;
         }
     }

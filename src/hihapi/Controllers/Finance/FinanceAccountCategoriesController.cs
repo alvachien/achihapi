@@ -15,7 +15,7 @@ using hihapi.Utilities;
 
 namespace hihapi.Controllers
 {
-    public class FinanceAccountCategoriesController: ODataController
+    public class FinanceAccountCategoriesController : ODataController
     {
         public const Int32 AccountCategory_AdvancePayment = 8;
         public const Int32 AccountCategory_Asset = 7;
@@ -29,31 +29,36 @@ namespace hihapi.Controllers
         {
             _context = context;
         }
-        
+
         /// GET: /FinanceAccountCategories
         [EnableQuery]
         [Authorize]
-        public IQueryable<FinanceAccountCategory> Get()
+        public IQueryable<FinanceAccountCategory> Get(Int32? hid = null)
         {
-            String usrName = String.Empty;
-            try
+            if (hid.HasValue)
             {
-                usrName = HIHAPIUtility.GetUserID(this);
+                String usrName = String.Empty;
+                try
+                {
+                    usrName = HIHAPIUtility.GetUserID(this);
+                }
+                catch
+                {
+                    // Do nothing
+                }
+
+                if (String.IsNullOrEmpty(usrName))
+                    return _context.FinAccountCategories.Where(p => p.HID == null);
+
+                var rst =
+                    from hmem in _context.HomeMembers.Where(p => p.User == usrName)
+                    from acntctgy in _context.FinAccountCategories.Where(p => p.HID == null || p.HID == hmem.HomeID)
+                    select acntctgy;
+
+                return rst;
             }
-            catch
-            {
-                // Do nothing
-            }
-
-            if (String.IsNullOrEmpty(usrName))
-                return _context.FinAccountCategories.Where(p => p.HID == null);
-
-            var rst = 
-                from hmem in _context.HomeMembers.Where(p => p.User == usrName)
-                from acntctgy in _context.FinAccountCategories.Where(p => p.HID == null || p.HID == hmem.HomeID)
-                select acntctgy;
-
-            return rst;
+            
+            return _context.FinAccountCategories.Where(p => p.HID == null);
         }
     }
 }

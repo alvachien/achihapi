@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace hihapi.test.UnitTests
 {
-    public class FinanceAccountCategoriesControllerTest
+    public class FinanceDocumentTypesControllerTest
     {
         [Fact]
-        public async Task Test_Read_Create_ReRead()
+        public async Task TestCase1()
         {
             hihDataContext.TestingMode = true;
 
