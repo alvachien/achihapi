@@ -140,6 +140,8 @@ namespace hihapi
             modelBuilder.EntitySet<FinanceDocumentType>("FinanceDocumentTypes");
             modelBuilder.EntitySet<FinanceTransactionType>("FinanceTransactionTypes");
             modelBuilder.EnumType<FinanceAccountStatus>();
+            modelBuilder.EnumType<RepeatFrequency>();
+            modelBuilder.EnumType<LoanRepaymentMethod>();
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();
