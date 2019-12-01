@@ -25,5 +25,6 @@ namespace hihapi.Models
         public String Desp { get; set; }
 
         public HomeDefine CurrentHome { get; set; }
+        public ICollection<FinanceAccountExtraAS> AccountExtraAsset { get; set; }
     }
 }

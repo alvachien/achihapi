@@ -61,6 +61,8 @@ namespace hihapi.Models
 
         [Column("STATUS", TypeName="TINYINT")]
         public FinanceAccountStatus? Status { get; set; }
+
+        public HomeDefine CurrentHome { get; set; }
     }
 
     public abstract class FinanceAccountExtra
@@ -266,6 +268,8 @@ namespace hihapi.Models
         [Column("REFDOC_SOLD", TypeName="INT")]
         public Int32? RefenceSoldDocumentID { get; set; }
 
+        public FinanceAssetCategory AssetCategory { get; set; }
+        
         public FinanceAccountExtraAS(): base()
         {
         }

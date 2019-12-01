@@ -25,6 +25,9 @@ namespace hihapi.Models
         public DbSet<FinanceAssetCategory> FinAssetCategories { get; set; }
         public DbSet<FinanceDocumentType> FinDocumentTypes { get; set; }
         public DbSet<FinanceTransactionType> FinTransactionType { get; set; }
+        public DbSet<FinanceAccount> FinanceAccount { get; set; }
+        public DbSet<FinanceAccountExtraDP> FinanceAccountExtraDP { get; set; }
+        public DbSet<FinanceAccountExtraAS> FinanceAccountExtraAS { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -193,6 +196,26 @@ namespace hihapi.Models
                     .HasForeignKey(d => d.HomeID)
                     .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("FK_t_fin_trantype_HID");
+            });
+        
+            modelBuilder.Entity<FinanceAccount> (entity => {
+                if (!TestingMode) 
+                {
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.FinanceAccounts)
+                    .HasForeignKey(d => d.HomeID)
+                    .HasConstraintName("FK_t_account_HID");
+            });
+            modelBuilder.Entity<FinanceAccountExtraAS>(entity => {
+                entity.HasOne(d => d.AssetCategory)
+                    .WithMany(p => p.AccountExtraAsset)
+                    .HasForeignKey(d => d.CategoryID)
+                    .HasConstraintName("FK_t_fin_account_exp_as_ID");
             });
         }
     }

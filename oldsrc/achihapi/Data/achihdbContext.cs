@@ -312,37 +312,6 @@ namespace achihapi.Models
                     .HasConstraintName("FK_t_account_HID");
             });
 
-            modelBuilder.Entity<TFinAccountExtAs>(entity =>
-            {
-                entity.HasKey(e => e.Accountid);
-
-                entity.ToTable("t_fin_account_ext_as");
-
-                entity.Property(e => e.Accountid)
-                    .HasColumnName("ACCOUNTID")
-                    .ValueGeneratedNever();
-
-                entity.Property(e => e.Comment)
-                    .HasColumnName("COMMENT")
-                    .HasMaxLength(100);
-
-                entity.Property(e => e.Ctgyid).HasColumnName("CTGYID");
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasColumnName("NAME")
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.RefdocBuy).HasColumnName("REFDOC_BUY");
-
-                entity.Property(e => e.RefdocSold).HasColumnName("REFDOC_SOLD");
-
-                entity.HasOne(d => d.Ctgy)
-                    .WithMany(p => p.TFinAccountExtAs)
-                    .HasForeignKey(d => d.Ctgyid)
-                    .HasConstraintName("FK_t_fin_account_exp_as_ID");
-            });
-
             modelBuilder.Entity<TFinAccountExtCc>(entity =>
             {
                 entity.HasKey(e => e.Accountid);
