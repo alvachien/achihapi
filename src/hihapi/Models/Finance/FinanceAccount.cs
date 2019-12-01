@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Reflection;
+using System.Linq;
 
 namespace hihapi.Models
 {
@@ -33,15 +35,15 @@ namespace hihapi.Models
     public partial class FinanceAccount : BaseModel
     {
         [Key]
-        [Column("ID", TypeName="int")]
+        [Column("ID", TypeName="INT")]
         public Int32 ID { get; set; }
 
         [Required]
-        [Column("HID", TypeName="int")]
-        public Int32 HID { get; set; }
+        [Column("HID", TypeName="INT")]
+        public Int32 HomeID { get; set; }
 
         [Required]
-        [Column("CTGYID", TypeName="int")]
+        [Column("CTGYID", TypeName="INT")]
         public Int32 CategoryID { get; set; }
 
         [Required]
@@ -54,12 +56,17 @@ namespace hihapi.Models
         public String Comment { get; set; }
         
         [StringLength(40)]
+        [Column("OWNER", TypeName="NVARCHAR(40)")]
         public String Owner { get; set; }
-        public FinanceAccountStatus Status { get; set; }
+
+        [Column("STATUS", TypeName="TINYINT")]
+        public FinanceAccountStatus? Status { get; set; }
     }
 
     public abstract class FinanceAccountExtra
     {
+        [Key]
+        [Column("ACCOUNTID", TypeName="INT")]
         public Int32 AccountID { get; set; }
         public abstract bool IsValid();
         public abstract string GetDBFieldName(string field);
@@ -67,28 +74,47 @@ namespace hihapi.Models
 
     // Account extra: advance payment
     [Table("T_FIN_ACCOUNT_EXT_DP")]
-    public sealed class FinanceAccountExtDPViewModel: FinanceAccountExtra
+    public sealed class FinanceAccountExtraDP: FinanceAccountExtra
     {
+        [Required]
+        [Column("DIRECT", TypeName="BIT")]
         public Boolean Direct { get; set; }
+        
         [Required]
+        [Column("STARTDATE")]
+        [DataType(DataType.Date)]
         public DateTime StartDate { get; set; }
+        
         [Required]
+        [Column("ENDDATE")]
+        [DataType(DataType.Date)]
         public DateTime EndDate { get; set; }
-        public RepeatFrequency RptType { get; set; }
-        public Int32 RefDocID { get; set; }
+        
+        [Required]
+        [Column("RPTTYPE", TypeName="TINYINT")]
+        public RepeatFrequency RepeatType { get; set; }
+        
+        [Required]
+        [Column("REFDOCID", TypeName="INT")]
+        public Int32 RefenceDocumentID { get; set; }
+
         [StringLength(100)]
+        [Column("DEFRRDAYS", TypeName="NVARCHAR(100)")]
         public String DefrrDays { get; set; }
+
         [StringLength(45)]
+        [Column("COMMENT", TypeName="NVARCHAR(45)")]
         public String Comment { get; set; }
+
         // Tmp. docs
-        public List<FinanceTmpDocDPViewModel> DPTmpDocs { get; }
+        public List<FinanceTmpDPDocument> DPTmpDocs { get; }
 
         public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
-        public FinanceAccountExtDPViewModel(): base()
+        public FinanceAccountExtraDP(): base()
         {
-            this.DPTmpDocs = new List<FinanceTmpDocDPViewModel>();
+            this.DPTmpDocs = new List<FinanceTmpDPDocument>();
         }
-        static FinanceAccountExtDPViewModel()
+        static FinanceAccountExtraDP()
         {
             dictFieldNames.Add("AccountID", "ACCOUNTID");
             dictFieldNames.Add("Direct", "DIRECT");
@@ -117,8 +143,8 @@ namespace hihapi.Models
 
             return true;
         }
-        public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountExtDPViewModel oldAcnt,
-            FinanceAccountExtDPViewModel newAcnt)
+        public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountExtraDP oldAcnt,
+            FinanceAccountExtraDP newAcnt)
         {
             Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
             if (oldAcnt == null || newAcnt == null || Object.ReferenceEquals(oldAcnt, newAcnt)
@@ -131,7 +157,7 @@ namespace hihapi.Models
                 throw new Exception("Account info is invalid");
             }
 
-            Type t = typeof(FinanceAccountExtDPViewModel);
+            Type t = typeof(FinanceAccountExtraDP);
             PropertyInfo[] listProperties = t.GetProperties();
             var listSortedProperties = listProperties.OrderBy(o => o.Name);
 
@@ -169,8 +195,8 @@ namespace hihapi.Models
 
             return dictDelta;
         }
-        public static string WorkoutDeltaStringForUpdate(FinanceAccountExtDPViewModel oldAcnt,
-            FinanceAccountExtDPViewModel newAcnt)
+        public static string WorkoutDeltaStringForUpdate(FinanceAccountExtraDP oldAcnt,
+            FinanceAccountExtraDP newAcnt)
         {
             var diffs = WorkoutDeltaForUpdate(oldAcnt, newAcnt);
 
@@ -218,23 +244,33 @@ namespace hihapi.Models
 
     // Account extra: Assert
     [Table("T_FIN_ACCOUNT_EXT_AS")]
-    public sealed class FinanceAccountExtASViewModel: FinanceAccountExtra
+    public sealed class FinanceAccountExtraAS: FinanceAccountExtra
     {
+        [Required]
+        [Column("CTGYID", TypeName="INT")]
         public Int32 CategoryID { get; set; }
-        [StringLength(50)]
-        [Required]
-        public String Name { get; set; }
-        [StringLength(50)]
-        public String Comment { get; set; }
-        [Required]
-        public Int32 RefDocForBuy { get; set; }
-        public Int32? RefDocForSold { get; set; }
 
-        public FinanceAccountExtASViewModel(): base()
+        [Required]
+        [StringLength(50)]
+        [Column("NAME", TypeName="NVARCHAR(50)")]
+        public String Name { get; set; }
+
+        [StringLength(50)]
+        [Column("COMMENT", TypeName="NVARCHAR(100)")]
+        public String Comment { get; set; }
+
+        [Required]
+        [Column("REFDOC_BUY", TypeName="INT")]
+        public Int32 RefenceBuyDocumentID { get; set; }
+
+        [Column("REFDOC_SOLD", TypeName="INT")]
+        public Int32? RefenceSoldDocumentID { get; set; }
+
+        public FinanceAccountExtraAS(): base()
         {
         }
         public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
-        static FinanceAccountExtASViewModel()
+        static FinanceAccountExtraAS()
         {
             dictFieldNames.Add("AccountID", "ACCOUNTID");
             dictFieldNames.Add("CategoryID", "CTGYID");
@@ -255,7 +291,7 @@ namespace hihapi.Models
         {
             if (String.IsNullOrEmpty(Name))
                 return false;
-            if (RefDocForBuy <= 0)
+            if (RefenceBuyDocumentID <= 0)
                 return false;
             if (CategoryID <= 0)
                 return false;
@@ -263,8 +299,8 @@ namespace hihapi.Models
             return true;
         }
 
-        public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountExtASViewModel oldAcnt,
-            FinanceAccountExtASViewModel newAcnt)
+        public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountExtraAS oldAcnt,
+            FinanceAccountExtraAS newAcnt)
         {
             Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
             if (oldAcnt == null || newAcnt == null || Object.ReferenceEquals(oldAcnt, newAcnt)
@@ -277,7 +313,7 @@ namespace hihapi.Models
                 throw new Exception("Account info is invalid");
             }
 
-            Type t = typeof(FinanceAccountExtASViewModel);
+            Type t = typeof(FinanceAccountExtraAS);
             PropertyInfo[] listProperties = t.GetProperties();
             var listSortedProperties = listProperties.OrderBy(o => o.Name);
 
@@ -285,13 +321,13 @@ namespace hihapi.Models
             {
                 if (item.Name == "RefDocForSold")
                 {
-                    if (oldAcnt.RefDocForSold.HasValue)
+                    if (oldAcnt.RefenceSoldDocumentID.HasValue)
                     {
-                        if (newAcnt.RefDocForSold.HasValue)
+                        if (newAcnt.RefenceSoldDocumentID.HasValue)
                         {
-                            if (oldAcnt.RefDocForSold.Value != newAcnt.RefDocForSold.Value)
+                            if (oldAcnt.RefenceSoldDocumentID.Value != newAcnt.RefenceSoldDocumentID.Value)
                             {
-                                dictDelta.Add(item.Name, newAcnt.RefDocForSold.Value);
+                                dictDelta.Add(item.Name, newAcnt.RefenceSoldDocumentID.Value);
                             }
                         }
                         else
@@ -301,9 +337,9 @@ namespace hihapi.Models
                     }
                     else
                     {
-                        if (newAcnt.RefDocForSold.HasValue)
+                        if (newAcnt.RefenceSoldDocumentID.HasValue)
                         {
-                            dictDelta.Add(item.Name, newAcnt.RefDocForSold.Value);
+                            dictDelta.Add(item.Name, newAcnt.RefenceSoldDocumentID.Value);
                         }
                     }
                 }
@@ -333,8 +369,8 @@ namespace hihapi.Models
 
             return dictDelta;
         }
-        public static string WorkoutDeltaStringForUpdate(FinanceAccountExtASViewModel oldAcnt,
-            FinanceAccountExtASViewModel newAcnt)
+        public static string WorkoutDeltaStringForUpdate(FinanceAccountExtraAS oldAcnt,
+            FinanceAccountExtraAS newAcnt)
         {
             var diffs = WorkoutDeltaForUpdate(oldAcnt, newAcnt);
 

@@ -34,14 +34,14 @@ namespace hihapi.test.UnitTests
 
                     // Add system
                     context.FinAccountCategories.Add(new FinanceAccountCategory() {
-                        HID = null,
+                        HomeID = null,
                         Name = "Test 1",
                         AssetFlag = true,
                         Comment = "Test 1"
                     });
                     // Add Home defined
                     context.FinAccountCategories.Add(new FinanceAccountCategory() {
-                        HID = 1,
+                        HomeID = 1,
                         Name = "HID 1.Test 1",
                         AssetFlag = true,
                         Comment = "Test 1"
@@ -54,7 +54,7 @@ namespace hihapi.test.UnitTests
                     Assert.Single(items);
                     var firstitem = await items.FirstOrDefaultAsync<FinanceAccountCategory>();
                     Assert.Equal(1, firstitem.ID);
-                    Assert.Null(firstitem.HID);
+                    Assert.Null(firstitem.HomeID);
                 }
             }
             finally

@@ -39,7 +39,7 @@ namespace hihapi.Models
         public Int32 ID { get; set; }
 
         [Column("HID", TypeName="INT")]
-        public Int32? HID { get; set; }
+        public Int32? HomeID { get; set; }
 
         [Required]
         [StringLength(30)]
@@ -56,5 +56,7 @@ namespace hihapi.Models
         [StringLength(45)]
         [Column("COMMENT", TypeName="NVARCHAR(45)")]
         public String Comment { get; set; }
+
+        public HomeDefine CurrentHome { get; set; }
     }
 }

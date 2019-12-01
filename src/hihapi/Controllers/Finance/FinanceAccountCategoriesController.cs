@@ -48,17 +48,17 @@ namespace hihapi.Controllers
                 }
 
                 if (String.IsNullOrEmpty(usrName))
-                    return _context.FinAccountCategories.Where(p => p.HID == null);
+                    return _context.FinAccountCategories.Where(p => p.HomeID == null);
 
                 var rst =
                     from hmem in _context.HomeMembers.Where(p => p.User == usrName)
-                    from acntctgy in _context.FinAccountCategories.Where(p => p.HID == null || p.HID == hmem.HomeID)
+                    from acntctgy in _context.FinAccountCategories.Where(p => p.HomeID == null || p.HomeID == hmem.HomeID)
                     select acntctgy;
 
                 return rst;
             }
             
-            return _context.FinAccountCategories.Where(p => p.HID == null);
+            return _context.FinAccountCategories.Where(p => p.HomeID == null);
         }
     }
 }

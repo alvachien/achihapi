@@ -43,13 +43,13 @@ namespace hihapi.Controllers
 
                 var rst = 
                     from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid.Value)
-                    from ctgy in _context.FinAssetCategories.Where(p => p.HID == null || p.HID == hmem.HomeID)
+                    from ctgy in _context.FinAssetCategories.Where(p => p.HomeID == null || p.HomeID == hmem.HomeID)
                     select ctgy;
 
                 return rst;
             }
             
-            return _context.FinAssetCategories.Where(p => p.HID == null);
+            return _context.FinAssetCategories.Where(p => p.HomeID == null);
         }
     }
 }

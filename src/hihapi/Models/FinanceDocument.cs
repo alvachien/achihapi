@@ -19,7 +19,7 @@ namespace hihapi.Models
 
         [Required]
         [Column("HID", TypeName="INT")]
-        public Int32 HID { get; set; }
+        public Int32 HomeID { get; set; }
 
         [Required]
         [Column("DOCTYPE", TypeName="SMALLINT")]

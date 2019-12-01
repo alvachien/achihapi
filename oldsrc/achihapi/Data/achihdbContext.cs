@@ -29,7 +29,6 @@ namespace achihapi.Models
         public virtual DbSet<TFinAccountExtLoanH> TFinAccountExtLoanH { get; set; }
         public virtual DbSet<TFinAssetCtgy> TFinAssetCtgy { get; set; }
         public virtual DbSet<TFinControlcenter> TFinControlcenter { get; set; }
-        public virtual DbSet<TFinDocType> TFinDocType { get; set; }
         public virtual DbSet<TFinDocument> TFinDocument { get; set; }
         public virtual DbSet<TFinDocumentItem> TFinDocumentItem { get; set; }
         public virtual DbSet<TFinOrder> TFinOrder { get; set; }
@@ -37,7 +36,6 @@ namespace achihapi.Models
         public virtual DbSet<TFinPlan> TFinPlan { get; set; }
         public virtual DbSet<TFinTmpdocDp> TFinTmpdocDp { get; set; }
         public virtual DbSet<TFinTmpdocLoan> TFinTmpdocLoan { get; set; }
-        public virtual DbSet<TFinTranType> TFinTranType { get; set; }
         public virtual DbSet<THomedef> THomedef { get; set; }
         public virtual DbSet<THomemem> THomemem { get; set; }
         public virtual DbSet<THomemsg> THomemsg { get; set; }
@@ -314,53 +312,6 @@ namespace achihapi.Models
                     .HasConstraintName("FK_t_account_HID");
             });
 
-            modelBuilder.Entity<TFinAccountCtgy>(entity =>
-            {
-                entity.ToTable("t_fin_account_ctgy");
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.Assetflag)
-                    .IsRequired()
-                    .HasColumnName("ASSETFLAG")
-                    .HasDefaultValueSql("((1))");
-
-                entity.Property(e => e.Comment)
-                    .HasColumnName("COMMENT")
-                    .HasMaxLength(45);
-
-                entity.Property(e => e.Createdat)
-                    .HasColumnName("CREATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Createdby)
-                    .HasColumnName("CREATEDBY")
-                    .HasMaxLength(40);
-
-                entity.Property(e => e.Hid).HasColumnName("HID");
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasColumnName("NAME")
-                    .HasMaxLength(30);
-
-                entity.Property(e => e.Updatedat)
-                    .HasColumnName("UPDATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Updatedby)
-                    .HasColumnName("UPDATEDBY")
-                    .HasMaxLength(40);
-
-                entity.HasOne(d => d.H)
-                    .WithMany(p => p.TFinAccountCtgy)
-                    .HasForeignKey(d => d.Hid)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_account_ctgy_HID");
-            });
-
             modelBuilder.Entity<TFinAccountExtAs>(entity =>
             {
                 entity.HasKey(e => e.Accountid);
@@ -559,47 +510,6 @@ namespace achihapi.Models
                     .HasConstraintName("FK_t_fin_account_ext_loan_h_ID");
             });
 
-            modelBuilder.Entity<TFinAssetCtgy>(entity =>
-            {
-                entity.ToTable("t_fin_asset_ctgy");
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.Createdat)
-                    .HasColumnName("CREATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Createdby)
-                    .HasColumnName("CREATEDBY")
-                    .HasMaxLength(40);
-
-                entity.Property(e => e.Desp)
-                    .HasColumnName("DESP")
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Hid).HasColumnName("HID");
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasColumnName("NAME")
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Updatedat)
-                    .HasColumnName("UPDATEDAT")
-                    .HasColumnType("date");
-
-                entity.Property(e => e.Updatedby)
-                    .HasColumnName("UPDATEDBY")
-                    .HasMaxLength(40);
-
-                entity.HasOne(d => d.H)
-                    .WithMany(p => p.TFinAssetCtgy)
-                    .HasForeignKey(d => d.Hid)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_fin_asset_ctgy_HID");
-            });
-
             modelBuilder.Entity<TFinControlcenter>(entity =>
             {
                 entity.ToTable("t_fin_controlcenter");
@@ -645,48 +555,6 @@ namespace achihapi.Models
                     .WithMany(p => p.TFinControlcenter)
                     .HasForeignKey(d => d.Hid)
                     .HasConstraintName("FK_t_fin_cc_HID");
-            });
-
-            modelBuilder.Entity<TFinDocType>(entity =>
-            {
-                entity.ToTable("t_fin_doc_type");
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.Comment)
-                    .HasColumnName("COMMENT")
-                    .HasMaxLength(45);
-
-                entity.Property(e => e.Createdat)
-                    .HasColumnName("CREATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Createdby)
-                    .HasColumnName("CREATEDBY")
-                    .HasMaxLength(40);
-
-                entity.Property(e => e.Hid).HasColumnName("HID");
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasColumnName("NAME")
-                    .HasMaxLength(30);
-
-                entity.Property(e => e.Updatedat)
-                    .HasColumnName("UPDATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Updatedby)
-                    .HasColumnName("UPDATEDBY")
-                    .HasMaxLength(40);
-
-                entity.HasOne(d => d.H)
-                    .WithMany(p => p.TFinDocType)
-                    .HasForeignKey(d => d.Hid)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_fin_doctype_HID");
             });
 
             modelBuilder.Entity<TFinDocument>(entity =>
@@ -1033,52 +901,6 @@ namespace achihapi.Models
                     .WithMany(p => p.TFinTmpdocLoan)
                     .HasForeignKey(d => d.Hid)
                     .HasConstraintName("FK_t_fin_tmpdocloan_HID");
-            });
-
-            modelBuilder.Entity<TFinTranType>(entity =>
-            {
-                entity.ToTable("t_fin_tran_type");
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.Comment)
-                    .HasColumnName("COMMENT")
-                    .HasMaxLength(45);
-
-                entity.Property(e => e.Createdat)
-                    .HasColumnName("CREATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Createdby)
-                    .HasColumnName("CREATEDBY")
-                    .HasMaxLength(40);
-
-                entity.Property(e => e.Expense).HasColumnName("EXPENSE");
-
-                entity.Property(e => e.Hid).HasColumnName("HID");
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasColumnName("NAME")
-                    .HasMaxLength(30);
-
-                entity.Property(e => e.Parid).HasColumnName("PARID");
-
-                entity.Property(e => e.Updatedat)
-                    .HasColumnName("UPDATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Updatedby)
-                    .HasColumnName("UPDATEDBY")
-                    .HasMaxLength(40);
-
-                entity.HasOne(d => d.H)
-                    .WithMany(p => p.TFinTranType)
-                    .HasForeignKey(d => d.Hid)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_fin_trantype_HID");
             });
 
             modelBuilder.Entity<THomemsg>(entity =>

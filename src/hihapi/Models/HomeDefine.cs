@@ -36,5 +36,9 @@ namespace hihapi.Models
         public String CreatorDisplayAs { get; set; }
 
         public ICollection<HomeMember> HomeMembers { get; set; }
+        public ICollection<FinanceAccountCategory> FinanceAccountCategories { get; set; }
+        public ICollection<FinanceAssetCategory> FinanceAssetCategories { get; set; }
+        public ICollection<FinanceDocumentType> FinanceDocumentTypes { get; set; }
+        public ICollection<FinanceTransactionType> FinanceTransactionTypes { get; set; }
     }
 }

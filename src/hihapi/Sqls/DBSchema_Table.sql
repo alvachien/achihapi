@@ -1275,7 +1275,6 @@ CREATE TABLE [dbo].[t_fin_tmpdoc_loan](
 	[REFDOCID] [int] NULL,
 	[ACCOUNTID] [int] NOT NULL,
 	[TRANDATE] [date] NOT NULL,
-	[TRANTYPE] [int] NOT NULL,
 	[TRANAMOUNT] [decimal](17, 2) NOT NULL,
 	[INTERESTAMOUNT] [decimal](17, 2) NULL,
 	[CONTROLCENTERID] [int] NULL,

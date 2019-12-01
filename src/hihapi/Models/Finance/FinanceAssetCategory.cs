@@ -13,7 +13,7 @@ namespace hihapi.Models
         public Int32 ID { get; set; }
 
         [Column("HID", TypeName="INT")]
-        public Int32? HID { get; set; }
+        public Int32? HomeID { get; set; }
 
         [Required]
         [StringLength(50)]
@@ -23,5 +23,7 @@ namespace hihapi.Models
         [StringLength(50)]
         [Column("DESP", TypeName="NVARCHAR(50)")]
         public String Desp { get; set; }
+
+        public HomeDefine CurrentHome { get; set; }
     }
 }

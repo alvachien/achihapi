@@ -43,7 +43,7 @@ namespace hihapi.Controllers
 
                 var rst = 
                     from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid.Value)
-                    from ctgy in _context.FinTransactionType.Where(p => p.HID == null || p.HID == hmem.HomeID)
+                    from ctgy in _context.FinTransactionType.Where(p => p.HomeID == null || p.HomeID == hmem.HomeID)
                     select ctgy;
 
                 return rst;
