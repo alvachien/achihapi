@@ -217,6 +217,8 @@ namespace hihapi.Models
                     .HasForeignKey(d => d.CategoryID)
                     .HasConstraintName("FK_t_fin_account_exp_as_ID");
             });
+            modelBuilder.Entity<FinanceAccountExtraDP>(entity => {
+            });
         }
     }
 }
