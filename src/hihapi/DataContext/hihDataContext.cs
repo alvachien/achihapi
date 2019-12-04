@@ -33,6 +33,8 @@ namespace hihapi.Models
         public DbSet<FinanceTmpDPDocument> FinanceTmpDPDocument { get; set; }
         public DbSet<FinanceTmpLoanDocument> FinanceTmpLoanDocument { get; set; }
         public DbSet<FinanceControlCenter> FinanceControlCenter { get; set; }
+        public DbSet<FinanceOrder> FinanceOrder { get; set; }
+        public DbSet<FinanceOrderSRule> FinanceOrderSRule { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -296,6 +298,31 @@ namespace hihapi.Models
                     .WithMany(p => p.FinanceControlCenters)
                     .HasForeignKey(d => d.HomeID)
                     .HasConstraintName("FK_t_fin_cc_HID");
+            });
+            modelBuilder.Entity<FinanceOrder>(entity => {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.FinanceOrders)
+                    .HasForeignKey(d => d.HomeID)
+                    .HasConstraintName("FK_t_fin_order_HID");
+            });
+            modelBuilder.Entity<FinanceOrderSRule>(entity => {
+                entity.HasOne(d => d.Order)
+                    .WithMany(p => p.SRule)
+                    .HasForeignKey(d => d.OrderID)
+                    .HasConstraintName("FK_t_fin_order_srule_order");
             });
         }
     }

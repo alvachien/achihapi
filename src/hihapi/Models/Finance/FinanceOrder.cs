@@ -19,7 +19,7 @@ namespace hihapi.Models
 
         [Required]
         [Column("HID", TypeName="INT")]
-        public Int32 HID { get; set; }
+        public Int32 HomeID { get; set; }
 
         [Required]
         [StringLength(30)]
@@ -41,6 +41,7 @@ namespace hihapi.Models
         public String Comment { get; set; }
 
         public ICollection<FinanceOrderSRule> SRule { get; set; }
+        public HomeDefine CurrentHome { get; set; }
     }
 
     [Table("T_FIN_ORDER_SRULE")]

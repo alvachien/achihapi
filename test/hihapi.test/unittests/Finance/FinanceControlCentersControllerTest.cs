@@ -86,11 +86,12 @@ namespace hihapi.test.UnitTests
                     Assert.Equal(rst2.Entity.Name, cc.Name);
                     Assert.Equal(rst2.Entity.HomeID, cc.HomeID);
                     Assert.Equal(rst2.Entity.Owner, cc.Owner);
-                    Assert.True(rst2.Entity.ID > 0);
+                    var sndccid = rst2.Entity.ID;
+                    Assert.True(sndccid > 0);
 
                     // 4. Change one control center
                     cc.Owner = DataSetupUtility.UserB;
-                    rst = await control.Put(rst2.Entity.ID, cc);
+                    rst = await control.Put(sndccid, cc);
                     Assert.NotNull(rst);
                     var rst4 = Assert.IsType<UpdatedODataResult<FinanceControlCenter>>(rst);
                     Assert.Equal(rst4.Entity.Name, cc.Name);
@@ -98,6 +99,16 @@ namespace hihapi.test.UnitTests
                     Assert.Equal(rst4.Entity.Owner, DataSetupUtility.UserB);
 
                     // 5. Delete the second control center
+                    var rst5 = await control.Delete(sndccid);
+                    Assert.NotNull(rst5);
+                    var rst6 = Assert.IsType<StatusCodeResult>(rst5);
+                    Assert.Equal(204, rst6.StatusCode);
+
+                    // 6. Now read the whole control centers
+                    rst3 = control.Get(DataSetupUtility.Home1ID);
+                    Assert.NotNull(rst3);
+                    Assert.Equal(1, rst3.Count());
+
                 }
             }
             finally

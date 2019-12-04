@@ -44,5 +44,6 @@ namespace hihapi.Models
         public ICollection<FinanceAccountExtraDP> FinanceAccountExtraDPs { get; set; }
         public ICollection<FinanceAccountExtraAS> FinanceAccountExtraASs { get; set; }
         public ICollection<FinanceControlCenter> FinanceControlCenters { get; set; }
+        public ICollection<FinanceOrder> FinanceOrders { get; set; }
     }
 }
