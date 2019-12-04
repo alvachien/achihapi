@@ -153,6 +153,7 @@ namespace hihapi
             var model = modelBuilder.GetEdmModel();
             app.UseODataBatching();
             
+            app.UseMiddleware(typeof(ErrorHandlingMiddleware));
             app.UseMvc(routeBuilder =>
                 {
                     // and this line to enable OData query option, for example $filter

@@ -61,15 +61,14 @@ namespace hihapi.Controllers
                 //scopeFilter = HIHAPIUtility.GetScopeSQLFilter(scopeObj.Value, usrName);
                 //if (String.IsNullOrEmpty(scopeFilter))
                 //    scopeFilter = usrName;
+                if (String.IsNullOrEmpty(scopeFilter))
+                {
+                    throw new UnauthorizedAccessException();
+                }
             }
             catch
             {
-                scopeFilter = String.Empty;
-            }
-
-            if (String.IsNullOrEmpty(scopeFilter))
-            {
-                return BadRequest();
+                throw new UnauthorizedAccessException();
             }
 
             var rst = (from hd in _context.HomeDefines

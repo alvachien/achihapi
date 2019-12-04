@@ -45,6 +45,7 @@ namespace hihapi.Controllers
                 catch
                 {
                     // Do nothing
+                    usrName = String.Empty;
                 }
 
                 if (String.IsNullOrEmpty(usrName))
