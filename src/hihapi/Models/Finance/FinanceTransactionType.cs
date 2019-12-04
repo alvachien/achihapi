@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace hihapi.Models
 {
     [Table("T_FIN_TRAN_TYPE")]
-    public partial class FinanceTransactionType : BaseModel
+    public sealed class FinanceTransactionType : BaseModel
     {
         // Constants
         public const Int32 TranType_OpeningAsset = 1;

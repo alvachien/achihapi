@@ -15,6 +15,20 @@ namespace hihapi.test
         internal static List<FinanceAssetCategory> listFinAssetCategory = new List<FinanceAssetCategory>();
         internal static List<FinanceDocumentType> listFinDocumentType = new List<FinanceDocumentType>();
         internal static List<FinanceTransactionType> listFinTransactionType = new List<FinanceTransactionType>();
+        internal const string UserA = "USERA";
+        internal const string UserB = "USERB";
+        internal const string UserC = "USERC";
+        internal const string UserD = "USERD";
+        internal const int Home1ID = 1;
+        internal const string Home1BaseCurrency = "CNY";
+        internal const int Home2ID = 2;
+        internal const string Home2BaseCurrency = "CNY";
+        internal const int Home3ID = 3;
+        internal const string Home3BaseCurrency = "CNY";
+        internal const int Home4ID = 4;
+        internal const string Home4BaseCurrency = "USD";
+        internal const int Home5ID = 5;
+        internal const string Home5BaseCurrency = "EUR";
 
         static DataSetupUtility()
         {
@@ -30,6 +44,27 @@ namespace hihapi.test
         public static void InitializeDbForTests(hihDataContext db)
         {
             InitialTable_DBVersion(db);
+
+            db.SaveChanges();
+        }
+
+        public static void InitializeSystemTables(hihDataContext db)
+        {
+            InitialTable_DBVersion(db);
+            InitialTable_Currency(db);
+            InitialTable_Language(db);
+            InitialTable_FinAccountCategory(db);
+            InitialTable_FinAssetCategory(db);
+            InitialTable_FinDocumentType(db);
+            InitialTable_FinTransactionType(db);
+
+            db.SaveChanges();
+        }
+
+        public static void InitializeHomeDefineAndMemberTables(hihDataContext db)
+        {
+            SetupTable_HomeDefineAndMember();
+            InitialTable_HomeDefineAndMember(db);
 
             db.SaveChanges();
         }
@@ -69,6 +104,12 @@ namespace hihapi.test
             db.FinTransactionType.AddRange(listFinTransactionType);
         }
 
+        public static void InitialTable_HomeDefineAndMember(hihDataContext db)
+        {
+            db.HomeDefines.AddRange(listHomeDefine);
+            db.HomeMembers.AddRange(listHomeMember);
+        }
+
         public static void SetupTable_HomeDefineAndMember()
         {
             // Home 1
@@ -78,55 +119,55 @@ namespace hihapi.test
             // Member D
             listHomeDefine.Add(new HomeDefine()
             {
-                ID = 1,
-                BaseCurrency = "CNY",
+                ID = Home1ID,
+                BaseCurrency = Home1BaseCurrency,
                 Name = "Home 1",
-                Host = "USERA"
+                Host = UserA
             });
             listHomeMember.Add(new HomeMember()
             {
-                HomeID = 1,
+                HomeID = Home1ID,
                 DisplayAs = "User A",
                 Relation = 0,
-                User = "USERA"
+                User = UserA
             });
             listHomeMember.Add(new HomeMember()
             {
-                HomeID = 1,
+                HomeID = Home1ID,
                 DisplayAs = "User B",
                 Relation = 1,
-                User = "USERB"
+                User = UserB
             });
             listHomeMember.Add(new HomeMember()
             {
-                HomeID = 1,
+                HomeID = Home1ID,
                 DisplayAs = "User C",
                 Relation = 2,
-                User = "USERC"
+                User = UserC
             });
             listHomeMember.Add(new HomeMember()
             {
-                HomeID = 1,
+                HomeID = Home1ID,
                 DisplayAs = "User D",
                 Relation = 2,
-                User = "USERD"
+                User = UserD
             });
 
             // Home 2
             // Member B (Host)
             listHomeDefine.Add(new HomeDefine()
             {
-                ID = 2,
-                BaseCurrency = "CNY",
+                ID = Home2ID,
+                BaseCurrency = Home2BaseCurrency,
                 Name = "Home 2",
-                Host = "USERB"
+                Host = UserB
             });
             listHomeMember.Add(new HomeMember()
             {
-                HomeID = 2,
+                HomeID = Home2ID,
                 DisplayAs = "User B",
                 Relation = 0,
-                User = "USERB"
+                User = UserB
             });
 
             // Home 3
@@ -134,58 +175,58 @@ namespace hihapi.test
             // Member B
             listHomeDefine.Add(new HomeDefine()
             {
-                ID = 3,
-                BaseCurrency = "CNY",
+                ID = Home3ID,
+                BaseCurrency = Home3BaseCurrency,
                 Name = "Home 3",
-                Host = "USERA"
+                Host = UserA
             });
             listHomeMember.Add(new HomeMember()
             {
-                HomeID = 3,
+                HomeID = Home3ID,
                 DisplayAs = "User A",
                 Relation = 0,
-                User = "USERA"
+                User = UserA
             });
             listHomeMember.Add(new HomeMember()
             {
-                HomeID = 3,
+                HomeID = Home3ID,
                 DisplayAs = "User B",
                 Relation = 1,
-                User = "USERB"
+                User = UserB
             });
 
             // Home 4
             // Member C (Host)
             listHomeDefine.Add(new HomeDefine()
             {
-                ID = 4,
-                BaseCurrency = "USD",
+                ID = Home4ID,
+                BaseCurrency = Home4BaseCurrency,
                 Name = "Home 4",
-                Host = "USERC"
+                Host = UserC
             });
             listHomeMember.Add(new HomeMember()
             {
-                HomeID = 4,
+                HomeID = Home4ID,
                 DisplayAs = "User C",
                 Relation = 0,
-                User = "USERC"
+                User = UserC
             });
 
             // Home 5
             // Member D (host)
             listHomeDefine.Add(new HomeDefine()
             {
-                ID = 5,
-                BaseCurrency = "EUR",
+                ID = Home5ID,
+                BaseCurrency = Home5BaseCurrency,
                 Name = "Home 5",
-                Host = "USERD"
+                Host = UserD
             });
             listHomeMember.Add(new HomeMember()
             {
-                HomeID = 5,
+                HomeID = Home5ID,
                 DisplayAs = "User D",
                 Relation = 0,
-                User = "USERD"
+                User = UserD
             });
         }
 

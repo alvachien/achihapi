@@ -32,7 +32,7 @@ namespace hihapi.Models
     }
 
     [Table("T_FIN_ACCOUNT")]
-    public partial class FinanceAccount : BaseModel
+    public sealed class FinanceAccount : BaseModel
     {
         [Key]
         [Column("ID", TypeName="INT")]
@@ -420,4 +420,5 @@ namespace hihapi.Models
         }
     }
 
+    // Account extra: Creditcard
 }

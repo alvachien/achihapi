@@ -54,8 +54,8 @@ namespace hihapi.test.UnitTests
                     //mockContext.SetupGet(hc => hc.User.Identity.Name).Returns("USERA");
                     var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
                     {
-                        new Claim(ClaimTypes.Name, "USERA"),
-                        new Claim(ClaimTypes.NameIdentifier, "USERA"),
+                        new Claim(ClaimTypes.Name, DataSetupUtility.UserA),
+                        new Claim(ClaimTypes.NameIdentifier, DataSetupUtility.UserA),
                     }, "mock"));
 
                     control.ControllerContext = new ControllerContext()
@@ -71,8 +71,8 @@ namespace hihapi.test.UnitTests
                     // For user B, 3 home defines
                     user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
                     {
-                        new Claim(ClaimTypes.Name, "USERB"),
-                        new Claim(ClaimTypes.NameIdentifier, "USERB"),
+                        new Claim(ClaimTypes.Name, DataSetupUtility.UserB),
+                        new Claim(ClaimTypes.NameIdentifier, DataSetupUtility.UserB),
                     }, "mock"));
 
                     control.ControllerContext = new ControllerContext()

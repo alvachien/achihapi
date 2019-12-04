@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace hihapi.Models
 {
     [Table("T_FIN_ACCOUNT_CTGY")]
-    public partial class FinanceAccountCategory : BaseModel
+    public sealed class FinanceAccountCategory : BaseModel
     {
         [Key]
         [Column("ID", TypeName="int")]

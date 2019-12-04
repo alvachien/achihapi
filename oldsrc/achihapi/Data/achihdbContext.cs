@@ -28,7 +28,6 @@ namespace achihapi.Models
         public virtual DbSet<TFinAccountExtLoan> TFinAccountExtLoan { get; set; }
         public virtual DbSet<TFinAccountExtLoanH> TFinAccountExtLoanH { get; set; }
         public virtual DbSet<TFinAssetCtgy> TFinAssetCtgy { get; set; }
-        public virtual DbSet<TFinControlcenter> TFinControlcenter { get; set; }
         public virtual DbSet<TFinDocument> TFinDocument { get; set; }
         public virtual DbSet<TFinDocumentItem> TFinDocumentItem { get; set; }
         public virtual DbSet<TFinOrder> TFinOrder { get; set; }
@@ -477,53 +476,6 @@ namespace achihapi.Models
                     .WithOne(p => p.TFinAccountExtLoanH)
                     .HasForeignKey<TFinAccountExtLoanH>(d => d.Accountid)
                     .HasConstraintName("FK_t_fin_account_ext_loan_h_ID");
-            });
-
-            modelBuilder.Entity<TFinControlcenter>(entity =>
-            {
-                entity.ToTable("t_fin_controlcenter");
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.Comment)
-                    .HasColumnName("COMMENT")
-                    .HasMaxLength(45);
-
-                entity.Property(e => e.Createdat)
-                    .HasColumnName("CREATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Createdby)
-                    .HasColumnName("CREATEDBY")
-                    .HasMaxLength(40);
-
-                entity.Property(e => e.Hid).HasColumnName("HID");
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasColumnName("NAME")
-                    .HasMaxLength(30);
-
-                entity.Property(e => e.Owner)
-                    .HasColumnName("OWNER")
-                    .HasMaxLength(40);
-
-                entity.Property(e => e.Parid).HasColumnName("PARID");
-
-                entity.Property(e => e.Updatedat)
-                    .HasColumnName("UPDATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Updatedby)
-                    .HasColumnName("UPDATEDBY")
-                    .HasMaxLength(40);
-
-                entity.HasOne(d => d.H)
-                    .WithMany(p => p.TFinControlcenter)
-                    .HasForeignKey(d => d.Hid)
-                    .HasConstraintName("FK_t_fin_cc_HID");
             });
 
             modelBuilder.Entity<TFinDocument>(entity =>

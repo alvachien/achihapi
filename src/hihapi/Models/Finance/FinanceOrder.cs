@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace hihapi.Models
 {
     [Table("T_FIN_ORDER")]
-    public class FinanceOrder: BaseModel
+    public sealed class FinanceOrder: BaseModel
     {
         public FinanceOrder(): base()
         {
@@ -44,7 +44,7 @@ namespace hihapi.Models
     }
 
     [Table("T_FIN_ORDER_SRULE")]
-    public class FinanceOrderSRule
+    public sealed class FinanceOrderSRule
     {
         [Key]
         [Column("ORDID", TypeName="INT")]

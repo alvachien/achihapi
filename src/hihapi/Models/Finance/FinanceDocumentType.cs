@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace hihapi.Models
 {
     [Table("T_FIN_DOC_TYPE")]
-    public partial class FinanceDocumentType : BaseModel
+    public sealed class FinanceDocumentType : BaseModel
     {
         // Constants
         public const Int16 DocType_Normal = 1;

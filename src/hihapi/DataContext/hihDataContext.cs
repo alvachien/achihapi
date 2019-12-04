@@ -28,6 +28,11 @@ namespace hihapi.Models
         public DbSet<FinanceAccount> FinanceAccount { get; set; }
         public DbSet<FinanceAccountExtraDP> FinanceAccountExtraDP { get; set; }
         public DbSet<FinanceAccountExtraAS> FinanceAccountExtraAS { get; set; }
+        public DbSet<FinanceDocument> FinanceDocument { get; set; }
+        public DbSet<FinanceDocumentItem> FinanceDocumentItem { get; set; }
+        public DbSet<FinanceTmpDPDocument> FinanceTmpDPDocument { get; set; }
+        public DbSet<FinanceTmpLoanDocument> FinanceTmpLoanDocument { get; set; }
+        public DbSet<FinanceControlCenter> FinanceControlCenter { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -206,18 +211,91 @@ namespace hihapi.Models
                     entity.Property(e => e.UpdatedAt)
                         .HasDefaultValueSql("(getdate())");
                 }
+                else
+                {
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                }
                 entity.HasOne(d => d.CurrentHome)
                     .WithMany(p => p.FinanceAccounts)
                     .HasForeignKey(d => d.HomeID)
                     .HasConstraintName("FK_t_account_HID");
             });
             modelBuilder.Entity<FinanceAccountExtraAS>(entity => {
+                if (TestingMode)
+                {
+                    entity.Property(e => e.AccountID).HasConversion(v => v, v => v);
+                }
+
                 entity.HasOne(d => d.AssetCategory)
                     .WithMany(p => p.AccountExtraAsset)
                     .HasForeignKey(d => d.CategoryID)
                     .HasConstraintName("FK_t_fin_account_exp_as_ID");
             });
             modelBuilder.Entity<FinanceAccountExtraDP>(entity => {
+                if (TestingMode)
+                {
+                    entity.Property(e => e.AccountID).HasConversion(v => v, v => v);
+                }
+            });
+            modelBuilder.Entity<FinanceDocument>(entity => {
+                if (!TestingMode)
+                {
+
+                }
+                else
+                {
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                }
+            });
+            modelBuilder.Entity<FinanceDocumentItem>(entity => {
+                entity.HasKey(p => new { p.DocID, p.ItemID });
+            });
+            modelBuilder.Entity<FinanceTmpLoanDocument>(entity => {
+                if (!TestingMode)
+                {
+
+                }
+                else
+                {
+                    entity.Property(e => e.DocumentID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                }
+            });
+            modelBuilder.Entity<FinanceTmpDPDocument>(entity => {
+                if (!TestingMode)
+                {
+
+                }
+                else
+                {
+                    entity.Property(e => e.DocumentID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                }
+            });
+            modelBuilder.Entity<FinanceControlCenter>(entity => {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.FinanceControlCenters)
+                    .HasForeignKey(d => d.HomeID)
+                    .HasConstraintName("FK_t_fin_cc_HID");
             });
         }
     }

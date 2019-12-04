@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace hihapi.Models
 {
     [Table("T_FIN_DOCUMENT")]
-    public class FinanceDocument: BaseModel
+    public sealed class FinanceDocument: BaseModel
     {
         public FinanceDocument(): base()
         {
@@ -57,7 +57,7 @@ namespace hihapi.Models
     }
 
     [Table("T_FIN_DOCUMENT_ITEM")]
-    public class FinanceDocumentItem
+    public sealed class FinanceDocumentItem
     {
         [Key]
         [Column("DOCID", TypeName="INT")]

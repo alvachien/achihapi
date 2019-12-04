@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace hihapi.Models
 {
-    [Table("T_FIN_DOCUMENT")]
+    [Table("T_FIN_TMPDOC_LOAN")]
     public class FinanceTmpLoanDocument: BaseModel
     {
         [Key]
