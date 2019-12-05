@@ -49,5 +49,122 @@ namespace hihapi.Controllers
 
             return rst;
         }
+
+        [Authorize]
+        public async Task<IActionResult> Post([FromBody] FinanceOrder order)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // Check
+            if (!order.IsValid())
+            {
+                return BadRequest();
+            }
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == order.HomeID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            _context.FinanceOrder.Add(order);
+            foreach(var rule in order.SRule)
+            {
+                rule.Order = order;
+                _context.FinanceOrderSRule.Add(rule);
+            }
+            await _context.SaveChangesAsync();
+
+            return Created(order);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceOrder update)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+            if (key != update.ID)
+            {
+                return BadRequest();
+            }
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == update.HomeID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            _context.Entry(update).State = EntityState.Modified;
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException exp)
+            {
+                if (!_context.FinanceOrder.Any(p => p.ID == key))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw new DBOperationException(exp.Message);
+                }
+            }
+
+            return Updated(update);
+        }
     }
 }

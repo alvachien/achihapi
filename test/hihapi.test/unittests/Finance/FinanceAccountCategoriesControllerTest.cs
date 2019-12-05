@@ -32,21 +32,18 @@ namespace hihapi.test.UnitTests
                 {
                     context.Database.EnsureCreated();
 
-                    // Add system
-                    context.FinAccountCategories.Add(new FinanceAccountCategory() {
-                        HomeID = null,
-                        Name = "Test 1",
-                        AssetFlag = true,
-                        Comment = "Test 1"
-                    });
-                    // Add Home defined
-                    context.FinAccountCategories.Add(new FinanceAccountCategory() {
-                        HomeID = 1,
-                        Name = "HID 1.Test 1",
-                        AssetFlag = true,
-                        Comment = "Test 1"
-                    });
-                    await context.SaveChangesAsync();
+                    // 0. Setup user and home defines
+                    DataSetupUtility.InitializeSystemTables(context);
+                    DataSetupUtility.InitializeHomeDefineAndMemberTables(context);
+
+                    //// Add Home defined
+                    //context.FinAccountCategories.Add(new FinanceAccountCategory() {
+                    //    HomeID = DataSetupUtility.Home1ID,
+                    //    Name = "HID 1.Test 1",
+                    //    AssetFlag = true,
+                    //    Comment = "Test 1"
+                    //});
+                    //await context.SaveChangesAsync();
 
                     FinanceAccountCategoriesController control = new FinanceAccountCategoriesController(context);
                     // For non-home case

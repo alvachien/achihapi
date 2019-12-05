@@ -30,8 +30,6 @@ namespace achihapi.Models
         public virtual DbSet<TFinAssetCtgy> TFinAssetCtgy { get; set; }
         public virtual DbSet<TFinDocument> TFinDocument { get; set; }
         public virtual DbSet<TFinDocumentItem> TFinDocumentItem { get; set; }
-        public virtual DbSet<TFinOrder> TFinOrder { get; set; }
-        public virtual DbSet<TFinOrderSrule> TFinOrderSrule { get; set; }
         public virtual DbSet<TFinPlan> TFinPlan { get; set; }
         public virtual DbSet<TFinTmpdocDp> TFinTmpdocDp { get; set; }
         public virtual DbSet<TFinTmpdocLoan> TFinTmpdocLoan { get; set; }

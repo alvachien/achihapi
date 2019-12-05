@@ -40,6 +40,30 @@ namespace hihapi.Models
         [Column("COMMENT", TypeName="NVARCHAR(45)")]
         public String Comment { get; set; }
 
+        public override bool IsValid()
+        {
+            if (!base.IsValid())
+                return false;
+
+            // SRule must exist
+            if (SRule.Count <= 0)
+                return false;
+
+            // Percentage checks
+            var total = 0;
+            foreach (var rule in SRule)
+            {
+                if (!rule.IsValid())
+                    return false;
+
+                total += rule.Precent;
+            }
+            if (total != 100)
+                return false;
+
+            return true;
+        }
+
         public ICollection<FinanceOrderSRule> SRule { get; set; }
         public HomeDefine CurrentHome { get; set; }
     }
@@ -66,6 +90,14 @@ namespace hihapi.Models
         [StringLength(45)]
         [Column("COMMENT", TypeName="NVARCHAR(45)")]
         public String Comment { get; set; }
+
+        public Boolean IsValid()
+        {
+            if (this.Precent <= 0)
+                return false;
+
+            return true;
+        }
 
         public FinanceOrder Order { get; set; }
     }

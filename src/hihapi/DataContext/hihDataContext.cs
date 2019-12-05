@@ -319,6 +319,8 @@ namespace hihapi.Models
                     .HasConstraintName("FK_t_fin_order_HID");
             });
             modelBuilder.Entity<FinanceOrderSRule>(entity => {
+                entity.HasKey(p => new { p.OrderID, p.RuleID });
+
                 entity.HasOne(d => d.Order)
                     .WithMany(p => p.SRule)
                     .HasForeignKey(d => d.OrderID)

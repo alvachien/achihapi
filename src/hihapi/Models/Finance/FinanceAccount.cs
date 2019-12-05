@@ -62,6 +62,12 @@ namespace hihapi.Models
         [Column("STATUS", TypeName="TINYINT")]
         public FinanceAccountStatus? Status { get; set; }
 
+        public override bool IsValid()
+        {
+            return base.IsValid();
+
+        }
+
         public HomeDefine CurrentHome { get; set; }
     }
 
