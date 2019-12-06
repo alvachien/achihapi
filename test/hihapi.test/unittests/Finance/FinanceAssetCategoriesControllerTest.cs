@@ -7,9 +7,14 @@ using Microsoft.EntityFrameworkCore.Sqlite;
 using hihapi.Models;
 using hihapi.Controllers;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNet.OData.Results;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace hihapi.test.UnitTests
 {
+    [Collection("Collection#1")]
     public class FinanceAssetCategoriesControllerTest
     {
         [Fact]
@@ -32,27 +37,46 @@ namespace hihapi.test.UnitTests
                 {
                     context.Database.EnsureCreated();
 
-                    // Add system
-                    context.FinAssetCategories.Add(new FinanceAssetCategory() {
-                        HomeID = null,
+                    // 0. Setup user and home defines
+                    DataSetupUtility.InitializeSystemTables(context);
+                    DataSetupUtility.InitializeHomeDefineAndMemberTables(context);
+                    var ctgyCount = DataSetupUtility.listFinAssetCategory.Count();
+
+                    FinanceAssetCategoriesController control = new FinanceAssetCategoriesController(context);
+                    var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+                    {
+                        new Claim(ClaimTypes.Name, DataSetupUtility.UserA),
+                        new Claim(ClaimTypes.NameIdentifier, DataSetupUtility.UserA),
+                    }, "mock"));
+                    control.ControllerContext = new ControllerContext()
+                    {
+                        HttpContext = new DefaultHttpContext() { User = user }
+                    };
+
+                    // 1. Read all categories
+                    var items = control.Get();
+                    var itemcnt = items.Count();
+                    Assert.Equal(ctgyCount, itemcnt);
+
+                    // 2. Insert new category
+                    var ctgy = new FinanceAssetCategory()
+                    {
+                        HomeID = DataSetupUtility.Home1ID,
                         Name = "Test 1",
                         Desp = "Test 1"
-                    });
-                    // Add Home defined
-                    context.FinAssetCategories.Add(new FinanceAssetCategory() {
-                        HomeID = 1,
-                        Name = "HID 1.Test 1",
-                        Desp = "Test 1"
-                    });
-                    await context.SaveChangesAsync();
+                    };
+                    var rst1 = await control.Post(ctgy);
+                    Assert.NotNull(rst1);
+                    var rst2 = Assert.IsType<CreatedODataResult<FinanceAssetCategory>>(rst1);
+                    Assert.Equal(ctgy.Name, rst2.Entity.Name);
+                    Assert.True(rst2.Entity.ID > 0);
+                    Assert.Equal(ctgy.Desp, rst2.Entity.Desp);
 
-                    // FinanceAccountCategoriesController control = new FinanceAccountCategoriesController(context);
-                    // // For non-home case
-                    // var items = control.Get();
-                    // Assert.Single(items);
-                    // var firstitem = await items.FirstOrDefaultAsync<FinanceAccountCategory>();
-                    // Assert.Equal(1, firstitem.ID);
-                    // Assert.Null(firstitem.HID);
+                    // 3. Read all categories
+                    items = control.Get(DataSetupUtility.Home1ID);
+                    itemcnt = items.Count();
+                    ctgyCount++;
+                    Assert.Equal(ctgyCount, itemcnt);
                 }
             }
             finally
@@ -60,7 +84,7 @@ namespace hihapi.test.UnitTests
                 connection.Close();
             }
 
-            hihDataContext.TestingMode = false;
+            //hihDataContext.TestingMode = false;
         }
     }
 }

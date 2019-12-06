@@ -29,6 +29,9 @@ namespace hihapi.test
         internal const string Home4BaseCurrency = "USD";
         internal const int Home5ID = 5;
         internal const string Home5BaseCurrency = "EUR";
+        private static bool SystemTableInitialized = false;
+        private static bool HomeDefineTableInitialized = false;
+
 
         static DataSetupUtility()
         {
@@ -50,23 +53,33 @@ namespace hihapi.test
 
         public static void InitializeSystemTables(hihDataContext db)
         {
-            InitialTable_DBVersion(db);
-            InitialTable_Currency(db);
-            InitialTable_Language(db);
-            InitialTable_FinAccountCategory(db);
-            InitialTable_FinAssetCategory(db);
-            InitialTable_FinDocumentType(db);
-            InitialTable_FinTransactionType(db);
+            if (!SystemTableInitialized)
+            {
+                InitialTable_DBVersion(db);
+                InitialTable_Currency(db);
+                InitialTable_Language(db);
+                InitialTable_FinAccountCategory(db);
+                InitialTable_FinAssetCategory(db);
+                InitialTable_FinDocumentType(db);
+                InitialTable_FinTransactionType(db);
 
-            db.SaveChanges();
+                db.SaveChanges();
+
+                SystemTableInitialized = true;
+            }
         }
 
         public static void InitializeHomeDefineAndMemberTables(hihDataContext db)
         {
-            SetupTable_HomeDefineAndMember();
-            InitialTable_HomeDefineAndMember(db);
+            if (!HomeDefineTableInitialized)
+            {
+                SetupTable_HomeDefineAndMember();
+                InitialTable_HomeDefineAndMember(db);
 
-            db.SaveChanges();
+                db.SaveChanges();
+
+                HomeDefineTableInitialized = true;
+            }
         }
 
         public static void ReinitializeDbForTests(hihDataContext db)

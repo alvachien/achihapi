@@ -16,6 +16,7 @@ using System.Collections.Generic;
 
 namespace hihapi.test.UnitTests
 {
+    [Collection("Collection#1")]
     public class FinanceOrdersControllerTest
     {
         [Fact]
@@ -106,7 +107,7 @@ namespace hihapi.test.UnitTests
                 connection.Close();
             }
 
-            hihDataContext.TestingMode = false;
+            //hihDataContext.TestingMode = false;
         }
     }
 }

@@ -53,13 +53,13 @@ namespace hihapi.Controllers
                     return _context.FinAccountCategories.Where(p => p.HomeID == null);
 
                 var rst =
-                    from hmem in _context.HomeMembers.Where(p => p.User == usrName)
-                    from acntctgy in _context.FinAccountCategories.Where(p => p.HomeID == null || p.HomeID == hmem.HomeID)
-                    select acntctgy;
+                   from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid.Value)
+                   from acntctgy in _context.FinAccountCategories.Where(p => p.HomeID == null || p.HomeID == hmem.HomeID)
+                   select acntctgy;
 
                 return rst;
             }
-            
+
             return _context.FinAccountCategories.Where(p => p.HomeID == null);
         }
 
@@ -162,7 +162,7 @@ namespace hihapi.Controllers
             }
             catch (DbUpdateConcurrencyException exp)
             {
-                if (!_context.FinanceOrder.Any(p => p.ID == key))
+                if (!_context.FinAccountCategories.Any(p => p.ID == key))
                 {
                     return NotFound();
                 }
@@ -173,6 +173,21 @@ namespace hihapi.Controllers
             }
 
             return Updated(update);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Delete([FromODataUri] int key)
+        {
+            var cc = await _context.FinAccountCategories.FindAsync(key);
+            if (cc == null)
+            {
+                return NotFound();
+            }
+
+            _context.FinAccountCategories.Remove(cc);
+            await _context.SaveChangesAsync();
+
+            return StatusCode(204); // HttpStatusCode.NoContent
         }
     }
 }

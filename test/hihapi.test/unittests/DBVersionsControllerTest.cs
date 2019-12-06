@@ -12,6 +12,7 @@ using Microsoft.AspNet.OData.Results;
 
 namespace hihapi.test.UnitTests
 {
+    [Collection("Collection#1")]
     public class DBVersionsControllerTest
     {
         [Fact]
@@ -49,7 +50,7 @@ namespace hihapi.test.UnitTests
                 connection.Close();
             }
 
-            hihDataContext.TestingMode = false;
+            //hihDataContext.TestingMode = false;
         }
     }
 }

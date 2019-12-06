@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Routing;
 
 namespace hihapi.test.UnitTests
 {
+    [Collection("Collection#1")]
     public class CurrenciesControllerTest
     {
         [Fact]
@@ -130,7 +131,7 @@ namespace hihapi.test.UnitTests
                 connection.Close();
             }
 
-            hihDataContext.TestingMode = false;
+            //hihDataContext.TestingMode = false;
         }
     }
 }

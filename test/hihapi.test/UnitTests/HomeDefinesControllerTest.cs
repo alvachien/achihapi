@@ -16,10 +16,11 @@ using System.Collections.Generic;
 
 namespace hihapi.test.UnitTests
 {
+    [Collection("Collection#1")]
     public class HomeDefinesControllerTest
     {
         [Fact]
-        public async Task Test_Read_Create_ReRead()
+        public async Task TestCase1()
         {
             hihDataContext.TestingMode = true;
 
@@ -91,7 +92,7 @@ namespace hihapi.test.UnitTests
                 connection.Close();
             }
 
-            hihDataContext.TestingMode = false;
+            //hihDataContext.TestingMode = false;
         }
     }
 }

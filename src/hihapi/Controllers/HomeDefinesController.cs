@@ -17,7 +17,6 @@ using System.Security.Claims;
 
 namespace hihapi.Controllers
 {
-    [Authorize]
     public class HomeDefinesController : ODataController
     {
         private readonly hihDataContext _context;
@@ -40,6 +39,7 @@ namespace hihapi.Controllers
         /// 
         /// <remarks>
         [EnableQuery]
+        [Authorize]
         public IActionResult Get()
         {
             DbSet<HomeMember> listRst = null;

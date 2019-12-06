@@ -166,5 +166,20 @@ namespace hihapi.Controllers
 
             return Updated(update);
         }
+
+        [Authorize]
+        public async Task<IActionResult> Delete([FromODataUri] int key)
+        {
+            var cc = await _context.FinanceOrder.FindAsync(key);
+            if (cc == null)
+            {
+                return NotFound();
+            }
+
+            _context.FinanceOrder.Remove(cc);
+            await _context.SaveChangesAsync();
+
+            return StatusCode(204); // HttpStatusCode.NoContent
+        }
     }
 }
