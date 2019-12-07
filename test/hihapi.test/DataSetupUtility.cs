@@ -1,40 +1,81 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Security.Claims;
 using hihapi.Models;
 
-namespace hihapi.test 
+namespace hihapi.test
 {
     public static class DataSetupUtility
     {
-        internal static List<DBVersion> listDBVersion = new List<DBVersion>();
-        internal static List<HomeDefine> listHomeDefine = new List<HomeDefine>();
-        internal static List<HomeMember> listHomeMember = new List<HomeMember>();
-        internal static List<Currency> listCurrency = new List<Currency>();
-        internal static List<Language> listLanguage = new List<Language>();
-        internal static List<FinanceAccountCategory> listFinAccountCategory = new List<FinanceAccountCategory>();
-        internal static List<FinanceAssetCategory> listFinAssetCategory = new List<FinanceAssetCategory>();
-        internal static List<FinanceDocumentType> listFinDocumentType = new List<FinanceDocumentType>();
-        internal static List<FinanceTransactionType> listFinTransactionType = new List<FinanceTransactionType>();
-        internal const string UserA = "USERA";
-        internal const string UserB = "USERB";
-        internal const string UserC = "USERC";
-        internal const string UserD = "USERD";
-        internal const int Home1ID = 1;
-        internal const string Home1BaseCurrency = "CNY";
-        internal const int Home2ID = 2;
-        internal const string Home2BaseCurrency = "CNY";
-        internal const int Home3ID = 3;
-        internal const string Home3BaseCurrency = "CNY";
-        internal const int Home4ID = 4;
-        internal const string Home4BaseCurrency = "USD";
-        internal const int Home5ID = 5;
-        internal const string Home5BaseCurrency = "EUR";
-        private static bool SystemTableInitialized = false;
-        private static bool HomeDefineTableInitialized = false;
-
+        public static List<DBVersion> DBVersions
+        {
+            get { return listDBVersion; }
+        }
+        public static List<HomeDefine> HomeDefines
+        {
+            get { return listHomeDefine;  }
+        }
+        public static List<HomeMember> HomeMembers
+        {
+            get { return listHomeMember;  }
+        }
+        public static List<Currency> Currencies
+        {
+            get { return listCurrency;  }
+        }
+        public static List<Language> Languages
+        {
+            get { return listLanguage; }
+        }
+        public static List<FinanceAccountCategory> FinanceAccountCategories
+        {
+            get { return listFinAccountCategory;  }
+        }
+        public static List<FinanceAssetCategory> FinanceAssetCategories
+        {
+            get { return listFinAssetCategory; }
+        }
+        public static List<FinanceDocumentType> FinanceDocumentTypes
+        {
+            get { return listFinDocumentType; }
+        }
+        public static List<FinanceTransactionType> FinanceTransactionTypes
+        {
+            get { return listFinTransactionType; }
+        }
+        
+        private static List<DBVersion> listDBVersion = new List<DBVersion>();
+        private static List<HomeDefine> listHomeDefine = new List<HomeDefine>();
+        private static List<HomeMember> listHomeMember = new List<HomeMember>();
+        private static List<Currency> listCurrency = new List<Currency>();
+        private static List<Language> listLanguage = new List<Language>();
+        private static List<FinanceAccountCategory> listFinAccountCategory = new List<FinanceAccountCategory>();
+        private static List<FinanceAssetCategory> listFinAssetCategory = new List<FinanceAssetCategory>();
+        private static List<FinanceDocumentType> listFinDocumentType = new List<FinanceDocumentType>();
+        private static List<FinanceTransactionType> listFinTransactionType = new List<FinanceTransactionType>();
+        public const string UserA = "USERA";
+        public const string UserB = "USERB";
+        public const string UserC = "USERC";
+        public const string UserD = "USERD";
+        public const int Home1ID = 1;
+        public const string Home1BaseCurrency = "CNY";
+        public const int Home2ID = 2;
+        public const string Home2BaseCurrency = "CNY";
+        public const int Home3ID = 3;
+        public const string Home3BaseCurrency = "CNY";
+        public const int Home4ID = 4;
+        public const string Home4BaseCurrency = "USD";
+        public const int Home5ID = 5;
+        public const string Home5BaseCurrency = "EUR";
+        public const string IntegrationTestClient = "hihapi.test.integration";
+        public const string IntegrationTestIdentityServerUrl = "http://localhost:5005";
+        public const string IntegrationTestAPIScope = "api.hih";
+        public const string IntegrationTestPassword = "password";
 
         static DataSetupUtility()
         {
+            // Setup tables
             SetupTable_DBVersion();
             SetupTable_Currency();
             SetupTable_Language();
@@ -42,88 +83,75 @@ namespace hihapi.test
             SetupTable_FinDocumentType();
             SetupTable_FinAssertCategory();
             SetupTable_FinTransactionType();
+
+            SetupTable_HomeDefineAndMember();
         }
 
-        public static void InitializeDbForTests(hihDataContext db)
+        public static ClaimsPrincipal GetClaimForUser(String usr)
         {
-            InitialTable_DBVersion(db);
-
-            db.SaveChanges();
+            return new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, usr),
+                new Claim(ClaimTypes.NameIdentifier, usr),
+            }, "mock"));
         }
 
         public static void InitializeSystemTables(hihDataContext db)
         {
-            if (!SystemTableInitialized)
-            {
-                InitialTable_DBVersion(db);
-                InitialTable_Currency(db);
-                InitialTable_Language(db);
-                InitialTable_FinAccountCategory(db);
-                InitialTable_FinAssetCategory(db);
-                InitialTable_FinDocumentType(db);
-                InitialTable_FinTransactionType(db);
+            InitialTable_DBVersion(db);
+            InitialTable_Currency(db);
+            InitialTable_Language(db);
+            InitialTable_FinAccountCategory(db);
+            InitialTable_FinAssetCategory(db);
+            InitialTable_FinDocumentType(db);
+            InitialTable_FinTransactionType(db);
 
-                db.SaveChanges();
-
-                SystemTableInitialized = true;
-            }
+            db.SaveChanges();
         }
 
         public static void InitializeHomeDefineAndMemberTables(hihDataContext db)
         {
-            if (!HomeDefineTableInitialized)
-            {
-                SetupTable_HomeDefineAndMember();
-                InitialTable_HomeDefineAndMember(db);
+            InitialTable_HomeDefineAndMember(db);
 
-                db.SaveChanges();
-
-                HomeDefineTableInitialized = true;
-            }
+            db.SaveChanges();
         }
 
-        public static void ReinitializeDbForTests(hihDataContext db)
+        private static void InitialTable_DBVersion(hihDataContext db)
         {
-            // db.Messages.RemoveRange(db.Messages);
-            InitializeDbForTests(db);
+            db.DBVersions.AddRange(DataSetupUtility.DBVersions);
+        }
+        private static void InitialTable_Currency(hihDataContext db)
+        {
+            db.Currencies.AddRange(DataSetupUtility.Currencies);
+        }
+        private static void InitialTable_Language(hihDataContext db)
+        {
+            db.Languages.AddRange(DataSetupUtility.Languages);
+        }
+        private static void InitialTable_FinAccountCategory(hihDataContext db)
+        {
+            db.FinAccountCategories.AddRange(DataSetupUtility.FinanceAccountCategories);
+        }
+        private static void InitialTable_FinDocumentType(hihDataContext db)
+        {
+            db.FinDocumentTypes.AddRange(DataSetupUtility.FinanceDocumentTypes);
+        }
+        private static void InitialTable_FinAssetCategory(hihDataContext db)
+        {
+            db.FinAssetCategories.AddRange(DataSetupUtility.FinanceAssetCategories);
+        }
+        private static void InitialTable_FinTransactionType(hihDataContext db)
+        {
+            db.FinTransactionType.AddRange(DataSetupUtility.FinanceTransactionTypes);
         }
 
-        public static void InitialTable_DBVersion(hihDataContext db)
+        private static void InitialTable_HomeDefineAndMember(hihDataContext db)
         {
-            db.DBVersions.AddRange(listDBVersion);
-        }
-        public static void InitialTable_Currency(hihDataContext db)
-        {
-            db.Currencies.AddRange(listCurrency);
-        }
-        public static void InitialTable_Language(hihDataContext db)
-        {
-            db.Languages.AddRange(listLanguage);
-        }
-        public static void InitialTable_FinAccountCategory(hihDataContext db)
-        {
-            db.FinAccountCategories.AddRange(listFinAccountCategory);
-        }
-        public static void InitialTable_FinDocumentType(hihDataContext db)
-        {
-            db.FinDocumentTypes.AddRange(listFinDocumentType);
-        }
-        public static void InitialTable_FinAssetCategory(hihDataContext db)
-        {
-            db.FinAssetCategories.AddRange(listFinAssetCategory);
-        }
-        public static void InitialTable_FinTransactionType(hihDataContext db)
-        {
-            db.FinTransactionType.AddRange(listFinTransactionType);
+            db.HomeDefines.AddRange(DataSetupUtility.HomeDefines);
+            db.HomeMembers.AddRange(DataSetupUtility.HomeMembers);
         }
 
-        public static void InitialTable_HomeDefineAndMember(hihDataContext db)
-        {
-            db.HomeDefines.AddRange(listHomeDefine);
-            db.HomeMembers.AddRange(listHomeMember);
-        }
-
-        public static void SetupTable_HomeDefineAndMember()
+        private static void SetupTable_HomeDefineAndMember()
         {
             // Home 1
             // Member A (host)
@@ -338,7 +366,7 @@ namespace hihapi.test
             listLanguage.Add(new Language() { Lcid = 17, ISOName = "ja", EnglishName = "Japanese", NativeName = "日本语", AppFlag = false });
             listLanguage.Add(new Language() { Lcid = 31748, ISOName = "zh-Hant", EnglishName = "Chinese (Traditional)", NativeName = "繁體中文", AppFlag = false });
         }
-    
+
         private static void SetupTable_FinAccountCategory()
         {
             listFinAccountCategory.Add(new FinanceAccountCategory() { ID = 1, Name = "Sys.AcntCty.Cash", AssetFlag = true, Comment = null });
@@ -354,7 +382,7 @@ namespace hihapi.test
             listFinAccountCategory.Add(new FinanceAccountCategory() { ID = 11, Name = "Sys.AcntCty.AdvancedRecv", AssetFlag = false, Comment = "预收款" });
             listFinAccountCategory.Add(new FinanceAccountCategory() { ID = 12, Name = "Sys.AcntCty.Insurance", AssetFlag = true, Comment = "保险" });
         }
-    
+
         private static void SetupTable_FinDocumentType()
         {
             listFinDocumentType.Add(new FinanceDocumentType() { ID = 1, Name = "Sys.DocTy.Normal", Comment = "普通" });
@@ -375,13 +403,13 @@ namespace hihapi.test
 
         private static void SetupTable_FinAssertCategory()
         {
-            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 1, Name= "Sys.AssCtgy.Apartment", Desp = "公寓" });
-            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 2, Name= "Sys.AssCtgy.Automobile", Desp = "机动车" });
-            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 3, Name= "Sys.AssCtgy.Furniture", Desp = "家具" });
-            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 4, Name= "Sys.AssCtgy.HouseAppliances", Desp = "家用电器" });
-            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 5, Name= "Sys.AssCtgy.Camera", Desp = "相机" });
-            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 6, Name= "Sys.AssCtgy.Computer", Desp = "计算机" });
-            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 7, Name= "Sys.AssCtgy.MobileDevice", Desp = "移动设备" });
+            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 1, Name = "Sys.AssCtgy.Apartment", Desp = "公寓" });
+            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 2, Name = "Sys.AssCtgy.Automobile", Desp = "机动车" });
+            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 3, Name = "Sys.AssCtgy.Furniture", Desp = "家具" });
+            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 4, Name = "Sys.AssCtgy.HouseAppliances", Desp = "家用电器" });
+            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 5, Name = "Sys.AssCtgy.Camera", Desp = "相机" });
+            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 6, Name = "Sys.AssCtgy.Computer", Desp = "计算机" });
+            listFinAssetCategory.Add(new FinanceAssetCategory() { ID = 7, Name = "Sys.AssCtgy.MobileDevice", Desp = "移动设备" });
         }
 
         private static void SetupTable_FinTransactionType()

@@ -12,45 +12,25 @@ using Microsoft.AspNet.OData.Results;
 
 namespace hihapi.test.UnitTests
 {
-    [Collection("Collection#1")]
+    [Collection("HIHAPI_UnitTests#1")]
     public class DBVersionsControllerTest
     {
-        [Fact]
-        public async Task Test_Read_Create_ReRead()
+        SqliteDatabaseFixture fixture = null;
+
+        public DBVersionsControllerTest(SqliteDatabaseFixture fixture)
         {
-            hihDataContext.TestingMode = true;
+            this.fixture = fixture;
+        }
 
-            // In-memory database only exists while the connection is open
-            var connection = new SqliteConnection("DataSource=:memory:");
-            connection.Open();
-
-            try
-            {
-                var options = new DbContextOptionsBuilder<hihDataContext>()
-                    .UseSqlite(connection)
-                    .Options;
-
-                // Create the schema in the database
-                using (var context = new hihDataContext(options))
-                {
-                    context.Database.EnsureCreated();
-                    DataSetupUtility.InitialTable_DBVersion(context);
-                    await context.SaveChangesAsync();
-
-                    DBVersionsController control = new DBVersionsController(context);
-                    var version = control.Get();
-                    Assert.NotEmpty(version);
-                    var cnt1 = DataSetupUtility.listDBVersion.Count();
-                    var cnt2 = version.Count();
-                    Assert.Equal(cnt1, cnt2);
-                }
-            }
-            finally
-            {
-                connection.Close();
-            }
-
-            //hihDataContext.TestingMode = false;
+        [Fact]
+        public async Task TestCase1()
+        {
+            DBVersionsController control = new DBVersionsController(this.fixture.CurrentDataContext);
+            var version = control.Get();
+            Assert.NotEmpty(version);
+            var cnt1 = DataSetupUtility.DBVersions.Count();
+            var cnt2 = version.Count();
+            Assert.Equal(cnt1, cnt2);
         }
     }
 }

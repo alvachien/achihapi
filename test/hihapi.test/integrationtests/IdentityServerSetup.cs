@@ -10,16 +10,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace knowledgebuilderapi.test
+namespace hihapi.test
 {
     public class IdentityServerSetup
     {
         private IWebHost _webHost;
         private static IdentityServerSetup instance = null;
         private static readonly object padlock = new object();
-
-        public string IdentityServerUrl => "http://localhost:5005";
-        private string TokenEndpoint => IdentityServerUrl + "/connect/token";
 
         IdentityServerSetup() { }
 
@@ -40,19 +37,20 @@ namespace knowledgebuilderapi.test
         }
 
         public async Task<string> GetAccessTokenForUser(string userName, string password, 
-            string clientId = "hih.api.integrationtest", 
+            string clientId = DataSetupUtility.IntegrationTestClient, 
             string clientSecret = "secret")
         {
-            var client = new TokenClient(TokenEndpoint, clientId, clientSecret);
+            var client = new TokenClient(DataSetupUtility.IntegrationTestIdentityServerUrl + "/connect/token", clientId, clientSecret);
 
-            var response = await client.RequestResourceOwnerPasswordAsync(userName, password, "hih.api");
+            var response = await client.RequestResourceOwnerPasswordAsync(userName, password, DataSetupUtility.IntegrationTestAPIScope);
+
             return response.AccessToken;
         }
 
         private void InitializeIdentityServer()
         {
             _webHost = WebHost.CreateDefaultBuilder()
-                .UseUrls(IdentityServerUrl)
+                .UseUrls(DataSetupUtility.IntegrationTestIdentityServerUrl)
                 .ConfigureServices(services =>
                 {
                     services.AddIdentityServer()
@@ -71,10 +69,9 @@ namespace knowledgebuilderapi.test
         {
             return new List<ApiResource>
             {
-                new ApiResource("hih.api", "HIH API") { ApiSecrets = {new Secret("secret".Sha256())} }
+                new ApiResource(DataSetupUtility.IntegrationTestAPIScope, "HIH API") { ApiSecrets = {new Secret("secret".Sha256())} }
             };
         }
-
 
         // Default client
         public static IEnumerable<Client> GetClients()
@@ -83,7 +80,7 @@ namespace knowledgebuilderapi.test
             {
                 new Client
                 {
-                    ClientId = "hih.api.integrationtest",
+                    ClientId = DataSetupUtility.IntegrationTestClient,
                     AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
 
                     ClientSecrets =
@@ -93,7 +90,7 @@ namespace knowledgebuilderapi.test
                     AllowedScopes = {
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
-                        "hih.api"
+                        DataSetupUtility.IntegrationTestAPIScope
                     },
                     AllowOfflineAccess = true
                 }
@@ -107,14 +104,50 @@ namespace knowledgebuilderapi.test
             {
                 new TestUser
                 {
-                    SubjectId = "1",
-                    Username = "user",
-                    Password = "password",
+                    SubjectId = DataSetupUtility.UserA,
+                    Username = DataSetupUtility.UserA,
+                    Password = DataSetupUtility.IntegrationTestPassword,
 
                     Claims = new List<Claim>
                     {
-                        new Claim("name", "User"),
-                        new Claim("website", "https://user.com")
+                        new Claim(ClaimTypes.Name, DataSetupUtility.UserA),
+                        new Claim(ClaimTypes.NameIdentifier, DataSetupUtility.UserA),
+                    }
+                },
+                new TestUser
+                {
+                    SubjectId = DataSetupUtility.UserB,
+                    Username = DataSetupUtility.UserB,
+                    Password = DataSetupUtility.IntegrationTestPassword,
+
+                    Claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, DataSetupUtility.UserB),
+                        new Claim(ClaimTypes.NameIdentifier, DataSetupUtility.UserB),
+                    }
+                },
+                new TestUser
+                {
+                    SubjectId = DataSetupUtility.UserC,
+                    Username = DataSetupUtility.UserC,
+                    Password = DataSetupUtility.IntegrationTestPassword,
+
+                    Claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, DataSetupUtility.UserC),
+                        new Claim(ClaimTypes.NameIdentifier, DataSetupUtility.UserC),
+                    }
+                },
+                new TestUser
+                {
+                    SubjectId = DataSetupUtility.UserD,
+                    Username = DataSetupUtility.UserD,
+                    Password = DataSetupUtility.IntegrationTestPassword,
+
+                    Claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, DataSetupUtility.UserD),
+                        new Claim(ClaimTypes.NameIdentifier, DataSetupUtility.UserD),
                     }
                 }
             };

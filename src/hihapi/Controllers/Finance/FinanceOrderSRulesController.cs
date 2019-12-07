@@ -28,7 +28,7 @@ namespace hihapi.Controllers
         /// GET: /FinanceOrders
         [EnableQuery]
         [Authorize]
-        public IQueryable<FinanceOrderSRule> Get(Int32 hid)
+        public IQueryable<FinanceOrderSRule> Get(Int32 hid, Int32 orderid)
         {
             String usrName = String.Empty;
             try
@@ -42,13 +42,14 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            // var rst =
-            //     from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid)
-            //     from items in _context.FinanceOrderSRule.Where(p => p.HomeID == hmem.HomeID)
-            //     select items;
+            var rst =
+                from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid)
+                from ord in _context.FinanceOrder.Where(p => p.ID == orderid && p.HomeID == hmem.HomeID)
+                from items in _context.FinanceOrderSRule.Where(p => p.OrderID == ord.ID)
+                select items;
 
             // return rst;
-            return _context.FinanceOrderSRule;
+            return rst;
         }
     }
 }

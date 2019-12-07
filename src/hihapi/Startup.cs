@@ -53,6 +53,20 @@ namespace hihapi
 
             if (Environment.EnvironmentName == "IntegrationTest")
             {
+                services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                    .AddIdentityServerAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme,
+                        jwtOptions =>
+                        {
+                            // jwt bearer options
+                            jwtOptions.Authority = "http://localhost:5005";
+                            jwtOptions.Audience = "api.hih";
+                            jwtOptions.RequireHttpsMetadata = false;
+                            jwtOptions.SaveToken = true;
+                        },
+                        referenceOptions =>
+                        {
+                            // oauth2 introspection options
+                        });
             }
             else if (Environment.IsDevelopment())
             {                
@@ -127,7 +141,10 @@ namespace hihapi
 
             // app.UseHttpsRedirection();
             app.UseAuthentication();
-            app.UseCors(MyAllowSpecificOrigins);
+            if (Environment.EnvironmentName != "IntegrationTest")
+            {
+                app.UseCors(MyAllowSpecificOrigins);
+            }
 
             ODataModelBuilder modelBuilder = new ODataConventionModelBuilder(app.ApplicationServices);
             modelBuilder.EntitySet<DBVersion>("DBVersions");

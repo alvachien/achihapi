@@ -169,7 +169,7 @@ namespace hihapi.Controllers
         }
 
         [Authorize]
-        public async Task<IActionResult> Delete([FromODataUri] int key)
+        public async Task<IActionResult> Delete([FromODataUri] short key)
         {
             var cc = await _context.FinDocumentTypes.FindAsync(key);
             if (cc == null)

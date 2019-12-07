@@ -10,81 +10,72 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNet.OData.Results;
 using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 
 namespace hihapi.test.UnitTests
 {
-    [Collection("Collection#1")]
+    [Collection("HIHAPI_UnitTests#1")]
     public class FinanceAccountCategoriesControllerTest
     {
-        [Fact]
-        public async Task TestCase1()
+        SqliteDatabaseFixture fixture = null;
+
+        public FinanceAccountCategoriesControllerTest(SqliteDatabaseFixture fixture)
         {
-            hihDataContext.TestingMode = true;
+            this.fixture = fixture;
+        }
 
-            // In-memory database only exists while the connection is open
-            var connection = new SqliteConnection("DataSource=:memory:");
-            connection.Open();
+        [Fact]
+        public async Task TestCase1_Home1()
+        {
+            var ctgyCount = DataSetupUtility.FinanceAccountCategories.Count();
 
-            try
+            FinanceAccountCategoriesController control = new FinanceAccountCategoriesController(this.fixture.CurrentDataContext);
+            var user = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA);
+            control.ControllerContext = new ControllerContext()
             {
-                var options = new DbContextOptionsBuilder<hihDataContext>()
-                    .UseSqlite(connection)
-                    .Options;
+                HttpContext = new DefaultHttpContext() { User = user }
+            };
 
-                // Create the schema in the database
-                using (var context = new hihDataContext(options))
-                {
-                    context.Database.EnsureCreated();
+            // 1. Read all categories
+            var items = control.Get();
+            var itemcnt = items.Count();
+            Assert.Equal(ctgyCount, itemcnt);
 
-                    // 0. Setup user and home defines
-                    DataSetupUtility.InitializeSystemTables(context);
-                    DataSetupUtility.InitializeHomeDefineAndMemberTables(context);
-                    var ctgyCount = DataSetupUtility.listFinAccountCategory.Count();
-
-                    FinanceAccountCategoriesController control = new FinanceAccountCategoriesController(context);
-                    var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-                    {
-                        new Claim(ClaimTypes.Name, DataSetupUtility.UserA),
-                        new Claim(ClaimTypes.NameIdentifier, DataSetupUtility.UserA),
-                    }, "mock"));
-                    control.ControllerContext = new ControllerContext()
-                    {
-                        HttpContext = new DefaultHttpContext() { User = user }
-                    };
-
-                    // 1. Read all categories
-                    var items = control.Get();
-                    var itemcnt = items.Count();
-                    Assert.Equal(ctgyCount, itemcnt);
-
-                    // 2. Insert new category
-                    var ctgy = new FinanceAccountCategory()
-                    {
-                        HomeID = DataSetupUtility.Home1ID,
-                        Name = "Test 1",
-                        Comment = "Test 1"
-                    };
-                    var rst1 = await control.Post(ctgy);
-                    Assert.NotNull(rst1);
-                    var rst2 = Assert.IsType<CreatedODataResult<FinanceAccountCategory>>(rst1);
-                    Assert.Equal(ctgy.Name, rst2.Entity.Name);
-                    Assert.True(rst2.Entity.ID > 0);
-                    Assert.Equal(ctgy.Comment, rst2.Entity.Comment);
-
-                    // 3. Read all categories
-                    items = control.Get(DataSetupUtility.Home1ID);
-                    itemcnt = items.Count();
-                    ctgyCount++;
-                    Assert.Equal(ctgyCount, itemcnt);
-                }
-            }
-            finally
+            // 2. Insert new category
+            var ctgy = new FinanceAccountCategory()
             {
-                connection.Close();
-            }
+                HomeID = DataSetupUtility.Home1ID,
+                Name = "Test 1",
+                Comment = "Test 1"
+            };
+            var rst1 = await control.Post(ctgy);
+            Assert.NotNull(rst1);
+            var rst2 = Assert.IsType<CreatedODataResult<FinanceAccountCategory>>(rst1);
+            Assert.Equal(ctgy.Name, rst2.Entity.Name);
+            var firstctg = rst2.Entity.ID;
+            Assert.True(firstctg > 0);
+            Assert.Equal(ctgy.Comment, rst2.Entity.Comment);
 
-            //hihDataContext.TestingMode = false;
+            // 3. Read all categories
+            items = control.Get(DataSetupUtility.Home1ID);
+            itemcnt = items.Count();
+            Assert.Equal(ctgyCount + 1, itemcnt);
+
+            // 4. Change the category's name
+            ctgy.Name = "Test 2";
+            rst1 = await control.Put(firstctg, ctgy);
+            var rst3 = Assert.IsType<UpdatedODataResult<FinanceAccountCategory>>(rst1);
+            Assert.Equal(ctgy.Name, rst3.Entity.Name);
+
+            // 5. Delete it
+            var rst4 = await control.Delete(firstctg);
+            Assert.NotNull(rst4);
+            var rst6 = Assert.IsType<StatusCodeResult>(rst4);
+            Assert.Equal(204, rst6.StatusCode);
+
+            // 6. Read all categories again
+            items = control.Get(DataSetupUtility.Home1ID);
+            itemcnt = items.Count();
+            Assert.Equal(ctgyCount, itemcnt);
         }
     }
 }
