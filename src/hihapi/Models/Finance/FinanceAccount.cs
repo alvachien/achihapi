@@ -65,7 +65,6 @@ namespace hihapi.Models
         public override bool IsValid()
         {
             return base.IsValid();
-
         }
 
         public HomeDefine CurrentHome { get; set; }

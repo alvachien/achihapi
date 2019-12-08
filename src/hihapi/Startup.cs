@@ -167,6 +167,8 @@ namespace hihapi
             modelBuilder.EntitySet<FinanceTmpLoanDocument>("FinanceTmpLoanDocuments");
             modelBuilder.EntitySet<FinanceOrder>("FinanceOrders");
             modelBuilder.EntitySet<FinanceOrderSRule>("FinanceOrderSRules");
+            modelBuilder.EntitySet<FinanceDocument>("FinanceDocuments");
+            modelBuilder.EntitySet<FinanceDocumentItem>("FinanceDocumentItems");
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();

@@ -10,6 +10,9 @@ namespace hihapi.Models
     {
         public FinanceOrder(): base()
         {
+            ValidFrom = DateTime.Today;
+            ValidTo = DateTime.Today;
+
             SRule = new HashSet<FinanceOrderSRule>();
         }
         
@@ -43,6 +46,11 @@ namespace hihapi.Models
         public override bool IsValid()
         {
             if (!base.IsValid())
+                return false;
+
+            // Check Validility
+            var ts = ValidTo - ValidFrom;
+            if (ts.TotalSeconds < 0)
                 return false;
 
             // SRule must exist

@@ -53,7 +53,7 @@ namespace hihapi.test.UnitTests
             var okResult = Assert.IsType<OkObjectResult>(result);
             var returnValue = Assert.IsAssignableFrom<IQueryable<HomeDefine>>(okResult.Value);
             var cnt = returnValue.Count();
-            Assert.Equal(3, cnt);
+            Assert.Equal(2, cnt);
 
             // For user B, 3 home defines
             user = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB);

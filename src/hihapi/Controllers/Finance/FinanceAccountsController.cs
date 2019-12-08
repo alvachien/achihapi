@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
@@ -16,61 +16,42 @@ using hihapi.Exceptions;
 
 namespace hihapi.Controllers
 {
-    public class FinanceAccountCategoriesController : ODataController
+    public sealed class FinanceAccountsController : ODataController
     {
-        public const Int32 AccountCategory_AdvancePayment = 8;
-        public const Int32 AccountCategory_Asset = 7;
-        public const Int32 AccountCategory_BorrowFrom = 9;
-        public const Int32 AccountCategory_LendTo = 10;
-        public const Int32 AccountCategory_AdvanceReceive = 11;
-        public const Int32 AccountCategory_Insurance = 12;
-        public const Int32 AccountCategory_Cash = 1; // Cash
-        public const Int32 AccountCategory_Deposit = 2;
-        public const Int32 AccountCategory_Creditcard = 3;
-        public const Int32 AccountCategory_AccountPayable = 4;
-        public const Int32 AccountCategory_AccountReceivable = 5;
-        public const Int32 AccountCategory_VirtualAccount = 6;
         private readonly hihDataContext _context;
 
-        public FinanceAccountCategoriesController(hihDataContext context)
+        public FinanceAccountsController(hihDataContext context)
         {
             _context = context;
         }
 
-        /// GET: /FinanceAccountCategories
+        /// GET: /FinanceAccounts
         [EnableQuery]
         [Authorize]
-        public IQueryable<FinanceAccountCategory> Get(Int32? hid = null)
+        public IQueryable<FinanceAccount> Get(Int32 hid)
         {
-            if (hid.HasValue)
+            String usrName = String.Empty;
+            try
             {
-                String usrName = String.Empty;
-                try
-                {
-                    usrName = HIHAPIUtility.GetUserID(this);
-                }
-                catch
-                {
-                    // Do nothing
-                    usrName = String.Empty;
-                }
-
+                usrName = HIHAPIUtility.GetUserID(this);
                 if (String.IsNullOrEmpty(usrName))
-                    return _context.FinAccountCategories.Where(p => p.HomeID == null);
-
-                var rst =
-                   from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid.Value)
-                   from acntctgy in _context.FinAccountCategories.Where(p => p.HomeID == null || p.HomeID == hmem.HomeID)
-                   select acntctgy;
-
-                return rst;
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
             }
 
-            return _context.FinAccountCategories.Where(p => p.HomeID == null);
+            var rst =
+                from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid)
+                from acnt in _context.FinanceAccount.Where(p => p.HomeID == hmem.HomeID)
+                select acnt;
+
+            return rst;
         }
 
         [Authorize]
-        public async Task<IActionResult> Post([FromBody] FinanceAccountCategory ctgy)
+        public async Task<IActionResult> Post([FromBody]FinanceAccount account)
         {
             if (!ModelState.IsValid)
             {
@@ -82,12 +63,6 @@ namespace hihapi.Controllers
                     }
                 }
 
-                return BadRequest();
-            }
-
-            // Check
-            if (!ctgy.IsValid() || !ctgy.HomeID.HasValue)
-            {
                 return BadRequest();
             }
 
@@ -107,20 +82,20 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == ctgy.HomeID.Value && p.User == usrName).Count();
+            var hms = _context.HomeMembers.Where(p => p.HomeID == account.HomeID && p.User == usrName).Count();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
             }
 
-            _context.FinAccountCategories.Add(ctgy);
+            _context.FinanceAccount.Add(account);
             await _context.SaveChangesAsync();
 
-            return Created(ctgy);
+            return Created(account);
         }
-    
+
         [Authorize]
-        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceAccountCategory update)
+        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody]FinanceAccount update)
         {
             if (!ModelState.IsValid)
             {
@@ -168,7 +143,7 @@ namespace hihapi.Controllers
             }
             catch (DbUpdateConcurrencyException exp)
             {
-                if (!_context.FinAccountCategories.Any(p => p.ID == key))
+                if (!_context.FinanceAccount.Any(p => p.ID == key))
                 {
                     return NotFound();
                 }
@@ -184,13 +159,13 @@ namespace hihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
-            var cc = await _context.FinAccountCategories.FindAsync(key);
+            var cc = await _context.FinanceAccount.FindAsync(key);
             if (cc == null)
             {
                 return NotFound();
             }
 
-            _context.FinAccountCategories.Remove(cc);
+            _context.FinanceAccount.Remove(cc);
             await _context.SaveChangesAsync();
 
             return StatusCode(204); // HttpStatusCode.NoContent
