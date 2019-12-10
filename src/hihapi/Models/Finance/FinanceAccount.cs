@@ -64,7 +64,10 @@ namespace hihapi.Models
 
         public override bool IsValid()
         {
-            return base.IsValid();
+            if (!base.IsValid())
+                return false;
+
+            return true;
         }
 
         public HomeDefine CurrentHome { get; set; }
@@ -75,7 +78,9 @@ namespace hihapi.Models
         [Key]
         [Column("ACCOUNTID", TypeName="INT")]
         public Int32 AccountID { get; set; }
+
         public abstract bool IsValid();
+        
         public abstract string GetDBFieldName(string field);
     }
 

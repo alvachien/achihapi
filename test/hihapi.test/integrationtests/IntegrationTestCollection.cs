@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Xunit;
 
-namespace hihapi.test.integrationtests
+namespace hihapi.test.IntegrationTests
 {
     [CollectionDefinition("HIHAPI_IntegrationTests#1")]
     public class IntegrationTestCollection : ICollectionFixture<SqliteDatabaseFixture>

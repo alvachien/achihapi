@@ -19,11 +19,20 @@ namespace hihapi.Models
         [StringLength(40)]
         public String Updatedby { get; set; }
 
+        #region Virtual Methods
         // IsValid
         // Check current model is valid from business perspective
         public virtual Boolean IsValid()
         {
             return true;
         }
+
+        // IsDeleteAllowed
+        // Check current model is allowed to delete
+        public virtual Boolean IsDeleteAllowed()
+        {
+            return true;
+        }
+        #endregion
     }
 }

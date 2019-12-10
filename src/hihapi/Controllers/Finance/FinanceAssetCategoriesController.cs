@@ -100,6 +100,9 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            if (!ctgy.IsValid())
+                return BadRequest();
+
             _context.FinAssetCategories.Add(ctgy);
             await _context.SaveChangesAsync();
 
@@ -147,6 +150,9 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
+
+            if (!update.IsValid())
+                return BadRequest();
 
             _context.Entry(update).State = EntityState.Modified;
             try

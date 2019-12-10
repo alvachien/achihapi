@@ -79,5 +79,45 @@ namespace hihapi.Controllers
 
             return Ok(rst);
         }
+
+        [Authorize]
+        public async Task<IActionResult> Post([FromBody]HomeDefine homedef)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            if (!homedef.IsValid())
+                return BadRequest();
+
+            _context.HomeDefines.Add(homedef);
+            await _context.SaveChangesAsync();
+
+            return Created(homedef);
+        }
     }
 }

@@ -88,6 +88,9 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            if (!account.IsValid())
+                return BadRequest();
+
             _context.FinanceAccount.Add(account);
             await _context.SaveChangesAsync();
 
@@ -135,6 +138,9 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
+
+            if (!update.IsValid())
+                return BadRequest();
 
             _context.Entry(update).State = EntityState.Modified;
             try

@@ -55,117 +55,117 @@ namespace hihapi.Controllers
         /// <summary>
         /// Support for creating knowledge
         /// </summary>
-        public async Task<IActionResult> Post([FromBody] Currency currency)
-        {
-            if (!ModelState.IsValid)
-            {
-                foreach (var value in ModelState.Values)
-                {
-                    foreach(var err in value.Errors) 
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
+        //public async Task<IActionResult> Post([FromBody] Currency currency)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        foreach (var value in ModelState.Values)
+        //        {
+        //            foreach(var err in value.Errors) 
+        //            {
+        //                System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+        //            }
+        //        }
 
-                return BadRequest();
-            }
+        //        return BadRequest();
+        //    }
 
-            _context.Currencies.Add(currency);
-            await _context.SaveChangesAsync();
+        //    _context.Currencies.Add(currency);
+        //    await _context.SaveChangesAsync();
 
-            return Created(currency);
-        }
+        //    return Created(currency);
+        //}
 
-        // PUT: /Currencies/5
-        /// <summary>
-        /// Support for updating Currencies
-        /// </summary>
-        public async Task<IActionResult> Put([FromODataUri] string curr, [FromBody] Currency update)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+        //// PUT: /Currencies/5
+        ///// <summary>
+        ///// Support for updating Currencies
+        ///// </summary>
+        //public async Task<IActionResult> Put([FromODataUri] string curr, [FromBody] Currency update)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
 
-            if (curr != update.Curr)
-            {
-                return BadRequest();
-            }
+        //    if (curr != update.Curr)
+        //    {
+        //        return BadRequest();
+        //    }
 
-            _context.Entry(update).State = EntityState.Modified;
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Currencies.Any(p => p.Curr == curr))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+        //    _context.Entry(update).State = EntityState.Modified;
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!_context.Currencies.Any(p => p.Curr == curr))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
 
-            return Updated(update);
-        }
+        //    return Updated(update);
+        //}
 
-        // DELETE: /Currencies/5
-        /// <summary>
-        /// Support for deleting currency by key.
-        /// </summary>
-        public async Task<IActionResult> Delete([FromODataUri] int key)
-        {
-            var currency = await _context.Currencies.FindAsync(key);
-            if (currency == null)
-            {
-                return NotFound();
-            }
+        //// DELETE: /Currencies/5
+        ///// <summary>
+        ///// Support for deleting currency by key.
+        ///// </summary>
+        //public async Task<IActionResult> Delete([FromODataUri] int key)
+        //{
+        //    var currency = await _context.Currencies.FindAsync(key);
+        //    if (currency == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            _context.Currencies.Remove(currency);
-            await _context.SaveChangesAsync();
+        //    _context.Currencies.Remove(currency);
+        //    await _context.SaveChangesAsync();
 
-            return StatusCode(204); // HttpStatusCode.NoContent
-        }
+        //    return StatusCode(204); // HttpStatusCode.NoContent
+        //}
 
-        // PATCH: /Currencies
-        /// <summary>
-        /// Support for partial updates of Currencies
-        /// </summary>
-        public async Task<IActionResult> Patch([FromODataUri] string curr, [FromBody] Delta<Currency> currency)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+        //// PATCH: /Currencies
+        ///// <summary>
+        ///// Support for partial updates of Currencies
+        ///// </summary>
+        //public async Task<IActionResult> Patch([FromODataUri] string curr, [FromBody] Delta<Currency> currency)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
 
-            var entity = await _context.Currencies.FindAsync(curr);
-            if (entity == null)
-            {
-                return NotFound();
-            }
+        //    var entity = await _context.Currencies.FindAsync(curr);
+        //    if (entity == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            currency.Patch(entity);
+        //    currency.Patch(entity);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Currencies.Any(p => p.Curr == curr))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!_context.Currencies.Any(p => p.Curr == curr))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
 
-            return Updated(entity);
-        }
+        //    return Updated(entity);
+        //}
     }
 }

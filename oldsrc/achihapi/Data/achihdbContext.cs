@@ -28,8 +28,6 @@ namespace achihapi.Models
         public virtual DbSet<TFinAccountExtLoan> TFinAccountExtLoan { get; set; }
         public virtual DbSet<TFinAccountExtLoanH> TFinAccountExtLoanH { get; set; }
         public virtual DbSet<TFinAssetCtgy> TFinAssetCtgy { get; set; }
-        public virtual DbSet<TFinDocument> TFinDocument { get; set; }
-        public virtual DbSet<TFinDocumentItem> TFinDocumentItem { get; set; }
         public virtual DbSet<TFinPlan> TFinPlan { get; set; }
         public virtual DbSet<TFinTmpdocDp> TFinTmpdocDp { get; set; }
         public virtual DbSet<TFinTmpdocLoan> TFinTmpdocLoan { get; set; }
@@ -260,55 +258,6 @@ namespace achihapi.Models
                     .HasConstraintName("FK_t_event_recur_HID");
             });
 
-            modelBuilder.Entity<TFinAccount>(entity =>
-            {
-                entity.ToTable("t_fin_account");
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.Comment)
-                    .HasColumnName("COMMENT")
-                    .HasMaxLength(45);
-
-                entity.Property(e => e.Createdat)
-                    .HasColumnName("CREATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Createdby)
-                    .HasColumnName("CREATEDBY")
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Ctgyid).HasColumnName("CTGYID");
-
-                entity.Property(e => e.Hid).HasColumnName("HID");
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasColumnName("NAME")
-                    .HasMaxLength(30);
-
-                entity.Property(e => e.Owner)
-                    .HasColumnName("OWNER")
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Status).HasColumnName("STATUS");
-
-                entity.Property(e => e.Updatedat)
-                    .HasColumnName("UPDATEDAT")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Updatedby)
-                    .HasColumnName("UPDATEDBY")
-                    .HasMaxLength(50);
-
-                entity.HasOne(d => d.H)
-                    .WithMany(p => p.TFinAccount)
-                    .HasForeignKey(d => d.Hid)
-                    .HasConstraintName("FK_t_account_HID");
-            });
-
             modelBuilder.Entity<TFinAccountExtCc>(entity =>
             {
                 entity.HasKey(e => e.Accountid);
@@ -474,103 +423,6 @@ namespace achihapi.Models
                     .WithOne(p => p.TFinAccountExtLoanH)
                     .HasForeignKey<TFinAccountExtLoanH>(d => d.Accountid)
                     .HasConstraintName("FK_t_fin_account_ext_loan_h_ID");
-            });
-
-            modelBuilder.Entity<TFinDocument>(entity =>
-            {
-                entity.ToTable("t_fin_document");
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.Createdat)
-                    .HasColumnName("CREATEDAT")
-                    .HasColumnType("date");
-
-                entity.Property(e => e.Createdby)
-                    .HasColumnName("CREATEDBY")
-                    .HasMaxLength(40);
-
-                entity.Property(e => e.Desp)
-                    .IsRequired()
-                    .HasColumnName("DESP")
-                    .HasMaxLength(45);
-
-                entity.Property(e => e.Doctype).HasColumnName("DOCTYPE");
-
-                entity.Property(e => e.Exgrate)
-                    .HasColumnName("EXGRATE")
-                    .HasColumnType("decimal(17, 4)");
-
-                entity.Property(e => e.Exgrate2)
-                    .HasColumnName("EXGRATE2")
-                    .HasColumnType("decimal(17, 4)");
-
-                entity.Property(e => e.ExgratePlan).HasColumnName("EXGRATE_PLAN");
-
-                entity.Property(e => e.ExgratePlan2).HasColumnName("EXGRATE_PLAN2");
-
-                entity.Property(e => e.Hid).HasColumnName("HID");
-
-                entity.Property(e => e.Trancurr)
-                    .IsRequired()
-                    .HasColumnName("TRANCURR")
-                    .HasMaxLength(5);
-
-                entity.Property(e => e.Trancurr2)
-                    .HasColumnName("TRANCURR2")
-                    .HasMaxLength(5);
-
-                entity.Property(e => e.Trandate)
-                    .HasColumnName("TRANDATE")
-                    .HasColumnType("date")
-                    .HasDefaultValueSql("(getdate())");
-
-                entity.Property(e => e.Updatedat)
-                    .HasColumnName("UPDATEDAT")
-                    .HasColumnType("date");
-
-                entity.Property(e => e.Updatedby)
-                    .HasColumnName("UPDATEDBY")
-                    .HasMaxLength(40);
-
-                entity.HasOne(d => d.H)
-                    .WithMany(p => p.TFinDocument)
-                    .HasForeignKey(d => d.Hid)
-                    .HasConstraintName("FK_t_fin_document_HID");
-            });
-
-            modelBuilder.Entity<TFinDocumentItem>(entity =>
-            {
-                entity.HasKey(e => new { e.Docid, e.Itemid });
-
-                entity.ToTable("t_fin_document_item");
-
-                entity.Property(e => e.Docid).HasColumnName("DOCID");
-
-                entity.Property(e => e.Itemid).HasColumnName("ITEMID");
-
-                entity.Property(e => e.Accountid).HasColumnName("ACCOUNTID");
-
-                entity.Property(e => e.Controlcenterid).HasColumnName("CONTROLCENTERID");
-
-                entity.Property(e => e.Desp)
-                    .HasColumnName("DESP")
-                    .HasMaxLength(45);
-
-                entity.Property(e => e.Orderid).HasColumnName("ORDERID");
-
-                entity.Property(e => e.Tranamount)
-                    .HasColumnName("TRANAMOUNT")
-                    .HasColumnType("decimal(17, 2)");
-
-                entity.Property(e => e.Trantype).HasColumnName("TRANTYPE");
-
-                entity.Property(e => e.Usecurr2).HasColumnName("USECURR2");
-
-                entity.HasOne(d => d.Doc)
-                    .WithMany(p => p.TFinDocumentItem)
-                    .HasForeignKey(d => d.Docid)
-                    .HasConstraintName("FK_t_fin_document_header");
             });
 
             modelBuilder.Entity<TFinPlan>(entity =>

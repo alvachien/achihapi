@@ -51,9 +51,21 @@ Deploy this Web API to IIS or other HTTP server.
 Though the whole project developed and tested with Visual Studio 2017 Community Version, the project can be processed by other IDE which supports ASP.NET Core.
 
 
-## Unit Test
-This unit test project also included. You can run the unit test to ensure the code run successfully. 
+## Test
+One test project has been added to solution. 
+The test project contains both Unit Test and Integration Test, you have to run Unit Test and Integration Test separately.
 
+### Unit Tests
+To run the unit test:
+```powershell
+dotnet test --filter DisplayName~hihapi.test.UnitTests
+```
+
+### Integration Tests
+To run the integration test:
+```powershell
+dotnet test --filter DisplayName~hihapi.test.integrationtests
+```
 
 # Author
 **Alva Chien (Hongjun Qian) | 钱红俊**

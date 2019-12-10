@@ -6,7 +6,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using Xunit;
 
-namespace hihapi.test.integrationtests
+namespace hihapi.test.IntegrationTests
 {
     public abstract class BasicIntegrationTest: IClassFixture<CustomWebApplicationFactory<hihapi.Startup>>, IDisposable
     {

@@ -244,7 +244,10 @@ namespace hihapi.Models
             modelBuilder.Entity<FinanceDocument>(entity => {
                 if (!TestingMode)
                 {
-
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
                 }
                 else
                 {
@@ -252,9 +255,19 @@ namespace hihapi.Models
                         .HasColumnType("INTEGER")
                         .ValueGeneratedOnAdd();
                 }
+
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.FinanceDocuments)
+                    .HasForeignKey(d => d.HomeID)
+                    .HasConstraintName("FK_t_fin_document_HID");
             });
             modelBuilder.Entity<FinanceDocumentItem>(entity => {
                 entity.HasKey(p => new { p.DocID, p.ItemID });
+
+                entity.HasOne(d => d.DocumentHeader)
+                    .WithMany(p => p.Items)
+                    .HasForeignKey(d => d.DocID)
+                    .HasConstraintName("FK_t_fin_document_header");
             });
             modelBuilder.Entity<FinanceTmpLoanDocument>(entity => {
                 if (!TestingMode)

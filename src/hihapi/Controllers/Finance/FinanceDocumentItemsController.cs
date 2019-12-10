@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
@@ -16,19 +16,19 @@ using hihapi.Exceptions;
 
 namespace hihapi.Controllers
 {
-    public sealed class FinanceOrderSRulesController: ODataController
+    public class FinanceDocumentItemsController: ODataController
     {
         private readonly hihDataContext _context;
 
-        public FinanceOrderSRulesController(hihDataContext context)
+        public FinanceDocumentItemsController(hihDataContext context)
         {
             _context = context;
         }
 
-        /// GET: /FinanceOrderSRules
+        /// GET: /FinanceDocumentItems
         [EnableQuery]
         [Authorize]
-        public IQueryable<FinanceOrderSRule> Get(Int32 hid, Int32 orderid)
+        public IQueryable<FinanceDocumentItem> Get(Int32 hid, Int32 docid)
         {
             String usrName = String.Empty;
             try
@@ -44,8 +44,8 @@ namespace hihapi.Controllers
 
             var rst =
                 from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid)
-                from ord in _context.FinanceOrder.Where(p => p.ID == orderid && p.HomeID == hmem.HomeID)
-                from items in _context.FinanceOrderSRule.Where(p => p.OrderID == ord.ID)
+                from doc in _context.FinanceDocument.Where(p => p.ID == docid && p.HomeID == hmem.HomeID)
+                from items in _context.FinanceDocumentItem.Where(p => p.DocID == doc.ID)
                 select items;
 
             return rst;

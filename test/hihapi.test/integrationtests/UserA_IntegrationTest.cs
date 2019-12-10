@@ -12,8 +12,9 @@ using Newtonsoft.Json;
 using System.Linq;
 using Newtonsoft.Json.Converters;
 using Microsoft.AspNet.OData.Results;
+using hihapi.Controllers;
 
-namespace hihapi.test.integrationtests
+namespace hihapi.test.IntegrationTests
 {
     public class UserA_IntegrationTest : BasicIntegrationTest
     {
@@ -96,6 +97,8 @@ namespace hihapi.test.integrationtests
             var hid = DataSetupUtility.Home1ID;
             var cc1id = 0;
             var ord1id = 0;
+            var acnt1id = 0;
+            var doc1id = 0;
             var jsetting = new JsonSerializerSettings();
             jsetting.Converters.Add(new StringEnumConverter());
             jsetting.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
@@ -149,6 +152,60 @@ namespace hihapi.test.integrationtests
                 Assert.Equal(odatarst.Name, ord.Name);
                 ord1id = odatarst.ID;
                 Assert.True(ord1id > 0);
+            }
+
+            // Step 7. Create an account
+            var acnt = new FinanceAccount()
+            {
+                HomeID = DataSetupUtility.Home1ID,
+                Name = "Account 1",
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                Owner = DataSetupUtility.UserA
+            };
+            kjson = JsonConvert.SerializeObject(acnt, jsetting);
+            inputContent = new StringContent(kjson, Encoding.UTF8, "application/json");
+            resp2 = await clientWithAuth.PostAsync("/api/FinanceAccounts", inputContent);
+            Assert.True(resp2.IsSuccessStatusCode);
+            result = resp2.Content.ReadAsStringAsync().Result;
+            if (!String.IsNullOrEmpty(result))
+            {
+                var odatarst = JsonConvert.DeserializeObject<FinanceAccount>(result);
+                Assert.Equal(odatarst.Name, acnt.Name);
+                acnt1id = odatarst.ID;
+                Assert.True(acnt1id > 0);
+            }
+
+            // Step 8. Post a document
+            var doc = new FinanceDocument()
+            {
+                DocType = FinanceDocumentType.DocType_Normal,
+                HomeID = hid,
+                TranDate = DateTime.Today,
+                Desp = "First document",
+                TranCurr = DataSetupUtility.Home1BaseCurrency,
+            };
+            var item = new FinanceDocumentItem()
+            {
+                DocumentHeader = doc,
+                ItemID = 1,
+                Desp = "Item 1.1",
+                TranType = 2, // Wage
+                TranAmount = 10,
+                AccountID = acnt1id,
+                ControlCenterID = cc1id,
+            };
+            doc.Items.Add(item);
+            kjson = JsonConvert.SerializeObject(doc, jsetting);
+            inputContent = new StringContent(kjson, Encoding.UTF8, "application/json");
+            resp2 = await clientWithAuth.PostAsync("/api/FinanceDocuments", inputContent);
+            Assert.True(resp2.IsSuccessStatusCode);
+            result = resp2.Content.ReadAsStringAsync().Result;
+            if (!String.IsNullOrEmpty(result))
+            {
+                var odatarst = JsonConvert.DeserializeObject<FinanceDocument>(result);
+                Assert.Equal(odatarst.Desp, doc.Desp);
+                doc1id = odatarst.ID;
+                Assert.True(doc1id > 0);
             }
         }
     }

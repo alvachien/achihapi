@@ -94,6 +94,9 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            if (!order.IsValid())
+                return BadRequest();
+
             _context.FinanceOrder.Add(order);
             foreach(var rule in order.SRule)
             {
@@ -146,6 +149,9 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
+
+            if (!update.IsValid())
+                return BadRequest();
 
             _context.Entry(update).State = EntityState.Modified;
             try
