@@ -175,6 +175,27 @@ namespace hihapi.test.IntegrationTests
                 Assert.True(acnt1id > 0);
             }
 
+            // Step 7a. Get all accounts
+            resp2 = await clientWithAuth.GetAsync("/api/FinanceAccounts?hid=" + hid.ToString());
+            Assert.True(resp2.IsSuccessStatusCode);
+            result = resp2.Content.ReadAsStringAsync().Result;
+            if (!String.IsNullOrEmpty(result))
+            {
+                //var odatarst = JsonConvert.DeserializeObject<FinanceAccount>(result);
+                //Assert.Equal(odatarst.Name, acnt.Name);
+                //acnt1id = odatarst.ID;
+                //Assert.True(acnt1id > 0);
+            }
+
+            // Step 7b. Read one specified account
+            resp2 = await clientWithAuth.GetAsync("/api/FinanceAccounts(" + acnt1id.ToString() + ", " + hid.ToString() + ")"); // ?hid=" + hid.ToString());
+            Assert.True(resp2.IsSuccessStatusCode);
+            result = resp2.Content.ReadAsStringAsync().Result;
+            if (!String.IsNullOrEmpty(result))
+            {
+
+            }
+            
             // Step 8. Post a document
             var doc = new FinanceDocument()
             {
@@ -195,6 +216,7 @@ namespace hihapi.test.IntegrationTests
                 ControlCenterID = cc1id,
             };
             doc.Items.Add(item);
+            jsetting.NullValueHandling = NullValueHandling.Ignore;
             kjson = JsonConvert.SerializeObject(doc, jsetting);
             inputContent = new StringContent(kjson, Encoding.UTF8, "application/json");
             resp2 = await clientWithAuth.PostAsync("/api/FinanceDocuments", inputContent);

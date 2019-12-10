@@ -55,7 +55,7 @@ namespace hihapi.test.UnitTests
             var firstacntid = rst2.Entity.ID;
             Assert.True(firstacntid > 0);
 
-            // 2. Now read the whole control centers
+            // 2. Now read the whole accounts
             var rst3 = control.Get(DataSetupUtility.Home1ID);
             Assert.NotNull(rst3);
             Assert.Equal(1, rst3.Count());

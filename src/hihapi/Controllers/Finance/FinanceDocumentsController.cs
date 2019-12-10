@@ -42,12 +42,43 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var rst =
-                from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid)
-                from acnt in _context.FinanceDocument.Where(p => p.HomeID == hmem.HomeID)
-                select acnt;
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var rst = from docs in _context.FinanceDocument.Where(p => p.HomeID == hid)
+                select docs;
 
             return rst;
+        }
+
+        [EnableQuery]
+        [Authorize]
+        public SingleResult<FinanceDocument> Get([FromODataUri]Int32 docid, Int32 hid)
+        {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            //// Check whether User assigned with specified Home ID
+            //var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            //if (hms <= 0)
+            //{
+            //    throw new UnauthorizedAccessException();
+            //}
+
+            return SingleResult.Create(_context.FinanceDocument.Where(p => p.HomeID == docid && p.HomeID == hid));
         }
 
         [Authorize]

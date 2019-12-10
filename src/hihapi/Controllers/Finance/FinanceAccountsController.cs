@@ -28,7 +28,7 @@ namespace hihapi.Controllers
         /// GET: /FinanceAccounts
         [EnableQuery]
         [Authorize]
-        public IQueryable<FinanceAccount> Get(Int32 hid)
+        public IQueryable<FinanceAccount> Get([FromQuery]Int32 hid)
         {
             String usrName = String.Empty;
             try
@@ -42,13 +42,45 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var rst =
-                from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid)
-                from acnt in _context.FinanceAccount.Where(p => p.HomeID == hmem.HomeID)
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var rst = from acnt in _context.FinanceAccount.Where(p => p.HomeID == hid)
                 select acnt;
 
             return rst;
         }
+
+        [EnableQuery]
+        [Authorize]
+        public SingleResult<FinanceAccount> Get([FromODataUri]Int32 acntid, [FromODataUri]Int32 hid)
+        {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            //// Check whether User assigned with specified Home ID
+            //var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            //if (hms <= 0)
+            //{
+            //    throw new UnauthorizedAccessException();
+            //}
+
+            return SingleResult.Create(_context.FinanceAccount.Where(p => p.HomeID == acntid && p.HomeID == hid));
+        }
+
 
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceAccount account)
