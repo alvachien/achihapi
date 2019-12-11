@@ -40,33 +40,53 @@ namespace hihapi.Controllers
         /// GET: /FinanceAccountCategories
         [EnableQuery]
         [Authorize]
-        public IQueryable<FinanceAccountCategory> Get(Int32? hid = null)
+        public IQueryable<FinanceAccountCategory> Get()
         {
-            if (hid.HasValue)
+            String usrName = String.Empty;
+            try
             {
-                String usrName = String.Empty;
-                try
-                {
-                    usrName = HIHAPIUtility.GetUserID(this);
-                }
-                catch
-                {
-                    // Do nothing
-                    usrName = String.Empty;
-                }
-
-                if (String.IsNullOrEmpty(usrName))
-                    return _context.FinAccountCategories.Where(p => p.HomeID == null);
-
-                var rst =
-                   from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid.Value)
-                   from acntctgy in _context.FinAccountCategories.Where(p => p.HomeID == null || p.HomeID == hmem.HomeID)
-                   select acntctgy;
-
-                return rst;
+                usrName = HIHAPIUtility.GetUserID(this);
+            }
+            catch
+            {
+                // Do nothing
+                usrName = String.Empty;
             }
 
-            return _context.FinAccountCategories.Where(p => p.HomeID == null);
+            if (String.IsNullOrEmpty(usrName))
+                return _context.FinAccountCategories.Where(p => p.HomeID == null);
+
+            var rst = from hmem in _context.HomeMembers.Where(p => p.User == usrName)
+               from acntctgy in _context.FinAccountCategories.Where(p => p.HomeID == null || p.HomeID == hmem.HomeID)
+               select acntctgy;
+
+            return rst;
+        }
+
+        /// GET: /FinanceAccountCategories(:id)
+        [EnableQuery]
+        [Authorize]
+        public SingleResult<FinanceAccountCategory> Get([FromODataUri] int id)
+        {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+            }
+            catch
+            {
+                // Do nothing
+                usrName = String.Empty;
+            }
+
+            if (String.IsNullOrEmpty(usrName))
+                return SingleResult.Create(_context.FinAccountCategories.Where(p => p.ID == id && p.HomeID == null));
+
+            var rst = from hmem in _context.HomeMembers.Where(p => p.User == usrName)
+                      from acntctgy in _context.FinAccountCategories.Where(p => p.ID == id && (p.HomeID == null || p.HomeID == hmem.HomeID))
+                      select acntctgy;
+
+            return SingleResult.Create(rst);
         }
 
         [Authorize]
