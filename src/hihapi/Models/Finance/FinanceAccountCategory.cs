@@ -9,10 +9,10 @@ namespace hihapi.Models
     public sealed class FinanceAccountCategory : BaseModel
     {
         [Key]
-        [Column("ID", TypeName="int")]
+        [Column("ID", TypeName="INT")]
         public Int32 ID { get; set; }
 
-        [Column("HID", TypeName="int")]
+        [Column("HID", TypeName="INT")]
         public Int32? HomeID { get; set; }
 
         [Required]
@@ -28,6 +28,6 @@ namespace hihapi.Models
         [Column("COMMENT", TypeName="NVARCHAR(45)")]
         public String Comment { get; set; }
 
-        public HomeDefine CurrentHome { get; set; }
+        //public HomeDefine CurrentHome { get; set; }
     }
 }

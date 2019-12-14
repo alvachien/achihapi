@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Sqlite;
 using hihapi.Models;
 
 namespace hihapi.test
@@ -11,8 +12,6 @@ namespace hihapi.test
     {
         public SqliteDatabaseFixture()
         {
-            hihDataContext.TestingMode = true;
-
             // Open connections
             DBConnection = new SqliteConnection("DataSource=:memory:");
             DBConnection.Open();
@@ -20,19 +19,30 @@ namespace hihapi.test
             try
             {
                 var options = new DbContextOptionsBuilder<hihDataContext>()
-                    .UseSqlite(DBConnection)
+                    .UseSqlite(DBConnection, action =>
+                    {
+                        action.UseRelationalNulls();                        
+                    })
+                    .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll)
                     .Options;
 
                 // Create the schema in the database
-                CurrentDataContext = new hihDataContext(options);
+                CurrentDataContext = new hihDataContext(options, true);
+                if (!CurrentDataContext.Database.IsSqlite()
+                    || CurrentDataContext.Database.IsSqlServer())
+                {
+                    throw new Exception("Faield!");
+                }
                 CurrentDataContext.Database.EnsureCreated();
+                
 
                 // Setup the tables
                 DataSetupUtility.InitializeSystemTables(CurrentDataContext);
                 DataSetupUtility.InitializeHomeDefineAndMemberTables(CurrentDataContext);
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
                 // Error occurred
             }
             finally
@@ -47,7 +57,7 @@ namespace hihapi.test
                 DBConnection.Close();
                 DBConnection = null;
             }
-            hihDataContext.TestingMode = false;
+            //hihDataContext.TestingMode = false;
         }
 
         protected SqliteConnection DBConnection { get; private set; }

@@ -20,9 +20,6 @@ namespace hihapi.Controllers
     public class HomeDefinesController : ODataController
     {
         private readonly hihDataContext _context;
-        // public static string SubjectId(this ClaimsPrincipal user) { 
-        //     return user?.Claims?.FirstOrDefault(c => c.Type.Equals(ClaimTypes.NameIdentifier, StringComparison.OrdinalIgnoreCase))?.Value; 
-        // }
 
         public HomeDefinesController(hihDataContext context)
         {

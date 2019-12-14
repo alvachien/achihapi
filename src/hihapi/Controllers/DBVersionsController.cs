@@ -72,7 +72,7 @@ namespace hihapi.Controllers
                                 String strcontent = reader.ReadToEnd();
                                 using (var dbContextTransaction = _context.Database.BeginTransaction())
                                 {
-                                    _context.Database.ExecuteSqlCommand(strcontent);
+                                    _context.Database.ExecuteSqlRaw(strcontent);
                                     dbContextTransaction.Commit();
                                 }
                             }

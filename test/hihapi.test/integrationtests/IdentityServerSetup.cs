@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using IdentityModel.Client;
@@ -40,11 +41,25 @@ namespace hihapi.test.IntegrationTests
             string clientId = DataSetupUtility.IntegrationTestClient, 
             string clientSecret = "secret")
         {
-            var client = new TokenClient(DataSetupUtility.IntegrationTestIdentityServerUrl + "/connect/token", clientId, clientSecret);
+            //var client = new TokenClient(DataSetupUtility.IntegrationTestIdentityServerUrl + "/connect/token", clientId, clientSecret);
 
-            var response = await client.RequestResourceOwnerPasswordAsync(userName, password, DataSetupUtility.IntegrationTestAPIScope);
+            //var response = await client.RequestResourceOwnerPasswordAsync(userName, password, DataSetupUtility.IntegrationTestAPIScope);
 
-            return response.AccessToken;
+            //return response.AccessToken;
+            var client = new HttpClient();
+            var idsrv = await client.GetDiscoveryDocumentAsync(DataSetupUtility.IntegrationTestIdentityServerUrl);
+
+            var tokenResponse = await client.RequestPasswordTokenAsync(new PasswordTokenRequest
+            {
+                Address = idsrv.TokenEndpoint,
+                ClientId = clientId,
+                ClientSecret = clientSecret,
+                UserName = userName,
+                Password = password,
+                Scope = DataSetupUtility.IntegrationTestAPIScope
+            });
+            return tokenResponse.AccessToken;
+
         }
 
         private void InitializeIdentityServer()

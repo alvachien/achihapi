@@ -23,7 +23,7 @@ namespace hihapi.Models
         public const Int16 DocType_Insurece = 14;
 
         [Key]
-        [Column("ID", TypeName="int")]
+        [Column("ID", TypeName="INT")]
         public Int16 ID { get; set; }
 
         [Column("HID", TypeName="INT")]

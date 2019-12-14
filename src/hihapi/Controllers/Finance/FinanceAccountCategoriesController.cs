@@ -56,11 +56,16 @@ namespace hihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return _context.FinAccountCategories.Where(p => p.HomeID == null);
 
-            var rst = from hmem in _context.HomeMembers.Where(p => p.User == usrName)
-               from acntctgy in _context.FinAccountCategories.Where(p => p.HomeID == null || p.HomeID == hmem.HomeID)
-               select acntctgy;
+            var rst0 = from acntctgy in _context.FinAccountCategories
+                       where acntctgy.HomeID == null
+                       select acntctgy;
+            var rst1 = from hmem in _context.HomeMembers
+                      where hmem.User == usrName
+                      select new { HomeID = hmem.HomeID } into hids
+                      join acntctgy in _context.FinAccountCategories on hids.HomeID equals acntctgy.HomeID
+                      select acntctgy;
 
-            return rst;
+            return rst0.Union(rst1);
         }
 
         /// GET: /FinanceAccountCategories(:id)

@@ -26,14 +26,14 @@ namespace hihapi
     {
         readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
-        public Startup(IConfiguration configuration, IHostingEnvironment env)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
             Environment = env;
         }
 
         public IConfiguration Configuration { get; }
-        public IHostingEnvironment Environment { get; }
+        public IWebHostEnvironment Environment { get; }
         public string ConnectionString { get; private set; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -48,7 +48,7 @@ namespace hihapi
                     options.UseSqlServer(this.ConnectionString));
             }
 
-            services.AddMvc(x => x.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            //services.AddMvc(x => x.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddAuthorization();
 
             if (Environment.EnvironmentName == "IntegrationTest")
@@ -68,7 +68,7 @@ namespace hihapi
                             // oauth2 introspection options
                         });
             }
-            else if (Environment.IsDevelopment())
+            else if (Environment.EnvironmentName == "Development")
             {                
                 // services.AddAuthentication("Bearer")
                 //     .AddJwtBearer("Bearer", options =>
@@ -106,7 +106,7 @@ namespace hihapi
                     });
                 });
             }
-            else if (Environment.IsProduction())
+            else if (Environment.EnvironmentName == "Production")
             {
                 services.AddAuthentication("Bearer")
                     .AddJwtBearer("Bearer", options =>
@@ -119,6 +119,7 @@ namespace hihapi
             }
 
             services.AddOData();
+            services.AddMvc(options => options.EnableEndpointRouting = false);
 
             // Response Caching
             services.AddResponseCaching();
@@ -127,9 +128,9 @@ namespace hihapi
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
+            if (env.EnvironmentName == "Development")
             {
                 app.UseDeveloperExceptionPage();
             }
@@ -147,38 +148,38 @@ namespace hihapi
             }
 
             ODataModelBuilder modelBuilder = new ODataConventionModelBuilder(app.ApplicationServices);
-            modelBuilder.EntitySet<DBVersion>("DBVersions");
             modelBuilder.EntitySet<Currency>("Currencies");
             modelBuilder.EntitySet<Language>("Languages");
+            modelBuilder.EntitySet<DBVersion>("DBVersions");
             modelBuilder.EntitySet<HomeDefine>("HomeDefines");
             modelBuilder.EntitySet<HomeMember>("HomeMembers");
             modelBuilder.EntitySet<FinanceAccountCategory>("FinanceAccountCategories");
             modelBuilder.EntitySet<FinanceAssetCategory>("FinanceAssetCategories");
-            modelBuilder.EntitySet<FinanceDocumentType>("FinanceDocumentTypes");
-            modelBuilder.EntitySet<FinanceTransactionType>("FinanceTransactionTypes");
-            modelBuilder.EnumType<FinanceAccountStatus>();
-            modelBuilder.EnumType<RepeatFrequency>();
-            modelBuilder.EnumType<LoanRepaymentMethod>();
-            modelBuilder.EntitySet<FinanceControlCenter>("FinanceControlCenters");
-            modelBuilder.EntitySet<FinanceAccount>("FinanceAccounts");
-            modelBuilder.EntitySet<FinanceAccountExtraDP>("FinanceAccountExtraDPs");
-            modelBuilder.EntitySet<FinanceAccountExtraAS>("FinanceAccountExtraASs");
-            modelBuilder.EntitySet<FinanceTmpDPDocument>("FinanceTmpDPDocuments");
-            modelBuilder.EntitySet<FinanceTmpLoanDocument>("FinanceTmpLoanDocuments");
-            modelBuilder.EntitySet<FinanceOrder>("FinanceOrders");
-            modelBuilder.EntitySet<FinanceOrderSRule>("FinanceOrderSRules");
-            modelBuilder.EntitySet<FinanceDocument>("FinanceDocuments");
-            modelBuilder.EntitySet<FinanceDocumentItem>("FinanceDocumentItems");
+            modelBuilder.EntitySet<FinanceDocumentType>("FinanceDocumentTypes");/*
+            modelBuilder.EntitySet<FinanceTransactionType>("FinanceTransactionTypes");*/
+            //modelBuilder.EnumType<FinanceAccountStatus>();
+            //modelBuilder.EnumType<RepeatFrequency>();
+            //modelBuilder.EnumType<LoanRepaymentMethod>();
+            //modelBuilder.EntitySet<FinanceControlCenter>("FinanceControlCenters");
+            //modelBuilder.EntitySet<FinanceAccount>("FinanceAccounts");
+            //modelBuilder.EntitySet<FinanceAccountExtraDP>("FinanceAccountExtraDPs");
+            //modelBuilder.EntitySet<FinanceAccountExtraAS>("FinanceAccountExtraASs");
+            //modelBuilder.EntitySet<FinanceTmpDPDocument>("FinanceTmpDPDocuments");
+            //modelBuilder.EntitySet<FinanceTmpLoanDocument>("FinanceTmpLoanDocuments");
+            //modelBuilder.EntitySet<FinanceOrder>("FinanceOrders");
+            //modelBuilder.EntitySet<FinanceOrderSRule>("FinanceOrderSRules");
+            //modelBuilder.EntitySet<FinanceDocument>("FinanceDocuments");
+            //modelBuilder.EntitySet<FinanceDocumentItem>("FinanceDocumentItems");
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();
             app.UseODataBatching();
             
             app.UseMiddleware(typeof(ErrorHandlingMiddleware));
-            app.UseMvc(routeBuilder =>
-                {
-                    // and this line to enable OData query option, for example $filter
-                    routeBuilder.Select().Expand().Filter().OrderBy().MaxTop(100).Count();
+
+            app.UseMvc(routeBuilder => {
+                // and this line to enable OData query option, for example $filter
+                routeBuilder.Select().Expand().Filter().OrderBy().MaxTop(100).Count();
 
                     routeBuilder.MapODataServiceRoute("ODataRoute", "api", model);
                 });

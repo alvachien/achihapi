@@ -13,6 +13,7 @@ using System.Linq;
 using Newtonsoft.Json.Converters;
 using Microsoft.AspNet.OData.Results;
 using hihapi.Controllers;
+using IdentityModel.Client;
 
 namespace hihapi.test.IntegrationTests
 {

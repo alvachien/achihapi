@@ -29,13 +29,14 @@ namespace hihapi.Utilities
             return ctrl.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
 
+/*
         internal static void CheckHIDAssignment(hihDataContext context, Int32 hid, String usrName)
         {
             var ncnt = context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
             if (ncnt <= 0)
                 throw new Exception("No Home Definition found");
         }
-
+        */
         // internal static System.Security.Claims.Claim GetUserClaim(Microsoft.AspNetCore.Mvc.ControllerBase ctrl)
         // {
         //     var usrObj = ctrl.User.FindFirst(c => c.Type == "sub");

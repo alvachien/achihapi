@@ -30,30 +30,30 @@ namespace hihapi.Controllers
         [Authorize]
         public IQueryable<FinanceAssetCategory> Get(Int32? hid = null)
         {
-            if (hid.HasValue)
+            String usrName = String.Empty;
+            try
             {
-                String usrName = String.Empty;
-                try
-                {
-                    usrName = HIHAPIUtility.GetUserID(this);
-                }
-                catch
-                {
-                    // Do nothing
-                }
-
-                if (String.IsNullOrEmpty(usrName))
-                    return _context.FinAssetCategories.Where(p => p.HomeID == null);
-
-                var rst =
-                   from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid.Value)
-                   from acntctgy in _context.FinAssetCategories.Where(p => p.HomeID == null || p.HomeID == hmem.HomeID)
-                   select acntctgy;
-
-                return rst;
+                usrName = HIHAPIUtility.GetUserID(this);
+            }
+            catch
+            {
+                // Do nothing
+                usrName = String.Empty;
             }
 
-            return _context.FinAssetCategories.Where(p => p.HomeID == null);
+            if (String.IsNullOrEmpty(usrName))
+                return _context.FinAssetCategories.Where(p => p.HomeID == null);
+
+            var rst0 = from acntctgy in _context.FinAssetCategories
+                       where acntctgy.HomeID == null
+                       select acntctgy;
+            var rst1 = from hmem in _context.HomeMembers
+                       where hmem.User == usrName
+                       select new { HomeID = hmem.HomeID } into hids
+                       join acntctgy in _context.FinAssetCategories on hids.HomeID equals acntctgy.HomeID
+                       select acntctgy;
+
+            return rst0.Union(rst1);
         }
 
         [Authorize]

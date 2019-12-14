@@ -6,15 +6,17 @@ namespace hihapi.Models
     public class hihDataContext : DbContext
     {
         public hihDataContext()
-        {            
+        {
+            TestingMode = false;
         }
         
-        public hihDataContext(DbContextOptions<hihDataContext> options) : base(options)
-        { 
+        public hihDataContext(DbContextOptions<hihDataContext> options, bool testingMode = false) : base(options)
+        {
+            TestingMode = testingMode;
         }
 
         // Testing mode
-        public static Boolean TestingMode { get; set; }
+        public Boolean TestingMode { get; private set; }
 
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Language> Languages { get; set; }
@@ -24,26 +26,20 @@ namespace hihapi.Models
         public DbSet<FinanceAccountCategory> FinAccountCategories { get; set; }
         public DbSet<FinanceAssetCategory> FinAssetCategories { get; set; }
         public DbSet<FinanceDocumentType> FinDocumentTypes { get; set; }
-        public DbSet<FinanceTransactionType> FinTransactionType { get; set; }
-        public DbSet<FinanceAccount> FinanceAccount { get; set; }
-        public DbSet<FinanceAccountExtraDP> FinanceAccountExtraDP { get; set; }
-        public DbSet<FinanceAccountExtraAS> FinanceAccountExtraAS { get; set; }
-        public DbSet<FinanceDocument> FinanceDocument { get; set; }
-        public DbSet<FinanceDocumentItem> FinanceDocumentItem { get; set; }
-        public DbSet<FinanceTmpDPDocument> FinanceTmpDPDocument { get; set; }
-        public DbSet<FinanceTmpLoanDocument> FinanceTmpLoanDocument { get; set; }
-        public DbSet<FinanceControlCenter> FinanceControlCenter { get; set; }
-        public DbSet<FinanceOrder> FinanceOrder { get; set; }
-        public DbSet<FinanceOrderSRule> FinanceOrderSRule { get; set; }
+        //public DbSet<FinanceTransactionType> FinTransactionType { get; set; }
+        //public DbSet<FinanceAccount> FinanceAccount { get; set; }
+        //public DbSet<FinanceAccountExtraDP> FinanceAccountExtraDP { get; set; }
+        //public DbSet<FinanceAccountExtraAS> FinanceAccountExtraAS { get; set; }
+        //public DbSet<FinanceDocument> FinanceDocument { get; set; }
+        //public DbSet<FinanceDocumentItem> FinanceDocumentItem { get; set; }
+        //public DbSet<FinanceTmpDPDocument> FinanceTmpDPDocument { get; set; }
+        //public DbSet<FinanceTmpLoanDocument> FinanceTmpLoanDocument { get; set; }
+        //public DbSet<FinanceControlCenter> FinanceControlCenter { get; set; }
+        //public DbSet<FinanceOrder> FinanceOrder { get; set; }
+        //public DbSet<FinanceOrderSRule> FinanceOrderSRule { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<DBVersion>(entity =>
-            {
-                entity.Property(e => e.VersionID)
-                    .ValueGeneratedNever();
-            });
-
             modelBuilder.Entity<Currency>(entity =>
             {
                 // entity.Property(e => e.Curr)
@@ -61,13 +57,19 @@ namespace hihapi.Models
                         .HasDefaultValueSql("((0))");
                 }
             });
+            modelBuilder.Entity<DBVersion>(entity =>
+            {
+                entity.Property(e => e.VersionID)
+                    .ValueGeneratedNever();
+            });
+
             modelBuilder.Entity<HomeDefine>(entity =>
             {
                 if (!TestingMode)
                 {
                     entity.Property(e => e.ID)
-                        .UseSqlServerIdentityColumn()
-                        .ValueGeneratedOnAdd();
+                        .UseIdentityColumn();
+                        //.ValueGeneratedOnAdd();
                 }
                 else
                 {
@@ -100,9 +102,10 @@ namespace hihapi.Models
                 if (!TestingMode)
                 {
                     entity.Property(e => e.ID)
-                        .UseSqlServerIdentityColumn()
-                        .ValueGeneratedOnAdd();
+                        .UseIdentityColumn();
+                        //.ValueGeneratedOnAdd();
                     entity.Property(e => e.AssetFlag)
+                        .HasColumnType<Boolean>("BIT")
                         .HasDefaultValueSql("((1))");
                     entity.Property(e => e.CreatedAt)
                         .HasDefaultValueSql("(getdate())");
@@ -113,24 +116,25 @@ namespace hihapi.Models
                 {
                     // Workaround for Sqlite in testing mode
                     // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.AssetFlag)
+                        .HasColumnType<Boolean>("INTEGER");
                     entity.Property(e => e.ID)
                         .HasColumnType("INTEGER")
                         .ValueGeneratedOnAdd();
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceAccountCategories)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_account_ctgy_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceAccountCategories)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_account_ctgy_HID");
             });
-
             modelBuilder.Entity<FinanceAssetCategory>(entity =>
             {
                 if (!TestingMode)
                 {
                     entity.Property(e => e.ID)
-                        .UseSqlServerIdentityColumn()
-                        .ValueGeneratedOnAdd();
+                        .UseIdentityColumn();
+                        //.ValueGeneratedOnAdd();
                     entity.Property(e => e.CreatedAt)
                         .HasDefaultValueSql("(getdate())");
                     entity.Property(e => e.UpdatedAt)
@@ -144,20 +148,19 @@ namespace hihapi.Models
                         .HasColumnType("INTEGER")
                         .ValueGeneratedOnAdd();
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceAssetCategories)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_fin_asset_ctgy_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceAssetCategories)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_fin_asset_ctgy_HID");
             });
-
             modelBuilder.Entity<FinanceDocumentType>(entity =>
             {
                 if (!TestingMode)
                 {
                     entity.Property(e => e.ID)
-                        .UseSqlServerIdentityColumn()
-                        .ValueGeneratedOnAdd();
+                        .UseIdentityColumn<short>();
+                        //.ValueGeneratedOnAdd();
                     entity.Property(e => e.CreatedAt)
                         .HasDefaultValueSql("(getdate())");
                     entity.Property(e => e.UpdatedAt)
@@ -171,20 +174,19 @@ namespace hihapi.Models
                         .HasColumnType("INTEGER")
                         .ValueGeneratedOnAdd();
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceDocumentTypes)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_fin_doctype_HID");
-            });
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceDocumentTypes)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_fin_doctype_HID");
+            });/*
 
             modelBuilder.Entity<FinanceTransactionType>(entity =>
             {
                 if (!TestingMode)
                 {
                     entity.Property(e => e.ID)
-                        .UseSqlServerIdentityColumn()
-                        .ValueGeneratedOnAdd();
+                        .UseIdentityColumn();
                     entity.Property(e => e.CreatedAt)
                         .HasDefaultValueSql("(getdate())");
                     entity.Property(e => e.UpdatedAt)
@@ -198,16 +200,18 @@ namespace hihapi.Models
                         .HasColumnType("INTEGER")
                         .ValueGeneratedOnAdd();
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceTransactionTypes)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_fin_trantype_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceTransactionTypes)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_fin_trantype_HID");
             });
-        
+/*        
             modelBuilder.Entity<FinanceAccount> (entity => {
                 if (!TestingMode) 
                 {
+                    entity.Property(e => e.ID)
+                        .UseIdentityColumn();
                     entity.Property(e => e.CreatedAt)
                         .HasDefaultValueSql("(getdate())");
                     entity.Property(e => e.UpdatedAt)
@@ -244,6 +248,8 @@ namespace hihapi.Models
             modelBuilder.Entity<FinanceDocument>(entity => {
                 if (!TestingMode)
                 {
+                    entity.Property(e => e.ID)
+                        .UseIdentityColumn();
                     entity.Property(e => e.CreatedAt)
                         .HasDefaultValueSql("(getdate())");
                     entity.Property(e => e.UpdatedAt)
@@ -256,23 +262,24 @@ namespace hihapi.Models
                         .ValueGeneratedOnAdd();
                 }
 
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceDocuments)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_fin_document_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceDocuments)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .HasConstraintName("FK_t_fin_document_HID");
             });
             modelBuilder.Entity<FinanceDocumentItem>(entity => {
                 entity.HasKey(p => new { p.DocID, p.ItemID });
 
-                entity.HasOne(d => d.DocumentHeader)
-                    .WithMany(p => p.Items)
-                    .HasForeignKey(d => d.DocID)
-                    .HasConstraintName("FK_t_fin_document_header");
+                //entity.HasOne(d => d.DocumentHeader)
+                //    .WithMany(p => p.Items)
+                //    .HasForeignKey(d => d.DocID)
+                //    .HasConstraintName("FK_t_fin_document_header");
             });
             modelBuilder.Entity<FinanceTmpLoanDocument>(entity => {
                 if (!TestingMode)
                 {
-
+                    entity.Property(e => e.DocumentID)
+                        .UseIdentityColumn();
                 }
                 else
                 {
@@ -284,7 +291,8 @@ namespace hihapi.Models
             modelBuilder.Entity<FinanceTmpDPDocument>(entity => {
                 if (!TestingMode)
                 {
-
+                    entity.Property(e => e.DocumentID)
+                        .UseIdentityColumn();
                 }
                 else
                 {
@@ -296,6 +304,9 @@ namespace hihapi.Models
             modelBuilder.Entity<FinanceControlCenter>(entity => {
                 if (!TestingMode)
                 {
+                    entity.Property(e => e.ID)
+                        .UseIdentityColumn();
+
                     entity.Property(e => e.CreatedAt)
                         .HasDefaultValueSql("(getdate())");
                     entity.Property(e => e.UpdatedAt)
@@ -315,6 +326,8 @@ namespace hihapi.Models
             modelBuilder.Entity<FinanceOrder>(entity => {
                 if (!TestingMode)
                 {
+                    entity.Property(e => e.ID)
+                        .UseIdentityColumn();
                     entity.Property(e => e.CreatedAt)
                         .HasDefaultValueSql("(getdate())");
                     entity.Property(e => e.UpdatedAt)
@@ -326,19 +339,21 @@ namespace hihapi.Models
                         .HasColumnType("INTEGER")
                         .ValueGeneratedOnAdd();
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceOrders)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_fin_order_HID");
+
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceOrders)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .HasConstraintName("FK_t_fin_order_HID");
             });
             modelBuilder.Entity<FinanceOrderSRule>(entity => {
                 entity.HasKey(p => new { p.OrderID, p.RuleID });
 
-                entity.HasOne(d => d.Order)
-                    .WithMany(p => p.SRule)
-                    .HasForeignKey(d => d.OrderID)
-                    .HasConstraintName("FK_t_fin_order_srule_order");
+                //entity.HasOne(d => d.Order)
+                //    .WithMany(p => p.SRule)
+                //    .HasForeignKey(d => d.OrderID)
+                //    .HasConstraintName("FK_t_fin_order_srule_order");
             });
+            */
         }
     }
 }

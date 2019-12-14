@@ -9,7 +9,7 @@ namespace hihapi.Models
     public sealed class FinanceAssetCategory : BaseModel
     {
         [Key]
-        [Column("ID", TypeName="int")]
+        [Column("ID", TypeName="INT")]
         public Int32 ID { get; set; }
 
         [Column("HID", TypeName="INT")]
@@ -25,6 +25,6 @@ namespace hihapi.Models
         public String Desp { get; set; }
 
         public HomeDefine CurrentHome { get; set; }
-        public ICollection<FinanceAccountExtraAS> AccountExtraAsset { get; set; }
+        //public ICollection<FinanceAccountExtraAS> AccountExtraAsset { get; set; }
     }
 }

@@ -16,8 +16,6 @@ namespace hihapi.test.IntegrationTests
     {
         public CustomWebApplicationFactory(): base()
         {
-            hihDataContext.TestingMode = true;
-
             // Open connections
             DBConnection = new SqliteConnection("DataSource=:memory:");
             DBConnection.Open();
@@ -29,7 +27,7 @@ namespace hihapi.test.IntegrationTests
                     .Options;
 
                 // Create the schema in the database
-                CurrentDataContext = new hihDataContext(options);
+                CurrentDataContext = new hihDataContext(options, true);
                 CurrentDataContext.Database.EnsureCreated();
 
                 // Setup the tables
