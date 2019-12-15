@@ -15,8 +15,8 @@ namespace hihapi.test
         public static List<Language> Languages { get; private set; }
         public static List<FinanceAccountCategory> FinanceAccountCategories { get; private set; }
         public static List<FinanceAssetCategory> FinanceAssetCategories { get; private set; }
-        public static List<FinanceDocumentType> FinanceDocumentTypes { get; private set; }/*
-        public static List<FinanceTransactionType> FinanceTransactionTypes { get; private set; }*/
+        public static List<FinanceDocumentType> FinanceDocumentTypes { get; private set; }
+        public static List<FinanceTransactionType> FinanceTransactionTypes { get; private set; }
 
         public const string UserA = "USERA";
         public const string UserB = "USERB";
@@ -45,9 +45,9 @@ namespace hihapi.test
             Currencies = new List<Currency>();
             Languages = new List<Language>();
             FinanceAccountCategories = new List<FinanceAccountCategory>();
-            FinanceAssetCategories = new List<FinanceAssetCategory>();/*
+            FinanceAssetCategories = new List<FinanceAssetCategory>();
             FinanceDocumentTypes = new List<FinanceDocumentType>();
-            FinanceTransactionTypes = new List<FinanceTransactionType>();*/
+            FinanceTransactionTypes = new List<FinanceTransactionType>();
 
             // Setup tables
             SetupTable_DBVersion();
@@ -55,9 +55,9 @@ namespace hihapi.test
             SetupTable_Language();
             SetupTable_HomeDefineAndMember();
             SetupTable_FinAccountCategory();
-            /*SetupTable_FinDocumentType();*/
+            SetupTable_FinDocumentType();
             SetupTable_FinAssertCategory();
-            /*SetupTable_FinTransactionType();*/
+            SetupTable_FinTransactionType();
         }
 
         public static ClaimsPrincipal GetClaimForUser(String usr)
@@ -105,7 +105,7 @@ namespace hihapi.test
         }
         private static void InitialTable_FinDocumentType(hihDataContext db)
         {
-            /*db.FinDocumentTypes.AddRange(DataSetupUtility.FinanceDocumentTypes);*/
+            db.FinDocumentTypes.AddRange(DataSetupUtility.FinanceDocumentTypes);
         }
         private static void InitialTable_FinAssetCategory(hihDataContext db)
         {
@@ -113,7 +113,7 @@ namespace hihapi.test
         }
         private static void InitialTable_FinTransactionType(hihDataContext db)
         {
-            /*db.FinTransactionType.AddRange(DataSetupUtility.FinanceTransactionTypes);*/
+            db.FinTransactionType.AddRange(DataSetupUtility.FinanceTransactionTypes);
         }
 
         private static void InitialTable_HomeDefineAndMember(hihDataContext db)
@@ -351,7 +351,8 @@ namespace hihapi.test
             FinanceAccountCategories.Add(new FinanceAccountCategory() { ID = 10, Name = "Sys.AcntCty.LendTo", AssetFlag = true, Comment = "借出款" });
             FinanceAccountCategories.Add(new FinanceAccountCategory() { ID = 11, Name = "Sys.AcntCty.AdvancedRecv", AssetFlag = false, Comment = "预收款" });
             FinanceAccountCategories.Add(new FinanceAccountCategory() { ID = 12, Name = "Sys.AcntCty.Insurance", AssetFlag = true, Comment = "保险" });
-        }/*
+        }
+
         private static void SetupTable_FinDocumentType()
         {
             FinanceDocumentTypes.Add(new FinanceDocumentType() { ID = 1, Name = "Sys.DocTy.Normal", Comment = "普通" });
@@ -368,7 +369,7 @@ namespace hihapi.test
             FinanceDocumentTypes.Add(new FinanceDocumentType() { ID = 12, Name = "Sys.DocTy.AdvancedRecv", Comment = "预收款" });
             FinanceDocumentTypes.Add(new FinanceDocumentType() { ID = 13, Name = "Sys.DocTy.AssetValChg", Comment = "资产净值变动" });
             FinanceDocumentTypes.Add(new FinanceDocumentType() { ID = 14, Name = "Sys.DocTy.Insurance", Comment = "保险" });
-        }*/
+        }
 
         private static void SetupTable_FinAssertCategory()
         {
@@ -379,7 +380,7 @@ namespace hihapi.test
             FinanceAssetCategories.Add(new FinanceAssetCategory() { ID = 5, Name = "Sys.AssCtgy.Camera", Desp = "相机" });
             FinanceAssetCategories.Add(new FinanceAssetCategory() { ID = 6, Name = "Sys.AssCtgy.Computer", Desp = "计算机" });
             FinanceAssetCategories.Add(new FinanceAssetCategory() { ID = 7, Name = "Sys.AssCtgy.MobileDevice", Desp = "移动设备" });
-        }/*
+        }
 
         private static void SetupTable_FinTransactionType()
         {
@@ -486,6 +487,6 @@ namespace hihapi.test
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 76, Name = "诊疗费", Expense = true, ParID = 75, Comment = "诊疗费" });
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 77, Name = "医药费", Expense = true, ParID = 75, Comment = "医药费" });
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 78, Name = "保健品费", Expense = true, ParID = 75, Comment = "保健品费" });
-        }*/
+        }
     }
 }

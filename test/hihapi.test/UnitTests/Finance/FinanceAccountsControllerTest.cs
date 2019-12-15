@@ -13,34 +13,54 @@ using Microsoft.AspNetCore.Http;
 using Moq;
 using System.Security.Claims;
 using System.Collections.Generic;
+using Microsoft.AspNet.OData.Builder;
+using Microsoft.AspNet.OData;
+using Microsoft.AspNet.OData.Query;
+using System.Net.Http;
+using Microsoft.OData.UriParser;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNet.OData.Query.Validators;
+using Microsoft.AspNet.OData.Extensions;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.OData.Edm;
 
 namespace hihapi.test.UnitTests
 {
     [Collection("HIHAPI_UnitTests#1")]
     public class FinanceAccountsControllerTest
     {
-        SqliteDatabaseFixture fixture = null;
+        private SqliteDatabaseFixture fixture = null;
+        private ServiceProvider provider = null;
+        private IEdmModel model = null;
 
         public FinanceAccountsControllerTest(SqliteDatabaseFixture fixture)
         {
             this.fixture = fixture;
+
+            this.provider = UnitTestUtility.GetServiceProvider();
+            this.model = UnitTestUtility.GetEdmModel<FinanceAccount>(provider, "FinanceAccounts");            
         }
 
-        [Fact]
-        public async Task TestCase1_Home1_UserA()
+        [Theory]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserB)]
+        public async Task TestCase1(int hid, string user)
         {
             // 0. Prepare the context
             var control = new FinanceAccountsController(this.fixture.CurrentDataContext);
-            var user = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA);
+            var userclaim = DataSetupUtility.GetClaimForUser(user);
+            var queryUrl = "http://localhost/api/FinanceAccounts";
+            var context = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
             control.ControllerContext = new ControllerContext()
             {
-                HttpContext = new DefaultHttpContext() { User = user }
+                HttpContext = context
             };
 
             // 1. Create first account
             var acnt = new FinanceAccount()
             {
-                HomeID = DataSetupUtility.Home1ID,
+                HomeID = hid,
                 Name = "Account 1",
                 CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
                 Owner = DataSetupUtility.UserA
@@ -56,14 +76,17 @@ namespace hihapi.test.UnitTests
             Assert.True(firstacntid > 0);
 
             // 2. Now read the whole accounts
-            var rst3 = control.Get(DataSetupUtility.Home1ID);
+            var req = UnitTestUtility.GetHttpRequest(context, "GET", queryUrl);
+            var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceAccount>(this.model);
+            var options = UnitTestUtility.GetODataQueryOptions<FinanceAccount>(odatacontext, req);
+            var rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(1, rst3.Count());
+            Assert.Equal(1, rst3.Cast<FinanceAccount>().Count());
 
             // 3. Now create another one!
             acnt = new FinanceAccount()
             {
-                HomeID = DataSetupUtility.Home1ID,
+                HomeID = hid,
                 Name = "Account 2",
                 Comment = "Comment 2",
                 CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
@@ -95,9 +118,9 @@ namespace hihapi.test.UnitTests
             Assert.Equal(204, rst6.StatusCode);
 
             // 6. Now read the whole accounts
-            rst3 = control.Get(DataSetupUtility.Home1ID);
+            rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(1, rst3.Count());
+            Assert.Equal(1, rst3.Cast<FinanceAccount>().Count());
 
             // 7. Delete the first account
             rst5 = await control.Delete(firstacntid);
@@ -106,9 +129,9 @@ namespace hihapi.test.UnitTests
             Assert.Equal(204, rst6.StatusCode);
 
             // 8. Now read the whole control centers
-            rst3 = control.Get(DataSetupUtility.Home1ID);
+            rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(0, rst3.Count());
+            Assert.Equal(0, rst3.Cast<FinanceAccount>().Count());
         }
     }
 }

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
 using hihapi.Exceptions;
+using Microsoft.AspNet.OData.Query;
 
 namespace hihapi.Controllers
 {
@@ -26,9 +27,9 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceAccounts
-        [EnableQuery]
+        //[EnableQuery]
         [Authorize]
-        public IQueryable<FinanceAccount> Get([FromQuery]Int32 hid)
+        public IQueryable Get(ODataQueryOptions<FinanceAccount> option)
         {
             String usrName = String.Empty;
             try
@@ -43,21 +44,18 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
-            if (hms <= 0)
-            {
-                throw new UnauthorizedAccessException();
-            }
+            var query = from hmem in _context.HomeMembers
+                        where hmem.User == usrName
+                        select new { HomeID = hmem.HomeID } into hids
+                        join acnts in _context.FinanceAccount on hids.HomeID equals acnts.HomeID
+                        select acnts;
 
-            var rst = from acnt in _context.FinanceAccount.Where(p => p.HomeID == hid)
-                select acnt;
-
-            return rst;
+            return option.ApplyTo(query);
         }
 
         [EnableQuery]
         [Authorize]
-        public SingleResult<FinanceAccount> Get([FromODataUri]Int32 acntid, [FromODataUri]Int32 hid)
+        public SingleResult<FinanceAccount> Get([FromODataUri]Int32 acntid)
         {
             String usrName = String.Empty;
             try
@@ -71,14 +69,18 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            //// Check whether User assigned with specified Home ID
-            //var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
-            //if (hms <= 0)
-            //{
-            //    throw new UnauthorizedAccessException();
-            //}
+            var hidquery = from hmem in _context.HomeMembers
+                           where hmem.User == usrName
+                           select new { HomeID = hmem.HomeID };
+            var acntquery = from acnt in _context.FinanceAccount
+                            where acnt.ID == acntid
+                            select acnt;
+            var rstquery = from acnt in acntquery
+                           join hid in hidquery
+                           on acnt.HomeID equals hid.HomeID
+                           select acnt;
 
-            return SingleResult.Create(_context.FinanceAccount.Where(p => p.HomeID == acntid && p.HomeID == hid));
+            return SingleResult.Create(rstquery);
         }
 
 

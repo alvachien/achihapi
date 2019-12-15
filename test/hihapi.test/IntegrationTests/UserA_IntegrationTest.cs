@@ -189,12 +189,11 @@ namespace hihapi.test.IntegrationTests
             }
 
             // Step 7b. Read one specified account
-            resp2 = await clientWithAuth.GetAsync("/api/FinanceAccounts(" + acnt1id.ToString() + ", " + hid.ToString() + ")"); // ?hid=" + hid.ToString());
+            resp2 = await clientWithAuth.GetAsync("/api/FinanceAccounts(" + acnt1id.ToString() + ")"); // ?hid=" + hid.ToString());
             Assert.True(resp2.IsSuccessStatusCode);
             result = resp2.Content.ReadAsStringAsync().Result;
             if (!String.IsNullOrEmpty(result))
             {
-
             }
             
             // Step 8. Post a document

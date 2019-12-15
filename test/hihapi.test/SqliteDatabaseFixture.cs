@@ -24,6 +24,7 @@ namespace hihapi.test
                         action.UseRelationalNulls();                        
                     })
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll)
+                    .EnableSensitiveDataLogging()
                     .Options;
 
                 // Create the schema in the database

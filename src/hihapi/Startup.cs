@@ -155,21 +155,21 @@ namespace hihapi
             modelBuilder.EntitySet<HomeMember>("HomeMembers");
             modelBuilder.EntitySet<FinanceAccountCategory>("FinanceAccountCategories");
             modelBuilder.EntitySet<FinanceAssetCategory>("FinanceAssetCategories");
-            modelBuilder.EntitySet<FinanceDocumentType>("FinanceDocumentTypes");/*
-            modelBuilder.EntitySet<FinanceTransactionType>("FinanceTransactionTypes");*/
-            //modelBuilder.EnumType<FinanceAccountStatus>();
-            //modelBuilder.EnumType<RepeatFrequency>();
-            //modelBuilder.EnumType<LoanRepaymentMethod>();
-            //modelBuilder.EntitySet<FinanceControlCenter>("FinanceControlCenters");
-            //modelBuilder.EntitySet<FinanceAccount>("FinanceAccounts");
-            //modelBuilder.EntitySet<FinanceAccountExtraDP>("FinanceAccountExtraDPs");
-            //modelBuilder.EntitySet<FinanceAccountExtraAS>("FinanceAccountExtraASs");
-            //modelBuilder.EntitySet<FinanceTmpDPDocument>("FinanceTmpDPDocuments");
-            //modelBuilder.EntitySet<FinanceTmpLoanDocument>("FinanceTmpLoanDocuments");
-            //modelBuilder.EntitySet<FinanceOrder>("FinanceOrders");
-            //modelBuilder.EntitySet<FinanceOrderSRule>("FinanceOrderSRules");
-            //modelBuilder.EntitySet<FinanceDocument>("FinanceDocuments");
-            //modelBuilder.EntitySet<FinanceDocumentItem>("FinanceDocumentItems");
+            modelBuilder.EntitySet<FinanceDocumentType>("FinanceDocumentTypes");
+            modelBuilder.EntitySet<FinanceTransactionType>("FinanceTransactionTypes");
+            modelBuilder.EnumType<FinanceAccountStatus>();
+            modelBuilder.EnumType<RepeatFrequency>();
+            modelBuilder.EnumType<LoanRepaymentMethod>();
+            modelBuilder.EntitySet<FinanceControlCenter>("FinanceControlCenters");
+            modelBuilder.EntitySet<FinanceAccount>("FinanceAccounts");
+            modelBuilder.EntitySet<FinanceAccountExtraDP>("FinanceAccountExtraDPs");
+            modelBuilder.EntitySet<FinanceAccountExtraAS>("FinanceAccountExtraASs");
+            modelBuilder.EntitySet<FinanceTmpDPDocument>("FinanceTmpDPDocuments");
+            modelBuilder.EntitySet<FinanceTmpLoanDocument>("FinanceTmpLoanDocuments");
+            modelBuilder.EntitySet<FinanceOrder>("FinanceOrders");
+            modelBuilder.EntitySet<FinanceOrderSRule>("FinanceOrderSRules");
+            modelBuilder.EntitySet<FinanceDocument>("FinanceDocuments");
+            modelBuilder.EntitySet<FinanceDocumentItem>("FinanceDocumentItems");
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();
