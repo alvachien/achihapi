@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
 using hihapi.Exceptions;
+using Microsoft.AspNet.OData.Query;
 
 namespace hihapi.Controllers
 {
@@ -26,9 +27,8 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceOrders
-        [EnableQuery]
         [Authorize]
-        public IQueryable<FinanceOrder> Get(Int32 hid)
+        public IQueryable Get(ODataQueryOptions<FinanceOrder> option)
         {
             String usrName = String.Empty;
             try
@@ -42,12 +42,44 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var rst =
-                from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid)
-                from acntctgy in _context.FinanceOrder.Where(p => p.HomeID == hmem.HomeID)
-                select acntctgy;
+            // Check whether User assigned with specified Home ID
+            var query = from hmem in _context.HomeMembers
+                        where hmem.User == usrName
+                        select new { HomeID = hmem.HomeID } into hids
+                        join ords in _context.FinanceOrder on hids.HomeID equals ords.HomeID
+                        select ords;
 
-            return rst;
+            return option.ApplyTo(query);
+        }
+
+        [EnableQuery]
+        [Authorize]
+        public SingleResult<FinanceOrder> Get([FromODataUri]Int32 ordid)
+        {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var hidquery = from hmem in _context.HomeMembers
+                           where hmem.User == usrName
+                           select new { HomeID = hmem.HomeID };
+            var ordquery = from ord in _context.FinanceOrder
+                            where ord.ID == ordid
+                            select ord;
+            var rstquery = from ord in ordquery
+                           join hid in hidquery
+                           on ord.HomeID equals hid.HomeID
+                           select ord;
+
+            return SingleResult.Create(rstquery);
         }
 
         [Authorize]

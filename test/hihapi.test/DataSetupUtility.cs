@@ -18,6 +18,24 @@ namespace hihapi.test
         public static List<FinanceDocumentType> FinanceDocumentTypes { get; private set; }
         public static List<FinanceTransactionType> FinanceTransactionTypes { get; private set; }
 
+
+        /// <summary>
+        /// Testing data
+        /// Home 1
+        ///     [Host] User A
+        ///     User B
+        ///     User C
+        ///     User D
+        /// Home 2
+        ///     [Host] User B
+        /// Home 3
+        ///     [Host] User A
+        ///     User B
+        /// Home 4
+        ///     [Host] User C
+        /// Home 5
+        ///     [Host] User D
+        /// </summary>
         public const string UserA = "USERA";
         public const string UserB = "USERB";
         public const string UserC = "USERC";

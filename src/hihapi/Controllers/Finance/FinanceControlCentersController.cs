@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
 using hihapi.Exceptions;
+using Microsoft.AspNet.OData.Query;
 
 namespace hihapi.Controllers
 {
@@ -26,9 +27,8 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceControlCenters
-        [EnableQuery]
         [Authorize]
-        public IQueryable<FinanceControlCenter> Get(Int32 hid)
+        public IQueryable Get(ODataQueryOptions<FinanceControlCenter> option)
         {
             String usrName = String.Empty;
             try
@@ -42,14 +42,45 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var rst =
-                from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid)
-                from acntctgy in _context.FinanceControlCenter.Where(p => p.HomeID == hmem.HomeID)
-                select acntctgy;
+            var query = from hmem in _context.HomeMembers
+                        where hmem.User == usrName
+                        select new { HomeID = hmem.HomeID } into hids
+                        join ccs in _context.FinanceControlCenter on hids.HomeID equals ccs.HomeID
+                        select ccs;
 
-            return rst;
+            return option.ApplyTo(query);
         }
-    
+
+        [EnableQuery]
+        [Authorize]
+        public SingleResult<FinanceControlCenter> Get([FromODataUri]Int32 ccid)
+        {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var hidquery = from hmem in _context.HomeMembers
+                           where hmem.User == usrName
+                           select new { HomeID = hmem.HomeID };
+            var ccquery = from cc in _context.FinanceControlCenter
+                            where cc.ID == ccid
+                            select cc;
+            var rstquery = from cc in ccquery
+                           join hid in hidquery
+                           on cc.HomeID equals hid.HomeID
+                           select cc;
+
+            return SingleResult.Create(rstquery);
+        }
+
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceControlCenter controlCenter)
         {

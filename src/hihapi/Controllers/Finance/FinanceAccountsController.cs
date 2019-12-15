@@ -27,7 +27,6 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceAccounts
-        //[EnableQuery]
         [Authorize]
         public IQueryable Get(ODataQueryOptions<FinanceAccount> option)
         {
@@ -82,7 +81,6 @@ namespace hihapi.Controllers
 
             return SingleResult.Create(rstquery);
         }
-
 
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceAccount account)
