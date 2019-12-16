@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -43,9 +44,9 @@ namespace hihapi.Models
         [Column("COMMENT", TypeName="NVARCHAR(45)")]
         public String Comment { get; set; }
 
-        public override bool IsValid()
+        public override bool IsValid(hihDataContext context)
         {
-            if (!base.IsValid())
+            if (!base.IsValid(context))
                 return false;
 
             // Check Validility
@@ -68,6 +69,17 @@ namespace hihapi.Models
             }
             if (total != 100)
                 return false;
+
+            return true;
+        }
+        public override bool IsDeleteAllowed(hihDataContext context)
+        {
+            if (!base.IsDeleteAllowed(context)) return false;
+
+            var refcnt = 0;
+            // Document items
+            refcnt = context.FinanceDocumentItem.Where(p => p.OrderID == this.ID).Count();
+            if (refcnt > 0) return false;
 
             return true;
         }

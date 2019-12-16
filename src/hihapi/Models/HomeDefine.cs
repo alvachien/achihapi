@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,6 +9,11 @@ namespace hihapi.Models
     [Table("T_HOMEDEF")]
     public partial class HomeDefine : BaseModel
     {
+        public HomeDefine(): base()
+        {
+            HomeMembers = new HashSet<HomeMember>();
+        }
+
         [Key]
         [Column("ID", TypeName = "INT")]
         public Int32 ID { get; set; }
@@ -31,20 +37,76 @@ namespace hihapi.Models
         [Column("BASECURR", TypeName = "NVARCHAR(5)")]
         public String BaseCurrency { get; set; }
 
-        // For creation - which need create a home member automatically
-        [NotMapped]
-        public String CreatorDisplayAs { get; set; }
-
         public ICollection<HomeMember> HomeMembers { get; set; }
         //public ICollection<FinanceAccountCategory> FinanceAccountCategories { get; set; }
         //public ICollection<FinanceAssetCategory> FinanceAssetCategories { get; set; }
         //public ICollection<FinanceDocumentType> FinanceDocumentTypes { get; set; }
         //public ICollection<FinanceTransactionType> FinanceTransactionTypes { get; set; }
-        public ICollection<FinanceAccount> FinanceAccounts { get; set; }
+        //public ICollection<FinanceAccount> FinanceAccounts { get; set; }
         //public ICollection<FinanceAccountExtraDP> FinanceAccountExtraDPs { get; set; }
         //public ICollection<FinanceAccountExtraAS> FinanceAccountExtraASs { get; set; }
         //public ICollection<FinanceControlCenter> FinanceControlCenters { get; set; }        
         //public ICollection<FinanceOrder> FinanceOrders { get; set; }
         //public ICollection<FinanceDocument> FinanceDocuments { get; set; }
+
+        public override bool IsValid(hihDataContext context)
+        {
+            if (!base.IsValid(context))
+                return false;
+
+            if (String.IsNullOrEmpty(Host))
+                return false;
+            if (String.IsNullOrEmpty(Name))
+                return false;
+            if (String.IsNullOrEmpty(BaseCurrency))
+                return false;
+            if (HomeMembers.Count <= 0)
+                return false;
+            var self = HomeMembers.First(p => p.Relation == HomeMemberRelationType.Self);
+            if (self == null)
+                return false;
+            else
+            {
+                if (self.User != this.Host)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public override bool IsDeleteAllowed(hihDataContext context)
+        {
+            if (!base.IsDeleteAllowed(context))
+                return false;
+
+            // Check whether there still data exists
+            // Account category
+            var refcnt = 0;
+            refcnt = context.FinAccountCategories.Where(p => p.HomeID == this.ID).Count();
+            if (refcnt > 0) return false;
+            // Asset category
+            refcnt = context.FinAssetCategories.Where(p => p.HomeID == this.ID).Count();
+            if (refcnt > 0) return false;
+            // Document type
+            refcnt = context.FinDocumentTypes.Where(p => p.HomeID == this.ID).Count();
+            if (refcnt > 0) return false;
+            // Transaction type
+            refcnt = context.FinTransactionType.Where(p => p.HomeID == this.ID).Count();
+            if (refcnt > 0) return false;
+            // Accounts
+            refcnt = context.FinanceAccount.Where(p => p.HomeID == this.ID).Count();
+            if (refcnt > 0) return false;
+            // Control centers
+            refcnt = context.FinanceControlCenter.Where(p => p.HomeID == this.ID).Count();
+            if (refcnt > 0) return false;
+            // Orders
+            refcnt = context.FinanceOrder.Where(p => p.HomeID == this.ID).Count();
+            if (refcnt > 0) return false;
+            // Documents
+            refcnt = context.FinanceDocument.Where(p => p.HomeID == this.ID).Count();
+            if (refcnt > 0) return false;
+
+            return true;
+        }
     }
 }

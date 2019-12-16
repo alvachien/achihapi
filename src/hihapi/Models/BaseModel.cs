@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace hihapi.Models
 {
-    public abstract class BaseModel {
-
+    public abstract class BaseModel 
+    {
         [Column("CREATEDAT")]
         [DataType(DataType.Date)]
         public DateTime? CreatedAt { get; set; }
@@ -22,14 +22,14 @@ namespace hihapi.Models
         #region Virtual Methods
         // IsValid
         // Check current model is valid from business perspective
-        public virtual Boolean IsValid()
+        public virtual Boolean IsValid(hihDataContext context)
         {
             return true;
         }
 
         // IsDeleteAllowed
         // Check current model is allowed to delete
-        public virtual Boolean IsDeleteAllowed()
+        public virtual Boolean IsDeleteAllowed(hihDataContext context)
         {
             return true;
         }

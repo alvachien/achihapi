@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -29,5 +30,23 @@ namespace hihapi.Models
         public String Comment { get; set; }
 
         //public HomeDefine CurrentHome { get; set; }
+
+        public override bool IsValid(hihDataContext context)
+        {
+            return base.IsValid(context);
+        }
+
+        public override bool IsDeleteAllowed(hihDataContext context)
+        {
+            if (!base.IsDeleteAllowed(context)) return false;
+
+            // Account
+            var refcnt = 0;
+            // Documents
+            refcnt = context.FinanceAccount.Where(p => p.CategoryID == this.ID).Count();
+            if (refcnt > 0) return false;
+
+            return true;
+        }
     }
 }

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using hihapi.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace hihapi.Controllers
 {
@@ -32,6 +33,7 @@ namespace hihapi.Controllers
         /// 
         /// <remarks>
         [EnableQuery]
+        [Authorize]
         public IQueryable<HomeDefine> Get()
         {
             return _context.HomeDefines;

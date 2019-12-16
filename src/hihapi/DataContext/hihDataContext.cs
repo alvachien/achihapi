@@ -224,10 +224,10 @@ namespace hihapi.Models
                         .ValueGeneratedOnAdd();
                 }
 
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceAccounts)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_account_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceAccounts)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .HasConstraintName("FK_t_account_HID");
             });
             modelBuilder.Entity<FinanceAccountExtraAS>(entity => {
                 if (TestingMode)
@@ -349,10 +349,10 @@ namespace hihapi.Models
             modelBuilder.Entity<FinanceOrderSRule>(entity => {
                 entity.HasKey(p => new { p.OrderID, p.RuleID });
 
-                //entity.HasOne(d => d.Order)
-                //    .WithMany(p => p.SRule)
-                //    .HasForeignKey(d => d.OrderID)
-                //    .HasConstraintName("FK_t_fin_order_srule_order");
+                entity.HasOne(d => d.Order)
+                    .WithMany(p => p.SRule)
+                    .HasForeignKey(d => d.OrderID)
+                    .HasConstraintName("FK_t_fin_order_srule_order");
             });
         }
     }

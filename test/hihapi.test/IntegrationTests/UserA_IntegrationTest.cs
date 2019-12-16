@@ -64,7 +64,7 @@ namespace hihapi.test.IntegrationTests
                     Assert.NotNull(df);
                     Assert.True(df.ID > 0);
                     Assert.False(String.IsNullOrEmpty(df.Name));
-                    Assert.Null(df.HomeMembers);
+                    Assert.NotNull(df.HomeMembers);
                     if (df.ID == DataSetupUtility.Home1ID)
                         bHome1Exist = true;
                 }

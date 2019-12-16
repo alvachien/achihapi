@@ -5,6 +5,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace hihapi.Models
 {
+    public enum HomeMemberRelationType : Int16
+    {
+        Self    = 0,
+        Couple  = 1,
+        Child   = 2,
+        Parent  = 3,
+    }
+
     [Table("T_HOMEMEM")]
     public partial class HomeMember : BaseModel
     {
@@ -24,7 +32,7 @@ namespace hihapi.Models
 
         [Required]
         [Column("RELT", TypeName = "SMALLINT")]
-        public Int16 Relation { get; set; } 
+        public HomeMemberRelationType Relation { get; set; } 
 
         public HomeDefine HomeDefinition { get; set; }
     }

@@ -43,8 +43,8 @@ namespace hihapi.Controllers
         /// 
         /// GET /Currencies(1)
         /// </summary>
-        /// <param name="key">The key of the currency required</param>
-        /// <returns>The Knowledge</returns>
+        /// <param name="curr">The key of the currency required</param>
+        /// <returns>The currency</returns>
         [EnableQuery]
         public SingleResult<Currency> Get([FromODataUri] string curr)
         {
@@ -53,7 +53,7 @@ namespace hihapi.Controllers
 
         // POST: /Currencies
         /// <summary>
-        /// Support for creating knowledge
+        /// Support for creating currency
         /// </summary>
         //public async Task<IActionResult> Post([FromBody] Currency currency)
         //{

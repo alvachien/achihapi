@@ -13,21 +13,26 @@ using Microsoft.AspNetCore.Http;
 using Moq;
 using System.Security.Claims;
 using System.Collections.Generic;
+using Microsoft.AspNet.OData;
 
 namespace hihapi.test.UnitTests
 {
     [Collection("HIHAPI_UnitTests#1")]
     public class HomeDefinesControllerTest
     {
-        SqliteDatabaseFixture fixture = null;
+        private SqliteDatabaseFixture fixture = null;
 
         public HomeDefinesControllerTest(SqliteDatabaseFixture fixture)
         {
             this.fixture = fixture;
         }
 
-        [Fact]
-        public async Task TestCase1()
+        [Theory]
+        [InlineData(DataSetupUtility.UserA)]
+        [InlineData(DataSetupUtility.UserB)]
+        [InlineData(DataSetupUtility.UserC)]
+        [InlineData(DataSetupUtility.UserD)]
+        public void TestCase_GetHomeDefineByUser(string user)
         {
             HomeDefinesController control = new HomeDefinesController(this.fixture.CurrentDataContext);
             try
@@ -38,34 +43,80 @@ namespace hihapi.test.UnitTests
             {
                 Assert.IsType<UnauthorizedAccessException>(exp);
             }
-            // badRequestResult.Value
 
-            // For user A, 2 home defines
-            //var mockContext = new Mock<HttpContext>(MockBehavior.Strict);
-            //mockContext.SetupGet(hc => hc.User.Identity.Name).Returns("USERA");
-            var user = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA);
+            var userclaim = DataSetupUtility.GetClaimForUser(user);
 
             control.ControllerContext = new ControllerContext()
             {
-                HttpContext = new DefaultHttpContext() { User = user }
+                HttpContext = new DefaultHttpContext() { User = userclaim }
             };
+
             var result = control.Get();
             var okResult = Assert.IsType<OkObjectResult>(result);
             var returnValue = Assert.IsAssignableFrom<IQueryable<HomeDefine>>(okResult.Value);
             var cnt = returnValue.Count();
-            Assert.Equal(2, cnt);
+            Assert.Equal(fixture.CurrentDataContext.HomeMembers.Where(p => p.User == user).Count(), cnt);
+        }
 
-            // For user B, 3 home defines
-            user = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB);
+        [Theory]
+        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1BaseCurrency)]
+        [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home1BaseCurrency)]
+        public async Task TestCase_CreateAndUpdateAndDelete(string user, string curr)
+        {
+            var control = new HomeDefinesController(this.fixture.CurrentDataContext);
+            var userclaim = DataSetupUtility.GetClaimForUser(user);
+            List<HomeDefine> listObjectCreated = new List<HomeDefine>();
+
             control.ControllerContext = new ControllerContext()
             {
-                HttpContext = new DefaultHttpContext() { User = user }
+                HttpContext = new DefaultHttpContext() { User = userclaim }
             };
-            result = control.Get();
-            okResult = Assert.IsType<OkObjectResult>(result);
-            returnValue = Assert.IsAssignableFrom<IQueryable<HomeDefine>>(okResult.Value);
-            cnt = returnValue.Count();
-            Assert.Equal(3, cnt);
+
+            // Create
+            var hd1 = new HomeDefine()
+            {
+                Name = "HomeDef.Test.1",
+                Host = user,
+                BaseCurrency = curr,
+            };
+            var hm1 = new HomeMember()
+            {
+                Relation = HomeMemberRelationType.Self,
+                DisplayAs = "Myself",
+                User = user,
+                HomeDefinition = hd1,
+            };
+            hd1.HomeMembers.Add(hm1);
+            var rst = await control.Post(hd1);
+            var nhdobj = Assert.IsType<CreatedODataResult<HomeDefine>>(rst);
+            Assert.True(nhdobj.Entity.ID > 0);
+            listObjectCreated.Add(nhdobj.Entity);
+
+            // Read the single object
+            var rst2 = control.Get(nhdobj.Entity.ID);
+            var nreadobjectrst = Assert.IsType<SingleResult<HomeDefine>>(rst2);
+            // Assert.Equal(nhdobj.Entity.Name, nreadobject.Queryable.)
+            Assert.Equal(1, nreadobjectrst.Queryable.Count<HomeDefine>());
+            var nreadobj = nreadobjectrst.Queryable.First<HomeDefine>();
+            Assert.Equal(nhdobj.Entity.Name, nreadobj.Name);
+            Assert.Equal(nhdobj.Entity.Host, nreadobj.Host);
+
+            // How to test the $expand? Test in integration test!
+
+            // Change the home define - Add new user
+
+            // Change the home define - change the host
+
+            // Change the home define - change the name
+
+            // Change the home define - remove one user
+            
+            // Delete the home define (failed case)
+
+            // Delete the home define (success case)
+
+            // Delete all objects
+            this.fixture.CurrentDataContext.HomeDefines.RemoveRange(listObjectCreated);
         }
     }
 }

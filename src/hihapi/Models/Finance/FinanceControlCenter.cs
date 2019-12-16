@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -32,6 +33,28 @@ namespace hihapi.Models
         [Column("OWNER", TypeName="NVARCHAR(40)")]
         public String Owner { get; set; }
 
-        public HomeDefine CurrentHome { get; set; }
+        //public HomeDefine CurrentHome { get; set; }
+
+        public override bool IsValid(hihDataContext context)
+        {
+            if (!base.IsValid(context)) return false;
+
+            return true;
+        }
+
+        public override bool IsDeleteAllowed(hihDataContext context)
+        {
+            if (!base.IsDeleteAllowed(context)) return false;
+
+            var refcnt = 0;
+            // Document items
+            refcnt = context.FinanceDocumentItem.Where(p => p.ControlCenterID == this.ID).Count();
+            if (refcnt > 0) return false;
+            // Order srules 
+            refcnt = context.FinanceOrderSRule.Where(p => p.ControlCenterID == this.ID).Count();
+            if (refcnt > 0) return false;
+
+            return true;
+        }
     }
 }

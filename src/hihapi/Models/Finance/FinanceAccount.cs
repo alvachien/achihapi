@@ -13,6 +13,7 @@ namespace hihapi.Models
         Closed = 1,
         Frozen = 2
     }
+
     public enum RepeatFrequency : Byte
     {
         Month       = 0,
@@ -62,10 +63,22 @@ namespace hihapi.Models
         [Column("STATUS", TypeName="TINYINT")]
         public FinanceAccountStatus? Status { get; set; }
 
-        public override bool IsValid()
+        public override bool IsValid(hihDataContext context)
         {
-            if (!base.IsValid())
+            if (!base.IsValid(context))
                 return false;
+
+            return true;
+        }
+        public override bool IsDeleteAllowed(hihDataContext context)
+        {
+            if (!base.IsDeleteAllowed(context))
+                return false;
+
+            var refcnt = 0;
+            // Documents
+            refcnt = context.FinanceDocumentItem.Where(p => p.AccountID == this.ID).Count();
+            if (refcnt > 0) return false;
 
             return true;
         }

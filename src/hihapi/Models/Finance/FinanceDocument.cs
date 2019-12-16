@@ -64,9 +64,9 @@ namespace hihapi.Models
         public ICollection<FinanceDocumentItem> Items { get; set; }
         public HomeDefine CurrentHome { get; set; }
 
-        public override bool IsValid()
+        public override bool IsValid(hihDataContext context)
         {
-            if (!base.IsValid())
+            if (!base.IsValid(context))
                 return false;
 
             if (Items.Count == 0)
@@ -79,6 +79,10 @@ namespace hihapi.Models
             }
 
             return true;
+        }
+        public override bool IsDeleteAllowed(hihDataContext context)
+        {
+            return base.IsDeleteAllowed(context);
         }
     }
 

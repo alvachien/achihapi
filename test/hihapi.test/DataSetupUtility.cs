@@ -158,28 +158,28 @@ namespace hihapi.test
             {
                 HomeID = Home1ID,
                 DisplayAs = "User A",
-                Relation = 0,
+                Relation = HomeMemberRelationType.Self,
                 User = UserA
             });
             HomeMembers.Add(new HomeMember()
             {
                 HomeID = Home1ID,
                 DisplayAs = "User B",
-                Relation = 1,
+                Relation = HomeMemberRelationType.Couple,
                 User = UserB
             });
             HomeMembers.Add(new HomeMember()
             {
                 HomeID = Home1ID,
                 DisplayAs = "User C",
-                Relation = 2,
+                Relation = HomeMemberRelationType.Child,
                 User = UserC
             });
             HomeMembers.Add(new HomeMember()
             {
                 HomeID = Home1ID,
                 DisplayAs = "User D",
-                Relation = 2,
+                Relation = HomeMemberRelationType.Child,
                 User = UserD
             });
 
@@ -196,7 +196,7 @@ namespace hihapi.test
             {
                 HomeID = Home2ID,
                 DisplayAs = "User B",
-                Relation = 0,
+                Relation = HomeMemberRelationType.Self,
                 User = UserB
             });
 
@@ -214,14 +214,14 @@ namespace hihapi.test
             {
                 HomeID = Home3ID,
                 DisplayAs = "User A",
-                Relation = 0,
+                Relation = HomeMemberRelationType.Self,
                 User = UserA
             });
             HomeMembers.Add(new HomeMember()
             {
                 HomeID = Home3ID,
                 DisplayAs = "User B",
-                Relation = 1,
+                Relation = HomeMemberRelationType.Couple,
                 User = UserB
             });
 
@@ -238,7 +238,7 @@ namespace hihapi.test
             {
                 HomeID = Home4ID,
                 DisplayAs = "User C",
-                Relation = 0,
+                Relation = HomeMemberRelationType.Self,
                 User = UserC
             });
 
@@ -255,7 +255,7 @@ namespace hihapi.test
             {
                 HomeID = Home5ID,
                 DisplayAs = "User D",
-                Relation = 0,
+                Relation = HomeMemberRelationType.Self,
                 User = UserD
             });
         }

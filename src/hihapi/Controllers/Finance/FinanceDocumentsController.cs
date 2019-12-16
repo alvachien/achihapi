@@ -87,6 +87,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
+#if DEBUG
                 foreach (var value in ModelState.Values)
                 {
                     foreach (var err in value.Errors)
@@ -94,6 +95,7 @@ namespace hihapi.Controllers
                         System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
                     }
                 }
+#endif
 
                 return BadRequest();
             }
@@ -120,7 +122,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            if (!document.IsValid())
+            if (!document.IsValid(this._context))
                 return BadRequest();
 
             _context.FinanceDocument.Add(document);
@@ -134,6 +136,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
+#if DEBUG
                 foreach (var value in ModelState.Values)
                 {
                     foreach (var err in value.Errors)
@@ -141,6 +144,7 @@ namespace hihapi.Controllers
                         System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
                     }
                 }
+#endif
 
                 return BadRequest();
             }
@@ -171,7 +175,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            if (!update.IsValid())
+            if (!update.IsValid(this._context))
                 return BadRequest();
 
             _context.Entry(update).State = EntityState.Modified;
@@ -202,6 +206,9 @@ namespace hihapi.Controllers
             {
                 return NotFound();
             }
+
+            if (!cc.IsDeleteAllowed(this._context))
+                return BadRequest();
 
             _context.FinanceDocument.Remove(cc);
             await _context.SaveChangesAsync();
