@@ -135,8 +135,10 @@ namespace hihapi.Controllers
             }
 
             _context.HomeDefines.Add(homedef);
+
             await _context.SaveChangesAsync();
 
+            _context.Entry(homedef).State = EntityState.Detached;
             return Created(homedef);
         }
 
@@ -187,9 +189,14 @@ namespace hihapi.Controllers
                 return BadRequest();
 
             _context.Entry(update).State = EntityState.Modified;
+            foreach(var mem in update.HomeMembers)
+            {
+
+            }
             try
             {
                 await _context.SaveChangesAsync();
+                _context.Entry(update).State = EntityState.Detached;
             }
             catch (DbUpdateConcurrencyException exp)
             {

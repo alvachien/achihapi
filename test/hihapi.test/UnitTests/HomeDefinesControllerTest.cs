@@ -91,6 +91,10 @@ namespace hihapi.test.UnitTests
             var nhdobj = Assert.IsType<CreatedODataResult<HomeDefine>>(rst);
             Assert.True(nhdobj.Entity.ID > 0);
             listObjectCreated.Add(nhdobj.Entity);
+            Assert.True(nhdobj.Entity.HomeMembers.Count == 1);
+            Assert.True(nhdobj.Entity.HomeMembers.ElementAt(0).HomeID == nhdobj.Entity.ID);
+            Assert.True(nhdobj.Entity.HomeMembers.ElementAt(0).Relation == HomeMemberRelationType.Self);
+            Assert.True(nhdobj.Entity.HomeMembers.ElementAt(0).User == nhdobj.Entity.Host);
 
             // Read the single object
             var rst2 = control.Get(nhdobj.Entity.ID);
@@ -100,17 +104,36 @@ namespace hihapi.test.UnitTests
             var nreadobj = nreadobjectrst.Queryable.First<HomeDefine>();
             Assert.Equal(nhdobj.Entity.Name, nreadobj.Name);
             Assert.Equal(nhdobj.Entity.Host, nreadobj.Host);
+            Assert.True(nreadobj.HomeMembers.Count == 1);
+            Assert.True(nreadobj.HomeMembers.ElementAt(0).HomeID == nreadobj.ID);
+            Assert.True(nreadobj.HomeMembers.ElementAt(0).Relation == HomeMemberRelationType.Self);
+            Assert.True(nreadobj.HomeMembers.ElementAt(0).User == nreadobj.Host);
 
             // How to test the $expand? Test in integration test!
 
             // Change the home define - Add new user
+            var hm2 = new HomeMember()
+            {
+                HomeID = nreadobj.ID,
+                Relation = HomeMemberRelationType.Couple,
+                DisplayAs = "New Test",
+                User = (user == DataSetupUtility.UserA) ? DataSetupUtility.UserB : DataSetupUtility.UserA,
+                HomeDefinition = nreadobj
+            };
+            nreadobj.HomeMembers.Add(hm2);
+            var rst3 = await control.Put(nreadobj.ID, nreadobj);
+            var nupdobjectrst = Assert.IsType<UpdatedODataResult<HomeDefine>>(rst3);
+            Assert.Equal(nreadobj.ID, nupdobjectrst.Entity.ID);
+            var memcnt = fixture.CurrentDataContext.HomeMembers.Where(p => p.HomeID == nreadobj.ID).Count();
+            Assert.Equal(2, memcnt);
+            Assert.Equal(2, nupdobjectrst.Entity.HomeMembers.Count);
 
             // Change the home define - change the host
 
             // Change the home define - change the name
 
             // Change the home define - remove one user
-            
+
             // Delete the home define (failed case)
 
             // Delete the home define (success case)
