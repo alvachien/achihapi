@@ -196,22 +196,22 @@ namespace hihapi.Controllers
             {
                 _context.Entry(existinghd).CurrentValues.SetValues(update);
 
-                var existingmems = _context.HomeMembers.Where(p => p.HomeID == key).ToList();
+                var dbmems = _context.HomeMembers.Where(p => p.HomeID == key).ToList();
                 foreach (var mem in update.HomeMembers)
                 {
-                    var memindb = existingmems.Find(p => p.HomeID == key && p.User == mem.User);
+                    var memindb = dbmems.Find(p => p.HomeID == key && p.User == mem.User);
                     if (memindb == null)
                     {
-                        existinghd.HomeMembers.Add(mem);
+                        _context.HomeMembers.Add(mem);
                     }
                     else
                     {
                         _context.Entry(memindb).CurrentValues.SetValues(mem);
                     }
                 }
-                foreach (var mem in existingmems)
+                foreach (var mem in dbmems)
                 {
-                    var nmem = update.HomeMembers.First(p => p.User == mem.User);
+                    var nmem = update.HomeMembers.FirstOrDefault(p => p.User == mem.User);
                     if (nmem == null)
                     {
                         _context.HomeMembers.Remove(mem);
@@ -241,6 +241,28 @@ namespace hihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == key && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             var cc = await _context.HomeDefines.FindAsync(key);
             if (cc == null)
             {

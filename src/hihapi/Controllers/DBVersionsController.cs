@@ -56,39 +56,61 @@ namespace hihapi.Controllers
         public async Task<IActionResult> Post()
         {
             var lastestVersion = await _context.DBVersions.MaxAsync(p => p.VersionID);
-            if (lastestVersion < CurrentVersion)
+            if (lastestVersion++ < CurrentVersion)
             {
-                lastestVersion++;
-
                 while (lastestVersion <= CurrentVersion)
                 {
-                    var sqlfile = "achihapi.Sqls.Delta.v" + lastestVersion.ToString() + ".sql";
+                    var sqlfile = $"hihapi.Sqls.Delta.v{lastestVersion}.sql";
+
                     try
                     {
-                        using (var stream = typeof(DBVersionsController).GetTypeInfo().Assembly.GetManifestResourceStream(sqlfile))
+                        var asmy = typeof(DBVersionsController).GetTypeInfo().Assembly;
+                        //var resourceNames = asmy.GetManifestResourceNames();
+                        using var stream = asmy.GetManifestResourceStream(sqlfile);
+                        using var reader = new StreamReader(stream, Encoding.UTF8);
+                        
+                        var strcontent = reader.ReadToEnd();
+                        if (string.IsNullOrEmpty(strcontent))
                         {
-                            using (var reader = new StreamReader(stream, Encoding.UTF8))
+                            throw new Exception("Empty file");
+                        }
+
+                        if (!_context.TestingMode)
+                        {
+                            using var dbContextTransaction = _context.Database.BeginTransaction();
+                            _context.Database.ExecuteSqlRaw(strcontent);
+                            dbContextTransaction.Commit();
+                        }
+                        else
+                        {
+                            _context.DBVersions.Add(new DBVersion
                             {
-                                String strcontent = reader.ReadToEnd();
-                                using (var dbContextTransaction = _context.Database.BeginTransaction())
-                                {
-                                    _context.Database.ExecuteSqlRaw(strcontent);
-                                    dbContextTransaction.Commit();
-                                }
-                            }
+                                VersionID = lastestVersion,
+                                AppliedDate = DateTime.Today
+                            });
                         }
                     }
                     catch (Exception exception)
                     {
                         System.Diagnostics.Debug.WriteLine(exception.Message);
+
                         // ApplicationProvider.WriteToLog<EmbeddedResource>().Error(exception.Message);
                         throw new Exception($"Failed to read Embedded Resource {sqlfile}, reason: {exception.Message}");
                     }
+
+                    ++lastestVersion;
+                }
+
+                if (_context.TestingMode)
+                {
+                    await _context.SaveChangesAsync();
                 }
             }
-            var dbv = new DBVersion();
-            dbv.VersionID = CurrentVersion;
-            dbv.AppliedDate = DateTime.Today;
+            var dbv = new DBVersion
+            {
+                VersionID = CurrentVersion,
+                AppliedDate = DateTime.Today
+            };
 
             return Created(dbv);
         }

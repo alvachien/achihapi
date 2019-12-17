@@ -105,7 +105,7 @@ namespace hihapi.test
             db.SaveChanges();
         }
 
-        private static void InitialTable_DBVersion(hihDataContext db)
+        public static void InitialTable_DBVersion(hihDataContext db)
         {
             db.DBVersions.AddRange(DataSetupUtility.DBVersions);
         }

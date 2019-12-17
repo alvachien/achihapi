@@ -54,8 +54,7 @@ namespace hihapi.test.UnitTests
             };
 
             var result = control.Get();
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsAssignableFrom<IQueryable<HomeDefine>>(okResult.Value);
+            var returnValue = Assert.IsAssignableFrom<IQueryable<HomeDefine>>(result);
             var cnt = returnValue.Count();
             Assert.Equal(context.HomeMembers.Where(p => p.User == user).Count(), cnt);
 
@@ -72,6 +71,7 @@ namespace hihapi.test.UnitTests
             var userclaim = DataSetupUtility.GetClaimForUser(user);
             //List<HomeDefine> listObjectCreated = new List<HomeDefine>();
             var hid = 0;
+            var homehost = user;
 
             control.ControllerContext = new ControllerContext()
             {
@@ -82,14 +82,14 @@ namespace hihapi.test.UnitTests
             var hd1 = new HomeDefine()
             {
                 Name = "HomeDef.TestCase2." + user,
-                Host = user,
+                Host = homehost,
                 BaseCurrency = curr,
             };
             var hm1 = new HomeMember()
             {
                 Relation = HomeMemberRelationType.Self,
                 DisplayAs = "Myself",
-                User = user,
+                User = homehost,
                 HomeDefinition = hd1,
             };
             hd1.HomeMembers.Add(hm1);
@@ -136,6 +136,7 @@ namespace hihapi.test.UnitTests
 
             // Change the home define - change the host
             nreadobj.Host = hm2.User;
+            homehost = nreadobj.Host;
             // Need the relationship....
             foreach (var mem in nreadobj.HomeMembers)
             {
@@ -170,16 +171,49 @@ namespace hihapi.test.UnitTests
             Assert.Equal(1, nupdobjectrst.Entity.HomeMembers.Count);
 
             // Delete the home define (failed case)
-            // Create one test
+            try
+            {
+                await control.Delete(hid);
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
 
+            // Switch to another user
+            context = this.fixture.GetCurrentDataContext();
+            var fakeCtgy = context.FinAccountCategories.Add(new FinanceAccountCategory()
+            {
+                HomeID = hid,
+                Name = "Test 1",
+                Comment = "Test 1"
+            });
+            await context.SaveChangesAsync();
+            control = new HomeDefinesController(context);
+            userclaim = DataSetupUtility.GetClaimForUser(homehost);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            // Delete the home define (failed case 2)
+            try
+            {
+                await control.Delete(hid);
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<BadRequestResult>(exp);
+            }
+            context.FinAccountCategories.Remove(fakeCtgy.Entity);
+            await context.SaveChangesAsync();
 
             // Delete the home define (success case)
             var rst9 = await control.Delete(hid);
-            //Assert.True(rst9.)
+            var rst9rst = Assert.IsType<StatusCodeResult>(rst9);
+            Assert.Equal(204, rst9rst.StatusCode);
 
-            // Delete all objects
-            //this.fixture.CurrentDataContext.HomeDefines.RemoveRange(listObjectCreated);
-            //await this.fixture.CurrentDataContext.SaveChangesAsync();
+            Assert.Equal(0, context.HomeDefines.Where(p => p.ID == hid).Count());
 
             await context.DisposeAsync();
         }
