@@ -45,6 +45,8 @@ namespace hihapi.test.UnitTests
         [InlineData(DataSetupUtility.Home2ID, DataSetupUtility.UserB)]
         public async Task TestCase1(int hid, string user)
         {
+            var context = this.fixture.GetCurrentDataContext();
+
             // 0. Create control centers for other homes
             List<FinanceControlCenter> ccInOtherHomes = new List<FinanceControlCenter>();
             if (hid == DataSetupUtility.Home1ID)
@@ -58,9 +60,9 @@ namespace hihapi.test.UnitTests
                         Comment = "Comment 3.1",
                         Owner = user
                     };
-                    var ec1 = this.fixture.CurrentDataContext.FinanceControlCenter.Add(cc1);
+                    var ec1 = context.FinanceControlCenter.Add(cc1);
                     ccInOtherHomes.Add(ec1.Entity);
-                    this.fixture.CurrentDataContext.SaveChanges();
+                    context.SaveChanges();
                 }
                 else if (user == DataSetupUtility.UserC)
                 {
@@ -71,9 +73,9 @@ namespace hihapi.test.UnitTests
                         Comment = "Comment 4.1",
                         Owner = user
                     };
-                    var ec1 = this.fixture.CurrentDataContext.FinanceControlCenter.Add(cc1);
+                    var ec1 = context.FinanceControlCenter.Add(cc1);
                     ccInOtherHomes.Add(ec1.Entity);
-                    this.fixture.CurrentDataContext.SaveChanges();
+                    context.SaveChanges();
                 }
                 else if (user == DataSetupUtility.UserD)
                 {
@@ -84,9 +86,9 @@ namespace hihapi.test.UnitTests
                         Comment = "Comment 5.1",
                         Owner = user
                     };
-                    var ec1 = this.fixture.CurrentDataContext.FinanceControlCenter.Add(cc1);
+                    var ec1 = context.FinanceControlCenter.Add(cc1);
                     ccInOtherHomes.Add(ec1.Entity);
-                    this.fixture.CurrentDataContext.SaveChanges();
+                    context.SaveChanges();
                 }
             }
             else if (hid == DataSetupUtility.Home2ID)
@@ -98,18 +100,18 @@ namespace hihapi.test.UnitTests
                     Comment = "Comment 3.1",
                     Owner = user
                 };
-                var ec1 = this.fixture.CurrentDataContext.FinanceControlCenter.Add(cc1);
+                var ec1 = context.FinanceControlCenter.Add(cc1);
                 ccInOtherHomes.Add(ec1.Entity);
-                this.fixture.CurrentDataContext.SaveChanges();
+                context.SaveChanges();
             }
 
             // 1. Create first control center
-            var control = new FinanceControlCentersController(this.fixture.CurrentDataContext);
+            var control = new FinanceControlCentersController(context);
             var userclaim = DataSetupUtility.GetClaimForUser(user);
-            var context = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
+            var httpctx = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
             control.ControllerContext = new ControllerContext()
             {
-                HttpContext = context
+                HttpContext = httpctx
             };
             var cc = new FinanceControlCenter()
             {
@@ -129,7 +131,7 @@ namespace hihapi.test.UnitTests
 
             // 2. Now read the whole control centers (without Home ID)
             var queryUrl = @"http://localhost/api/FinanceControlCenters";
-            var req = UnitTestUtility.GetHttpRequest(context, "GET", queryUrl);
+            var req = UnitTestUtility.GetHttpRequest(httpctx, "GET", queryUrl);
             var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceControlCenter>(this.model);
             var options = UnitTestUtility.GetODataQueryOptions<FinanceControlCenter>(odatacontext, req);
             var rst3 = control.Get(options);
@@ -138,7 +140,7 @@ namespace hihapi.test.UnitTests
 
             // 2a. Now read the whole control centers (with Home ID)            
             queryUrl = @"http://localhost/api/FinanceControlCenters?$filter=HomeID eq " + hid.ToString();
-            req = UnitTestUtility.GetHttpRequest(context, "GET", queryUrl);
+            req = UnitTestUtility.GetHttpRequest(httpctx, "GET", queryUrl);
             //var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceControlCenter>(this.model);
             options = UnitTestUtility.GetODataQueryOptions<FinanceControlCenter>(odatacontext, req);
             rst3 = control.Get(options);
@@ -195,8 +197,10 @@ namespace hihapi.test.UnitTests
             Assert.Equal(0, rst3.Cast<FinanceControlCenter>().Count());
 
             // LAST. Remove all pre-created control center
-            this.fixture.CurrentDataContext.FinanceControlCenter.RemoveRange(ccInOtherHomes);
-            this.fixture.CurrentDataContext.SaveChanges();
+            context.FinanceControlCenter.RemoveRange(ccInOtherHomes);
+            await context.SaveChangesAsync();
+
+            context.Dispose();
         }
     }
 }

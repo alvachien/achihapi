@@ -23,16 +23,17 @@ namespace hihapi.test.UnitTests
             this.fixture = fixture;
         }
 
-        [Fact]
-        public async Task TestCase1_Home1()
+        [Theory]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA)]
+        public async Task TestCase1(int hid, string user)
         {
             var ctgyCount = DataSetupUtility.FinanceAccountCategories.Count();
-
-            FinanceAccountCategoriesController control = new FinanceAccountCategoriesController(this.fixture.CurrentDataContext);
-            var user = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA);
+            var context = this.fixture.GetCurrentDataContext();
+            FinanceAccountCategoriesController control = new FinanceAccountCategoriesController(context);
+            var userclaim = DataSetupUtility.GetClaimForUser(user);
             control.ControllerContext = new ControllerContext()
             {
-                HttpContext = new DefaultHttpContext() { User = user }
+                HttpContext = new DefaultHttpContext() { User = userclaim }
             };
 
             // 1. Read all categories
@@ -43,7 +44,7 @@ namespace hihapi.test.UnitTests
             // 2. Insert new category
             var ctgy = new FinanceAccountCategory()
             {
-                HomeID = DataSetupUtility.Home1ID,
+                HomeID = hid,
                 Name = "Test 1",
                 Comment = "Test 1"
             };
@@ -76,6 +77,8 @@ namespace hihapi.test.UnitTests
             items = control.Get();
             itemcnt = items.Count();
             Assert.Equal(ctgyCount, itemcnt);
+
+            await context.DisposeAsync();
         }
     }
 }

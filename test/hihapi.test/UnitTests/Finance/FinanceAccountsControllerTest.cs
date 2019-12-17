@@ -45,6 +45,8 @@ namespace hihapi.test.UnitTests
         [InlineData(DataSetupUtility.Home2ID, DataSetupUtility.UserB)]
         public async Task TestCase1(int hid, string user)
         {
+            var context = this.fixture.GetCurrentDataContext();
+
             // 0. Create accounts for other homes
             List<FinanceAccount> acntInOtherHomes = new List<FinanceAccount>();
             if (hid == DataSetupUtility.Home1ID)
@@ -58,9 +60,9 @@ namespace hihapi.test.UnitTests
                         CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
                         Owner = user
                     };
-                    var ec1 = this.fixture.CurrentDataContext.FinanceAccount.Add(acnt1);
+                    var ec1 = context.FinanceAccount.Add(acnt1);
                     acntInOtherHomes.Add(ec1.Entity);
-                    this.fixture.CurrentDataContext.SaveChanges();
+                    context.SaveChanges();
                 }
                 else if (user == DataSetupUtility.UserC)
                 {
@@ -71,9 +73,9 @@ namespace hihapi.test.UnitTests
                         CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
                         Owner = user
                     };
-                    var ec1 = this.fixture.CurrentDataContext.FinanceAccount.Add(acnt1);
+                    var ec1 = context.FinanceAccount.Add(acnt1);
                     acntInOtherHomes.Add(ec1.Entity);
-                    this.fixture.CurrentDataContext.SaveChanges();
+                    context.SaveChanges();
                 }
                 else if (user == DataSetupUtility.UserD)
                 {
@@ -84,9 +86,9 @@ namespace hihapi.test.UnitTests
                         CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
                         Owner = user
                     };
-                    var ec1 = this.fixture.CurrentDataContext.FinanceAccount.Add(acnt1);
+                    var ec1 = context.FinanceAccount.Add(acnt1);
                     acntInOtherHomes.Add(ec1.Entity);
-                    this.fixture.CurrentDataContext.SaveChanges();
+                    context.SaveChanges();
                 }
             }
             else if (hid == DataSetupUtility.Home2ID)
@@ -98,18 +100,18 @@ namespace hihapi.test.UnitTests
                     CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
                     Owner = user
                 };
-                var ec1 = this.fixture.CurrentDataContext.FinanceAccount.Add(acnt1);
+                var ec1 = context.FinanceAccount.Add(acnt1);
                 acntInOtherHomes.Add(ec1.Entity);
-                this.fixture.CurrentDataContext.SaveChanges();
+                context.SaveChanges();
             }
 
             // 0a. Prepare the context
-            var control = new FinanceAccountsController(this.fixture.CurrentDataContext);
+            var control = new FinanceAccountsController(context);
             var userclaim = DataSetupUtility.GetClaimForUser(user);
-            var context = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
+            var httpctx = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
             control.ControllerContext = new ControllerContext()
             {
-                HttpContext = context
+                HttpContext = httpctx
             };
 
             // 1. Create first account
@@ -132,7 +134,7 @@ namespace hihapi.test.UnitTests
 
             // 2. Now read the whole accounts (no home ID applied)
             var queryUrl = "http://localhost/api/FinanceAccounts";
-            var req = UnitTestUtility.GetHttpRequest(context, "GET", queryUrl);
+            var req = UnitTestUtility.GetHttpRequest(httpctx, "GET", queryUrl);
             var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceAccount>(this.model);
             var options = UnitTestUtility.GetODataQueryOptions<FinanceAccount>(odatacontext, req);
             var rst3 = control.Get(options);
@@ -142,7 +144,7 @@ namespace hihapi.test.UnitTests
 
             // 2a. Read the whole accounts (with home ID applied)
             queryUrl = "http://localhost/api/FinanceAccounts?$filter=HomeID eq " + hid.ToString();
-            req = UnitTestUtility.GetHttpRequest(context, "GET", queryUrl);
+            req = UnitTestUtility.GetHttpRequest(httpctx, "GET", queryUrl);
             //var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceAccount>(this.model);
             options = UnitTestUtility.GetODataQueryOptions<FinanceAccount>(odatacontext, req);
             rst3 = control.Get(options);
@@ -201,8 +203,10 @@ namespace hihapi.test.UnitTests
             Assert.Equal(0, rst3.Cast<FinanceAccount>().Count());
 
             // LAST. Remove all pre-created control center
-            this.fixture.CurrentDataContext.FinanceAccount.RemoveRange(acntInOtherHomes);
-            this.fixture.CurrentDataContext.SaveChanges();
+            context.FinanceAccount.RemoveRange(acntInOtherHomes);
+            await context.SaveChangesAsync();
+
+            await context.DisposeAsync();
         }
     }
 }

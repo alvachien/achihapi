@@ -38,7 +38,7 @@ namespace hihapi.Controllers
         /// <remarks>
         [EnableQuery]
         [Authorize]
-        public IActionResult Get()
+        public IQueryable<HomeDefine> Get()
         {
             String usrName = "";
             try
@@ -55,13 +55,11 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var rst = (from hd in _context.HomeDefines
+            return from hd in _context.HomeDefines
                     join hm in _context.HomeMembers
                         on hd.ID equals hm.HomeID
                     where hm.User == usrName
-                       select hd);
-
-            return Ok(rst);
+                       select hd;
         }
 
         /// GET: /HomeDefines(:id)
@@ -138,7 +136,6 @@ namespace hihapi.Controllers
 
             await _context.SaveChangesAsync();
 
-            _context.Entry(homedef).State = EntityState.Detached;
             return Created(homedef);
         }
 
@@ -188,19 +185,47 @@ namespace hihapi.Controllers
             if (!update.IsValid(this._context))
                 return BadRequest();
 
-            _context.Entry(update).State = EntityState.Modified;
-            foreach(var mem in update.HomeMembers)
-            {
+            // Find out the home define
+            var existinghd = _context.HomeDefines.Find(key);
 
+            if (existinghd == null)
+            {
+                return NotFound();
             }
+            else
+            {
+                _context.Entry(existinghd).CurrentValues.SetValues(update);
+
+                var existingmems = _context.HomeMembers.Where(p => p.HomeID == key).ToList();
+                foreach (var mem in update.HomeMembers)
+                {
+                    var memindb = existingmems.Find(p => p.HomeID == key && p.User == mem.User);
+                    if (memindb == null)
+                    {
+                        existinghd.HomeMembers.Add(mem);
+                    }
+                    else
+                    {
+                        _context.Entry(memindb).CurrentValues.SetValues(mem);
+                    }
+                }
+                foreach (var mem in existingmems)
+                {
+                    var nmem = update.HomeMembers.First(p => p.User == mem.User);
+                    if (nmem == null)
+                    {
+                        _context.HomeMembers.Remove(mem);
+                    }
+                }
+            }
+
             try
             {
                 await _context.SaveChangesAsync();
-                _context.Entry(update).State = EntityState.Detached;
             }
             catch (DbUpdateConcurrencyException exp)
             {
-                if (!_context.FinAccountCategories.Any(p => p.ID == key))
+                if (!_context.HomeDefines.Any(p => p.ID == key))
                 {
                     return NotFound();
                 }

@@ -53,6 +53,7 @@ namespace hihapi.test.UnitTests
             FinanceControlCenter controlCenterObject = null;
             FinanceOrder orderObject = null;
             FinanceDocument documentObject = null;
+            var context = this.fixture.GetCurrentDataContext();
 
             // 0a. Prepare the context for other homes to test the filters
             var secondhid = hid;
@@ -90,7 +91,7 @@ namespace hihapi.test.UnitTests
                     CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
                     Owner = user
                 };
-                var ea1 = this.fixture.CurrentDataContext.FinanceAccount.Add(accountObject);
+                var ea1 = context.FinanceAccount.Add(accountObject);
                 accountsCreated.Add(ea1.Entity);
                 // Control center
                 controlCenterObject = new FinanceControlCenter()
@@ -100,7 +101,7 @@ namespace hihapi.test.UnitTests
                     Comment = "Comment 3.1",
                     Owner = user
                 };
-                var ec1 = this.fixture.CurrentDataContext.FinanceControlCenter.Add(controlCenterObject);
+                var ec1 = context.FinanceControlCenter.Add(controlCenterObject);
                 controlCentersCreated.Add(ec1.Entity);
                 // Order
                 orderObject = new FinanceOrder()
@@ -117,7 +118,7 @@ namespace hihapi.test.UnitTests
                     Precent = 100
                 };
                 orderObject.SRule.Add(srule1);
-                var eord1 = this.fixture.CurrentDataContext.FinanceOrder.Add(orderObject);
+                var eord1 = context.FinanceOrder.Add(orderObject);
                 ordersCreated.Add(eord1.Entity);
                 // Document
                 documentObject = new FinanceDocument()
@@ -138,9 +139,9 @@ namespace hihapi.test.UnitTests
                     ControlCenterID = ec1.Entity.ID,
                 };
                 documentObject.Items.Add(item1);
-                var edoc1 = this.fixture.CurrentDataContext.FinanceDocument.Add(documentObject);
+                var edoc1 = context.FinanceDocument.Add(documentObject);
                 documentsCreated.Add(edoc1.Entity);
-                this.fixture.CurrentDataContext.SaveChanges();
+                await context.SaveChangesAsync();
             }
 
             // 0b. Prepare the context for current home
@@ -154,7 +155,7 @@ namespace hihapi.test.UnitTests
                     CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
                     Owner = user
                 };
-                var ea1 = this.fixture.CurrentDataContext.FinanceAccount.Add(accountObject);
+                var ea1 = context.FinanceAccount.Add(accountObject);
                 accountsCreated.Add(ea1.Entity);
                 // Control center
                 controlCenterObject = new FinanceControlCenter()
@@ -164,7 +165,7 @@ namespace hihapi.test.UnitTests
                     Comment = "Comment 3.1",
                     Owner = user
                 };
-                var ec1 = this.fixture.CurrentDataContext.FinanceControlCenter.Add(controlCenterObject);
+                var ec1 = context.FinanceControlCenter.Add(controlCenterObject);
                 controlCentersCreated.Add(ec1.Entity);
                 // Order
                 orderObject = new FinanceOrder()
@@ -181,18 +182,18 @@ namespace hihapi.test.UnitTests
                     Precent = 100
                 };
                 orderObject.SRule.Add(srule1);
-                var eord1 = this.fixture.CurrentDataContext.FinanceOrder.Add(orderObject);
+                var eord1 = context.FinanceOrder.Add(orderObject);
                 ordersCreated.Add(eord1.Entity);
-                this.fixture.CurrentDataContext.SaveChanges();
+                await context.SaveChangesAsync();
             }
 
             // 1. Create first docs.
-            var control = new FinanceDocumentsController(this.fixture.CurrentDataContext);
+            var control = new FinanceDocumentsController(context);
             var userclaim = DataSetupUtility.GetClaimForUser(user);
-            var context = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
+            var httpctx = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
             control.ControllerContext = new ControllerContext()
             {
-                HttpContext = context
+                HttpContext = httpctx
             };
 
             var doc = new FinanceDocument()
@@ -224,7 +225,7 @@ namespace hihapi.test.UnitTests
 
             // 2a. Now read the whole orders (without home id)
             var queryUrl = "http://localhost/api/FinanceDocuments";
-            var req = UnitTestUtility.GetHttpRequest(context, "GET", queryUrl);
+            var req = UnitTestUtility.GetHttpRequest(httpctx, "GET", queryUrl);
             var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceDocument>(this.model);
             var options = UnitTestUtility.GetODataQueryOptions<FinanceDocument>(odatacontext, req);
             var expectedamt = documentsCreated.Where(p => p.HomeID == hid).Count() + 1;
@@ -234,7 +235,7 @@ namespace hihapi.test.UnitTests
 
             // 2b. Now read the whole orders (with home id)
             queryUrl = "http://localhost/api/FinanceDocuments?$filter=HomeID eq " + hid.ToString();
-            req = UnitTestUtility.GetHttpRequest(context, "GET", queryUrl);
+            req = UnitTestUtility.GetHttpRequest(httpctx, "GET", queryUrl);
             // odatacontext = UnitTestUtility.GetODataQueryContext<FinanceDocument>(this.model);
             options = UnitTestUtility.GetODataQueryOptions<FinanceDocument>(odatacontext, req);
             rst3 = control.Get(options);
@@ -281,7 +282,7 @@ namespace hihapi.test.UnitTests
             Assert.NotNull(rst5);
             var rst6 = Assert.IsType<StatusCodeResult>(rst5);
             Assert.Equal(204, rst6.StatusCode);
-            Assert.Equal(0, this.fixture.CurrentDataContext.FinanceDocumentItem.Where(p => p.DocID == seconddocid).Count());
+            Assert.Equal(0, context.FinanceDocumentItem.Where(p => p.DocID == seconddocid).Count());
 
             // 6. Now read the whole documents
             rst3 = control.Get(options);
@@ -289,13 +290,15 @@ namespace hihapi.test.UnitTests
             Assert.Equal(1, rst3.Cast<FinanceDocument>().Count());
 
             // Last, clear all created objects
-            this.fixture.CurrentDataContext.FinanceDocument.RemoveRange(documentsCreated);
-            this.fixture.CurrentDataContext.FinanceAccount.RemoveRange(accountsCreated);
-            this.fixture.CurrentDataContext.FinanceControlCenter.RemoveRange(controlCentersCreated);
-            this.fixture.CurrentDataContext.FinanceOrder.RemoveRange(ordersCreated);
-            this.fixture.CurrentDataContext.SaveChanges();
+            context.FinanceDocument.RemoveRange(documentsCreated);
+            context.FinanceAccount.RemoveRange(accountsCreated);
+            context.FinanceControlCenter.RemoveRange(controlCentersCreated);
+            context.FinanceOrder.RemoveRange(ordersCreated);
+            await context.SaveChangesAsync();
 
-            Assert.Equal(0, this.fixture.CurrentDataContext.FinanceDocumentItem.Where(p => p.DocID == firstdocid).Count());
+            Assert.Equal(0, context.FinanceDocumentItem.Where(p => p.DocID == firstdocid).Count());
+
+            await context.DisposeAsync();
         }
     }
 }

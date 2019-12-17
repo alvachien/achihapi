@@ -48,6 +48,8 @@ namespace hihapi.test.UnitTests
             // 0. Prepare entries for other homes
             List<FinanceControlCenter> ccInOtherHomes = new List<FinanceControlCenter>();
             List<FinanceOrder> ordInOtherHomes = new List<FinanceOrder>();
+            var context = this.fixture.GetCurrentDataContext();
+
             var secondhid = hid;
             if (hid == DataSetupUtility.Home1ID)
             {
@@ -61,7 +63,7 @@ namespace hihapi.test.UnitTests
                         Comment = "Comment 2.1",
                         Owner = user
                     };
-                    var ec1 = this.fixture.CurrentDataContext.FinanceControlCenter.Add(cc1);
+                    var ec1 = context.FinanceControlCenter.Add(cc1);
                     ccInOtherHomes.Add(ec1.Entity);
 
                     var ord1 = new FinanceOrder()
@@ -78,9 +80,9 @@ namespace hihapi.test.UnitTests
                         Precent = 100
                     };
                     ord1.SRule.Add(srule1);
-                    var eord1 = this.fixture.CurrentDataContext.FinanceOrder.Add(ord1);
+                    var eord1 = context.FinanceOrder.Add(ord1);
                     ordInOtherHomes.Add(eord1.Entity);
-                    this.fixture.CurrentDataContext.SaveChanges();
+                    context.SaveChanges();
                 }
                 else if (user == DataSetupUtility.UserC)
                 {
@@ -92,7 +94,7 @@ namespace hihapi.test.UnitTests
                         Comment = "Comment 4.1",
                         Owner = user
                     };
-                    var ec1 = this.fixture.CurrentDataContext.FinanceControlCenter.Add(cc1);
+                    var ec1 = context.FinanceControlCenter.Add(cc1);
                     ccInOtherHomes.Add(ec1.Entity);
 
                     var ord1 = new FinanceOrder()
@@ -109,9 +111,9 @@ namespace hihapi.test.UnitTests
                         Precent = 100
                     };
                     ord1.SRule.Add(srule1);
-                    var eord1 = this.fixture.CurrentDataContext.FinanceOrder.Add(ord1);
+                    var eord1 = context.FinanceOrder.Add(ord1);
                     ordInOtherHomes.Add(eord1.Entity);
-                    this.fixture.CurrentDataContext.SaveChanges();
+                    context.SaveChanges();
                 }
                 else if (user == DataSetupUtility.UserD)
                 {
@@ -123,7 +125,7 @@ namespace hihapi.test.UnitTests
                         Comment = "Comment 5.1",
                         Owner = user
                     };
-                    var ec1 = this.fixture.CurrentDataContext.FinanceControlCenter.Add(cc1);
+                    var ec1 = context.FinanceControlCenter.Add(cc1);
                     ccInOtherHomes.Add(ec1.Entity);
 
                     var ord1 = new FinanceOrder()
@@ -140,9 +142,9 @@ namespace hihapi.test.UnitTests
                         Precent = 100
                     };
                     ord1.SRule.Add(srule1);
-                    var eord1 = this.fixture.CurrentDataContext.FinanceOrder.Add(ord1);
+                    var eord1 = context.FinanceOrder.Add(ord1);
                     ordInOtherHomes.Add(eord1.Entity);
-                    this.fixture.CurrentDataContext.SaveChanges();
+                    context.SaveChanges();
                 }
             }
             else if(hid == DataSetupUtility.Home2ID)
@@ -155,7 +157,7 @@ namespace hihapi.test.UnitTests
                     Comment = "Comment 3.1",
                     Owner = user
                 };
-                var ec1 = this.fixture.CurrentDataContext.FinanceControlCenter.Add(cc1);
+                var ec1 = context.FinanceControlCenter.Add(cc1);
                 ccInOtherHomes.Add(ec1.Entity);
 
                 var ord1 = new FinanceOrder()
@@ -172,18 +174,18 @@ namespace hihapi.test.UnitTests
                     Precent = 100
                 };
                 ord1.SRule.Add(srule1);
-                var eord1 = this.fixture.CurrentDataContext.FinanceOrder.Add(ord1);
+                var eord1 = context.FinanceOrder.Add(ord1);
                 ordInOtherHomes.Add(eord1.Entity);
-                this.fixture.CurrentDataContext.SaveChanges();
+                context.SaveChanges();
             }
 
             // 1. Setup control centers
-            var cccontrol = new FinanceControlCentersController(this.fixture.CurrentDataContext);
+            var cccontrol = new FinanceControlCentersController(context);
             var userclaim = DataSetupUtility.GetClaimForUser(user);
-            var context = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
+            var httpctx = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
             cccontrol.ControllerContext = new ControllerContext()
             {
-                HttpContext = context
+                HttpContext = httpctx
             };
             await cccontrol.Post(new FinanceControlCenter()
             {
@@ -199,13 +201,13 @@ namespace hihapi.test.UnitTests
                 Comment = "Comment 2",
                 Owner = user
             });
-            var listCCs = this.fixture.CurrentDataContext.FinanceControlCenter.Where(p => p.HomeID == hid).ToList<FinanceControlCenter>();
+            var listCCs = context.FinanceControlCenter.Where(p => p.HomeID == hid).ToList<FinanceControlCenter>();
 
             // 2. Create order
-            var control = new FinanceOrdersController(this.fixture.CurrentDataContext);
+            var control = new FinanceOrdersController(context);
             control.ControllerContext = new ControllerContext()
             {
-                HttpContext = context
+                HttpContext = httpctx
             };
             var ord = new FinanceOrder()
             {
@@ -230,7 +232,7 @@ namespace hihapi.test.UnitTests
 
             // 3. Read the order out (without Home ID)
             var queryUrl = "http://localhost/api/FinanceOrders";
-            var req = UnitTestUtility.GetHttpRequest(context, "GET", queryUrl);
+            var req = UnitTestUtility.GetHttpRequest(httpctx, "GET", queryUrl);
             var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceOrder>(this.model);
             var options = UnitTestUtility.GetODataQueryOptions<FinanceOrder>(odatacontext, req);
             var rst3 = control.Get(options);
@@ -240,7 +242,7 @@ namespace hihapi.test.UnitTests
 
             // 3a. Read the order out (with Home ID)
             queryUrl = "http://localhost/api/FinanceOrders?$filter=HomeID eq " + hid.ToString();
-            req = UnitTestUtility.GetHttpRequest(context, "GET", queryUrl);
+            req = UnitTestUtility.GetHttpRequest(httpctx, "GET", queryUrl);
             //var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceOrder>(this.model);
             options = UnitTestUtility.GetODataQueryOptions<FinanceOrder>(odatacontext, req);
             rst3 = control.Get(options);
@@ -261,7 +263,7 @@ namespace hihapi.test.UnitTests
             Assert.NotNull(rst4);
             var rst6 = Assert.IsType<StatusCodeResult>(rst5);
             Assert.Equal(204, rst6.StatusCode);
-            Assert.Equal(0, this.fixture.CurrentDataContext.FinanceOrderSRule.Where(p => p.OrderID == oid).Count());
+            Assert.Equal(0, context.FinanceOrderSRule.Where(p => p.OrderID == oid).Count());
 
             // 6. Read the order again
             rst3 = control.Get(options);
@@ -269,10 +271,12 @@ namespace hihapi.test.UnitTests
             Assert.Equal(0, rst3.Cast<FinanceOrder>().Count());
 
             // Last, delete all pre-created objects.
-            this.fixture.CurrentDataContext.FinanceControlCenter.RemoveRange(listCCs);
-            this.fixture.CurrentDataContext.FinanceOrder.RemoveRange(ordInOtherHomes);
-            this.fixture.CurrentDataContext.FinanceControlCenter.RemoveRange(ccInOtherHomes);
-            this.fixture.CurrentDataContext.SaveChanges();
+            context.FinanceControlCenter.RemoveRange(listCCs);
+            context.FinanceOrder.RemoveRange(ordInOtherHomes);
+            context.FinanceControlCenter.RemoveRange(ccInOtherHomes);
+            context.SaveChanges();
+
+            await context.DisposeAsync();
         }
     }
 }

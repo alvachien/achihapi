@@ -28,8 +28,9 @@ namespace hihapi.test.UnitTests
         public async Task TestCase1_Home1()
         {
             var ctgyCount = DataSetupUtility.FinanceDocumentTypes.Count();
+            var context = this.fixture.GetCurrentDataContext();
 
-            FinanceDocumentTypesController control = new FinanceDocumentTypesController(this.fixture.CurrentDataContext);
+            FinanceDocumentTypesController control = new FinanceDocumentTypesController(context);
             var user = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA);
             control.ControllerContext = new ControllerContext()
             {
@@ -77,6 +78,8 @@ namespace hihapi.test.UnitTests
             items = control.Get(DataSetupUtility.Home1ID);
             itemcnt = items.Count();
             Assert.Equal(ctgyCount, itemcnt);
+
+            await context.DisposeAsync();
         }
     }
 }

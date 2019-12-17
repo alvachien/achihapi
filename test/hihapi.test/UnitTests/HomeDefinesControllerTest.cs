@@ -32,9 +32,11 @@ namespace hihapi.test.UnitTests
         [InlineData(DataSetupUtility.UserB)]
         [InlineData(DataSetupUtility.UserC)]
         [InlineData(DataSetupUtility.UserD)]
-        public void TestCase_GetHomeDefineByUser(string user)
+        public async Task TestCase_GetHomeDefineByUser(string user)
         {
-            HomeDefinesController control = new HomeDefinesController(this.fixture.CurrentDataContext);
+            var context = this.fixture.GetCurrentDataContext();
+            HomeDefinesController control = new HomeDefinesController(context);
+
             try
             {
                 control.Get();
@@ -55,7 +57,9 @@ namespace hihapi.test.UnitTests
             var okResult = Assert.IsType<OkObjectResult>(result);
             var returnValue = Assert.IsAssignableFrom<IQueryable<HomeDefine>>(okResult.Value);
             var cnt = returnValue.Count();
-            Assert.Equal(fixture.CurrentDataContext.HomeMembers.Where(p => p.User == user).Count(), cnt);
+            Assert.Equal(context.HomeMembers.Where(p => p.User == user).Count(), cnt);
+
+            await context.DisposeAsync();
         }
 
         [Theory]
@@ -63,9 +67,11 @@ namespace hihapi.test.UnitTests
         [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home1BaseCurrency)]
         public async Task TestCase_CreateAndUpdateAndDelete(string user, string curr)
         {
-            var control = new HomeDefinesController(this.fixture.CurrentDataContext);
+            var context = this.fixture.GetCurrentDataContext();
+            var control = new HomeDefinesController(context);
             var userclaim = DataSetupUtility.GetClaimForUser(user);
-            List<HomeDefine> listObjectCreated = new List<HomeDefine>();
+            //List<HomeDefine> listObjectCreated = new List<HomeDefine>();
+            var hid = 0;
 
             control.ControllerContext = new ControllerContext()
             {
@@ -75,7 +81,7 @@ namespace hihapi.test.UnitTests
             // Create
             var hd1 = new HomeDefine()
             {
-                Name = "HomeDef.Test.1",
+                Name = "HomeDef.TestCase2." + user,
                 Host = user,
                 BaseCurrency = curr,
             };
@@ -90,7 +96,7 @@ namespace hihapi.test.UnitTests
             var rst = await control.Post(hd1);
             var nhdobj = Assert.IsType<CreatedODataResult<HomeDefine>>(rst);
             Assert.True(nhdobj.Entity.ID > 0);
-            listObjectCreated.Add(nhdobj.Entity);
+            hid = nhdobj.Entity.ID;
             Assert.True(nhdobj.Entity.HomeMembers.Count == 1);
             Assert.True(nhdobj.Entity.HomeMembers.ElementAt(0).HomeID == nhdobj.Entity.ID);
             Assert.True(nhdobj.Entity.HomeMembers.ElementAt(0).Relation == HomeMemberRelationType.Self);
@@ -124,22 +130,58 @@ namespace hihapi.test.UnitTests
             var rst3 = await control.Put(nreadobj.ID, nreadobj);
             var nupdobjectrst = Assert.IsType<UpdatedODataResult<HomeDefine>>(rst3);
             Assert.Equal(nreadobj.ID, nupdobjectrst.Entity.ID);
-            var memcnt = fixture.CurrentDataContext.HomeMembers.Where(p => p.HomeID == nreadobj.ID).Count();
-            Assert.Equal(2, memcnt);
+            //var memcnt = context.HomeMembers.Where(p => p.HomeID == nreadobj.ID).Count();
+            //Assert.Equal(2, memcnt);
             Assert.Equal(2, nupdobjectrst.Entity.HomeMembers.Count);
 
             // Change the home define - change the host
-
-            // Change the home define - change the name
+            nreadobj.Host = hm2.User;
+            // Need the relationship....
+            foreach (var mem in nreadobj.HomeMembers)
+            {
+                if (mem.User == nreadobj.Host)
+                    mem.Relation = HomeMemberRelationType.Self;
+                else
+                    mem.Relation = HomeMemberRelationType.Couple;
+            }
+            rst3 = await control.Put(nreadobj.ID, nreadobj);
+            nupdobjectrst = Assert.IsType<UpdatedODataResult<HomeDefine>>(rst3);
+            Assert.Equal(nreadobj.Host, nupdobjectrst.Entity.Host);
+            Assert.Equal(2, nupdobjectrst.Entity.HomeMembers.Count);
+            foreach(var mem in nupdobjectrst.Entity.HomeMembers)
+            {
+                if (mem.User == nupdobjectrst.Entity.Host)
+                {
+                    Assert.Equal(HomeMemberRelationType.Self, mem.Relation);
+                }
+                else
+                {
+                    Assert.NotEqual(HomeMemberRelationType.Self, mem.Relation);
+                }
+            }
 
             // Change the home define - remove one user
+            var memtoremove = nreadobj.HomeMembers.First(p => p.Relation != HomeMemberRelationType.Self);
+            nreadobj.HomeMembers.Remove(memtoremove);
+            Assert.Equal(1, nreadobj.HomeMembers.Count);
+            Assert.Equal(nreadobj.Host, nreadobj.HomeMembers.ElementAt(0).User);
+            rst3 = await control.Put(nreadobj.ID, nreadobj);
+            nupdobjectrst = Assert.IsType<UpdatedODataResult<HomeDefine>>(rst3);
+            Assert.Equal(1, nupdobjectrst.Entity.HomeMembers.Count);
 
             // Delete the home define (failed case)
+            // Create one test
+
 
             // Delete the home define (success case)
+            var rst9 = await control.Delete(hid);
+            //Assert.True(rst9.)
 
             // Delete all objects
-            this.fixture.CurrentDataContext.HomeDefines.RemoveRange(listObjectCreated);
+            //this.fixture.CurrentDataContext.HomeDefines.RemoveRange(listObjectCreated);
+            //await this.fixture.CurrentDataContext.SaveChangesAsync();
+
+            await context.DisposeAsync();
         }
     }
 }

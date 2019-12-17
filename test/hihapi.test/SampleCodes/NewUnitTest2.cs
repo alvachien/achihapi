@@ -15,7 +15,6 @@ using System.Web;
 using Microsoft.AspNet.OData.Extensions;
 using hihapi.Controllers;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNet.OData.Routing;
 
 namespace hihapi.test.SampleCodes
 {

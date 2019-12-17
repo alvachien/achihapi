@@ -18,28 +18,21 @@ namespace hihapi.test
 
             try
             {
-                var options = new DbContextOptionsBuilder<hihDataContext>()
-                    .UseSqlite(DBConnection, action =>
-                    {
-                        action.UseRelationalNulls();                        
-                    })
-                    .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll)
-                    .EnableSensitiveDataLogging()
-                    .Options;
-
                 // Create the schema in the database
-                CurrentDataContext = new hihDataContext(options, true);
-                if (!CurrentDataContext.Database.IsSqlite()
-                    || CurrentDataContext.Database.IsSqlServer())
+                var context = GetCurrentDataContext();
+                if (!context.Database.IsSqlite()
+                    || context.Database.IsSqlServer())
                 {
                     throw new Exception("Faield!");
                 }
-                CurrentDataContext.Database.EnsureCreated();
-                
+
+                context.Database.EnsureCreated();                
 
                 // Setup the tables
-                DataSetupUtility.InitializeSystemTables(CurrentDataContext);
-                DataSetupUtility.InitializeHomeDefineAndMemberTables(CurrentDataContext);
+                DataSetupUtility.InitializeSystemTables(context);
+                DataSetupUtility.InitializeHomeDefineAndMemberTables(context);
+
+                context.Dispose();
             }
             catch (Exception ex)
             {
@@ -58,10 +51,24 @@ namespace hihapi.test
                 DBConnection.Close();
                 DBConnection = null;
             }
-            //hihDataContext.TestingMode = false;
+        }
+
+        public hihDataContext GetCurrentDataContext()
+        {
+            var options = new DbContextOptionsBuilder<hihDataContext>()
+                .UseSqlite(DBConnection, action =>
+                {
+                    action.UseRelationalNulls();
+                })
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll)
+                .EnableSensitiveDataLogging()
+                .Options;
+
+            var context = new hihDataContext(options, true);
+            return context;
         }
 
         protected SqliteConnection DBConnection { get; private set; }
-        public hihDataContext CurrentDataContext { get; private set; }
+        //public hihDataContext CurrentDataContext { get; private set; }
     }
 }

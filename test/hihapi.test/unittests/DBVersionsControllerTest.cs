@@ -25,12 +25,16 @@ namespace hihapi.test.UnitTests
         [Fact]
         public async Task TestCase1()
         {
-            DBVersionsController control = new DBVersionsController(this.fixture.CurrentDataContext);
+            var context = this.fixture.GetCurrentDataContext();
+            DBVersionsController control = new DBVersionsController(context);
+
             var version = control.Get();
             Assert.NotEmpty(version);
             var cnt1 = DataSetupUtility.DBVersions.Count();
             var cnt2 = version.Count();
             Assert.Equal(cnt1, cnt2);
+
+            await context.DisposeAsync();
         }
     }
 }

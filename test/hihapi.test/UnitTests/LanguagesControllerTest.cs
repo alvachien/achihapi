@@ -31,7 +31,8 @@ namespace hihapi.test.UnitTests
         [Fact]
         public async Task TestCase1()
         {
-            LanguagesController control = new LanguagesController(this.fixture.CurrentDataContext);
+            var context = this.fixture.GetCurrentDataContext();
+            LanguagesController control = new LanguagesController(context);
 
             // Step 1. Read all
             //ODataQueryOption opt = new ODataQueryOptions();
@@ -39,6 +40,8 @@ namespace hihapi.test.UnitTests
             var rstscnt = await rsts.CountAsync();
             var cnt1 = DataSetupUtility.Languages.Count;
             Assert.Equal(cnt1, rstscnt);
+
+            await context.DisposeAsync();
         }
     }
 }

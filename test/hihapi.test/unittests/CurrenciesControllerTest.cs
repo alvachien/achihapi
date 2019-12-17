@@ -30,7 +30,8 @@ namespace hihapi.test.UnitTests
         [Fact]
         public async Task TestCase1()
         {
-            CurrenciesController control = new CurrenciesController(this.fixture.CurrentDataContext);
+            var context = this.fixture.GetCurrentDataContext();
+            CurrenciesController control = new CurrenciesController(context);
 
             // Step 1. Read all
             var rsts = control.Get();
@@ -59,12 +60,14 @@ namespace hihapi.test.UnitTests
                 HttpContext = httpContext,
             };
             // Assign context to controller
-            control = new CurrenciesController(this.fixture.CurrentDataContext)
+            control = new CurrenciesController(context)
             {
                 ControllerContext = controllerContext,
             };
             rsts = control.Get();
             Assert.NotNull(rsts);
+
+            await context.DisposeAsync();
 
             //var routes = new RouteCollection();
             //MvcApplication.RegisterRoutes(routes);
