@@ -14,17 +14,6 @@ namespace hihapi.Models
         Frozen = 2
     }
 
-    public enum RepeatFrequency : Byte
-    {
-        Month       = 0,
-        Fortnight   = 1,
-        Week        = 2,
-        Day         = 3,
-        Quarter     = 4,
-        HalfYear    = 5,
-        Year        = 6,
-        Manual      = 7,
-    }
     public enum LoanRepaymentMethod
     {
         EqualPrincipalAndInterset   = 1,  // Equal principal & interest
