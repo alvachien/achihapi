@@ -218,6 +218,28 @@ namespace hihapi.Controllers
                 return NotFound();
             }
 
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == cc.HomeID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             if (!cc.IsDeleteAllowed(this._context))
                 return BadRequest();
 
