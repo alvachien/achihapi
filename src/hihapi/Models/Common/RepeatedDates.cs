@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.OData.Edm;
 
 namespace hihapi.Models
 {
     public class RepeatedDates
     {
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        [DataType(DataType.Date)]
+        public Date StartDate { get; set; }
+        [DataType(DataType.Date)]
+        public Date EndDate { get; set; }
     }
 
     public enum RepeatFrequency : Byte
@@ -25,8 +29,10 @@ namespace hihapi.Models
 
     public class RepeatDatesCalculationInput
     {
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public RepeatFrequency RptType { get; set; }
+        [DataType(DataType.Date)]
+        public Date StartDate { get; set; }
+        [DataType(DataType.Date)]
+        public Date EndDate { get; set; }
+        public RepeatFrequency RepeatType { get; set; }
     }
 }

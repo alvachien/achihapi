@@ -119,28 +119,30 @@ namespace hihapi.Utilities
 
     public class CommonUtility
     {
-        public static List<RepeatedDates> GetDates(RepeatDatesCalculationInput datInput)
+        public static List<RepeatedDates> WorkoutRepeatedDates(RepeatDatesCalculationInput datInput)
         {
             List<RepeatedDates> listResults = new List<RepeatedDates>();
 
             // Input checks
             if (datInput == null)
                 throw new Exception("Input the data!");
-            if (datInput.EndDate < datInput.StartDate)
+            var dtEnd = new DateTime(datInput.EndDate.Year, datInput.EndDate.Month, datInput.EndDate.Day);
+            var dtStart = new DateTime(datInput.StartDate.Year, datInput.StartDate.Month, datInput.StartDate.Day);
+            if (dtEnd < dtStart)
                 throw new Exception("Invalid data range");
 
-            switch (datInput.RptType)
+            switch (datInput.RepeatType)
             {
                 case RepeatFrequency.Day:
                     {
-                        var tspans = datInput.EndDate.Date - datInput.StartDate.Date;
+                        var tspans = dtEnd - dtStart;
                         var tdays = (Int32)tspans.Days;
 
                         for (int i = 0; i <= tdays; i++)
                         {
                             listResults.Add(new RepeatedDates
                             {
-                                StartDate = datInput.StartDate.AddDays(i),
+                                StartDate = dtStart.AddDays(i),
                             });
                         }
 
@@ -153,7 +155,7 @@ namespace hihapi.Utilities
 
                 case RepeatFrequency.Fortnight:
                     {
-                        var tspans = datInput.EndDate.Date - datInput.StartDate.Date;
+                        var tspans = dtEnd - dtStart;
                         var tdays = (Int32)tspans.Days;
 
                         var tfortnights = tdays / 14;
@@ -262,7 +264,7 @@ namespace hihapi.Utilities
 
                 case RepeatFrequency.Week:
                     {
-                        var tspans = datInput.EndDate.Date - datInput.StartDate.Date;
+                        var tspans = dtEnd - dtStart;
                         var tdays = (Int32)tspans.Days;
 
                         var tweeks = tdays / 7;

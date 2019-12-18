@@ -12,6 +12,8 @@ using Newtonsoft.Json.Linq;
 using System.Reflection;
 using System.Text;
 using hihapi.Models;
+using Microsoft.AspNet.OData.Routing;
+using hihapi.Utilities;
 
 namespace hihapi.Controllers
 {
@@ -113,6 +115,27 @@ namespace hihapi.Controllers
             };
 
             return Created(dbv);
+        }
+
+        [HttpGet]
+        [ODataRoute("GetRepeatedDates(input={input})")]
+        public IActionResult GetRepeatedDates([FromODataUri] RepeatDatesCalculationInput input)
+        {
+            if (!ModelState.IsValid)
+            {
+#if DEBUG
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception != null? err.Exception.Message : err.ErrorMessage);
+                    }
+                }
+#endif
+                return BadRequest();
+            }
+
+            return Ok(CommonUtility.WorkoutRepeatedDates(input));
         }
     }
 }
