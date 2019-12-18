@@ -100,6 +100,18 @@ namespace hihapi.Controllers
                 return BadRequest();
             }
 
+            // Check document type, DP, Asset, loan document is not allowed
+            if(document.DocType == FinanceDocumentType.DocType_AdvancePayment
+                || document.DocType == FinanceDocumentType.DocType_AdvanceReceive
+                || document.DocType == FinanceDocumentType.DocType_AssetBuyIn
+                || document.DocType == FinanceDocumentType.DocType_AssetSoldOut
+                || document.DocType == FinanceDocumentType.DocType_AssetValChg
+                || document.DocType == FinanceDocumentType.DocType_BorrowFrom
+                || document.DocType == FinanceDocumentType.DocType_LendTo)
+            {
+                return BadRequest("Document type is not allowed");
+            }
+
             // User
             String usrName = String.Empty;
             try
@@ -236,6 +248,93 @@ namespace hihapi.Controllers
             await _context.SaveChangesAsync();
 
             return StatusCode(204); // HttpStatusCode.NoContent
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> PostDPDocument(int HomeID, [FromBody]FinanceADPDocumentCreateContext createContext)
+        {
+            if (!ModelState.IsValid)
+            {
+#if DEBUG
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+#endif
+
+                return BadRequest("Model State is Invalid");
+            }
+            if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null || createContext.AccountExtraInfo == null
+                || createContext.DPTemplateDocuments.Count <= 0)
+            {
+                return BadRequest("Invalid inputted data");
+            }
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == HomeID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Verify the inputted parameters
+            if (!(createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvancePayment
+                || createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvanceReceive))
+            {
+                return BadRequest("Invalid document type");
+            }
+            if (createContext.DocumentInfo.Items.Count != 1)
+            {
+                return BadRequest("It shall be only one line item in DP docs");
+            }
+            // Check on the data
+            if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvancePayment)
+            {
+                if (createContext.DocumentInfo.Items.ElementAt(0).TranType != FinanceTransactionType.TranType_AdvancePaymentOut)
+                    return BadRequest("Invalid tran. type for advance payment");
+            }
+            else if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvanceReceive)
+            {
+                if (createContext.DocumentInfo.Items.ElementAt(0).TranType != FinanceTransactionType.TranType_AdvanceReceiveIn)
+                    return BadRequest("Invalid tran. type for advance receive");
+            }
+            foreach (var tmpdocitem in createContext.DPTemplateDocuments)
+            {
+                if (!tmpdocitem.ControlCenterID.HasValue && !tmpdocitem.OrderID.HasValue)
+                {
+                    return BadRequest("Tmp Doc Item miss control center or order");
+                }
+                if (tmpdocitem.TranAmount == 0)
+                {
+                    return BadRequest("Tmp Doc Item miss amount");
+                }
+            }
+
+            // Now update into database
+            var tran = await _context.Database.BeginTransactionAsync();
+
+            await tran.CommitAsync();
+
+
+            return Ok(createContext.DocumentInfo);
         }
     }
 }

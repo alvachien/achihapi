@@ -173,10 +173,17 @@ namespace hihapi
             modelBuilder.EntitySet<FinanceDocumentItem>("FinanceDocumentItems");
             modelBuilder.ComplexType<RepeatedDates>();
             modelBuilder.ComplexType<RepeatDatesCalculationInput>();
-            // Unbound Function
+            // Function on root
             modelBuilder.Function("GetRepeatedDates")
                 .ReturnsCollection<RepeatedDates>()
                 .Parameter<RepeatDatesCalculationInput>("input");
+            // Functions on Documents
+            var docEntity = modelBuilder.EntityType<FinanceDocument>();
+            docEntity.Collection
+                .Function("PostDPDocument")
+                .Returns<FinanceDocument>()
+                .Parameter<int>("HomeID")
+                ;
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();

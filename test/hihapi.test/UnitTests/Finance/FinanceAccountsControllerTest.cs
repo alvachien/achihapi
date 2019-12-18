@@ -38,14 +38,24 @@ namespace hihapi.test.UnitTests
         }
 
         [Theory]
-        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA)]
-        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserB)]
-        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserC)]
-        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserD)]
-        [InlineData(DataSetupUtility.Home2ID, DataSetupUtility.UserB)]
-        public async Task TestCase1(int hid, string user)
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA, FinanceAccountCategoriesController.AccountCategory_Cash)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserB, FinanceAccountCategoriesController.AccountCategory_Cash)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserC, FinanceAccountCategoriesController.AccountCategory_Cash)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserD, FinanceAccountCategoriesController.AccountCategory_Cash)]
+        [InlineData(DataSetupUtility.Home2ID, DataSetupUtility.UserB, FinanceAccountCategoriesController.AccountCategory_Cash)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA, FinanceAccountCategoriesController.AccountCategory_Deposit)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserB, FinanceAccountCategoriesController.AccountCategory_Deposit)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserC, FinanceAccountCategoriesController.AccountCategory_Deposit)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserD, FinanceAccountCategoriesController.AccountCategory_Deposit)]
+        [InlineData(DataSetupUtility.Home2ID, DataSetupUtility.UserB, FinanceAccountCategoriesController.AccountCategory_Deposit)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA, FinanceAccountCategoriesController.AccountCategory_Creditcard)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA, FinanceAccountCategoriesController.AccountCategory_VirtualAccount)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA, FinanceAccountCategoriesController.AccountCategory_AccountPayable)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA, FinanceAccountCategoriesController.AccountCategory_AccountReceivable)]
+        public async Task TestCase1_NormalAccount(int hid, string user, int ctgyid)
         {
             var context = this.fixture.GetCurrentDataContext();
+            var secondhid = hid;
 
             // 0. Create accounts for other homes
             List<FinanceAccount> acntInOtherHomes = new List<FinanceAccount>();
@@ -53,51 +63,28 @@ namespace hihapi.test.UnitTests
             {
                 if (user == DataSetupUtility.UserA || user == DataSetupUtility.UserB)
                 {
-                    var acnt1 = new FinanceAccount()
-                    {
-                        HomeID = DataSetupUtility.Home3ID,
-                        Name = "Account 3.1",
-                        CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
-                        Owner = user
-                    };
-                    var ec1 = context.FinanceAccount.Add(acnt1);
-                    acntInOtherHomes.Add(ec1.Entity);
-                    context.SaveChanges();
+                    secondhid = DataSetupUtility.Home3ID;
                 }
                 else if (user == DataSetupUtility.UserC)
                 {
-                    var acnt1 = new FinanceAccount()
-                    {
-                        HomeID = DataSetupUtility.Home4ID,
-                        Name = "Account 4.1",
-                        CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
-                        Owner = user
-                    };
-                    var ec1 = context.FinanceAccount.Add(acnt1);
-                    acntInOtherHomes.Add(ec1.Entity);
-                    context.SaveChanges();
+                    secondhid = DataSetupUtility.Home4ID;
                 }
                 else if (user == DataSetupUtility.UserD)
                 {
-                    var acnt1 = new FinanceAccount()
-                    {
-                        HomeID = DataSetupUtility.Home5ID,
-                        Name = "Account 5.1",
-                        CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
-                        Owner = user
-                    };
-                    var ec1 = context.FinanceAccount.Add(acnt1);
-                    acntInOtherHomes.Add(ec1.Entity);
-                    context.SaveChanges();
+                    secondhid = DataSetupUtility.Home5ID;
                 }
             }
             else if (hid == DataSetupUtility.Home2ID)
             {
+                secondhid = DataSetupUtility.Home3ID;
+            }
+            if (secondhid != hid)
+            {
                 var acnt1 = new FinanceAccount()
                 {
-                    HomeID = DataSetupUtility.Home3ID,
-                    Name = "Account 3.1",
-                    CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                    HomeID = secondhid,
+                    Name = "Account " + secondhid.ToString() + ".1_cash",
+                    CategoryID = ctgyid,
                     Owner = user
                 };
                 var ec1 = context.FinanceAccount.Add(acnt1);
@@ -118,8 +105,8 @@ namespace hihapi.test.UnitTests
             var acnt = new FinanceAccount()
             {
                 HomeID = hid,
-                Name = "Account 1",
-                CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                Name = "Account_" + ctgyid.ToString() + ".1",
+                CategoryID = ctgyid,
                 Owner = user
             };
             var rst = await control.Post(acnt);
@@ -156,9 +143,9 @@ namespace hihapi.test.UnitTests
             acnt = new FinanceAccount()
             {
                 HomeID = hid,
-                Name = "Account 2",
+                Name = "Account_" + ctgyid.ToString() + ".2",
                 Comment = "Comment 2",
-                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                CategoryID = ctgyid,
                 Owner = user
             };
             rst = await control.Post(acnt);

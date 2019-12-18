@@ -133,4 +133,17 @@ namespace hihapi.Models
             return true;
         }
     }
+
+    public sealed class FinanceADPDocumentCreateContext
+    {
+        public FinanceADPDocumentCreateContext()
+        {
+            DPTemplateDocuments = new List<FinanceTmpDPDocument>();
+        }
+
+        public FinanceDocument DocumentInfo { get; set; }
+        public FinanceAccount AccountInfo { get; set; }
+        public FinanceAccountExtraDP AccountExtraInfo { get; set; }
+        public List<FinanceTmpDPDocument> DPTemplateDocuments { get; private set; }
+    }
 }
