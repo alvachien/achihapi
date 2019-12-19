@@ -158,8 +158,9 @@ namespace hihapi.Models
             {
                 if (!TestingMode)
                 {
-                    //entity.Property(e => e.ID)
-                    //    .UseIdentityColumn<short>();
+                    entity.Property(e => e.ID)
+                        .HasColumnType("SMALLINT")
+                        .UseIdentityColumn();
                         //.ValueGeneratedOnAdd();
                     entity.Property(e => e.CreatedAt)
                         .HasDefaultValueSql("(getdate())");
