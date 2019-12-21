@@ -179,6 +179,7 @@ namespace hihapi
                 .Parameter<RepeatDatesCalculationInput>("input");
             // Functions on Documents
             var docEntity = modelBuilder.EntityType<FinanceDocument>();
+            docEntity.Property(c => c.TranDate).AsDate();
             docEntity.Collection
                 .Function("PostDPDocument")
                 .Returns<FinanceDocument>()

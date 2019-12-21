@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.OData.Edm;
 
 namespace hihapi.Models
 {
@@ -28,7 +29,7 @@ namespace hihapi.Models
         public Int16 DocType { get; set; }
         
         [Required]
-        [Column("TRANDATE")]
+        [Column("TRANDATE", TypeName = "date")]
         [DataType(DataType.Date)]
         public DateTime TranDate { get; set; }
         
