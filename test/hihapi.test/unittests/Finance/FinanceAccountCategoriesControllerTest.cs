@@ -25,6 +25,7 @@ namespace hihapi.test.UnitTests
 
         [Theory]
         [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA)]
+        [InlineData(DataSetupUtility.Home2ID, DataSetupUtility.UserB)]
         public async Task TestCase1(int hid, string user)
         {
             var ctgyCount = DataSetupUtility.FinanceAccountCategories.Count();
@@ -45,7 +46,7 @@ namespace hihapi.test.UnitTests
             var ctgy = new FinanceAccountCategory()
             {
                 HomeID = hid,
-                Name = "Test 1",
+                Name = "Test 1_UT_" + hid.ToString(),
                 Comment = "Test 1"
             };
             var rst1 = await control.Post(ctgy);

@@ -173,6 +173,8 @@ namespace hihapi
             modelBuilder.EntitySet<FinanceDocumentItem>("FinanceDocumentItems");
             modelBuilder.ComplexType<RepeatedDates>();
             modelBuilder.ComplexType<RepeatDatesCalculationInput>();
+            modelBuilder.ComplexType<RepeatedDatesWithAmount>();
+            modelBuilder.ComplexType<RepeatDatesWithAmountCalculationInput>();
             // Function on root
             modelBuilder.Function("GetRepeatedDates")
                 .ReturnsCollection<RepeatedDates>()

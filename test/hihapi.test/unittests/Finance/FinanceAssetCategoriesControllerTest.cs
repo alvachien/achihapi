@@ -24,17 +24,19 @@ namespace hihapi.test.UnitTests
             this.fixture = fixture;
         }
 
-        [Fact]
-        public async Task TestCase1_Home1()
+        [Theory]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA)]
+        [InlineData(DataSetupUtility.Home2ID, DataSetupUtility.UserB)]
+        public async Task TestCase1(int hid, string user)
         {
             var context = this.fixture.GetCurrentDataContext();
             var ctgyCount = DataSetupUtility.FinanceAssetCategories.Count();
 
             FinanceAssetCategoriesController control = new FinanceAssetCategoriesController(context);
-            var user = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA);
+            var userclaim = DataSetupUtility.GetClaimForUser(user);
             control.ControllerContext = new ControllerContext()
             {
-                HttpContext = new DefaultHttpContext() { User = user }
+                HttpContext = new DefaultHttpContext() { User = userclaim }
             };
 
             // 1. Read all categories
@@ -45,8 +47,8 @@ namespace hihapi.test.UnitTests
             // 2. Insert new category
             var ctgy = new FinanceAssetCategory()
             {
-                HomeID = DataSetupUtility.Home1ID,
-                Name = "Test 1",
+                HomeID = hid,
+                Name = "Test 1_UT_" + hid.ToString(),
                 Desp = "Test 1"
             };
             var rst1 = await control.Post(ctgy);
@@ -58,7 +60,7 @@ namespace hihapi.test.UnitTests
             Assert.Equal(ctgy.Desp, rst2.Entity.Desp);
 
             // 3. Read all categories, again
-            items = control.Get(DataSetupUtility.Home1ID);
+            items = control.Get(hid);
             itemcnt = items.Count();
             Assert.Equal(ctgyCount + 1, itemcnt);
 
@@ -75,7 +77,7 @@ namespace hihapi.test.UnitTests
             Assert.Equal(204, rst6.StatusCode);
 
             // 6. Read all categories again
-            items = control.Get(DataSetupUtility.Home1ID);
+            items = control.Get(hid);
             itemcnt = items.Count();
             Assert.Equal(ctgyCount, itemcnt);
 

@@ -103,6 +103,7 @@ namespace hihapi.test.IntegrationTests
             var jsetting = new JsonSerializerSettings();
             jsetting.Converters.Add(new StringEnumConverter());
             jsetting.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            jsetting.DateFormatString = "yyyy-MM-dd";
 
             // Step 5. Create a control center
             var cc = new FinanceControlCenter()
@@ -229,6 +230,12 @@ namespace hihapi.test.IntegrationTests
                 doc1id = odatarst.ID;
                 Assert.True(doc1id > 0);
             }
+
+            // Step 9. Create an ADP document
+            var adpcontext = new FinanceADPDocumentCreateContext();
+            adpcontext.DocumentInfo = new FinanceDocument();
+            adpcontext.AccountInfo = new FinanceAccount();
+            adpcontext.AccountExtraInfo = new FinanceAccountExtraDP();
         }
     }
 }

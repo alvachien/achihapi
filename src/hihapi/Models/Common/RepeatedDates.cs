@@ -35,4 +35,16 @@ namespace hihapi.Models
         public Date EndDate { get; set; }
         public RepeatFrequency RepeatType { get; set; }
     }
+
+    public sealed class RepeatDatesWithAmountCalculationInput : RepeatDatesCalculationInput
+    {
+        public Decimal TotalAmount { get; set; }
+        public String Desp { get; set; }
+    }
+
+    public sealed class RepeatedDatesWithAmount : RepeatedDates
+    {
+        public Decimal TranAmount { get; set; }
+        public String Desp { get; set; }
+    }
 }
