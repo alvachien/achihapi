@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.OData.Edm;
 
-namespace hihapi.test.UnitTests.Finance
+namespace hihapi.test.UnitTests
 {
     [Collection("HIHAPI_UnitTests#1")]
     public class FinanceDocumentDownpaymentTest: IDisposable

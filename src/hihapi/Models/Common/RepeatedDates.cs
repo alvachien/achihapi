@@ -42,8 +42,10 @@ namespace hihapi.Models
         public String Desp { get; set; }
     }
 
-    public sealed class RepeatedDatesWithAmount : RepeatedDates
+    public sealed class RepeatedDatesWithAmount
     {
+        [DataType(DataType.Date)]
+        public Date TranDate { get; set; }
         public Decimal TranAmount { get; set; }
         public String Desp { get; set; }
     }

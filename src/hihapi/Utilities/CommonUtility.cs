@@ -498,7 +498,6 @@ namespace hihapi.Utilities
             }
 
             return listResults;
-
         }
     }
 }

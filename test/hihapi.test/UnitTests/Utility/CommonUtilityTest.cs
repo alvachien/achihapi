@@ -93,6 +93,89 @@ namespace hihapi.test.UnitTests
             }
         }
 
+        [Theory]
+        [MemberData(nameof(RepeatedDateWithAmountTestingData))]
+        public void RepeatedDatesWithAmount_test(RepeatDatesWithAmountCalculationInput datInput)
+        {
+            var results = CommonUtility.WorkoutRepeatedDatesWithAmount(datInput);
+
+            switch (datInput.RepeatType)
+            {
+                case RepeatFrequency.Month:
+                    Assert.Equal(12, results.Count);
+                    for (int i = 0; i < 12; i++)
+                    {
+                        Assert.Equal(datInput.StartDate.Year, results[i].TranDate.Year);
+                        Assert.Equal(i + 1, results[i].TranDate.Month);
+                        Assert.Equal(1, results[i].TranDate.Day);
+
+                        switch (i)
+                        {
+                            case 0:
+                                Assert.Equal(31, results[i].TranDate.Day);
+                                break;
+
+                            case 1:
+                                Assert.Equal(29, results[i].TranDate.Day);
+                                break;
+
+                            case 2:
+                                Assert.Equal(31, results[i].TranDate.Day);
+                                break;
+
+                            case 3:
+                                Assert.Equal(30, results[i].TranDate.Day);
+                                break;
+
+                            case 4:
+                                Assert.Equal(31, results[i].TranDate.Day);
+                                break;
+
+                            case 5:
+                                Assert.Equal(30, results[i].TranDate.Day);
+                                break;
+
+                            case 6:
+                                Assert.Equal(31, results[i].TranDate.Day);
+                                break;
+
+                            case 7:
+                                Assert.Equal(31, results[i].TranDate.Day);
+                                break;
+
+                            case 8:
+                                Assert.Equal(30, results[i].TranDate.Day);
+                                break;
+
+                            case 9:
+                                Assert.Equal(31, results[i].TranDate.Day);
+                                break;
+
+                            case 10:
+                                Assert.Equal(30, results[i].TranDate.Day);
+                                break;
+
+                            case 11:
+                                Assert.Equal(31, results[i].TranDate.Day);
+                                break;
+
+                            default:
+                                break;
+                        }
+                    }
+
+                    break;
+
+                case RepeatFrequency.Week:
+                    Assert.Equal(5, results.Count);
+                    break;
+
+                default:
+                    break;
+            }
+
+        }
+
         public static IEnumerable<object[]> RepeatedDateTestingData => new List<object[]>
         {
             new object[] 
@@ -111,6 +194,32 @@ namespace hihapi.test.UnitTests
                     StartDate = new Date(2020, 1, 1),
                     EndDate = new Date(2020, 2, 1),
                     RepeatType = RepeatFrequency.Week
+                }
+            }
+        };
+
+        public static IEnumerable<object[]> RepeatedDateWithAmountTestingData => new List<object[]>
+        {
+            new object[]
+            {
+                new RepeatDatesWithAmountCalculationInput()
+                {
+                    StartDate = new Date(2020, 1, 1),
+                    EndDate = new Date(2020, 12, 31),
+                    RepeatType = RepeatFrequency.Month,
+                    TotalAmount = 1200,
+                    Desp = "Test1"
+                }
+            },
+            new object[]
+            {
+                new RepeatDatesWithAmountCalculationInput()
+                {
+                    StartDate = new Date(2020, 1, 1),
+                    EndDate = new Date(2020, 2, 1),
+                    RepeatType = RepeatFrequency.Week,
+                    TotalAmount = 1200,
+                    Desp = "Test2"
                 }
             }
         };
