@@ -331,8 +331,15 @@ namespace hihapi.Controllers
             // Now update into database
             var tran = await _context.Database.BeginTransactionAsync();
 
-            await tran.CommitAsync();
+            // 1, Post the document
+            var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
+            var docid = docEntity.Entity.ID;
+            // 2, Create the account
+            createContext.AccountExtraInfo.RefenceDocumentID = docid;
+            // 3, Update the document
+            // 4, Create the template documents
 
+            await tran.CommitAsync();
 
             return Ok(createContext.DocumentInfo);
         }

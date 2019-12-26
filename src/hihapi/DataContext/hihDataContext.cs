@@ -240,6 +240,7 @@ namespace hihapi.Models
                 //    .WithMany(p => p.AccountExtraAsset)
                 //    .HasForeignKey(d => d.CategoryID)
                 //    .HasConstraintName("FK_t_fin_account_exp_as_ID");
+
             });
             modelBuilder.Entity<FinanceAccountExtraDP>(entity => {
                 if (TestingMode)

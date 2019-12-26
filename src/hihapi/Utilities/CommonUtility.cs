@@ -394,6 +394,7 @@ namespace hihapi.Utilities
 
                 case RepeatFrequency.HalfYear:
                     {
+                        var tspans = dtEnd - dtStart;
                         var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
                         var nhalfyear = nmonths / 6;
                         var tamt = Math.Round(datInput.TotalAmount / nhalfyear, 2);

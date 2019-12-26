@@ -73,6 +73,9 @@ namespace hihapi.Models
         }
 
         public HomeDefine CurrentHome { get; set; }
+        public FinanceAccountExtraDP ExtraDP { get; set; }
+        // public FinanceAccountExtraLoan ExtraLoan { get; set; }
+        public FinanceAccountExtraAS ExtraAsset { get; set; }
     }
 
     public abstract class FinanceAccountExtra
@@ -122,6 +125,7 @@ namespace hihapi.Models
 
         // Tmp. docs
         public List<FinanceTmpDPDocument> DPTmpDocs { get; }
+        public FinanceAccount CurrentAccount { get; set; }
 
         public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
         public FinanceAccountExtraDP(): base()
@@ -280,7 +284,10 @@ namespace hihapi.Models
         [Column("REFDOC_SOLD", TypeName="INT")]
         public Int32? RefenceSoldDocumentID { get; set; }
 
+        [NotMapped]
         public FinanceAssetCategory AssetCategory { get; set; }
+
+        public FinanceAccount financeAccount { get; set; }
         
         public FinanceAccountExtraAS(): base()
         {

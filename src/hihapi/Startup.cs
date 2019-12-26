@@ -179,6 +179,9 @@ namespace hihapi
             modelBuilder.Function("GetRepeatedDates")
                 .ReturnsCollection<RepeatedDates>()
                 .Parameter<RepeatDatesCalculationInput>("input");
+            modelBuilder.Function("GetRepeatedDatesWithAmount")
+                .ReturnsCollection<RepeatedDatesWithAmount>()
+                .Parameter<RepeatDatesWithAmountCalculationInput>("input");
             // Functions on Documents
             var docEntity = modelBuilder.EntityType<FinanceDocument>();
             docEntity.Property(c => c.TranDate).AsDate();
