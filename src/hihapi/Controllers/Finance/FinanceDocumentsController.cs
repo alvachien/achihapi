@@ -401,7 +401,56 @@ namespace hihapi.Controllers
                 return BadRequest(errorString);
             }
 
-            return Ok(createContext.DocumentInfo);
+            return Created(createContext.DocumentInfo);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> PostLoanDocument(int HomeID, [FromBody]FinanceLoanDocumentCreateContext createContext)
+        {
+            if (!ModelState.IsValid)
+            {
+#if DEBUG
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+#endif
+
+                return BadRequest("Model State is Invalid");
+            }
+            if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null
+                || createContext.AccountInfo.ExtraLoan == null
+                || createContext.AccountInfo.ExtraLoan.LoanTmpDocs.Count <= 0)
+            {
+                return BadRequest("Invalid inputted data");
+            }
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == HomeID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            return Ok();
         }
     }
 }

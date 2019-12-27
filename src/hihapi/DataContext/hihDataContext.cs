@@ -30,6 +30,7 @@ namespace hihapi.Models
         public DbSet<FinanceAccount> FinanceAccount { get; set; }
         public DbSet<FinanceAccountExtraDP> FinanceAccountExtraDP { get; set; }
         public DbSet<FinanceAccountExtraAS> FinanceAccountExtraAS { get; set; }
+        public DbSet<FinanceAccountExtraLoan> FinanceAccountExtraLoan { get; set; }
         public DbSet<FinanceDocument> FinanceDocument { get; set; }
         public DbSet<FinanceDocumentItem> FinanceDocumentItem { get; set; }
         public DbSet<FinanceTmpDPDocument> FinanceTmpDPDocument { get; set; }
@@ -232,6 +233,10 @@ namespace hihapi.Models
                     .WithOne(p => p.AccountHeader)
                     .HasForeignKey<FinanceAccountExtraAS>(p => p.AccountID)
                     .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(d => d.ExtraLoan)
+                    .WithOne(p => p.AccountHeader)
+                    .HasForeignKey<FinanceAccountExtraLoan>(p => p.AccountID)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 //entity.HasOne(d => d.CurrentHome)
                 //    .WithMany(p => p.FinanceAccounts)
@@ -256,6 +261,13 @@ namespace hihapi.Models
                     entity.Property(e => e.AccountID).HasConversion(v => v, v => v);
                 }
             });
+            modelBuilder.Entity<FinanceAccountExtraLoan>(entity => {
+                if (TestingMode)
+                {
+                    entity.Property(e => e.AccountID).HasConversion(v => v, v => v);
+                }
+            });
+
             modelBuilder.Entity<FinanceDocument>(entity => {
                 if (!TestingMode)
                 {
@@ -298,6 +310,10 @@ namespace hihapi.Models
                         .HasColumnType("INTEGER")
                         .ValueGeneratedOnAdd();
                 }
+                entity.HasOne(d => d.AccountExtra)
+                    .WithMany(p => p.LoanTmpDocs)
+                    .HasForeignKey(d => d.AccountID)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<FinanceTmpDPDocument>(entity => {
                 if (!TestingMode)
@@ -311,6 +327,7 @@ namespace hihapi.Models
                         .HasColumnType("INTEGER")
                         .ValueGeneratedOnAdd();
                 }
+
                 entity.HasOne(d => d.AccountExtra)
                     .WithMany(p => p.DPTmpDocs)
                     .HasForeignKey(d => d.AccountID)

@@ -15,13 +15,13 @@ using hihapi.Utilities;
 namespace hihapi.test.UnitTests
 {
     [Collection("HIHAPI_UnitTests#1")]
-    public class FinanceDocumentDownpaymentTest: IDisposable
+    public class FinanceDocumentLoanTest : IDisposable
     {
         private SqliteDatabaseFixture fixture = null;
         private ServiceProvider provider = null;
         private IEdmModel model = null;
 
-        public FinanceDocumentDownpaymentTest(SqliteDatabaseFixture fixture)
+        public FinanceDocumentLoanTest(SqliteDatabaseFixture fixture)
         {
             this.fixture = fixture;
 
@@ -120,7 +120,7 @@ namespace hihapi.test.UnitTests
                 ItemID = 1,
                 Desp = "Item 1.1",
                 TranType = FinanceTransactionType.TranType_AdvancePaymentOut,
-                TranAmount = 1200,                
+                TranAmount = 1200,
                 AccountID = accountsCreated[0],
                 ControlCenterID = controlCentersCreated[0],
             };
@@ -149,7 +149,7 @@ namespace hihapi.test.UnitTests
                 RepeatType = RepeatFrequency.Month,
                 Desp = item.Desp,
             });
-            foreach(var rst in rsts)
+            foreach (var rst in rsts)
             {
                 var tmpdoc = new FinanceTmpDPDocument
                 {
@@ -186,7 +186,7 @@ namespace hihapi.test.UnitTests
                     var tmpdocs = context.FinanceTmpDPDocument.Where(p => p.AccountID == docitem.AccountID).OrderBy(p => p.TransactionDate).ToList();
                     Assert.True(rsts.Count == tmpdocs.Count);
 
-                    foreach(var rst in rsts)
+                    foreach (var rst in rsts)
                     {
                         DateTime dat = rst.TranDate;
                         var tdoc = tmpdocs.Find(p => p.TransactionDate.Date == dat);
@@ -212,3 +212,4 @@ namespace hihapi.test.UnitTests
         }
     }
 }
+

@@ -76,6 +76,7 @@ namespace hihapi.Models
         public FinanceAccountExtraDP ExtraDP { get; set; }
         // public FinanceAccountExtraLoan ExtraLoan { get; set; }
         public FinanceAccountExtraAS ExtraAsset { get; set; }
+        public FinanceAccountExtraLoan ExtraLoan { get; set; }
     }
 
     public abstract class FinanceAccountExtra
@@ -436,6 +437,260 @@ namespace hihapi.Models
             return listHeaderSqls.Count == 0 ?
                 String.Empty :
                 (@"UPDATE [dbo].[t_fin_account_ext_as] SET " + string.Join(",", listHeaderSqls) + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
+        }
+    }
+
+    // Account extra: Loan (Borrow from, or Lend to)
+    [Table("T_FIN_ACCOUNT_EXT_LOAN")]
+    public sealed class FinanceAccountExtraLoan : FinanceAccountExtra
+    {
+        [Required]
+        [Column("STARTDATE")]
+        [DataType(DataType.Date)]
+        public DateTime StartDate { get; set; }
+
+        [Column("ANNUALRATE", TypeName = "DECIMAL(17, 2)")]
+        public Decimal? AnnualRate { get; set; }
+
+        [Column("INTERESTFREE", TypeName = "BIT")]
+        public Boolean? InterestFree { get; set; }
+
+        [Column("REPAYMETHOD", TypeName = "TINYINT")]
+        public LoanRepaymentMethod? RepaymentMethod { get; set; }
+
+        [Column("TOTALMONTH", TypeName = "SMALLINT")]
+        public Int16? TotalMonths { get; set; }
+
+        [Column("REFDOCID", TypeName = "INT")]
+        public Int32 RefDocID { get; set; }
+
+        [Column("OTHERS", TypeName = "NVARCHAR(100)")]
+        [StringLength(100)]
+        public String Others { get; set; }
+
+        [Column("ENDDATE")]
+        [DataType(DataType.Date)]
+        public DateTime? EndDate { get; set; }
+
+        [Column("PAYINGACCOUNT", TypeName = "INT")]
+        public Int32? PayingAccount { get; set; }
+
+        [Column("PARTNER", TypeName = "NVARCHAR(50)")]
+        [StringLength(50)]
+        public String Partner { get; set; }
+
+        // Tmp. docs
+        public ICollection<FinanceTmpLoanDocument> LoanTmpDocs { get; set; }
+        public FinanceAccount AccountHeader { get; set; }
+
+        public FinanceAccountExtraLoan() : base()
+        {
+            // Default
+            this.StartDate = DateTime.Today;
+            this.LoanTmpDocs = new HashSet<FinanceTmpLoanDocument>();
+        }
+
+        public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
+        static FinanceAccountExtraLoan()
+        {
+            dictFieldNames.Add("AccountID", "ACCOUNTID");
+            dictFieldNames.Add("StartDate", "STARTDATE");
+            dictFieldNames.Add("AnnualRate", "ANNUALRATE");
+            dictFieldNames.Add("InterestFree", "INTERESTFREE");
+            dictFieldNames.Add("RepaymentMethod", "REPAYMETHOD");
+            dictFieldNames.Add("TotalMonths", "TOTALMONTH");
+            dictFieldNames.Add("RefDocID", "REFDOCID");
+            dictFieldNames.Add("Others", "OTHERS");
+            dictFieldNames.Add("EndDate", "ENDDATE");
+            dictFieldNames.Add("PayingAccount", "PAYINGACCOUNT");
+            dictFieldNames.Add("Partner", "PARTNER");
+        }
+        public override String GetDBFieldName(String strField)
+        {
+            if (!dictFieldNames.ContainsKey(strField))
+                return String.Empty;
+
+            return dictFieldNames[strField];
+        }
+
+        public override bool IsValid()
+        {
+            if (RefDocID <= 0)
+                return false;
+            //if (LoanTmpDocs.Count < 0)
+            //    return false;
+            if (InterestFree.HasValue && InterestFree.Value == true && AnnualRate.HasValue && AnnualRate.Value >= 0)
+                return false; // throw new Exception("Cannot input interest rate for Interest-Free loan");
+            if (AnnualRate.HasValue && AnnualRate.Value < 0)
+                return false; // throw new Exception("Interest rate can not be negative");
+            if (RepaymentMethod.HasValue)
+            {
+                if (RepaymentMethod.Value == LoanRepaymentMethod.EqualPrincipal
+                    || RepaymentMethod.Value == LoanRepaymentMethod.EqualPrincipalAndInterset)
+                {
+                    if (!TotalMonths.HasValue || (TotalMonths.HasValue && TotalMonths.Value <= 0))
+                        return false; //  throw new Exception("Total months must large than zero");
+                }
+                else if (RepaymentMethod.Value == LoanRepaymentMethod.DueRepayment)
+                {
+                    if (!EndDate.HasValue)
+                        return false; //  throw new Exception("End date must input");
+                }
+                else
+                    return false; //  throw new Exception("Not supported method");
+            }
+
+            return true;
+        }
+
+        public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountExtraLoan oldAcnt,
+            FinanceAccountExtraLoan newAcnt)
+        {
+            Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
+            if (oldAcnt == null || newAcnt == null || Object.ReferenceEquals(oldAcnt, newAcnt)
+                || oldAcnt.AccountID != newAcnt.AccountID)
+            {
+                throw new ArgumentException("Invalid inputted parameter Or AccountID change is not allowed");
+            }
+            if (!oldAcnt.IsValid() || !newAcnt.IsValid())
+            {
+                throw new Exception("Account info is invalid");
+            }
+
+            Type t = typeof(FinanceAccountExtraLoan);
+            PropertyInfo[] listProperties = t.GetProperties();
+            var listSortedProperties = listProperties.OrderBy(o => o.Name);
+
+            foreach (PropertyInfo item in listSortedProperties)
+            {
+                if (item.Name == "LoanTmpDocs")
+                {
+                    continue;
+                }
+
+                object oldValue = item.GetValue(oldAcnt, null);
+                object newValue = item.GetValue(newAcnt, null);
+                if (item.PropertyType == typeof(Nullable<Decimal>))
+                {
+                    if (Nullable.Compare<Decimal>(oldValue as Nullable<Decimal>, newValue as Nullable<Decimal>) != 0)
+                    {
+                        if (newValue != null)
+                            dictDelta.Add(item.Name, (newValue as Nullable<Decimal>).Value);
+                        else
+                            dictDelta.Add(item.Name, null);
+                    }
+                }
+                else if (item.PropertyType == typeof(Nullable<DateTime>))
+                {
+                    if (Nullable.Compare<DateTime>(oldValue as Nullable<DateTime>, newValue as Nullable<DateTime>) != 0)
+                    {
+                        if (newValue != null)
+                            dictDelta.Add(item.Name, (newValue as Nullable<DateTime>).Value);
+                        else
+                            dictDelta.Add(item.Name, null);
+                    }
+                }
+                else if (item.PropertyType == typeof(Nullable<Boolean>))
+                {
+                    if (Nullable.Compare<Boolean>(oldValue as Nullable<Boolean>, newValue as Nullable<Boolean>) != 0)
+                    {
+                        if (newValue != null)
+                            dictDelta.Add(item.Name, (newValue as Nullable<Boolean>).Value ? 1 : 0);
+                        else
+                            dictDelta.Add(item.Name, null);
+                    }
+                }
+                else if (item.PropertyType == typeof(Nullable<Int32>))
+                {
+                    if (Nullable.Compare<Int32>(oldValue as Nullable<Int32>, newValue as Nullable<Int32>) != 0)
+                    {
+                        if (newValue != null)
+                            dictDelta.Add(item.Name, (newValue as Nullable<Int32>).Value);
+                        else
+                            dictDelta.Add(item.Name, null);
+                    }
+                }
+                else if (item.PropertyType == typeof(Nullable<Int16>))
+                {
+                    if (Nullable.Compare<Int16>(oldValue as Nullable<Int16>, newValue as Nullable<Int16>) != 0)
+                    {
+                        if (newValue != null)
+                            dictDelta.Add(item.Name, (newValue as Nullable<Int16>).Value);
+                        else
+                            dictDelta.Add(item.Name, null);
+                    }
+                }
+                else if (item.PropertyType == typeof(Decimal))
+                {
+                    if (Decimal.Compare((Decimal)oldValue, (Decimal)newValue) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else if (item.PropertyType == typeof(String))
+                {
+                    if (String.CompareOrdinal((string)oldValue, (string)newValue) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else if (item.PropertyType == typeof(DateTime))
+                {
+                    if (DateTime.Compare(((DateTime)oldValue).Date, ((DateTime)newValue).Date) != 0) dictDelta.Add(item.Name, newValue);
+                }
+                else
+                {
+                    if (!Object.Equals(oldValue, newValue))
+                        dictDelta.Add(item.Name, newValue);
+                }
+            }
+
+            return dictDelta;
+        }
+        public static string WorkoutDeltaStringForUpdate(FinanceAccountExtraLoan oldAcnt,
+            FinanceAccountExtraLoan newAcnt)
+        {
+            var diffs = WorkoutDeltaForUpdate(oldAcnt, newAcnt);
+
+            List<String> listHeaderSqls = new List<string>();
+            foreach (var diff in diffs)
+            {
+                var dbfield = newAcnt.GetDBFieldName(diff.Key);
+
+                if (diff.Value is DateTime)
+                    listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
+                else if (diff.Value is Boolean)
+                    listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
+                else if (diff.Value is String)
+                {
+                    if (String.IsNullOrEmpty((string)diff.Value))
+                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                    else
+                        listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                }
+                else if (diff.Value is Decimal)
+                {
+                    if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
+                    {
+                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                    }
+                    else
+                        listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
+                }
+                else if (diff.Value is Boolean)
+                {
+                    if ((bool)diff.Value)
+                        listHeaderSqls.Add("[" + dbfield + "] = 1");
+                    else
+                        listHeaderSqls.Add("[" + dbfield + "] = 0");
+                }
+                else
+                {
+                    if (diff.Value == null)
+                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
+                    else
+                        listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
+                }
+            }
+
+            return listHeaderSqls.Count == 0 ?
+                String.Empty :
+                (@"UPDATE [dbo].[t_fin_account_ext_loan] SET " + string.Join(",", listHeaderSqls)
+                    + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
         }
     }
 

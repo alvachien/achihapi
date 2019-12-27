@@ -36,17 +36,27 @@ namespace hihapi.Models
         public RepeatFrequency RepeatType { get; set; }
     }
 
-    public sealed class RepeatDatesWithAmountCalculationInput : RepeatDatesCalculationInput
+    public class RepeatDatesWithAmountCalculationInput : RepeatDatesCalculationInput
     {
         public Decimal TotalAmount { get; set; }
         public String Desp { get; set; }
     }
 
-    public sealed class RepeatedDatesWithAmount
+    public class RepeatedDatesWithAmount
     {
         [DataType(DataType.Date)]
         public Date TranDate { get; set; }
         public Decimal TranAmount { get; set; }
         public String Desp { get; set; }
+    }
+
+    public class RepeatDatesWithAmountExCalculationInput : RepeatDatesCalculationInput
+    {
+        public Int16 TotalMonths { get; set; }
+        public Decimal InterestRate { get; set; }
+        public Boolean InterestFreeLoan { get; set; }
+        public LoanRepaymentMethod RepaymentMethod { get; set; }
+        public Int16? RepayDayInMonth { get; set; }
+
     }
 }

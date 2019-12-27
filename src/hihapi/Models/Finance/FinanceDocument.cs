@@ -144,4 +144,10 @@ namespace hihapi.Models
         public FinanceDocument DocumentInfo { get; set; }
         public FinanceAccount AccountInfo { get; set; }
     }
+
+    public sealed class FinanceLoanDocumentCreateContext
+    {
+        public FinanceDocument DocumentInfo { get; set; }
+        public FinanceAccount AccountInfo { get; set; }
+    }
 }
