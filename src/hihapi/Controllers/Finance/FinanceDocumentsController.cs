@@ -268,8 +268,9 @@ namespace hihapi.Controllers
 
                 return BadRequest("Model State is Invalid");
             }
-            if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null || createContext.AccountExtraInfo == null
-                || createContext.DPTemplateDocuments.Count <= 0)
+            if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null 
+                || createContext.AccountInfo.ExtraDP == null
+                || createContext.AccountInfo.ExtraDP.DPTmpDocs.Count <= 0)
             {
                 return BadRequest("Invalid inputted data");
             }
@@ -316,7 +317,7 @@ namespace hihapi.Controllers
                 if (createContext.DocumentInfo.Items.ElementAt(0).TranType != FinanceTransactionType.TranType_AdvanceReceiveIn)
                     return BadRequest("Invalid tran. type for advance receive");
             }
-            foreach (var tmpdocitem in createContext.DPTemplateDocuments)
+            foreach (var tmpdocitem in createContext.AccountInfo.ExtraDP.DPTmpDocs)
             {
                 if (!tmpdocitem.ControlCenterID.HasValue && !tmpdocitem.OrderID.HasValue)
                 {
@@ -328,18 +329,77 @@ namespace hihapi.Controllers
                 }
             }
 
-            // Now update into database
-            var tran = await _context.Database.BeginTransactionAsync();
+            // Database update
+            var errorString = "";
+            var errorOccur = false;
+            var origdocid = 0;
+            var dpaccountid = 0;
+            try
+            {
+                var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
+                await _context.SaveChangesAsync();
+                origdocid = docEntity.Entity.ID;
 
-            // 1, Post the document
-            var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
-            var docid = docEntity.Entity.ID;
-            // 2, Create the account
-            createContext.AccountExtraInfo.RefenceDocumentID = docid;
-            // 3, Update the document
-            // 4, Create the template documents
+                // 2, Create the account
+                createContext.AccountInfo.ExtraDP.RefenceDocumentID = origdocid;
+                var acntEntity = _context.FinanceAccount.Add(createContext.AccountInfo);
+                await _context.SaveChangesAsync();
+                dpaccountid = acntEntity.Entity.ID;
 
-            await tran.CommitAsync();
+                // 3, Update the document
+                var itemid = docEntity.Entity.Items.ElementAt(0).ItemID;
+                // _context.Attach(docEntity);
+                
+                var ndi = new FinanceDocumentItem();
+                ndi.ItemID = ++itemid;
+                ndi.AccountID = dpaccountid;
+                ndi.ControlCenterID = docEntity.Entity.Items.ElementAt(0).ControlCenterID;
+                ndi.OrderID = docEntity.Entity.Items.ElementAt(0).OrderID;
+                ndi.Desp = docEntity.Entity.Items.ElementAt(0).Desp;
+                ndi.TranAmount = docEntity.Entity.Items.ElementAt(0).TranAmount;
+                ndi.UseCurr2 = docEntity.Entity.Items.ElementAt(0).UseCurr2;
+                if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvancePayment)
+                    ndi.TranType = FinanceTransactionType.TranType_OpeningAsset;
+                else if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvanceReceive)
+                    ndi.TranType = FinanceTransactionType.TranType_OpeningLiability;
+                docEntity.Entity.Items.Add(ndi);
+
+                docEntity.State = EntityState.Modified;
+                
+                await _context.SaveChangesAsync();
+            }
+            catch(Exception exp)
+            {
+                errorOccur = true;
+                errorString = exp.Message;
+            }
+            finally
+            {
+                // Remove new created object
+                if (errorOccur)
+                {
+                    try
+                    {
+                        if (origdocid > 0)
+                        {
+                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + origdocid.ToString());
+                        }
+                        if (dpaccountid > 0)
+                        {
+                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = " + dpaccountid.ToString());
+                        }
+                    }
+                    catch(Exception exp2)
+                    {
+                        System.Diagnostics.Debug.WriteLine(exp2.Message);
+                    }
+                }
+            }
+
+            if (errorOccur)
+            {
+                return BadRequest(errorString);
+            }
 
             return Ok(createContext.DocumentInfo);
         }

@@ -45,5 +45,7 @@ namespace hihapi.Models
         [StringLength(45)]
         [Column("DESP", TypeName="NVARCHAR(45)")]
         public String Description { get; set; }
+
+        public FinanceAccountExtraDP AccountExtra { get; set; }
     }
 }

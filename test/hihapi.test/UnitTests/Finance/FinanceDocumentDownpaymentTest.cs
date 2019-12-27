@@ -10,6 +10,7 @@ using Microsoft.AspNet.OData.Results;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.OData.Edm;
+using hihapi.Utilities;
 
 namespace hihapi.test.UnitTests
 {
@@ -41,21 +42,17 @@ namespace hihapi.test.UnitTests
         [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserA)]
         public async Task TestCase1(int hid, string currency, string user)
         {
-            List<FinanceAccount> accountsCreated = new List<FinanceAccount>();
-            List<FinanceControlCenter> controlCentersCreated = new List<FinanceControlCenter>();
-            List<FinanceOrder> ordersCreated = new List<FinanceOrder>();
-            List<FinanceDocument> documentsCreated = new List<FinanceDocument>();
-            FinanceAccount accountObject = null;
-            FinanceControlCenter controlCenterObject = null;
-            FinanceOrder orderObject = null;
-            FinanceDocument documentObject = null;
+            List<int> accountsCreated = new List<int>();
+            List<int> controlCentersCreated = new List<int>();
+            List<int> ordersCreated = new List<int>();
+            List<int> documentsCreated = new List<int>();
             var context = this.fixture.GetCurrentDataContext();
 
             // 0. Prepare the context for current home
             if (hid > 0)
             {
                 // Account
-                accountObject = new FinanceAccount()
+                var accountObject = new FinanceAccount()
                 {
                     HomeID = hid,
                     Name = "Account 3.1",
@@ -63,9 +60,8 @@ namespace hihapi.test.UnitTests
                     Owner = user
                 };
                 var ea1 = context.FinanceAccount.Add(accountObject);
-                accountsCreated.Add(ea1.Entity);
                 // Control center
-                controlCenterObject = new FinanceControlCenter()
+                var controlCenterObject = new FinanceControlCenter()
                 {
                     HomeID = hid,
                     Name = "Control Center 3.1",
@@ -73,9 +69,8 @@ namespace hihapi.test.UnitTests
                     Owner = user
                 };
                 var ec1 = context.FinanceControlCenter.Add(controlCenterObject);
-                controlCentersCreated.Add(ec1.Entity);
                 // Order
-                orderObject = new FinanceOrder()
+                var orderObject = new FinanceOrder()
                 {
                     HomeID = hid,
                     Name = "Order 3.1",
@@ -90,8 +85,11 @@ namespace hihapi.test.UnitTests
                 };
                 orderObject.SRule.Add(srule1);
                 var eord1 = context.FinanceOrder.Add(orderObject);
-                ordersCreated.Add(eord1.Entity);
                 await context.SaveChangesAsync();
+
+                accountsCreated.Add(ea1.Entity.ID);
+                controlCentersCreated.Add(ec1.Entity.ID);
+                ordersCreated.Add(eord1.Entity.ID);
             }
             else
             {
@@ -102,7 +100,6 @@ namespace hihapi.test.UnitTests
             var control = new FinanceDocumentsController(context);
             var userclaim = DataSetupUtility.GetClaimForUser(user);
             var httpctx = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
-            var firstdocid = 0;
             control.ControllerContext = new ControllerContext()
             {
                 HttpContext = httpctx
@@ -113,7 +110,7 @@ namespace hihapi.test.UnitTests
             dpcontext.DocumentInfo = new FinanceDocument()
             {
                 HomeID = hid,
-                DocType = FinanceDocumentType.DocType_Normal,
+                DocType = FinanceDocumentType.DocType_AdvancePayment,
                 TranCurr = currency,
                 Desp = "Test 1"
             };
@@ -122,10 +119,10 @@ namespace hihapi.test.UnitTests
                 DocumentHeader = dpcontext.DocumentInfo,
                 ItemID = 1,
                 Desp = "Item 1.1",
-                TranType = 2, // Wage
-                TranAmount = 10,
-                AccountID = accountsCreated.First(p => p.HomeID == hid).ID,
-                ControlCenterID = controlCentersCreated.First(p => p.HomeID == hid).ID,
+                TranType = FinanceTransactionType.TranType_AdvancePaymentOut,
+                TranAmount = 1200,                
+                AccountID = accountsCreated[0],
+                ControlCenterID = controlCentersCreated[0],
             };
             dpcontext.DocumentInfo.Items.Add(item);
             dpcontext.AccountInfo = new FinanceAccount()
@@ -137,25 +134,67 @@ namespace hihapi.test.UnitTests
             };
             var startdate = new DateTime();
             var enddate = startdate.AddMonths(6);
-            dpcontext.AccountExtraInfo = new FinanceAccountExtraDP()
+            dpcontext.AccountInfo.ExtraDP = new FinanceAccountExtraDP()
             {
                 StartDate = startdate,
                 EndDate = enddate,
                 RepeatType = RepeatFrequency.Month,
                 Comment = "Test",
             };
+            var rsts = CommonUtility.WorkoutRepeatedDatesWithAmount(new RepeatDatesWithAmountCalculationInput
+            {
+                StartDate = startdate,
+                EndDate = enddate,
+                TotalAmount = item.TranAmount,
+                RepeatType = RepeatFrequency.Month,
+                Desp = item.Desp,
+            });
+            foreach(var rst in rsts)
+            {
+                var tmpdoc = new FinanceTmpDPDocument
+                {
+                    TranAmount = rst.TranAmount,
+                    TransactionDate = rst.TranDate,
+                    HomeID = hid,
+                    TransactionType = 5,
+                    ControlCenterID = item.ControlCenterID,
+                    OrderID = item.OrderID,
+                    Description = item.Desp
+                };
+
+                dpcontext.AccountInfo.ExtraDP.DPTmpDocs.Add(tmpdoc);
+            }
+            var resp = await control.PostDPDocument(hid, dpcontext);
+            var doc = Assert.IsType<FinanceDocument>(resp);
+            documentsCreated.Add(doc.ID);
+            Assert.True(doc.Items.Count == 2);
+
+            // Now check in the databse
+            foreach (var docitem in doc.Items)
+            {
+                if (docitem.AccountID != accountsCreated[0])
+                {
+                    accountsCreated.Add(docitem.AccountID);
+
+                    var acnt = context.FinanceAccount.Find(docitem.AccountID);
+                    Assert.NotNull(acnt);
+                    Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_AdvancePayment);
+                    var acntExtraDP = context.FinanceAccountExtraDP.Find(docitem.AccountID);
+                    Assert.NotNull(acntExtraDP);
+                    Assert.True(acntExtraDP.RefenceDocumentID == doc.ID);
+                }
+            }
 
             // Last, clear all created objects
-            context.FinanceDocument.RemoveRange(documentsCreated);
-            context.FinanceAccount.RemoveRange(accountsCreated);
-            context.FinanceControlCenter.RemoveRange(controlCentersCreated);
-            context.FinanceOrder.RemoveRange(ordersCreated);
+            foreach (var docid in documentsCreated)
+                this.fixture.DeleteDocument(context, docid);
+            foreach (var aid in accountsCreated)
+                this.fixture.DeleteAccount(context, aid);
+            foreach (var ccid in controlCentersCreated)
+                this.fixture.DeleteControlCenter(context, ccid);
+            foreach (var ordid in ordersCreated)
+                this.fixture.DeleteOrder(context, ordid);
             await context.SaveChangesAsync();
-
-            if (firstdocid > 0)
-            {
-                Assert.Equal(0, context.FinanceDocumentItem.Where(p => p.DocID == firstdocid).Count());
-            }
 
             await context.DisposeAsync();
         }

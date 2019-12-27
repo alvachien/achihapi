@@ -39,11 +39,6 @@ namespace hihapi.test.UnitTests
             var cnt1 = DataSetupUtility.Currencies.Count;
             Assert.Equal(cnt1, rstscnt);
 
-            //var mockUrlHelper = new Mock<IUrlHelper>(MockBehavior.Strict);
-            //Expression<Func<IUrlHelper, string>> urlSetup
-            //    = url => url.Action(It.Is<UrlActionContext>(uac => uac.Action == "Get" && GetId(uac.Values) != cmd.Id));
-            //mockUrlHelper.Setup(urlSetup).Returns("a/mock/url/for/testing").Verifiable();
-
             // Step 2. Read currency with select
             var httpContext = new DefaultHttpContext(); // or mock a `HttpContext`
             httpContext.Request.Path = "/api/Currencies";
@@ -68,52 +63,6 @@ namespace hihapi.test.UnitTests
             Assert.NotNull(rsts);
 
             await context.DisposeAsync();
-
-            //var routes = new RouteCollection();
-            //MvcApplication.RegisterRoutes(routes);
-
-            //var request = new Mock<HttpRequestBase>(MockBehavior.Strict);
-            //request.SetupGet(x => x.ApplicationPath).Returns("/");
-            //request.SetupGet(x => x.Url).Returns(new Uri("http://localhost/a", UriKind.Absolute));
-            //request.SetupGet(x => x.ServerVariables).Returns(new System.Collections.Specialized.NameValueCollection());
-
-            //var response = new Mock<HttpResponseBase>(MockBehavior.Strict);
-            //response.Setup(x => x.ApplyAppPathModifier("/post1")).Returns("http://localhost/post1");
-
-            //var context = new Mock<HttpContextBase>(MockBehavior.Strict);
-            //context.SetupGet(x => x.Request).Returns(request.Object);
-            //context.SetupGet(x => x.Response).Returns(response.Object);
-
-            //var controller = new LinkbackController(dbF.Object);
-            //controller.ControllerContext = new ControllerContext(context.Object, new RouteData(), controller);
-            //controller.Url = new UrlHelper(new RequestContext(context.Object, new RouteData()), routes);
-
-            // // Step 2. Create a new one
-            // var nmod = new Knowledge() {
-            //     Title = "Test 1",
-            //     Category = KnowledgeCategory.Concept,
-            //     Content = "My test 1"
-            // };
-            // var result = control.Post(nmod);
-            // var actionResult = Assert.IsType<Task<IActionResult>>(result);
-            // var actResult = Assert.IsType<CreatedODataResult<Knowledge>>(result.Result);
-            // rstscnt = await context.Knowledges.CountAsync();
-            // Assert.Equal(1, rstscnt);
-
-            // var nid = actResult.Entity.ID;
-            // var dbrst = await context.Knowledges.SingleOrDefaultAsync(p => p.ID == nid);
-            // Assert.Equal(dbrst.Title, nmod.Title);
-            // Assert.Equal(dbrst.Content, nmod.Content);
-            // Assert.Equal(dbrst.Category, nmod.Category);
-
-            // // Step 3. Re-read
-            // rsts = control.Get();
-            // rstscnt = await rsts.CountAsync();
-            // Assert.Equal(1, rstscnt);
-            // var firstrst = rsts.ToList()[0];
-            // Assert.Equal(firstrst.Title, nmod.Title);
-            // Assert.Equal(firstrst.Content, nmod.Content);
-            // Assert.Equal(firstrst.Category, nmod.Category);
         }
     }
 }

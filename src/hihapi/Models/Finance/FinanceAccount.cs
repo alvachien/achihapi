@@ -124,13 +124,13 @@ namespace hihapi.Models
         public String Comment { get; set; }
 
         // Tmp. docs
-        public List<FinanceTmpDPDocument> DPTmpDocs { get; }
-        public FinanceAccount CurrentAccount { get; set; }
+        public ICollection<FinanceTmpDPDocument> DPTmpDocs { get; set; }
+        public FinanceAccount AccountHeader { get; set; }
 
         public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
         public FinanceAccountExtraDP(): base()
         {
-            this.DPTmpDocs = new List<FinanceTmpDPDocument>();
+            this.DPTmpDocs = new HashSet<FinanceTmpDPDocument>();
         }
         static FinanceAccountExtraDP()
         {
@@ -287,7 +287,7 @@ namespace hihapi.Models
         [NotMapped]
         public FinanceAssetCategory AssetCategory { get; set; }
 
-        public FinanceAccount financeAccount { get; set; }
+        public FinanceAccount AccountHeader { get; set; }
         
         public FinanceAccountExtraAS(): base()
         {

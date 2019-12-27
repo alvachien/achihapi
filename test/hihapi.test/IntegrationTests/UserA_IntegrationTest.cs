@@ -232,10 +232,9 @@ namespace hihapi.test.IntegrationTests
             }
 
             // Step 9. Create an ADP document
-            var adpcontext = new FinanceADPDocumentCreateContext();
-            adpcontext.DocumentInfo = new FinanceDocument();
-            adpcontext.AccountInfo = new FinanceAccount();
-            adpcontext.AccountExtraInfo = new FinanceAccountExtraDP();
+            //var adpcontext = new FinanceADPDocumentCreateContext();
+            //adpcontext.DocumentInfo = new FinanceDocument();
+            //adpcontext.AccountInfo = new FinanceAccount();
         }
     }
 }

@@ -224,6 +224,14 @@ namespace hihapi.Models
                         .HasColumnType("INTEGER")
                         .ValueGeneratedOnAdd();
                 }
+                entity.HasOne(d => d.ExtraDP)
+                    .WithOne(p => p.AccountHeader)
+                    .HasForeignKey<FinanceAccountExtraDP>(p => p.AccountID)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(d => d.ExtraAsset)
+                    .WithOne(p => p.AccountHeader)
+                    .HasForeignKey<FinanceAccountExtraAS>(p => p.AccountID)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 //entity.HasOne(d => d.CurrentHome)
                 //    .WithMany(p => p.FinanceAccounts)
@@ -303,6 +311,10 @@ namespace hihapi.Models
                         .HasColumnType("INTEGER")
                         .ValueGeneratedOnAdd();
                 }
+                entity.HasOne(d => d.AccountExtra)
+                    .WithMany(p => p.DPTmpDocs)
+                    .HasForeignKey(d => d.AccountID)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<FinanceControlCenter>(entity => {
                 if (!TestingMode)

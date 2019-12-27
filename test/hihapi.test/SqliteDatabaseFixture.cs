@@ -68,6 +68,26 @@ namespace hihapi.test
             return context;
         }
 
+        public void DeleteAccount(hihDataContext context, int acntid)
+        {
+            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = " + acntid.ToString());
+        }
+
+        public void DeleteControlCenter(hihDataContext context, int ccid)
+        {
+            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_controlcenter WHERE ID = " + ccid.ToString());
+        }
+
+        public void DeleteOrder(hihDataContext context, int ordid)
+        {
+            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_order WHERE ID = " + ordid.ToString());
+        }
+
+        public void DeleteDocument(hihDataContext context, int docid)
+        {
+            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + docid.ToString());
+        }
+
         protected SqliteConnection DBConnection { get; private set; }
         //public hihDataContext CurrentDataContext { get; private set; }
     }

@@ -34,8 +34,7 @@ namespace hihapi.test.UnitTests
             var context = this.fixture.GetCurrentDataContext();
             LanguagesController control = new LanguagesController(context);
 
-            // Step 1. Read all
-            //ODataQueryOption opt = new ODataQueryOptions();
+            // Read all
             var rsts = control.Get();
             var rstscnt = await rsts.CountAsync();
             var cnt1 = DataSetupUtility.Languages.Count;
