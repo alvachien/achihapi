@@ -39,8 +39,9 @@ namespace hihapi.test.UnitTests
         }
 
         [Theory]
-        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserA)]
-        public async Task TestCase1(int hid, string currency, string user)
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserA, FinanceDocumentType.DocType_AdvancePayment)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserA, FinanceDocumentType.DocType_AdvanceReceive)]
+        public async Task TestCase1(int hid, string currency, string user, short doctype)
         {
             List<int> accountsCreated = new List<int>();
             List<int> controlCentersCreated = new List<int>();
@@ -110,7 +111,7 @@ namespace hihapi.test.UnitTests
             dpcontext.DocumentInfo = new FinanceDocument()
             {
                 HomeID = hid,
-                DocType = FinanceDocumentType.DocType_AdvancePayment,
+                DocType = doctype,
                 TranCurr = currency,
                 Desp = "Test 1"
             };
@@ -119,7 +120,9 @@ namespace hihapi.test.UnitTests
                 DocumentHeader = dpcontext.DocumentInfo,
                 ItemID = 1,
                 Desp = "Item 1.1",
-                TranType = FinanceTransactionType.TranType_AdvancePaymentOut,
+                TranType = doctype == FinanceDocumentType.DocType_AdvancePayment 
+                    ? FinanceTransactionType.TranType_AdvancePaymentOut
+                    : FinanceTransactionType.TranType_AdvanceReceiveIn,
                 TranAmount = 1200,                
                 AccountID = accountsCreated[0],
                 ControlCenterID = controlCentersCreated[0],
@@ -129,7 +132,9 @@ namespace hihapi.test.UnitTests
             {
                 HomeID = hid,
                 Name = "Account_8" + ".1",
-                CategoryID = FinanceAccountCategoriesController.AccountCategory_AdvancePayment,
+                CategoryID = doctype == FinanceDocumentType.DocType_AdvancePayment
+                        ? FinanceAccountCategoriesController.AccountCategory_AdvancePayment
+                        : FinanceAccountCategoriesController.AccountCategory_AdvanceReceive,
                 Owner = user
             };
             var startdate = new DateTime();
@@ -178,7 +183,10 @@ namespace hihapi.test.UnitTests
 
                     var acnt = context.FinanceAccount.Find(docitem.AccountID);
                     Assert.NotNull(acnt);
-                    Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_AdvancePayment);
+                    if (doctype == FinanceDocumentType.DocType_AdvancePayment)
+                        Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_AdvancePayment);
+                    if (doctype == FinanceDocumentType.DocType_AdvanceReceive)
+                        Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_AdvanceReceive);
                     var acntExtraDP = context.FinanceAccountExtraDP.Find(docitem.AccountID);
                     Assert.NotNull(acntExtraDP);
                     Assert.True(acntExtraDP.RefenceDocumentID == doc.ID);

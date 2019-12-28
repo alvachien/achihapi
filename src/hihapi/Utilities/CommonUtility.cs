@@ -500,5 +500,182 @@ namespace hihapi.Utilities
 
             return listResults;
         }
+    
+        public static List<RepeatedDatesWithAmountAndInterest> WorkoutRepeatedDatesWithAmountAndInterest(RepeatDatesWithAmountAndInterestCalInput datInput)
+        {
+            List<RepeatedDatesWithAmountAndInterest> listResults = new List<RepeatedDatesWithAmountAndInterest>();
+
+            // Input checks
+            if (datInput == null)
+                throw new Exception("Input the data!");
+            datInput.doVerify();
+
+            var realStartDate = datInput.StartDate;
+            if (datInput.FirstRepayDate.HasValue)
+                realStartDate = datInput.FirstRepayDate.Value;
+            if (datInput.RepayDayInMonth.HasValue && datInput.RepayDayInMonth.Value != realStartDate.Day)
+            {
+                if (datInput.RepayDayInMonth.Value > realStartDate.Day)
+                {
+                    realStartDate = realStartDate.AddDays(datInput.RepayDayInMonth.Value - realStartDate.Day);
+                }
+                else
+                {
+                    realStartDate = realStartDate.AddMonths(1);
+                    realStartDate = realStartDate.AddDays(datInput.RepayDayInMonth.Value - realStartDate.Day);
+                }
+            }
+            var nInitDelay = (int)((DateTime)realStartDate - (DateTime)datInput.StartDate).TotalDays - 30;
+
+            if (datInput.InterestFreeLoan)
+            {
+                switch (datInput.RepaymentMethod)
+                {
+                    case LoanRepaymentMethod.EqualPrincipal:
+                    case LoanRepaymentMethod.EqualPrincipalAndInterset:
+                        {
+
+                            for (int i = 0; i < datInput.TotalMonths; i++)
+                            {
+                                listResults.Add(new RepeatedDatesWithAmountAndInterest
+                                {
+                                    TranDate = realStartDate.AddMonths(i),
+                                    TranAmount = Math.Round(datInput.TotalAmount / datInput.TotalMonths, 2),
+                                    InterestAmount = 0
+                                });
+                            }
+                        }
+                        break;
+
+                    case LoanRepaymentMethod.DueRepayment:
+                    default:
+                        {
+                            if (datInput.EndDate.HasValue)
+                            {
+                                listResults.Add(new RepeatedDatesWithAmountAndInterest
+                                {
+                                    TranDate = datInput.EndDate.Value,
+                                    TranAmount = datInput.TotalAmount,
+                                    InterestAmount = 0
+                                });
+                            }
+                            else
+                            {
+                                listResults.Add(new RepeatedDatesWithAmountAndInterest
+                                {
+                                    TranDate = datInput.StartDate,
+                                    TranAmount = datInput.TotalAmount,
+                                    InterestAmount = 0
+                                });
+                            }
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                // Have interest rate inputted
+                switch (datInput.RepaymentMethod)
+                {
+                    case LoanRepaymentMethod.EqualPrincipalAndInterset:
+                        {
+                            // Decimal dInitMonthIntere = 0;
+                            //每月月供额 =〔贷款本金×月利率×(1＋月利率)＾还款月数〕÷〔(1＋月利率)＾还款月数 - 1〕
+                            //每月应还利息 = 贷款本金×月利率×〔(1 + 月利率) ^ 还款月数 - (1 + 月利率) ^ (还款月序号 - 1)〕÷〔(1 + 月利率) ^ 还款月数 - 1〕
+                            //每月应还本金 = 贷款本金×月利率×(1 + 月利率) ^ (还款月序号 - 1)÷〔(1 + 月利率) ^ 还款月数 - 1〕
+                            Decimal monthRate = datInput.InterestRate / 12;
+                            //if (nInitDelay > 0)
+                            //    dInitMonthIntere = Math.Round(datInput.TotalAmount * (monthRate / 30) * nInitDelay, 2);
+                            Decimal d3 = (Decimal)Math.Pow((double)(1 + monthRate), datInput.TotalMonths) - 1;
+                            Decimal monthRepay = datInput.TotalAmount * monthRate * (Decimal)Math.Pow((double)(1 + monthRate), datInput.TotalMonths) / d3;
+
+                            Decimal totalInterestAmt = 0;
+                            for (int i = 0; i < datInput.TotalMonths; i++)
+                            {
+                                var rst = new RepeatedDatesWithAmountAndInterest
+                                {
+                                    TranDate = realStartDate.AddMonths(i),
+                                    TranAmount = Math.Round(datInput.TotalAmount * monthRate * (Decimal)Math.Pow((double)(1 + monthRate), i) / d3, 2),
+                                    InterestAmount = Math.Round(datInput.TotalAmount * monthRate * ((Decimal)Math.Pow((double)(1 + monthRate), datInput.TotalMonths) - (Decimal)Math.Pow((double)(1 + monthRate), i)) / d3, 2)
+                                };
+
+                                if (i == 0 && nInitDelay > 0)
+                                    rst.InterestAmount = Math.Round(rst.InterestAmount + (nInitDelay - 1) * datInput.TotalAmount * monthRate / 30, 2);
+
+                                //var diff = rst.TranAmount + rst.InterestAmount - monthRepay;
+                                //if (diff != 0)
+                                //{
+                                //    rst.TranAmount -= diff;
+                                //    rst.TranAmount = Math.Round(rst.TranAmount, 2);
+                                //}
+
+                                totalInterestAmt += rst.InterestAmount;
+
+                                listResults.Add(rst);
+                            }
+                        }
+                        break;
+
+                    case LoanRepaymentMethod.EqualPrincipal:
+                        {
+                            // 每月月供额 = (贷款本金÷还款月数) + (贷款本金 - 已归还本金累计额)×月利率
+                            // 每月应还本金 = 贷款本金÷还款月数
+                            // 每月应还利息 = 剩余本金×月利率 = (贷款本金 - 已归还本金累计额)×月利率
+                            // 每月月供递减额 = 每月应还本金×月利率 = 贷款本金÷还款月数×月利率
+                            // 总利息 = 还款月数×(总贷款额×月利率 - 月利率×(总贷款额÷还款月数)*(还款月数 - 1)÷2 + 总贷款额÷还款月数)
+                            Decimal monthRate = datInput.InterestRate / 12;
+                            Decimal totalAmt = datInput.TotalAmount;
+                            var monthPrincipal = datInput.TotalAmount / datInput.TotalMonths;
+
+                            for (int i = 0; i < datInput.TotalMonths; i++)
+                            {
+                                var rst = new RepeatedDatesWithAmountAndInterest
+                                {
+                                    TranDate = realStartDate.AddMonths(i + 1),
+                                    TranAmount = Math.Round(monthPrincipal, 2),
+                                    InterestAmount = Math.Round(totalAmt * monthRate, 2)
+                                };
+                                if (i == 0 && nInitDelay > 0)
+                                    rst.InterestAmount = Math.Round(rst.InterestAmount + (nInitDelay - 1) * datInput.TotalAmount * monthRate / 30, 2);
+
+                                totalAmt -= monthPrincipal;
+
+                                listResults.Add(rst);
+                            }
+                        }
+                        break;
+
+                    case LoanRepaymentMethod.DueRepayment:
+                        {
+                            Decimal monthRate = datInput.InterestRate / 12;
+                            Decimal amtInterest = 0;
+                            if (datInput.EndDate.HasValue)
+                            {
+                                TimeSpan ts = (DateTime)datInput.EndDate.Value - (DateTime)datInput.StartDate;
+                                amtInterest = datInput.TotalAmount * (Int32)Math.Round(ts.TotalDays / 30) * monthRate;
+                            }
+                            else if (datInput.TotalAmount > 0)
+                            {
+                                amtInterest = datInput.TotalAmount * datInput.TotalMonths * monthRate;
+                            }
+
+                            var rst = new RepeatedDatesWithAmountAndInterest
+                            {
+                                TranDate = datInput.StartDate.AddMonths(datInput.TotalMonths),
+                                TranAmount = datInput.TotalAmount,
+                                InterestAmount = amtInterest
+                            };
+
+                            listResults.Add(rst);
+                        }
+                        break;
+
+                    default: throw new Exception("Unsupported repayment method");
+                }
+            }
+
+            return listResults;
+
+        }
     }
 }

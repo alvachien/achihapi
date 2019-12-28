@@ -158,5 +158,26 @@ namespace hihapi.Controllers
 
             return Ok(CommonUtility.WorkoutRepeatedDatesWithAmount(input));
         }
+
+        [HttpGet]
+        [ODataRoute("GetRepeatedDatesWithAmountAndInterest(input={input})")]
+        public IActionResult GetRepeatedDatesWithAmountAndInterest([FromODataUri] RepeatDatesWithAmountAndInterestCalInput input)
+        {
+            if (!ModelState.IsValid)
+            {
+#if DEBUG
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception != null ? err.Exception.Message : err.ErrorMessage);
+                    }
+                }
+#endif
+                return BadRequest();
+            }
+
+            return Ok(CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(input));
+        }
     }
 }

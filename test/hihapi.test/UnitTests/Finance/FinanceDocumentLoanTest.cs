@@ -39,8 +39,9 @@ namespace hihapi.test.UnitTests
         }
 
         [Theory]
-        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserA)]
-        public async Task TestCase1(int hid, string currency, string user)
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserA, FinanceDocumentType.DocType_BorrowFrom)]
+        [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserA, FinanceDocumentType.DocType_LendTo)]
+        public async Task TestCase1(int hid, string currency, string user, short doctype)
         {
             List<int> accountsCreated = new List<int>();
             List<int> controlCentersCreated = new List<int>();
@@ -96,7 +97,7 @@ namespace hihapi.test.UnitTests
                 Assert.Equal(1, 2); // Quit!
             }
 
-            // 1. Create first DP docs.
+            // 1. Create first Loan docs.
             var control = new FinanceDocumentsController(context);
             var userclaim = DataSetupUtility.GetClaimForUser(user);
             var httpctx = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
@@ -106,11 +107,11 @@ namespace hihapi.test.UnitTests
             };
 
             // 1a. Prepare data
-            var dpcontext = new FinanceADPDocumentCreateContext();
+            var dpcontext = new FinanceLoanDocumentCreateContext();
             dpcontext.DocumentInfo = new FinanceDocument()
             {
                 HomeID = hid,
-                DocType = FinanceDocumentType.DocType_AdvancePayment,
+                DocType = doctype,
                 TranCurr = currency,
                 Desp = "Test 1"
             };
@@ -119,7 +120,9 @@ namespace hihapi.test.UnitTests
                 DocumentHeader = dpcontext.DocumentInfo,
                 ItemID = 1,
                 Desp = "Item 1.1",
-                TranType = FinanceTransactionType.TranType_AdvancePaymentOut,
+                TranType = doctype == FinanceDocumentType.DocType_BorrowFrom 
+                        ? FinanceTransactionType.TranType_BorrowFrom 
+                        : FinanceTransactionType.TranType_LendTo,
                 TranAmount = 1200,
                 AccountID = accountsCreated[0],
                 ControlCenterID = controlCentersCreated[0],
@@ -129,42 +132,47 @@ namespace hihapi.test.UnitTests
             {
                 HomeID = hid,
                 Name = "Account_8" + ".1",
-                CategoryID = FinanceAccountCategoriesController.AccountCategory_AdvancePayment,
+                CategoryID = doctype == FinanceDocumentType.DocType_BorrowFrom 
+                    ? FinanceAccountCategoriesController.AccountCategory_BorrowFrom
+                    : FinanceAccountCategoriesController.AccountCategory_LendTo,
                 Owner = user
             };
-            var startdate = new DateTime();
-            var enddate = startdate.AddMonths(6);
-            dpcontext.AccountInfo.ExtraDP = new FinanceAccountExtraDP()
+            var startdate = new DateTime(2020, 1, 10);
+            var enddate = new DateTime(2021, 1, 10);
+            dpcontext.AccountInfo.ExtraLoan = new FinanceAccountExtraLoan()
             {
                 StartDate = startdate,
                 EndDate = enddate,
-                RepeatType = RepeatFrequency.Month,
-                Comment = "Test",
+                TotalMonths = 12,
+                RepaymentMethod = LoanRepaymentMethod.EqualPrincipal,
+                InterestFree = false,
             };
-            var rsts = CommonUtility.WorkoutRepeatedDatesWithAmount(new RepeatDatesWithAmountCalculationInput
+            var rsts = CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(new RepeatDatesWithAmountAndInterestCalInput
             {
-                StartDate = startdate,
-                EndDate = enddate,
-                TotalAmount = item.TranAmount,
-                RepeatType = RepeatFrequency.Month,
-                Desp = item.Desp,
+                RepaymentMethod = dpcontext.AccountInfo.ExtraLoan.RepaymentMethod.Value,
+                InterestFreeLoan = dpcontext.AccountInfo.ExtraLoan.InterestFree.Value,
+                StartDate = dpcontext.AccountInfo.ExtraLoan.StartDate,
+                TotalAmount = 12000,
+                EndDate = dpcontext.AccountInfo.ExtraLoan.EndDate,
+                TotalMonths = dpcontext.AccountInfo.ExtraLoan.TotalMonths.Value,
+                FirstRepayDate = new DateTime(2020, 2, 15)
             });
             foreach (var rst in rsts)
             {
-                var tmpdoc = new FinanceTmpDPDocument
+                var tmpdoc = new FinanceTmpLoanDocument
                 {
-                    TranAmount = rst.TranAmount,
+                    TransactionAmount = rst.TranAmount,
+                    InterestAmount = rst.InterestAmount,
                     TransactionDate = rst.TranDate,
                     HomeID = hid,
-                    TransactionType = 5,
                     ControlCenterID = item.ControlCenterID,
                     OrderID = item.OrderID,
-                    Description = item.Desp
+                    Description = item.Desp,                    
                 };
 
-                dpcontext.AccountInfo.ExtraDP.DPTmpDocs.Add(tmpdoc);
+                dpcontext.AccountInfo.ExtraLoan.LoanTmpDocs.Add(tmpdoc);
             }
-            var resp = await control.PostDPDocument(hid, dpcontext);
+            var resp = await control.PostLoanDocument(hid, dpcontext);
             var doc = Assert.IsType<CreatedODataResult<FinanceDocument>>(resp).Entity;
             documentsCreated.Add(doc.ID);
             Assert.True(doc.Items.Count == 2);
@@ -178,12 +186,15 @@ namespace hihapi.test.UnitTests
 
                     var acnt = context.FinanceAccount.Find(docitem.AccountID);
                     Assert.NotNull(acnt);
-                    Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_AdvancePayment);
-                    var acntExtraDP = context.FinanceAccountExtraDP.Find(docitem.AccountID);
-                    Assert.NotNull(acntExtraDP);
-                    Assert.True(acntExtraDP.RefenceDocumentID == doc.ID);
+                    if (doctype == FinanceDocumentType.DocType_BorrowFrom)
+                        Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_BorrowFrom);
+                    else if (doctype == FinanceDocumentType.DocType_LendTo)
+                        Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_LendTo);
+                    var acntExtraLoan = context.FinanceAccountExtraLoan.Find(docitem.AccountID);
+                    Assert.NotNull(acntExtraLoan);
+                    Assert.True(acntExtraLoan.RefDocID == doc.ID);
 
-                    var tmpdocs = context.FinanceTmpDPDocument.Where(p => p.AccountID == docitem.AccountID).OrderBy(p => p.TransactionDate).ToList();
+                    var tmpdocs = context.FinanceTmpLoanDocument.Where(p => p.AccountID == docitem.AccountID).OrderBy(p => p.TransactionDate).ToList();
                     Assert.True(rsts.Count == tmpdocs.Count);
 
                     foreach (var rst in rsts)
@@ -191,8 +202,7 @@ namespace hihapi.test.UnitTests
                         DateTime dat = rst.TranDate;
                         var tdoc = tmpdocs.Find(p => p.TransactionDate.Date == dat);
                         Assert.NotNull(tdoc);
-                        Assert.True(rst.TranAmount == tdoc.TranAmount);
-                        Assert.True(tdoc.AccountID == acntExtraDP.AccountID);
+                        Assert.True(tdoc.AccountID == acntExtraLoan.AccountID);
                     }
                 }
             }

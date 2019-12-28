@@ -150,4 +150,55 @@ namespace hihapi.Models
         public FinanceDocument DocumentInfo { get; set; }
         public FinanceAccount AccountInfo { get; set; }
     }
+
+    #region Asset related
+    public abstract class FinanceAssetDocumentCreateContext
+    {
+        [Required]
+        public Int32 HID { get; set; }
+        [Required]
+        public DateTime TranDate { get; set; }
+        [Required]
+        [StringLength(5)]
+        public String TranCurr { get; set; }
+        [Required]
+        [StringLength(45)]
+        public String Desp { get; set; }
+        public Int32? ControlCenterID { get; set; }
+        public Int32? OrderID { get; set; }
+
+        // Items
+        public List<FinanceDocumentItem> Items = new List<FinanceDocumentItem>();
+    }
+
+    // Asset: Buyin
+    public sealed class FinanceAssetBuyDocumentCreateContext : FinanceAssetDocumentCreateContext
+    {
+        [Required]
+        public Decimal TranAmount { get; set; }
+        public Boolean? IsLegacy { get; set; }
+
+        [Required]
+        [StringLength(40)]
+        public String AccountOwner { get; set; }
+
+        public FinanceAccountExtraAS ExtraAsset { get; set; }
+    }
+
+    // Asset: Soldout
+    public sealed class FinanceAssetSellDocumentCreateContext : FinanceAssetDocumentCreateContext
+    {
+        [Required]
+        public Decimal TranAmount { get; set; }
+        [Required]
+        public Int32 AssetAccountID { get; set; }
+    }
+
+    // Asset: value change
+    public sealed class FinanceAssetRevaluationDocumentCreateContext : FinanceAssetDocumentCreateContext
+    {
+        [Required]
+        public Int32 AssetAccountID { get; set; }
+    }
+    #endregion
 }

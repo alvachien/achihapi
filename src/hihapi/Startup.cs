@@ -182,14 +182,20 @@ namespace hihapi
             modelBuilder.Function("GetRepeatedDatesWithAmount")
                 .ReturnsCollection<RepeatedDatesWithAmount>()
                 .Parameter<RepeatDatesWithAmountCalculationInput>("input");
+            modelBuilder.Function("GetRepeatedDatesWithAmountAndInterest")
+                .ReturnsCollection<RepeatedDatesWithAmountAndInterest>()
+                .Parameter<RepeatDatesWithAmountAndInterestCalInput>("input");
             // Functions on Documents
             var docEntity = modelBuilder.EntityType<FinanceDocument>();
             docEntity.Property(c => c.TranDate).AsDate();
             docEntity.Collection
                 .Function("PostDPDocument")
                 .Returns<FinanceDocument>()
-                .Parameter<int>("HomeID")
-                ;
+                .Parameter<int>("HomeID");
+            docEntity.Collection
+                .Function("PostLoanDocument")
+                .Returns<FinanceDocument>()
+                .Parameter<int>("HomeID");
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();

@@ -450,7 +450,100 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            return Ok();
+            if (!(createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_BorrowFrom
+                || createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_LendTo))
+            {
+                return BadRequest("Invalid document type");
+            }
+            if (createContext.DocumentInfo.Items.Count != 1)
+            {
+                return BadRequest("Only one item doc is supported by far");
+            }
+            foreach (var tdoc in createContext.AccountInfo.ExtraLoan.LoanTmpDocs)
+            {
+                if (!tdoc.ControlCenterID.HasValue && !tdoc.OrderID.HasValue)
+                {
+                    return BadRequest("Either control center or order shall be specified in Loan Template doc");
+                }
+                if (tdoc.TransactionAmount <= 0)
+                {
+                    return BadRequest("Amount is zero!");
+                }
+            }
+
+            // Database update
+            var errorString = "";
+            var errorOccur = false;
+            var origdocid = 0;
+            var dpaccountid = 0;
+            try
+            {
+                var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
+                await _context.SaveChangesAsync();
+                origdocid = docEntity.Entity.ID;
+
+                // 2, Create the account
+                createContext.AccountInfo.ExtraLoan.RefDocID = origdocid;
+                var acntEntity = _context.FinanceAccount.Add(createContext.AccountInfo);
+                await _context.SaveChangesAsync();
+                dpaccountid = acntEntity.Entity.ID;
+
+                // 3, Update the document
+                var itemid = docEntity.Entity.Items.ElementAt(0).ItemID;
+                // _context.Attach(docEntity);
+
+                var ndi = new FinanceDocumentItem();
+                ndi.ItemID = ++itemid;
+                ndi.AccountID = dpaccountid;
+                ndi.ControlCenterID = docEntity.Entity.Items.ElementAt(0).ControlCenterID;
+                ndi.OrderID = docEntity.Entity.Items.ElementAt(0).OrderID;
+                ndi.Desp = docEntity.Entity.Items.ElementAt(0).Desp;
+                ndi.TranAmount = docEntity.Entity.Items.ElementAt(0).TranAmount;
+                ndi.UseCurr2 = docEntity.Entity.Items.ElementAt(0).UseCurr2;
+                if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_BorrowFrom)
+                    ndi.TranType = FinanceTransactionType.TranType_BorrowFrom;
+                else if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_LendTo)
+                    ndi.TranType = FinanceTransactionType.TranType_LendTo;
+                docEntity.Entity.Items.Add(ndi);
+
+                docEntity.State = EntityState.Modified;
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception exp)
+            {
+                errorOccur = true;
+                errorString = exp.Message;
+            }
+            finally
+            {
+                // Remove new created object
+                if (errorOccur)
+                {
+                    try
+                    {
+                        if (origdocid > 0)
+                        {
+                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + origdocid.ToString());
+                        }
+                        if (dpaccountid > 0)
+                        {
+                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = " + dpaccountid.ToString());
+                        }
+                    }
+                    catch (Exception exp2)
+                    {
+                        System.Diagnostics.Debug.WriteLine(exp2.Message);
+                    }
+                }
+            }
+
+            if (errorOccur)
+            {
+                return BadRequest(errorString);
+            }
+
+            return Created(createContext.DocumentInfo);
         }
     }
 }
