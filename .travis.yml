@@ -9,7 +9,6 @@ script:
   - dotnet restore
   - dotnet build achihapi.sln
   - dotnet test ./test/hihapi.test/hihapi.test.csproj --filter DisplayName~hihapi.test.UnitTests
-  - dotnet test ./test/hihapi.test/hihapi.test.csproj --filter DisplayName~hihapi.test.integrationtests
 notifications:
   email:
     on_success: never

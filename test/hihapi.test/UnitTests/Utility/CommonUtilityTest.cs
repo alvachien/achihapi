@@ -97,7 +97,6 @@ namespace hihapi.test.UnitTests
         public void WorkoutRepeatedDates_Month()
         {
             var startyear = 2020;
-            var endyear = 2021;
             RepeatDatesCalculationInput vm = new RepeatDatesCalculationInput
             {
                 StartDate = new DateTime(startyear, 1, 1),

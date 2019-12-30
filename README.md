@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/alvachien/achihapi.svg?branch=master)](https://travis-ci.com/alvachien/achihapi)
+
 # achihapi
 Web API for [HIH](https://github.com/alvachien/achihui.git), built on ASP.NET Core.
 
