@@ -44,27 +44,29 @@ An example file look like following:
 }
 ```
 
-
 ### Step 4. Deployment
+
 Deploy this Web API to IIS or other HTTP server.
 
+## Development Tools
 
-## Tools
-Though the whole project developed and tested with Visual Studio 2017 Community Version, the project can be processed by other IDE which supports ASP.NET Core.
-
+Though the whole project developed and tested with Visual Studio 2019 Community Version and Visual Studio Code, the project can be processed by other IDE which supports ASP.NET Core.
 
 ## Test
-One test project has been added to solution. 
-The test project contains both Unit Test and Integration Test, you have to run Unit Test and Integration Test separately.
+
+Test project ```hihapi.test``` has been added to solution. And the Travis CI has been integrated with this repo.
+Test project ```hihapi.test``` contains both Unit Test and Integration Test, you have to run Unit Test and Integration Test separately. The Travis CI also coverages the unit tests part due to the VM setting is not suit for Identity Server setup.
 
 ### Unit Tests
-To run the unit test:
+
+To run the unit test via command line:
 ```powershell
 dotnet test --filter DisplayName~hihapi.test.UnitTests
 ```
 
 ### Integration Tests
-To run the integration test:
+
+To run the integration test via command line:
 ```powershell
 dotnet test --filter DisplayName~hihapi.test.integrationtests
 ```
