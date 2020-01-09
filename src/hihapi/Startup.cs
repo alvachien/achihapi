@@ -196,6 +196,10 @@ namespace hihapi
                 .Function("PostLoanDocument")
                 .Returns<FinanceDocument>()
                 .Parameter<int>("HomeID");
+            docEntity.Collection
+                .Function("PostAssetBuyDocument")
+                .Returns<FinanceDocument>()
+                .Parameter<int>("HomeID");
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();
@@ -207,8 +211,8 @@ namespace hihapi
                 // and this line to enable OData query option, for example $filter
                 routeBuilder.Select().Expand().Filter().OrderBy().MaxTop(100).Count();
 
-                    routeBuilder.MapODataServiceRoute("ODataRoute", "api", model);
-                });
+                routeBuilder.MapODataServiceRoute("ODataRoute", "api", model);
+            });
 
             app.UseResponseCaching();
         }
