@@ -566,7 +566,6 @@ namespace hihapi.Controllers
             }
             if (createContext == null || createContext.ExtraAsset == null)
                 return BadRequest("No data is inputted");
-
             if (HomeID <= 0)
                 return BadRequest("Not HID inputted");
 
@@ -612,28 +611,29 @@ namespace hihapi.Controllers
             vmAccount.CategoryID = FinanceAccountCategoriesController.AccountCategory_Asset;
             vmAccount.ExtraAsset = new FinanceAccountExtraAS();
             vmAccount.Owner = createContext.AccountOwner;
-            vmAccount.Comment = createContext.accountAsset.Name;
-            vmAccount.ExtraAsset.Name = createContext.accountAsset.Name;
-            vmAccount.ExtraAsset.Comment = createContext.accountAsset.Comment;
-            vmAccount.ExtraAsset.CategoryID = createContext.accountAsset.CategoryID;
+            vmAccount.Comment = createContext.ExtraAsset.Comment;
+            vmAccount.ExtraAsset.Name = createContext.ExtraAsset.Name;
+            vmAccount.ExtraAsset.Comment = createContext.ExtraAsset.Comment;
+            vmAccount.ExtraAsset.CategoryID = createContext.ExtraAsset.CategoryID;
+            vmAccount.ExtraAsset.AccountHeader = vmAccount;
 
             // Construct the Doc.
-            var vmFIDoc = new FinanceDocumentUIViewModel();
-            vmFIDoc.DocType = FinanceDocTypeViewModel.DocType_AssetBuyIn;
-            vmFIDoc.Desp = vm.Desp;
-            vmFIDoc.TranDate = vm.TranDate;
-            vmFIDoc.HID = vm.HID;
-            vmFIDoc.TranCurr = vm.TranCurr;
+            var vmFIDoc = new FinanceDocument();
+            vmFIDoc.DocType = FinanceDocumentType.DocType_AssetBuyIn;
+            vmFIDoc.Desp = createContext.Desp;
+            vmFIDoc.TranDate = createContext.TranDate;
+            vmFIDoc.HomeID = HomeID;
+            vmFIDoc.TranCurr = createContext.TranCurr;
 
             var maxItemID = 0;
-            if (vm.IsLegacy.HasValue && vm.IsLegacy.Value)
+            if (createContext.IsLegacy.HasValue && createContext.IsLegacy.Value)
             {
                 // Legacy account...
             }
             else
             {
                 Decimal totalAmt = 0;
-                foreach (var di in vm.Items)
+                foreach (var di in createContext.Items)
                 {
                     if (di.ItemID <= 0 || di.TranAmount == 0 || di.AccountID <= 0
                         || (di.ControlCenterID <= 0 && di.OrderID <= 0))
@@ -648,221 +648,247 @@ namespace hihapi.Controllers
                         maxItemID = di.ItemID;
                 }
 
-                if (totalAmt != vm.TranAmount)
+                if (totalAmt != createContext.TranAmount)
                     return BadRequest("Amount is not even");
             }
 
-            var nitem = new FinanceDocumentItemUIViewModel();
-            nitem.ItemID = ++maxItemID;
-            nitem.AccountID = -1;
-            nitem.TranAmount = vm.TranAmount;
-            nitem.Desp = vmFIDoc.Desp;
-            nitem.TranType = FinanceTranTypeViewModel.TranType_OpeningAsset;
-            if (vm.ControlCenterID.HasValue)
-                nitem.ControlCenterID = vm.ControlCenterID.Value;
-            if (vm.OrderID.HasValue)
-                nitem.OrderID = vm.OrderID.Value;
-            vmFIDoc.Items.Add(nitem);
-
-            // Update the database
-            SqlConnection conn = null;
-            SqlCommand cmd = null;
-            SqlDataReader reader = null;
-            SqlTransaction tran = null;
-            String queryString = "";
-            Int32 nNewDocID = -1;
-            String strErrMsg = "";
-            HttpStatusCode errorCode = HttpStatusCode.OK;
-
+            // Database update
+            var errorString = "";
+            var errorOccur = false;
+            var origdocid = 0;
+            var assetaccountid = 0;
             try
             {
-                // Basic check again - document level
-                FinanceDocumentController.FinanceDocumentBasicCheck(vmFIDoc);
+                // 1. Create the document
+                var docEntity = _context.FinanceDocument.Add(vmFIDoc);
+                await _context.SaveChangesAsync();
+                origdocid = docEntity.Entity.ID;
 
-                using (conn = new SqlConnection(Startup.DBConnectionString))
-                {
-                    await conn.OpenAsync();
+                // 2, Create the account
+                vmAccount.ExtraAsset.RefenceBuyDocumentID = origdocid;
+                var acntEntity = _context.FinanceAccount.Add(vmAccount);
+                await _context.SaveChangesAsync();
+                assetaccountid = acntEntity.Entity.ID;
 
-                    // Check Home assignment with current user
-                    try
-                    {
-                        HIHAPIUtility.CheckHIDAssignment(conn, vm.HID, usrName);
-                    }
-                    catch (Exception)
-                    {
-                        errorCode = HttpStatusCode.BadRequest;
-                        throw;
-                    }
+                // 3. Update the document by adding one more item
+                var nitem = new FinanceDocumentItem();
+                nitem.ItemID = ++maxItemID;
+                nitem.AccountID = assetaccountid;
+                nitem.TranAmount = createContext.TranAmount;
+                nitem.Desp = vmFIDoc.Desp;
+                nitem.TranType = FinanceTransactionType.TranType_OpeningAsset;
+                if (createContext.ControlCenterID.HasValue)
+                    nitem.ControlCenterID = createContext.ControlCenterID.Value;
+                if (createContext.OrderID.HasValue)
+                    nitem.OrderID = createContext.OrderID.Value;
+                nitem.DocumentHeader = vmFIDoc;
+                docEntity.Entity.Items.Add(nitem);
 
-                    // Perfrom the doc. validation
-                    await FinanceDocumentController.FinanceDocumentBasicValidationAsync(vmFIDoc, conn, -1);
+                docEntity.State = EntityState.Modified;
 
-                    // 0) Start the trasnaction for modifications
-                    tran = conn.BeginTransaction();
+                await _context.SaveChangesAsync();
 
-                    // 1) craete the doc header => nNewDocID
-                    queryString = HIHDBUtility.GetFinDocHeaderInsertString();
-                    cmd = new SqlCommand(queryString, conn)
-                    {
-                        Transaction = tran
-                    };
-
-                    HIHDBUtility.BindFinDocHeaderInsertParameter(cmd, vmFIDoc, usrName);
-                    SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                    idparam.Direction = ParameterDirection.Output;
-
-                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                    nNewDocID = (Int32)idparam.Value;
-                    vmFIDoc.ID = nNewDocID;
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // 2), create the new account => nNewAccountID
-                    queryString = HIHDBUtility.GetFinanceAccountHeaderInsertString();
-
-                    cmd = new SqlCommand(queryString, conn)
-                    {
-                        Transaction = tran
-                    };
-                    HIHDBUtility.BindFinAccountInsertParameter(cmd, vmAccount, usrName);
-                    SqlParameter idparam2 = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
-                    idparam2.Direction = ParameterDirection.Output;
-
-                    nRst = await cmd.ExecuteNonQueryAsync();
-                    vmAccount.ID = (Int32)idparam2.Value;
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // 3) create the Asset part of account
-                    vmAccount.ExtraInfo_AS.AccountID = vmAccount.ID;
-                    vmAccount.ExtraInfo_AS.RefDocForBuy = nNewDocID;
-                    queryString = HIHDBUtility.GetFinanceAccountAssetInsertString();
-                    cmd = new SqlCommand(queryString, conn)
-                    {
-                        Transaction = tran
-                    };
-                    HIHDBUtility.BindFinAccountAssetInsertParameter(cmd, vmAccount.ExtraInfo_AS);
-                    nRst = await cmd.ExecuteNonQueryAsync();
-                    cmd.Dispose();
-                    cmd = null;
-
-                    // 4) create the doc items
-                    foreach (FinanceDocumentItemUIViewModel ivm in vmFIDoc.Items)
-                    {
-                        if (ivm.AccountID == -1)
-                            ivm.AccountID = vmAccount.ID;
-
-                        queryString = HIHDBUtility.GetFinDocItemInsertString();
-                        cmd = new SqlCommand(queryString, conn)
-                        {
-                            Transaction = tran
-                        };
-                        HIHDBUtility.BindFinDocItemInsertParameter(cmd, ivm, nNewDocID);
-
-                        await cmd.ExecuteNonQueryAsync();
-
-                        cmd.Dispose();
-                        cmd = null;
-
-                        // Tags
-                        if (ivm.TagTerms.Count > 0)
-                        {
-                            // Create tags
-                            foreach (var term in ivm.TagTerms)
-                            {
-                                queryString = HIHDBUtility.GetTagInsertString();
-
-                                cmd = new SqlCommand(queryString, conn, tran);
-
-                                HIHDBUtility.BindTagInsertParameter(cmd, vm.HID, HIHTagTypeEnum.FinanceDocumentItem, nNewDocID, term, ivm.ItemID);
-
-                                await cmd.ExecuteNonQueryAsync();
-
-                                cmd.Dispose();
-                                cmd = null;
-                            }
-                        }
-                    }
-
-                    // 5) Do the commit
-                    tran.Commit();
-
-                    // Update the buffer
-                    // Account List
-                    try
-                    {
-                        var cacheKey = String.Format(CacheKeys.FinAccountList, vm.HID, null);
-                        this._cache.Remove(cacheKey);
-                    }
-                    catch (Exception)
-                    {
-                        // Do nothing here.
-                    }
-                    // B.S.
-                    try
-                    {
-                        var cacheKey = String.Format(CacheKeys.FinReportBS, vm.HID);
-                        this._cache.Remove(cacheKey);
-                    }
-                    catch (Exception)
-                    {
-                        // Do nothing here.
-                    }
-                }
+                vmFIDoc = docEntity.Entity;
             }
             catch (Exception exp)
             {
-#if DEBUG
-                System.Diagnostics.Debug.WriteLine(exp.Message);
-#endif
-
-                strErrMsg = exp.Message;
-                if (errorCode == HttpStatusCode.OK)
-                    errorCode = HttpStatusCode.InternalServerError;
-
-                if (tran != null)
-                    tran.Rollback();
+                errorOccur = true;
+                errorString = exp.Message;
             }
             finally
             {
-                if (tran != null)
+                // Remove new created object
+                if (errorOccur)
                 {
-                    tran.Dispose();
-                    tran = null;
-                }
-                if (reader != null)
-                {
-                    reader.Dispose();
-                    reader = null;
-                }
-                if (cmd != null)
-                {
-                    cmd.Dispose();
-                    cmd = null;
-                }
-                if (conn != null)
-                {
-                    conn.Dispose();
-                    conn = null;
+                    try
+                    {
+                        if (origdocid > 0)
+                        {
+                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + origdocid.ToString());
+                        }
+                        if (assetaccountid > 0)
+                        {
+                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = " + assetaccountid.ToString());
+                        }
+                    }
+                    catch (Exception exp2)
+                    {
+                        System.Diagnostics.Debug.WriteLine(exp2.Message);
+                    }
                 }
             }
 
-            if (errorCode != HttpStatusCode.OK)
+            if (errorOccur)
             {
-                switch (errorCode)
+                return BadRequest(errorString);
+            }
+
+            return Created(vmFIDoc);
+        }
+        
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> PostAssetSellDocument(int HomeID, [FromBody]FinanceAssetSellDocumentCreateContext createContext)
+        {
+            if (!ModelState.IsValid)
+            {
+#if DEBUG
+                foreach (var value in ModelState.Values)
                 {
-                    case HttpStatusCode.Unauthorized:
-                        return Unauthorized();
-                    case HttpStatusCode.NotFound:
-                        return NotFound();
-                    case HttpStatusCode.BadRequest:
-                        return BadRequest(strErrMsg);
-                    default:
-                        return StatusCode(500, strErrMsg);
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+#endif
+
+                return BadRequest("Model State is Invalid");
+            }
+            if (HomeID <= 0)
+                return BadRequest("Not HID inputted");
+            if (createContext.AssetAccountID <= 0)
+                return BadRequest("Asset Account is invalid");
+            if (createContext.TranAmount <= 0)
+                return BadRequest("Amount is less than zero");
+            if (createContext.Items.Count <= 0)
+                return BadRequest("No items inputted");
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == HomeID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Construct the Doc.
+            var vmFIDoc = new FinanceDocument();
+            vmFIDoc.DocType = FinanceDocumentType.DocType_AssetSoldOut;
+            vmFIDoc.Desp = createContext.Desp;
+            vmFIDoc.TranDate = createContext.TranDate;
+            vmFIDoc.HomeID = HomeID;
+            vmFIDoc.TranCurr = createContext.TranCurr;
+            Decimal totalAmt = 0;
+            var maxItemID = 0;
+            foreach (var di in createContext.Items)
+            {
+                if (di.ItemID <= 0 || di.TranAmount == 0 || di.AccountID <= 0
+                    || di.TranType != FinanceTransactionType.TranType_AssetSoldoutIncome
+                    || (di.ControlCenterID <= 0 && di.OrderID <= 0))
+                    return BadRequest("Invalid input data in items!");
+
+                totalAmt += di.TranAmount;
+                vmFIDoc.Items.Add(di);
+
+                if (maxItemID < di.ItemID)
+                    maxItemID = di.ItemID;
+            }
+            if (Decimal.Compare(totalAmt, createContext.TranAmount) != 0)
+                return BadRequest("Amount is not even");
+
+            // Check 1: check account is a valid asset?
+            
+
+            // Check 2: check the inputted date is valid > must be the later than all existing transactions;
+
+            var nitem = new FinanceDocumentItem();
+            nitem.ItemID = ++maxItemID;
+            nitem.AccountID = createContext.AssetAccountID;
+            nitem.TranAmount = createContext.TranAmount;
+            nitem.Desp = vmFIDoc.Desp;
+            nitem.TranType = FinanceTransactionType.TranType_AssetSoldout;
+            if (createContext.ControlCenterID.HasValue)
+                nitem.ControlCenterID = createContext.ControlCenterID.Value;
+            if (createContext.OrderID.HasValue)
+                nitem.OrderID = createContext.OrderID.Value;
+            nitem.DocumentHeader = vmFIDoc;
+            vmFIDoc.Items.Add(nitem);
+
+
+            // Database update
+            var errorString = "";
+            var errorOccur = false;
+            var origdocid = 0;
+            try
+            {
+                // 1. Create the document
+                var docEntity = _context.FinanceDocument.Add(vmFIDoc);
+                await _context.SaveChangesAsync();
+                origdocid = docEntity.Entity.ID;
+
+                // 2, Create the account
+                vmAccount.ExtraAsset.RefenceBuyDocumentID = origdocid;
+                var acntEntity = _context.FinanceAccount.Add(vmAccount);
+                await _context.SaveChangesAsync();
+                assetaccountid = acntEntity.Entity.ID;
+
+                // 3. Update the document by adding one more item
+                var nitem = new FinanceDocumentItem();
+                nitem.ItemID = ++maxItemID;
+                nitem.AccountID = assetaccountid;
+                nitem.TranAmount = createContext.TranAmount;
+                nitem.Desp = vmFIDoc.Desp;
+                nitem.TranType = FinanceTransactionType.TranType_OpeningAsset;
+                if (createContext.ControlCenterID.HasValue)
+                    nitem.ControlCenterID = createContext.ControlCenterID.Value;
+                if (createContext.OrderID.HasValue)
+                    nitem.OrderID = createContext.OrderID.Value;
+                nitem.DocumentHeader = vmFIDoc;
+                docEntity.Entity.Items.Add(nitem);
+
+                docEntity.State = EntityState.Modified;
+
+                await _context.SaveChangesAsync();
+
+                vmFIDoc = docEntity.Entity;
+            }
+            catch (Exception exp)
+            {
+                errorOccur = true;
+                errorString = exp.Message;
+            }
+            finally
+            {
+                // Remove new created object
+                if (errorOccur)
+                {
+                    try
+                    {
+                        if (origdocid > 0)
+                        {
+                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + origdocid.ToString());
+                        }
+                        if (assetaccountid > 0)
+                        {
+                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = " + assetaccountid.ToString());
+                        }
+                    }
+                    catch (Exception exp2)
+                    {
+                        System.Diagnostics.Debug.WriteLine(exp2.Message);
+                    }
                 }
             }
 
-            return Created(createContext.DocumentInfo);
+            if (errorOccur)
+            {
+                return BadRequest(errorString);
+            }
+
+            return Created(vmFIDoc);
         }
     }
 }

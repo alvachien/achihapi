@@ -200,6 +200,10 @@ namespace hihapi
                 .Function("PostAssetBuyDocument")
                 .Returns<FinanceDocument>()
                 .Parameter<int>("HomeID");
+            docEntity.Collection
+                .Function("PostAssetSellDocument")
+                .Returns<FinanceDocument>()
+                .Parameter<int>("HomeID");
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();
