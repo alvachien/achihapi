@@ -27,7 +27,8 @@ namespace hihapi.test
                 }
 
                 // Create tables and views
-                DataSetupUtility.CreateDatabaseTables(context.Database);                
+                DataSetupUtility.CreateDatabaseTables(context.Database);
+                DataSetupUtility.CreateDatabaseViews(context.Database);
 
                 context.Database.EnsureCreated();
 

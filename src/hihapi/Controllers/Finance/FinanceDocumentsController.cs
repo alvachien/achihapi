@@ -818,6 +818,11 @@ namespace hihapi.Controllers
                 return BadRequest("Tran. data is invalid");
 
             // Check 3. Fetch current balance
+            var query3 = (from acntbal in this._context.FinanceReportAccountBalance
+                         where acntbal.AccountID == createContext.AssetAccountID
+                         select acntbal.Balance).First();
+            if (query3 <= 0)
+                return BadRequest("Balance is less than zero");
 
             var nitem = new FinanceDocumentItem();
             nitem.ItemID = ++maxItemID;
@@ -833,6 +838,37 @@ namespace hihapi.Controllers
             vmFIDoc.Items.Add(nitem);
 
 
+            var ncmprst = Decimal.Compare(query3, createContext.TranAmount);
+            if (ncmprst > 0)
+            {
+                var nitem2 = new FinanceDocumentItem();
+                nitem2.ItemID = ++maxItemID;
+                nitem2.AccountID = createContext.AssetAccountID;
+                nitem2.TranAmount = Decimal.Subtract(query3, createContext.TranAmount);
+                nitem2.Desp = vmFIDoc.Desp;
+                nitem2.TranType = FinanceTransactionType.TranType_AssetValueDecrease;
+                if (createContext.ControlCenterID.HasValue)
+                    nitem2.ControlCenterID = createContext.ControlCenterID.Value;
+                if (createContext.OrderID.HasValue)
+                    nitem2.OrderID = createContext.OrderID.Value;
+                nitem.DocumentHeader = vmFIDoc;
+                vmFIDoc.Items.Add(nitem2);
+            }
+            else if (ncmprst < 0)
+            {
+                var nitem2 = new FinanceDocumentItem();
+                nitem2.ItemID = ++maxItemID;
+                nitem2.AccountID = createContext.AssetAccountID;
+                nitem2.TranAmount = Decimal.Subtract(createContext.TranAmount, query3);
+                nitem2.Desp = vmFIDoc.Desp;
+                nitem2.TranType = FinanceTransactionType.TranType_AssetValueIncrease;
+                if (createContext.ControlCenterID.HasValue)
+                    nitem2.ControlCenterID = createContext.ControlCenterID.Value;
+                if (createContext.OrderID.HasValue)
+                    nitem2.OrderID = createContext.OrderID.Value;
+                nitem.DocumentHeader = vmFIDoc;
+                vmFIDoc.Items.Add(nitem2);
+            }
             // Database update
             var errorString = "";
             var errorOccur = false;
@@ -843,30 +879,6 @@ namespace hihapi.Controllers
                 var docEntity = _context.FinanceDocument.Add(vmFIDoc);
                 await _context.SaveChangesAsync();
                 origdocid = docEntity.Entity.ID;
-
-                // 2, Create the account
-                //vmAccount.ExtraAsset.RefenceBuyDocumentID = origdocid;
-                //var acntEntity = _context.FinanceAccount.Add(vmAccount);
-                //await _context.SaveChangesAsync();
-                //assetaccountid = acntEntity.Entity.ID;
-
-                //// 3. Update the document by adding one more item
-                //var nitem = new FinanceDocumentItem();
-                //nitem.ItemID = ++maxItemID;
-                //nitem.AccountID = assetaccountid;
-                //nitem.TranAmount = createContext.TranAmount;
-                //nitem.Desp = vmFIDoc.Desp;
-                //nitem.TranType = FinanceTransactionType.TranType_OpeningAsset;
-                //if (createContext.ControlCenterID.HasValue)
-                //    nitem.ControlCenterID = createContext.ControlCenterID.Value;
-                //if (createContext.OrderID.HasValue)
-                //    nitem.OrderID = createContext.OrderID.Value;
-                //nitem.DocumentHeader = vmFIDoc;
-                //docEntity.Entity.Items.Add(nitem);
-
-                //docEntity.State = EntityState.Modified;
-
-                //await _context.SaveChangesAsync();
 
                 vmFIDoc = docEntity.Entity;
             }
@@ -886,10 +898,6 @@ namespace hihapi.Controllers
                         {
                             _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + origdocid.ToString());
                         }
-                        //if (assetaccountid > 0)
-                        //{
-                        //    _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = " + assetaccountid.ToString());
-                        //}
                     }
                     catch (Exception exp2)
                     {

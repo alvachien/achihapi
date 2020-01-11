@@ -358,9 +358,156 @@ namespace hihapi.test
                 )");
         }
 
-        public static void CreateDatabaseViews()
+        public static void CreateDatabaseViews(DatabaseFacade database)
         {
+            // View: 
+            database.ExecuteSqlRaw(@"CREATE VIEW V_FIN_DOCUMENT_ITEM AS 
+                SELECT 
+                    T_FIN_DOCUMENT_ITEM.DOCID,
+                    T_FIN_DOCUMENT_ITEM.ITEMID,
+		            T_FIN_DOCUMENT.HID,
+		            T_FIN_DOCUMENT.TRANDATE,
+		            T_FIN_DOCUMENT.DESP AS DOCDESP,
+                    T_FIN_DOCUMENT_ITEM.ACCOUNTID,
+                    T_FIN_DOCUMENT_ITEM.TRANTYPE,
+		            T_FIN_TRAN_TYPE.NAME AS TRANTYPENAME,
+		            T_FIN_TRAN_TYPE.EXPENSE AS TRANTYPE_EXP,
+		            T_FIN_DOCUMENT_ITEM.USECURR2,
+                    (CASE WHEN (T_FIN_DOCUMENT_ITEM.USECURR2 IS NULL OR T_FIN_DOCUMENT_ITEM.USECURR2 = '') THEN (T_FIN_DOCUMENT.TRANCURR)
+                    ELSE (T_FIN_DOCUMENT.TRANCURR2)
+                    END) AS TRANCURR,
+                    T_FIN_DOCUMENT_ITEM.TRANAMOUNT AS TRANAMOUNT_ORG,
+                    (CASE
+                        WHEN (T_FIN_TRAN_TYPE.EXPENSE = 1) THEN (T_FIN_DOCUMENT_ITEM.TRANAMOUNT * -1)
+                        WHEN (T_FIN_TRAN_TYPE.EXPENSE = 0) THEN T_FIN_DOCUMENT_ITEM.TRANAMOUNT
+                    END) AS TRANAMOUNT,
+                    (CASE WHEN (T_FIN_DOCUMENT_ITEM.USECURR2 IS NULL OR T_FIN_DOCUMENT_ITEM.USECURR2 = '') 
+			            THEN (
+                            CASE WHEN (T_FIN_DOCUMENT.EXGRATE IS NOT NULL) THEN (
+					            CASE
+						            WHEN (T_FIN_TRAN_TYPE.EXPENSE = 1) THEN (T_FIN_DOCUMENT_ITEM.TRANAMOUNT * T_FIN_DOCUMENT.EXGRATE / 100 * -1)
+						            WHEN (T_FIN_TRAN_TYPE.EXPENSE = 0) THEN T_FIN_DOCUMENT_ITEM.TRANAMOUNT * T_FIN_DOCUMENT.EXGRATE / 100
+					            END)
+                            ELSE (
+                            CASE
+					            WHEN (T_FIN_TRAN_TYPE.EXPENSE = 1) THEN (T_FIN_DOCUMENT_ITEM.TRANAMOUNT * -1)
+					            WHEN (T_FIN_TRAN_TYPE.EXPENSE = 0) THEN T_FIN_DOCUMENT_ITEM.TRANAMOUNT
+				            END)
+                            END)
+                    ELSE ( CASE WHEN (T_FIN_DOCUMENT.EXGRATE2 IS NOT NULL) THEN (
+					            CASE
+						            WHEN (T_FIN_TRAN_TYPE.EXPENSE = 1) THEN (T_FIN_DOCUMENT_ITEM.TRANAMOUNT * T_FIN_DOCUMENT.EXGRATE2 / 100 * -1)
+						            WHEN (T_FIN_TRAN_TYPE.EXPENSE = 0) THEN T_FIN_DOCUMENT_ITEM.TRANAMOUNT * T_FIN_DOCUMENT.EXGRATE2 / 100
+					            END)
+                            ELSE (
+					            CASE
+						            WHEN (T_FIN_TRAN_TYPE.EXPENSE = 1) THEN (T_FIN_DOCUMENT_ITEM.TRANAMOUNT * -1)
+						            WHEN (T_FIN_TRAN_TYPE.EXPENSE = 0) THEN T_FIN_DOCUMENT_ITEM.TRANAMOUNT
+					            END)
+                            END)
+                    END) AS TRANAMOUNT_LC,
+                    T_FIN_DOCUMENT_ITEM.CONTROLCENTERID,
+                    T_FIN_DOCUMENT_ITEM.ORDERID,
+                    T_FIN_DOCUMENT_ITEM.DESP
+                FROM
+                    T_FIN_DOCUMENT_ITEM
+		            JOIN T_FIN_TRAN_TYPE ON T_FIN_DOCUMENT_ITEM.TRANTYPE = T_FIN_TRAN_TYPE.ID
+                    LEFT OUTER JOIN T_FIN_DOCUMENT ON T_FIN_DOCUMENT_ITEM.DOCID = T_FIN_DOCUMENT.ID");
 
+            // View
+            database.ExecuteSqlRaw(@"CREATE VIEW V_FIN_DOCUMENT_ITEM1
+                AS
+                SELECT
+                        V_FIN_DOCUMENT_ITEM.DOCID,
+                        V_FIN_DOCUMENT_ITEM.ITEMID,
+                        V_FIN_DOCUMENT_ITEM.HID,
+                        V_FIN_DOCUMENT_ITEM.TRANDATE,
+                        V_FIN_DOCUMENT_ITEM.DOCDESP,
+                        V_FIN_DOCUMENT_ITEM.ACCOUNTID,
+                        T_FIN_ACCOUNT.NAME AS ACCOUNTNAME,
+                        V_FIN_DOCUMENT_ITEM.TRANTYPE,
+                        V_FIN_DOCUMENT_ITEM.TRANTYPENAME,
+                        V_FIN_DOCUMENT_ITEM.TRANTYPE_EXP,
+                        V_FIN_DOCUMENT_ITEM.USECURR2,
+                        V_FIN_DOCUMENT_ITEM.TRANCURR,
+                        V_FIN_DOCUMENT_ITEM.TRANAMOUNT_ORG,
+                        V_FIN_DOCUMENT_ITEM.TRANAMOUNT,
+                        V_FIN_DOCUMENT_ITEM.TRANAMOUNT_LC,
+                        V_FIN_DOCUMENT_ITEM.CONTROLCENTERID,
+                        T_FIN_CONTROLCENTER.NAME AS CONTROLCENTERNAME,
+                        V_FIN_DOCUMENT_ITEM.ORDERID,
+                        T_FIN_ORDER.NAME AS ORDERNAME,
+                        V_FIN_DOCUMENT_ITEM.DESP
+                    FROM
+                        V_FIN_DOCUMENT_ITEM
+                        LEFT OUTER JOIN T_FIN_ACCOUNT ON V_FIN_DOCUMENT_ITEM.ACCOUNTID = T_FIN_ACCOUNT.ID
+                        LEFT OUTER JOIN T_FIN_CONTROLCENTER ON V_FIN_DOCUMENT_ITEM.CONTROLCENTERID = T_FIN_CONTROLCENTER.ID
+                        LEFT OUTER JOIN T_FIN_ORDER ON V_FIN_DOCUMENT_ITEM.ORDERID = T_FIN_ORDER.ID");
+
+            // View
+            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_grp_acnt
+                AS
+                SELECT hid,
+                       accountid,
+		               round(sum(tranamount_lc), 2) AS balance_lc
+                    from
+                        v_fin_document_item
+		                group by hid, accountid");
+
+            // View
+            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_grp_acnt_tranexp
+                AS
+                SELECT hid,
+                       accountid,
+		               TRANTYPE_EXP,
+		               round(sum(tranamount_lc), 2) AS balance_lc
+                    from
+                        v_fin_document_item
+		                group by hid, accountid, TRANTYPE_EXP");
+
+            // View
+            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_report_bs
+                AS 
+                SELECT tab_a.hid,
+	                   tab_a.accountid,
+	                   tab_a.ACCOUNTNAME,
+	                   tab_a.ACCOUNTCTGYID,
+	                   tab_a.ACCOUNTCTGYNAME,
+                       tab_a.balance_lc AS debit_balance,
+                       tab_b.balance_lc AS credit_balance,
+                       (tab_a.balance_lc - tab_b.balance_lc) AS balance
+                 FROM 
+	                (SELECT 
+		                t_fin_account.ID AS ACCOUNTID,
+		                t_fin_account.HID AS HID,
+		                t_fin_account.NAME AS ACCOUNTNAME,
+		                t_fin_account_ctgy.ID AS ACCOUNTCTGYID,
+		                t_fin_account_ctgy.NAME AS ACCOUNTCTGYNAME,
+		                (case
+                            when (v_fin_grp_acnt_tranexp.balance_lc is not null) then v_fin_grp_acnt_tranexp.balance_lc
+                            else 0.0
+                        end) AS balance_lc
+	                FROM t_fin_account
+	                JOIN t_fin_account_ctgy ON t_fin_account.CTGYID = t_fin_account_ctgy.ID
+	                LEFT OUTER JOIN v_fin_grp_acnt_tranexp ON t_fin_account.ID = v_fin_grp_acnt_tranexp.accountid
+		                AND v_fin_grp_acnt_tranexp.trantype_exp = 0 ) tab_a
+
+	                JOIN 
+
+	                ( SELECT t_fin_account.ID AS ACCOUNTID,
+		                t_fin_account.NAME AS ACCOUNTNAME,
+		                t_fin_account_ctgy.ID AS ACCOUNTCTGYID,
+		                t_fin_account_ctgy.NAME AS ACCOUNTCTGYNAME,
+		                (case
+                            when (v_fin_grp_acnt_tranexp.balance_lc is not null) then v_fin_grp_acnt_tranexp.balance_lc * -1
+                            else 0.0
+                        end) AS balance_lc
+	                FROM t_fin_account
+	                JOIN t_fin_account_ctgy ON t_fin_account.CTGYID = t_fin_account_ctgy.ID
+	                LEFT OUTER JOIN v_fin_grp_acnt_tranexp ON t_fin_account.ID = v_fin_grp_acnt_tranexp.accountid
+		                AND v_fin_grp_acnt_tranexp.trantype_exp = 1 ) tab_b
+
+	                ON tab_a.ACCOUNTID = tab_b.ACCOUNTID");
         }
 
         public static void InitializeSystemTables(hihDataContext db)

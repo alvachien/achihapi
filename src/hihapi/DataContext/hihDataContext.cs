@@ -38,6 +38,7 @@ namespace hihapi.Models
         public DbSet<FinanceControlCenter> FinanceControlCenter { get; set; }
         public DbSet<FinanceOrder> FinanceOrder { get; set; }
         public DbSet<FinanceOrderSRule> FinanceOrderSRule { get; set; }
+        public DbSet<FinanceReportAccountBalance> FinanceReportAccountBalance { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -384,6 +385,12 @@ namespace hihapi.Models
                     .WithMany(p => p.SRule)
                     .HasForeignKey(d => d.OrderID)
                     .HasConstraintName("FK_t_fin_order_srule_order");
+            });
+
+            modelBuilder.Entity<FinanceReportAccountBalance>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("V_FIN_REPORT_BS");
             });
         }
     }
