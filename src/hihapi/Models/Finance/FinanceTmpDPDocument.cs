@@ -39,7 +39,7 @@ namespace hihapi.Models
         [Column("CONTROLCENTERID", TypeName="INT")]
         public Int32? ControlCenterID { get; set; }
 
-        [Column("ORDER", TypeName="INT")]
+        [Column("ORDERID", TypeName="INT")]
         public Int32? OrderID { get; set; }
         
         [StringLength(45)]

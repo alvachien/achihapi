@@ -30,7 +30,7 @@ CREATE TABLE [dbo].[t_homemem] (
     [UPDATEDBY] NVARCHAR (50) NULL,
     [UPDATEDAT] DATE          NULL,
     CONSTRAINT [PK_t_homemem] PRIMARY KEY CLUSTERED ([HID] ASC, [USER] ASC),
-    CONSTRAINT [UK_t_homemem_USER] UNIQUE NONCLUSTERED ([HID] ASC, [USER] ASC),
+--    CONSTRAINT [UK_t_homemem_USER] UNIQUE NONCLUSTERED ([HID] ASC, [USER] ASC),
     CONSTRAINT [FK_t_homemem_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
@@ -484,7 +484,7 @@ CREATE TABLE [dbo].[t_fin_account_ext_loan] (
     [TOTALMONTH]    SMALLINT        NULL,
     [REFDOCID]      INT             NOT NULL,
     [OTHERS]        NVARCHAR (100)  NULL,
-    [EndDate]       DATE            DEFAULT (getdate()) NULL,
+    [ENDDATE]       DATE            DEFAULT (getdate()) NULL,
     [PAYINGACCOUNT] INT             NULL,
     [PARTNER]       NVARCHAR (50)   NULL,
     CONSTRAINT [PK_t_fin_account_ext_loan] PRIMARY KEY CLUSTERED ([ACCOUNTID] ASC),

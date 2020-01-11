@@ -72,7 +72,7 @@ namespace hihapi.Models
             return true;
         }
 
-        public HomeDefine CurrentHome { get; set; }
+        // public HomeDefine CurrentHome { get; set; }
         public FinanceAccountExtraDP ExtraDP { get; set; }
         // public FinanceAccountExtraLoan ExtraLoan { get; set; }
         public FinanceAccountExtraAS ExtraAsset { get; set; }

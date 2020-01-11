@@ -100,9 +100,10 @@ namespace hihapi.test
 	            HOST nvarchar(50) NOT NULL,
 	            BASECURR nvarchar(5) NOT NULL,
 	            CREATEDBY nvarchar(50) NOT NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(50) NULL,
-	            UPDATEDAT date NULL )"
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE,
+                CONSTRAINT UK_t_homedef_NAME UNIQUE (NAME) )"
             );
 
             // Home members
@@ -112,12 +113,13 @@ namespace hihapi.test
 	            DISPLAYAS nvarchar(50) NULL,
 	            RELT smallint NOT NULL,
 	            CREATEDBY nvarchar(50) NOT NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(50) NULL,
-	            UPDATEDAT date NULL,
-                PRIMARY KEY(HID, USER),
-                FOREIGN KEY(HID) REFERENCES T_HOMEDEF(ID) )"
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE,
+                CONSTRAINT PK_t_homemem PRIMARY KEY (HID, USER),
+                CONSTRAINT FK_t_homemem_HID FOREIGN KEY(HID) REFERENCES T_HOMEDEF(ID) ON DELETE CASCADE ON UPDATE CASCADE )"
             );
+            // Home message - TBD
 
             // Currency
             database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_CURRENCY (
@@ -125,9 +127,9 @@ namespace hihapi.test
 	            NAME nvarchar(45) NOT NULL,
 	            SYMBOL nvarchar(30) NULL,
 	            CREATEDBY nvarchar(40) NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(40) NULL,
-	            UPDATEDAT date NULL )");
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE )");
 
             // Language
             database.ExecuteSqlRaw(@"CREATE TABLE t_language (
@@ -138,19 +140,20 @@ namespace hihapi.test
 	            APPFLAG bit NULL )");
 
             // Finance account category
-            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_account_ctgy (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_ACCOUNT_CTGY (
 	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
 	            HID int NULL,
 	            NAME nvarchar(30) NOT NULL,
 	            ASSETFLAG bit NOT NULL DEFAULT 1,
 	            COMMENT nvarchar(45) NULL,
 	            CREATEDBY nvarchar(40) NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(40) NULL,
-	            UPDATEDAT date NULL )");
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE
+                )");
 
             // Finance account
-            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_account (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_ACCOUNT (
 	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
 	            HID int NOT NULL,
 	            CTGYID int NOT NULL,
@@ -159,12 +162,13 @@ namespace hihapi.test
 	            OWNER nvarchar(50) NULL,
 	            STATUS tinyint NULL,
 	            CREATEDBY nvarchar(50) NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(50) NULL,
-	            UPDATEDAT date NULL )");
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE
+                )");
 
             // Finance account: DP
-            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_account_ext_dp (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_ACCOUNT_EXT_DP (
 	            ACCOUNTID int PRIMARY KEY NOT NULL,
 	            DIRECT bit NOT NULL,
 	            STARTDATE date NOT NULL,
@@ -173,7 +177,7 @@ namespace hihapi.test
 	            REFDOCID int NOT NULL,
 	            DEFRRDAYS nvarchar(100) NULL,
 	            COMMENT nvarchar(45) NULL, 
-                FOREIGN KEY(ACCOUNTID) REFERENCES t_fin_account(ID)
+                CONSTRAINT FK_t_fin_account_ext_dp_id FOREIGN KEY(ACCOUNTID) REFERENCES t_fin_account(ID) ON DELETE CASCADE ON UPDATE CASCADE
                 ) "
             );
 
@@ -186,9 +190,9 @@ namespace hihapi.test
 	            COMMENT nvarchar(45) NULL,
 	            OWNER nvarchar(40) NULL,
 	            CREATEDBY nvarchar(40) NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(40) NULL,
-	            UPDATEDAT date NULL )");
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE )");
 
             // Finance doc. type
             database.ExecuteSqlRaw(@"CREATE TABLE t_fin_doc_type (
@@ -197,9 +201,9 @@ namespace hihapi.test
 	            NAME nvarchar(30) NOT NULL,
 	            COMMENT nvarchar(45) NULL,
 	            CREATEDBY nvarchar(40) NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(40) NULL,
-	            UPDATEDAT date NULL )"
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE )"
             );
 
             // Document
@@ -216,9 +220,9 @@ namespace hihapi.test
 	            TRANCURR2 nvarchar(5) NULL,
 	            EXGRATE2 decimal(17, 4) NULL,
 	            CREATEDBY nvarchar(40) NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(40) NULL,
-	            UPDATEDAT date NULL )");
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE )");
 
             // Document Item
             database.ExecuteSqlRaw(@"CREATE TABLE t_fin_document_item (
@@ -231,7 +235,9 @@ namespace hihapi.test
 	            CONTROLCENTERID int NULL,
 	            ORDERID int NULL,
 	            DESP nvarchar(45) NULL,
-                PRIMARY KEY(DOCID, ITEMID) )");
+                CONSTRAINT PK_t_fin_document_item PRIMARY KEY(DOCID, ITEMID),
+                CONSTRAINT FK_t_fin_document_header FOREIGN KEY (DOCID) REFERENCES t_fin_document ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+                )");
 
             // Order
             database.ExecuteSqlRaw(@"CREATE TABLE t_fin_order (
@@ -242,9 +248,9 @@ namespace hihapi.test
 	            VALID_TO date NOT NULL,
 	            COMMENT nvarchar(45) NULL,
 	            CREATEDBY nvarchar(40) NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(40) NULL,
-	            UPDATEDAT date NULL )");
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE )");
 
             // Order Srule
             database.ExecuteSqlRaw(@"CREATE TABLE t_fin_order_srule (
@@ -253,7 +259,8 @@ namespace hihapi.test
 	            CONTROLCENTERID int NOT NULL,
 	            PRECENT int NOT NULL,
 	            COMMENT nvarchar(45) NULL,
-                PRIMARY KEY(ORDID, RULEID)
+                CONSTRAINT PK_t_fin_order PRIMARY KEY(ORDID, RULEID),
+                CONSTRAINT FK_t_fin_order_srule_order FOREIGN KEY (ORDID) REFERENCES t_fin_order ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
                 )");
 
             // Template DP
@@ -269,9 +276,10 @@ namespace hihapi.test
 	            ORDERID int NULL,
 	            DESP nvarchar(45) NULL,
 	            CREATEDBY nvarchar(40) NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(40) NULL,
-	            UPDATEDAT date NULL )");
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE
+                )");
 
             // Tran. type
             database.ExecuteSqlRaw(@"CREATE TABLE t_fin_tran_type (
@@ -282,9 +290,9 @@ namespace hihapi.test
 	            PARID int NULL,
 	            COMMENT nvarchar(45) NULL,
 	            CREATEDBY nvarchar(40) NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(40) NULL,
-	            UPDATEDAT date NULL )");
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE )");
 
             // Asset category
             database.ExecuteSqlRaw(@"CREATE TABLE t_fin_asset_ctgy (
@@ -293,31 +301,36 @@ namespace hihapi.test
 	            NAME nvarchar(50) NOT NULL,
 	            DESP nvarchar(50) NULL,
 	            CREATEDBY nvarchar(40) NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(40) NULL,
-	            UPDATEDAT date NULL )");
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE )");
 
             // Account Extra Asset
             database.ExecuteSqlRaw(@"CREATE TABLE t_fin_account_ext_as (
-	            ACCOUNTID int PRIMARY KEY NOT NULL,
-	            CTGYID int NOT NULL,
-	            NAME nvarchar(50) NOT NULL,
-	            REFDOC_BUY int NOT NULL,
-	            COMMENT nvarchar(100) NULL,
-	            REFDOC_SOLD int NULL,
-                FOREIGN KEY(ACCOUNTID) REFERENCES t_fin_account(ID) )");
+                ACCOUNTID   INT            NOT NULL,
+                CTGYID      INT            NOT NULL,
+                NAME        NVARCHAR (50)  NOT NULL,
+                REFDOC_BUY  INT            NOT NULL,
+                COMMENT     NVARCHAR (100) NULL,
+                REFDOC_SOLD INT            NULL,
+                CONSTRAINT FK_t_fin_account_ext_as_ACNTID FOREIGN KEY (ACCOUNTID) REFERENCES t_fin_account (ID) ON DELETE CASCADE ON UPDATE CASCADE
+                )");
 
             // Account Extra Loan
             database.ExecuteSqlRaw(@"CREATE TABLE t_fin_account_ext_loan (
-	            ACCOUNTID int PRIMARY KEY NOT NULL,
-	            STARTDATE datetime NOT NULL,
-	            ANNUALRATE decimal(17, 2) NULL,
-	            INTERESTFREE bit NULL,
-	            REPAYMETHOD tinyint NULL,
-	            TOTALMONTH smallint NULL,
-	            REFDOCID int NOT NULL,
-	            OTHERS nvarchar(100) NULL,
-                FOREIGN KEY(ACCOUNTID) REFERENCES t_fin_account(ID) )");
+                ACCOUNTID     INT             NOT NULL,
+                STARTDATE     DATETIME        NOT NULL,
+                ANNUALRATE    DECIMAL (17, 2) NULL,
+                INTERESTFREE  BIT             NULL,
+                REPAYMETHOD   TINYINT         NULL,
+                TOTALMONTH    SMALLINT        NULL,
+                REFDOCID      INT             NOT NULL,
+                OTHERS        NVARCHAR (100)  NULL,
+                ENDDATE       DATE            DEFAULT CURRENT_DATE,
+                PAYINGACCOUNT INT             NULL,
+                PARTNER       NVARCHAR (50)   NULL,
+                CONSTRAINT FK_t_fin_account_ext_loan_ID FOREIGN KEY (ACCOUNTID) REFERENCES t_fin_account (ID) ON DELETE CASCADE ON UPDATE CASCADE
+                )");
 
             // Template Loan
             database.ExecuteSqlRaw(@"CREATE TABLE t_fin_tmpdoc_loan (
@@ -332,15 +345,17 @@ namespace hihapi.test
 	            ORDERID int NULL,
 	            DESP nvarchar(45) NULL,
 	            CREATEDBY nvarchar(40) NULL,
-	            CREATEDAT date NULL,
+	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(40) NULL,
-	            UPDATEDAT date NULL )");
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE 
+                )");
 
             // DB version
             database.ExecuteSqlRaw(@"CREATE TABLE T_DBVERSION (
                 VersionID    INT      PRIMARY KEY NOT NULL,
                 ReleasedDate DATETIME NOT NULL,
-                AppliedDate  DATETIME NOT NULL )");
+                AppliedDate  DATETIME NOT NULL
+                )");
         }
 
         public static void CreateDatabaseViews()
@@ -421,28 +436,32 @@ namespace hihapi.test
                 HomeID = Home1ID,
                 DisplayAs = "User A",
                 Relation = HomeMemberRelationType.Self,
-                User = UserA
+                User = UserA,
+                Createdby = UserA
             });
             HomeMembers.Add(new HomeMember()
             {
                 HomeID = Home1ID,
                 DisplayAs = "User B",
                 Relation = HomeMemberRelationType.Couple,
-                User = UserB
+                User = UserB,
+                Createdby = UserA
             });
             HomeMembers.Add(new HomeMember()
             {
                 HomeID = Home1ID,
                 DisplayAs = "User C",
                 Relation = HomeMemberRelationType.Child,
-                User = UserC
+                User = UserC,
+                Createdby = UserA
             });
             HomeMembers.Add(new HomeMember()
             {
                 HomeID = Home1ID,
                 DisplayAs = "User D",
                 Relation = HomeMemberRelationType.Child,
-                User = UserD
+                User = UserD,
+                Createdby = UserA
             });
 
             // Home 2
@@ -460,7 +479,8 @@ namespace hihapi.test
                 HomeID = Home2ID,
                 DisplayAs = "User B",
                 Relation = HomeMemberRelationType.Self,
-                User = UserB
+                User = UserB,
+                Createdby = UserB
             });
 
             // Home 3
@@ -479,14 +499,16 @@ namespace hihapi.test
                 HomeID = Home3ID,
                 DisplayAs = "User A",
                 Relation = HomeMemberRelationType.Self,
-                User = UserA
+                User = UserA,
+                Createdby = UserA
             });
             HomeMembers.Add(new HomeMember()
             {
                 HomeID = Home3ID,
                 DisplayAs = "User B",
                 Relation = HomeMemberRelationType.Couple,
-                User = UserB
+                User = UserB,
+                Createdby = UserA
             });
 
             // Home 4
@@ -504,7 +526,8 @@ namespace hihapi.test
                 HomeID = Home4ID,
                 DisplayAs = "User C",
                 Relation = HomeMemberRelationType.Self,
-                User = UserC
+                User = UserC,
+                Createdby = UserC
             });
 
             // Home 5
@@ -522,7 +545,8 @@ namespace hihapi.test
                 HomeID = Home5ID,
                 DisplayAs = "User D",
                 Relation = HomeMemberRelationType.Self,
-                User = UserD
+                User = UserD,
+                Createdby = UserD
             });
         }
         private static void SetupTable_DBVersion()
