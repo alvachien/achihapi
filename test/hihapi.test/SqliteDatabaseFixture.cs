@@ -26,7 +26,10 @@ namespace hihapi.test
                     throw new Exception("Faield!");
                 }
 
-                context.Database.EnsureCreated();                
+                // Create tables and views
+                DataSetupUtility.CreateDatabaseTables(context.Database);                
+
+                context.Database.EnsureCreated();
 
                 // Setup the tables
                 DataSetupUtility.InitializeSystemTables(context);

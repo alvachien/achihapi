@@ -84,6 +84,7 @@ namespace hihapi.test.UnitTests
                 Name = "HomeDef.TestCase2." + user,
                 Host = homehost,
                 BaseCurrency = curr,
+                Createdby = user,
             };
             var hm1 = new HomeMember()
             {
@@ -91,6 +92,7 @@ namespace hihapi.test.UnitTests
                 DisplayAs = "Myself",
                 User = homehost,
                 HomeDefinition = hd1,
+                Createdby = user,
             };
             hd1.HomeMembers.Add(hm1);
             var rst = await control.Post(hd1);
@@ -124,7 +126,8 @@ namespace hihapi.test.UnitTests
                 Relation = HomeMemberRelationType.Couple,
                 DisplayAs = "New Test",
                 User = (user == DataSetupUtility.UserA) ? DataSetupUtility.UserB : DataSetupUtility.UserA,
-                HomeDefinition = nreadobj
+                HomeDefinition = nreadobj,
+                Createdby = user,
             };
             nreadobj.HomeMembers.Add(hm2);
             var rst3 = await control.Put(nreadobj.ID, nreadobj);

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Security.Claims;
 using hihapi.Models;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace hihapi.test
 {
@@ -87,6 +90,264 @@ namespace hihapi.test
             }, "mock"));
         }
 
+        public static void CreateDatabaseTables(DatabaseFacade database) 
+        {
+            // Home defines
+            database.ExecuteSqlRaw(@"CREATE TABLE T_HOMEDEF (
+	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+	            NAME nvarchar(50) NOT NULL,
+	            DETAILS nvarchar(50) NULL,
+	            HOST nvarchar(50) NOT NULL,
+	            BASECURR nvarchar(5) NOT NULL,
+	            CREATEDBY nvarchar(50) NOT NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(50) NULL,
+	            UPDATEDAT date NULL )"
+            );
+
+            // Home members
+            database.ExecuteSqlRaw(@"CREATE TABLE T_HOMEMEM (
+	            HID INTEGER NOT NULL,
+	            USER nvarchar(50) NOT NULL,
+	            DISPLAYAS nvarchar(50) NULL,
+	            RELT smallint NOT NULL,
+	            CREATEDBY nvarchar(50) NOT NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(50) NULL,
+	            UPDATEDAT date NULL,
+                PRIMARY KEY(HID, USER),
+                FOREIGN KEY(HID) REFERENCES T_HOMEDEF(ID) )"
+            );
+
+            // Currency
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_CURRENCY (
+	            CURR nvarchar(5) PRIMARY KEY NOT NULL,
+	            NAME nvarchar(45) NOT NULL,
+	            SYMBOL nvarchar(30) NULL,
+	            CREATEDBY nvarchar(40) NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(40) NULL,
+	            UPDATEDAT date NULL )");
+
+            // Language
+            database.ExecuteSqlRaw(@"CREATE TABLE t_language (
+	            LCID int PRIMARY KEY NOT NULL,
+	            ISONAME nvarchar(20) NOT NULL,
+	            ENNAME nvarchar(100) NOT NULL,
+	            NAVNAME nvarchar(100) NOT NULL,
+	            APPFLAG bit NULL )");
+
+            // Finance account category
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_account_ctgy (
+	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID int NULL,
+	            NAME nvarchar(30) NOT NULL,
+	            ASSETFLAG bit NOT NULL DEFAULT 1,
+	            COMMENT nvarchar(45) NULL,
+	            CREATEDBY nvarchar(40) NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(40) NULL,
+	            UPDATEDAT date NULL )");
+
+            // Finance account
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_account (
+	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID int NOT NULL,
+	            CTGYID int NOT NULL,
+	            NAME nvarchar(30) NOT NULL,
+	            COMMENT nvarchar(45) NULL,
+	            OWNER nvarchar(50) NULL,
+	            STATUS tinyint NULL,
+	            CREATEDBY nvarchar(50) NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(50) NULL,
+	            UPDATEDAT date NULL )");
+
+            // Finance account: DP
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_account_ext_dp (
+	            ACCOUNTID int PRIMARY KEY NOT NULL,
+	            DIRECT bit NOT NULL,
+	            STARTDATE date NOT NULL,
+	            ENDDATE date NOT NULL,
+	            RPTTYPE tinyint NOT NULL,
+	            REFDOCID int NOT NULL,
+	            DEFRRDAYS nvarchar(100) NULL,
+	            COMMENT nvarchar(45) NULL, 
+                FOREIGN KEY(ACCOUNTID) REFERENCES t_fin_account(ID)
+                ) "
+            );
+
+            // Control center
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_controlcenter (
+	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID int NOT NULL,
+	            NAME nvarchar(30) NOT NULL,
+	            PARID int NULL,
+	            COMMENT nvarchar(45) NULL,
+	            OWNER nvarchar(40) NULL,
+	            CREATEDBY nvarchar(40) NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(40) NULL,
+	            UPDATEDAT date NULL )");
+
+            // Finance doc. type
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_doc_type (
+	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID int NULL,
+	            NAME nvarchar(30) NOT NULL,
+	            COMMENT nvarchar(45) NULL,
+	            CREATEDBY nvarchar(40) NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(40) NULL,
+	            UPDATEDAT date NULL )"
+            );
+
+            // Document
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_document (
+	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID int NOT NULL,
+	            DOCTYPE smallint NOT NULL,
+	            TRANDATE date NOT NULL,
+	            TRANCURR nvarchar(5) NOT NULL,
+	            DESP nvarchar(45) NOT NULL,
+	            EXGRATE decimal(17, 4) NULL,
+	            EXGRATE_PLAN bit NULL,
+	            EXGRATE_PLAN2 bit NULL,
+	            TRANCURR2 nvarchar(5) NULL,
+	            EXGRATE2 decimal(17, 4) NULL,
+	            CREATEDBY nvarchar(40) NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(40) NULL,
+	            UPDATEDAT date NULL )");
+
+            // Document Item
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_document_item (
+	            DOCID int NOT NULL, 
+	            ITEMID int NOT NULL,
+	            ACCOUNTID int NOT NULL,
+	            TRANTYPE int NOT NULL,
+	            TRANAMOUNT decimal(17, 2) NOT NULL,
+	            USECURR2 bit NULL,
+	            CONTROLCENTERID int NULL,
+	            ORDERID int NULL,
+	            DESP nvarchar(45) NULL,
+                PRIMARY KEY(DOCID, ITEMID) )");
+
+            // Order
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_order (
+	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID int NOT NULL,
+	            NAME nvarchar(30) NOT NULL,
+	            VALID_FROM date NOT NULL,
+	            VALID_TO date NOT NULL,
+	            COMMENT nvarchar(45) NULL,
+	            CREATEDBY nvarchar(40) NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(40) NULL,
+	            UPDATEDAT date NULL )");
+
+            // Order Srule
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_order_srule (
+	            ORDID int NOT NULL, 
+	            RULEID int NOT NULL,
+	            CONTROLCENTERID int NOT NULL,
+	            PRECENT int NOT NULL,
+	            COMMENT nvarchar(45) NULL,
+                PRIMARY KEY(ORDID, RULEID)
+                )");
+
+            // Template DP
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_tmpdoc_dp (
+	            DOCID INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID int NOT NULL,
+	            REFDOCID int NULL,
+	            ACCOUNTID int NOT NULL,
+	            TRANDATE date NOT NULL,
+	            TRANTYPE int NOT NULL,
+	            TRANAMOUNT decimal(17, 2) NOT NULL,
+	            CONTROLCENTERID int NULL,
+	            ORDERID int NULL,
+	            DESP nvarchar(45) NULL,
+	            CREATEDBY nvarchar(40) NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(40) NULL,
+	            UPDATEDAT date NULL )");
+
+            // Tran. type
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_tran_type (
+	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID int NULL,
+	            NAME nvarchar(30) NOT NULL,
+	            EXPENSE bit NOT NULL,
+	            PARID int NULL,
+	            COMMENT nvarchar(45) NULL,
+	            CREATEDBY nvarchar(40) NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(40) NULL,
+	            UPDATEDAT date NULL )");
+
+            // Asset category
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_asset_ctgy (
+	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID int NULL,
+	            NAME nvarchar(50) NOT NULL,
+	            DESP nvarchar(50) NULL,
+	            CREATEDBY nvarchar(40) NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(40) NULL,
+	            UPDATEDAT date NULL )");
+
+            // Account Extra Asset
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_account_ext_as (
+	            ACCOUNTID int PRIMARY KEY NOT NULL,
+	            CTGYID int NOT NULL,
+	            NAME nvarchar(50) NOT NULL,
+	            REFDOC_BUY int NOT NULL,
+	            COMMENT nvarchar(100) NULL,
+	            REFDOC_SOLD int NULL,
+                FOREIGN KEY(ACCOUNTID) REFERENCES t_fin_account(ID) )");
+
+            // Account Extra Loan
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_account_ext_loan (
+	            ACCOUNTID int PRIMARY KEY NOT NULL,
+	            STARTDATE datetime NOT NULL,
+	            ANNUALRATE decimal(17, 2) NULL,
+	            INTERESTFREE bit NULL,
+	            REPAYMETHOD tinyint NULL,
+	            TOTALMONTH smallint NULL,
+	            REFDOCID int NOT NULL,
+	            OTHERS nvarchar(100) NULL,
+                FOREIGN KEY(ACCOUNTID) REFERENCES t_fin_account(ID) )");
+
+            // Template Loan
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_tmpdoc_loan (
+	            DOCID INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID int NOT NULL,
+	            REFDOCID int NULL,
+	            ACCOUNTID int NOT NULL,
+	            TRANDATE date NOT NULL,
+	            TRANAMOUNT decimal(17, 2) NOT NULL,
+	            INTERESTAMOUNT decimal(17, 2) NULL,
+	            CONTROLCENTERID int NULL,
+	            ORDERID int NULL,
+	            DESP nvarchar(45) NULL,
+	            CREATEDBY nvarchar(40) NULL,
+	            CREATEDAT date NULL,
+	            UPDATEDBY nvarchar(40) NULL,
+	            UPDATEDAT date NULL )");
+
+            // DB version
+            database.ExecuteSqlRaw(@"CREATE TABLE T_DBVERSION (
+                VersionID    INT      PRIMARY KEY NOT NULL,
+                ReleasedDate DATETIME NOT NULL,
+                AppliedDate  DATETIME NOT NULL )");
+        }
+
+        public static void CreateDatabaseViews()
+        {
+
+        }
+
         public static void InitializeSystemTables(hihDataContext db)
         {
             InitialTable_DBVersion(db);
@@ -152,7 +413,8 @@ namespace hihapi.test
                 ID = Home1ID,
                 BaseCurrency = Home1BaseCurrency,
                 Name = "Home 1",
-                Host = UserA
+                Host = UserA,
+                Createdby = UserA
             });
             HomeMembers.Add(new HomeMember()
             {
@@ -190,7 +452,8 @@ namespace hihapi.test
                 ID = Home2ID,
                 BaseCurrency = Home2BaseCurrency,
                 Name = "Home 2",
-                Host = UserB
+                Host = UserB,
+                Createdby = UserB,
             });
             HomeMembers.Add(new HomeMember()
             {
@@ -208,7 +471,8 @@ namespace hihapi.test
                 ID = Home3ID,
                 BaseCurrency = Home3BaseCurrency,
                 Name = "Home 3",
-                Host = UserA
+                Host = UserA,
+                Createdby = UserA
             });
             HomeMembers.Add(new HomeMember()
             {
@@ -232,7 +496,8 @@ namespace hihapi.test
                 ID = Home4ID,
                 BaseCurrency = Home4BaseCurrency,
                 Name = "Home 4",
-                Host = UserC
+                Host = UserC,
+                Createdby = UserC,
             });
             HomeMembers.Add(new HomeMember()
             {
@@ -249,7 +514,8 @@ namespace hihapi.test
                 ID = Home5ID,
                 BaseCurrency = Home5BaseCurrency,
                 Name = "Home 5",
-                Host = UserD
+                Host = UserD,
+                Createdby = UserD,
             });
             HomeMembers.Add(new HomeMember()
             {
