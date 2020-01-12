@@ -38,7 +38,10 @@ namespace hihapi.Models
         public DbSet<FinanceControlCenter> FinanceControlCenter { get; set; }
         public DbSet<FinanceOrder> FinanceOrder { get; set; }
         public DbSet<FinanceOrderSRule> FinanceOrderSRule { get; set; }
-        public DbSet<FinanceReportAccountBalance> FinanceReportAccountBalance { get; set; }
+        public DbSet<FianceDocumentItemView> FianceDocumentItemView { get; set; }
+        public DbSet<FinanceReporAccountGroupView> FinanceReporAccountGroupView { get; set; }
+        public DbSet<FinanceReporAccountGroupAndExpenseView> FinanceReporAccountGroupAndExpenseView { get; set; }
+        public DbSet<FinanceReportAccountBalanceView> FinanceReportAccountBalanceView { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -387,10 +390,27 @@ namespace hihapi.Models
                     .HasConstraintName("FK_t_fin_order_srule_order");
             });
 
-            modelBuilder.Entity<FinanceReportAccountBalance>(entity =>
+            modelBuilder.Entity<FianceDocumentItemView>(entity =>
             {
                 entity.HasNoKey();
-                entity.ToView("V_FIN_REPORT_BS");
+                entity.ToView("V_FIN_DOCUMENT_ITEM");
+            });
+            modelBuilder.Entity<FinanceReporAccountGroupView>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("v_fin_grp_acnt");
+            });
+
+            modelBuilder.Entity<FinanceReporAccountGroupAndExpenseView>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("v_fin_grp_acnt_tranexp");
+            });
+
+            modelBuilder.Entity<FinanceReportAccountBalanceView>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("v_fin_report_bs");
             });
         }
     }

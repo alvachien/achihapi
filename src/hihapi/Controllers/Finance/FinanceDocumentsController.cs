@@ -591,11 +591,18 @@ namespace hihapi.Controllers
             }
 
             // Do basic checks
-            if (String.IsNullOrEmpty(createContext.TranCurr) || String.IsNullOrEmpty(createContext.ExtraAsset.Name)
-                || (createContext.IsLegacy.HasValue && createContext.IsLegacy.Value && createContext.Items.Count > 0)
-                || ((!createContext.IsLegacy.HasValue || (createContext.IsLegacy.HasValue && !createContext.IsLegacy.Value)) && createContext.Items.Count <= 0)
-                )
+            if (String.IsNullOrEmpty(createContext.TranCurr) || String.IsNullOrEmpty(createContext.ExtraAsset.Name))
                 return BadRequest("Invalid input data");
+            if (createContext.IsLegacy.HasValue && createContext.IsLegacy.Value)
+            {
+                if (createContext.Items.Count > 0)
+                    return BadRequest("Invalid input data");
+            }
+            else
+            {
+                if (createContext.Items.Count <= 0)
+                    return BadRequest("Invalid input data");
+            }
 
             foreach (var di in createContext.Items)
             {
@@ -813,12 +820,13 @@ namespace hihapi.Controllers
             var query2 = (from docitem in this._context.FinanceDocumentItem
                          join docheader in this._context.FinanceDocument on docitem.DocID equals docheader.ID
                          where docitem.AccountID == createContext.AssetAccountID
-                         select new { TranDate = docheader.TranDate }).Max();
+                         orderby docheader.TranDate descending
+                         select new { TranDate = docheader.TranDate }).FirstOrDefault();
             if (createContext.TranDate < query2.TranDate)
                 return BadRequest("Tran. data is invalid");
 
             // Check 3. Fetch current balance
-            var query3 = (from acntbal in this._context.FinanceReportAccountBalance
+            var query3 = (from acntbal in this._context.FinanceReporAccountGroupView
                          where acntbal.AccountID == createContext.AssetAccountID
                          select acntbal.Balance).First();
             if (query3 <= 0)
