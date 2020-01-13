@@ -118,6 +118,33 @@ namespace hihapi.Controllers
         }
 
         [HttpGet]
+        [ODataRoute("GetRepeatedDates2(StartDate={StartDate}, EndDate={EndDate}, RepeatType={RepeatType})")]
+        public IActionResult GetRepeatedDates2([FromODataUri] string StartDate, string EndDate, int RepeatType)
+        {
+            //            if (!ModelState.IsValid)
+            //            {
+            //#if DEBUG
+            //                foreach (var value in ModelState.Values)
+            //                {
+            //                    foreach (var err in value.Errors)
+            //                    {
+            //                        System.Diagnostics.Debug.WriteLine(err.Exception != null ? err.Exception.Message : err.ErrorMessage);
+            //                    }
+            //                }
+            //#endif
+            //                return BadRequest();
+            //            }
+
+            var input = new RepeatDatesCalculationInput
+            {
+                StartDate = DateTime.Parse(StartDate),
+                EndDate = DateTime.Parse(EndDate),
+                RepeatType = (RepeatFrequency)RepeatType,
+            };
+            return Ok(CommonUtility.WorkoutRepeatedDates(input));
+        }
+
+        [HttpGet]
         [ODataRoute("GetRepeatedDates(input={input})")]
         public IActionResult GetRepeatedDates([FromODataUri] RepeatDatesCalculationInput input)
         {

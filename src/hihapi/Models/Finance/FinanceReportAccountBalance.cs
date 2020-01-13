@@ -21,7 +21,7 @@ namespace hihapi.Models
 
         [Column("TRANDATE", TypeName = "date")]
         [DataType(DataType.Date)]
-        public Date TransactionDate { get; set; }
+        public DateTime TransactionDate { get; set; }
 
         [Column("DOCDESP", TypeName = "nvarchar(50)")]
         public string DocumentDesp { get; set; }

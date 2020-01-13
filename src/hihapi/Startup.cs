@@ -179,6 +179,11 @@ namespace hihapi
             modelBuilder.Function("GetRepeatedDates")
                 .ReturnsCollection<RepeatedDates>()
                 .Parameter<RepeatDatesCalculationInput>("input");
+            var funcbuilder = modelBuilder.Function("GetRepeatedDates2")
+                .ReturnsCollection<RepeatedDates>();
+            funcbuilder.Parameter<string>("StartDate");
+            funcbuilder.Parameter<string>("EndDate");
+            funcbuilder.Parameter<string>("RepeatType");
             modelBuilder.Function("GetRepeatedDatesWithAmount")
                 .ReturnsCollection<RepeatedDatesWithAmount>()
                 .Parameter<RepeatDatesWithAmountCalculationInput>("input");
