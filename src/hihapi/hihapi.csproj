@@ -3,15 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UserSecretsId>cf80adf9-ce70-4ce9-bb4e-a73887a492a6</UserSecretsId>
-    <Version>1.0.15</Version>
+    <Version>1.0.18</Version>
     <Authors>Alva Chien</Authors>
     <Product>H.I.H.</Product>
     <Copyright>(C) Alva Chien, 2019</Copyright>
     <PackageProjectUrl>https://github.com/alvachien/achihapi</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/alvachien/achihapi/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <Description>Web API for Home Info. Hub</Description>
     <NeutralLanguage>en</NeutralLanguage>
     <RepositoryUrl>https://github.com/alvachien/achihapi</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Sqls\Delta\v1.sql" />

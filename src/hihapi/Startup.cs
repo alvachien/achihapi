@@ -177,19 +177,19 @@ namespace hihapi
             modelBuilder.ComplexType<RepeatDatesWithAmountCalculationInput>();
             // Function on root
             modelBuilder.Function("GetRepeatedDates")
-                .ReturnsCollection<RepeatedDates>()
-                .Parameter<RepeatDatesCalculationInput>("input");
+                .ReturnsCollection<RepeatedDates>();
+//                .Parameter<RepeatDatesCalculationInput>("input");
             var funcbuilder = modelBuilder.Function("GetRepeatedDates2")
                 .ReturnsCollection<RepeatedDates>();
             funcbuilder.Parameter<string>("StartDate");
             funcbuilder.Parameter<string>("EndDate");
-            funcbuilder.Parameter<string>("RepeatType");
+            funcbuilder.Parameter<int>("RepeatType");
             modelBuilder.Function("GetRepeatedDatesWithAmount")
-                .ReturnsCollection<RepeatedDatesWithAmount>()
-                .Parameter<RepeatDatesWithAmountCalculationInput>("input");
+                .ReturnsCollection<RepeatedDatesWithAmount>();
+            //.Parameter<RepeatDatesWithAmountCalculationInput>("input");
             modelBuilder.Function("GetRepeatedDatesWithAmountAndInterest")
-                .ReturnsCollection<RepeatedDatesWithAmountAndInterest>()
-                .Parameter<RepeatDatesWithAmountAndInterestCalInput>("input");
+                .ReturnsCollection<RepeatedDatesWithAmountAndInterest>();
+                //.Parameter<RepeatDatesWithAmountAndInterestCalInput>("input");
             // Functions on Documents
             var docEntity = modelBuilder.EntityType<FinanceDocument>();
             docEntity.Property(c => c.TranDate).AsDate();

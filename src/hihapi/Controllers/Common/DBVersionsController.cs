@@ -144,9 +144,9 @@ namespace hihapi.Controllers
             return Ok(CommonUtility.WorkoutRepeatedDates(input));
         }
 
-        [HttpGet]
-        [ODataRoute("GetRepeatedDates(input={input})")]
-        public IActionResult GetRepeatedDates([FromODataUri] RepeatDatesCalculationInput input)
+        [HttpPost]
+        [ODataRoute("GetRepeatedDates()")]
+        public IActionResult GetRepeatedDates([FromBody] RepeatDatesCalculationInput input)
         {
             if (!ModelState.IsValid)
             {
@@ -165,9 +165,9 @@ namespace hihapi.Controllers
             return Ok(CommonUtility.WorkoutRepeatedDates(input));
         }
 
-        [HttpGet]
-        [ODataRoute("GetRepeatedDatesWithAmount(input={input})")]
-        public IActionResult GetRepeatedDatesWithAmount([FromODataUri] RepeatDatesWithAmountCalculationInput input)
+        [HttpPost]
+        [ODataRoute("GetRepeatedDatesWithAmount()")]
+        public IActionResult GetRepeatedDatesWithAmount([FromBody] RepeatDatesWithAmountCalculationInput input)
         {
             if (!ModelState.IsValid)
             {
@@ -186,9 +186,9 @@ namespace hihapi.Controllers
             return Ok(CommonUtility.WorkoutRepeatedDatesWithAmount(input));
         }
 
-        [HttpGet]
-        [ODataRoute("GetRepeatedDatesWithAmountAndInterest(input={input})")]
-        public IActionResult GetRepeatedDatesWithAmountAndInterest([FromODataUri] RepeatDatesWithAmountAndInterestCalInput input)
+        [HttpPost]
+        [ODataRoute("GetRepeatedDatesWithAmountAndInterest()")]
+        public IActionResult GetRepeatedDatesWithAmountAndInterest([FromBody] RepeatDatesWithAmountAndInterestCalInput input)
         {
             if (!ModelState.IsValid)
             {
