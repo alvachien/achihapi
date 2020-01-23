@@ -14,6 +14,7 @@ using hihapi.Models;
 using hihapi.Utilities;
 using hihapi.Exceptions;
 using Microsoft.AspNet.OData.Query;
+using Microsoft.AspNet.OData.Routing;
 
 namespace hihapi.Controllers
 {
@@ -27,6 +28,7 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceControlCenters
+        /// [EnableQuery]
         [Authorize]
         public IQueryable Get(ODataQueryOptions<FinanceControlCenter> option)
         {
@@ -51,35 +53,37 @@ namespace hihapi.Controllers
             return option.ApplyTo(query);
         }
 
-        [EnableQuery]
-        [Authorize]
-        public SingleResult<FinanceControlCenter> Get([FromODataUri]Int32 ccid)
-        {
-            String usrName = String.Empty;
-            try
-            {
-                usrName = HIHAPIUtility.GetUserID(this);
-                if (String.IsNullOrEmpty(usrName))
-                    throw new UnauthorizedAccessException();
-            }
-            catch
-            {
-                throw new UnauthorizedAccessException();
-            }
+        // The Route will never reach following codes...
+        // 
+        //[EnableQuery]
+        //[Authorize]
+        //public SingleResult<FinanceControlCenter> Get(int ccid)
+        //{
+        //    String usrName = String.Empty;
+        //    try
+        //    {
+        //        usrName = HIHAPIUtility.GetUserID(this);
+        //        if (String.IsNullOrEmpty(usrName))
+        //            throw new UnauthorizedAccessException();
+        //    }
+        //    catch
+        //    {
+        //        throw new UnauthorizedAccessException();
+        //    }
 
-            var hidquery = from hmem in _context.HomeMembers
-                           where hmem.User == usrName
-                           select new { HomeID = hmem.HomeID };
-            var ccquery = from cc in _context.FinanceControlCenter
-                            where cc.ID == ccid
-                            select cc;
-            var rstquery = from cc in ccquery
-                           join hid in hidquery
-                           on cc.HomeID equals hid.HomeID
-                           select cc;
+        //    var hidquery = from hmem in _context.HomeMembers
+        //                   where hmem.User == usrName
+        //                   select new { HomeID = hmem.HomeID };
+        //    var ccquery = from cc in _context.FinanceControlCenter
+        //                  where cc.ID == ccid
+        //                  select cc;
+        //    var rstquery = from cc in ccquery
+        //                   join hid in hidquery
+        //                   on cc.HomeID equals hid.HomeID
+        //                   select cc;
 
-            return SingleResult.Create(rstquery);
-        }
+        //    return SingleResult.Create(rstquery);
+        //}
 
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceControlCenter controlCenter)
