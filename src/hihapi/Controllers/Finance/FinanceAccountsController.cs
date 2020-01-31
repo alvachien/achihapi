@@ -52,35 +52,37 @@ namespace hihapi.Controllers
             return option.ApplyTo(query);
         }
 
-        [EnableQuery]
-        [Authorize]
-        public SingleResult<FinanceAccount> Get([FromODataUri]Int32 acntid)
-        {
-            String usrName = String.Empty;
-            try
-            {
-                usrName = HIHAPIUtility.GetUserID(this);
-                if (String.IsNullOrEmpty(usrName))
-                    throw new UnauthorizedAccessException();
-            }
-            catch
-            {
-                throw new UnauthorizedAccessException();
-            }
+        // The Route will never reach following codes...
+        // 
+        //[EnableQuery]
+        //[Authorize]
+        //public SingleResult<FinanceAccount> Get([FromODataUri]Int32 acntid)
+        //{
+        //    String usrName = String.Empty;
+        //    try
+        //    {
+        //        usrName = HIHAPIUtility.GetUserID(this);
+        //        if (String.IsNullOrEmpty(usrName))
+        //            throw new UnauthorizedAccessException();
+        //    }
+        //    catch
+        //    {
+        //        throw new UnauthorizedAccessException();
+        //    }
 
-            var hidquery = from hmem in _context.HomeMembers
-                           where hmem.User == usrName
-                           select new { HomeID = hmem.HomeID };
-            var acntquery = from acnt in _context.FinanceAccount
-                            where acnt.ID == acntid
-                            select acnt;
-            var rstquery = from acnt in acntquery
-                           join hid in hidquery
-                           on acnt.HomeID equals hid.HomeID
-                           select acnt;
+        //    var hidquery = from hmem in _context.HomeMembers
+        //                   where hmem.User == usrName
+        //                   select new { HomeID = hmem.HomeID };
+        //    var acntquery = from acnt in _context.FinanceAccount
+        //                    where acnt.ID == acntid
+        //                    select acnt;
+        //    var rstquery = from acnt in acntquery
+        //                   join hid in hidquery
+        //                   on acnt.HomeID equals hid.HomeID
+        //                   select acnt;
 
-            return SingleResult.Create(rstquery);
-        }
+        //    return SingleResult.Create(rstquery);
+        //}
 
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceAccount account)

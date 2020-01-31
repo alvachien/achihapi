@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
 using hihapi.Exceptions;
+using Microsoft.AspNet.OData.Query;
 
 namespace hihapi.Controllers
 {
@@ -26,9 +27,8 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceDocumentItems
-        [EnableQuery]
         [Authorize]
-        public IQueryable<FinanceDocumentItem> Get(Int32 hid, Int32 docid)
+        public IQueryable Get(ODataQueryOptions<FinanceDocumentItem> option)
         {
             String usrName = String.Empty;
             try
@@ -43,12 +43,15 @@ namespace hihapi.Controllers
             }
 
             var rst =
-                from hmem in _context.HomeMembers.Where(p => p.User == usrName && p.HomeID == hid)
-                from doc in _context.FinanceDocument.Where(p => p.ID == docid && p.HomeID == hmem.HomeID)
-                from items in _context.FinanceDocumentItem.Where(p => p.DocID == doc.ID)
+                from hmem in _context.HomeMembers
+                where hmem.User == usrName
+                select new { HomeID = hmem.HomeID } into hids
+                join docs in _context.FinanceDocument on hids.HomeID equals docs.HomeID
+                select new { HomeID = docs.HomeID, ID = docs.ID } into docids
+                join items in _context.FinanceDocumentItem on docids.ID equals items.DocID
                 select items;
 
-            return rst;
+            return option.ApplyTo(rst);
         }
     }
 }

@@ -52,35 +52,37 @@ namespace hihapi.Controllers
             return option.ApplyTo(query);
         }
 
-        [EnableQuery]
-        [Authorize]
-        public SingleResult<FinanceDocument> Get([FromODataUri]Int32 docid)
-        {
-            String usrName = String.Empty;
-            try
-            {
-                usrName = HIHAPIUtility.GetUserID(this);
-                if (String.IsNullOrEmpty(usrName))
-                    throw new UnauthorizedAccessException();
-            }
-            catch
-            {
-                throw new UnauthorizedAccessException();
-            }
+        // The Route will never reach following codes...
+        // 
+        //[EnableQuery]
+        //[Authorize]
+        //public SingleResult<FinanceDocument> Get([FromODataUri]Int32 docid)
+        //{
+        //    String usrName = String.Empty;
+        //    try
+        //    {
+        //        usrName = HIHAPIUtility.GetUserID(this);
+        //        if (String.IsNullOrEmpty(usrName))
+        //            throw new UnauthorizedAccessException();
+        //    }
+        //    catch
+        //    {
+        //        throw new UnauthorizedAccessException();
+        //    }
 
-            var hidquery = from hmem in _context.HomeMembers
-                           where hmem.User == usrName
-                           select new { HomeID = hmem.HomeID };
-            var docquery = from doc in _context.FinanceDocument
-                          where doc.ID == docid
-                          select doc;
-            var rstquery = from doc in docquery
-                           join hid in hidquery
-                           on doc.HomeID equals hid.HomeID
-                           select doc;
+        //    var hidquery = from hmem in _context.HomeMembers
+        //                   where hmem.User == usrName
+        //                   select new { HomeID = hmem.HomeID };
+        //    var docquery = from doc in _context.FinanceDocument
+        //                  where doc.ID == docid
+        //                  select doc;
+        //    var rstquery = from doc in docquery
+        //                   join hid in hidquery
+        //                   on doc.HomeID equals hid.HomeID
+        //                   select doc;
 
-            return SingleResult.Create(rstquery);
-        }
+        //    return SingleResult.Create(rstquery);
+        //}
 
         [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceDocument document)
