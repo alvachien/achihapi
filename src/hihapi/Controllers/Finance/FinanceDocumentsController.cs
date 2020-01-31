@@ -252,7 +252,7 @@ namespace hihapi.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> PostDPDocument(int HomeID, [FromBody]FinanceADPDocumentCreateContext createContext)
+        public async Task<IActionResult> PostDPDocument([FromBody]FinanceADPDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
             {
@@ -261,7 +261,7 @@ namespace hihapi.Controllers
                 {
                     foreach (var err in value.Errors)
                     {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                        System.Diagnostics.Debug.WriteLine(err.Exception != null ? err.Exception.Message : err.ErrorMessage);
                     }
                 }
 #endif
@@ -269,6 +269,9 @@ namespace hihapi.Controllers
                 return BadRequest("Model State is Invalid");
             }
             if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null 
+                || createContext.AccountInfo.HomeID <= 0
+                || createContext.DocumentInfo.HomeID <= 0
+                || createContext.DocumentInfo.HomeID != createContext.AccountInfo.HomeID
                 || createContext.AccountInfo.ExtraDP == null
                 || createContext.AccountInfo.ExtraDP.DPTmpDocs.Count <= 0)
             {
@@ -290,7 +293,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == HomeID && p.User == usrName).Count();
+            var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.AccountInfo.HomeID && p.User == usrName).Count();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();

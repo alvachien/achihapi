@@ -194,9 +194,10 @@ namespace hihapi
             var docEntity = modelBuilder.EntityType<FinanceDocument>();
             docEntity.Property(c => c.TranDate).AsDate();
             docEntity.Collection
-                .Function("PostDPDocument")
-                .Returns<FinanceDocument>()
-                .Parameter<int>("HomeID");
+                .Action("PostDPDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+                //.Returns<FinanceDocument>();
+                //.Parameter<int>("HomeID");
             docEntity.Collection
                 .Function("PostLoanDocument")
                 .Returns<FinanceDocument>()
