@@ -10,9 +10,11 @@ namespace hihapi.Models
 {
     public class FinanceDocumentItemView
     {
+        [Key]
         [Column("DOCID", TypeName = "INT")]
         public Int32 DocumentID { get; set; }
 
+        [Key]
         [Column("ITEMID", TypeName = "INT")]
         public Int32 ItemID { get; set; }
 
