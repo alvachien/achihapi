@@ -8,7 +8,7 @@ using Microsoft.OData.Edm;
 
 namespace hihapi.Models
 {
-    public class FianceDocumentItemView
+    public class FinanceDocumentItemView
     {
         [Column("DOCID", TypeName = "INT")]
         public Int32 DocumentID { get; set; }

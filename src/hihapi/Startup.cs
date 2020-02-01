@@ -171,6 +171,7 @@ namespace hihapi
             modelBuilder.EntitySet<FinanceOrderSRule>("FinanceOrderSRules");
             modelBuilder.EntitySet<FinanceDocument>("FinanceDocuments");
             modelBuilder.EntitySet<FinanceDocumentItem>("FinanceDocumentItems");
+            modelBuilder.EntitySet<FinanceDocumentItemView>("FinanceDocumentItemViews");
             modelBuilder.ComplexType<RepeatedDates>();
             modelBuilder.ComplexType<RepeatDatesCalculationInput>();
             modelBuilder.ComplexType<RepeatedDatesWithAmount>();
@@ -196,20 +197,23 @@ namespace hihapi
             docEntity.Collection
                 .Action("PostDPDocument")
                 .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-                //.Returns<FinanceDocument>();
+            //.Returns<FinanceDocument>();
+            //.Parameter<int>("HomeID");
+            docEntity.Collection
+                .Action("PostLoanDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+//              .Parameter<int>("HomeID");
+            docEntity.Collection
+                .Action("PostAssetBuyDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
                 //.Parameter<int>("HomeID");
             docEntity.Collection
-                .Function("PostLoanDocument")
-                .Returns<FinanceDocument>()
-                .Parameter<int>("HomeID");
+                .Action("PostAssetSellDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+                //.Parameter<int>("HomeID");
             docEntity.Collection
-                .Function("PostAssetBuyDocument")
-                .Returns<FinanceDocument>()
-                .Parameter<int>("HomeID");
-            docEntity.Collection
-                .Function("PostAssetSellDocument")
-                .Returns<FinanceDocument>()
-                .Parameter<int>("HomeID");
+                .Action("PostAssetValueChangeDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
             modelBuilder.Namespace = typeof(Currency).Namespace;
 
             var model = modelBuilder.GetEdmModel();

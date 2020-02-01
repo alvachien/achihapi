@@ -137,7 +137,7 @@ namespace hihapi.test.UnitTests
             assetbuycontext.ExtraAsset.CategoryID = context.FinAssetCategories.ToList()[0].ID;
             assetbuycontext.ExtraAsset.Comment = "Test 1";
             
-            var resp = await control.PostAssetBuyDocument(hid, assetbuycontext);
+            var resp = await control.PostAssetBuyDocument(assetbuycontext);
             var doc = Assert.IsType<CreatedODataResult<FinanceDocument>>(resp).Entity;
             documentsCreated.Add(doc.ID);
             if (islegacy)
@@ -175,7 +175,7 @@ namespace hihapi.test.UnitTests
             var ditems = context.FinanceDocumentItem.Where(p => p.AccountID == assetacntid).ToList();
             Assert.True(ditems.Count == 1);
             // Document item view
-            var ditemview = (from diview in context.FianceDocumentItemView
+            var ditemview = (from diview in context.FinanceDocumentItemView
                             where diview.AccountID == assetacntid
                             select new { diview.AccountID, diview.Amount, diview.IsExpense }
                             ).ToList();
@@ -209,7 +209,7 @@ namespace hihapi.test.UnitTests
             };
             assetsellcontext.Items.Add(item);
 
-            resp = await control.PostAssetSellDocument(hid, assetsellcontext);
+            resp = await control.PostAssetSellDocument(assetsellcontext);
             doc = Assert.IsType<CreatedODataResult<FinanceDocument>>(resp).Entity;
             documentsCreated.Add(doc.ID);
 

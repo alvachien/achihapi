@@ -172,7 +172,7 @@ namespace hihapi.test.UnitTests
 
                 dpcontext.AccountInfo.ExtraLoan.LoanTmpDocs.Add(tmpdoc);
             }
-            var resp = await control.PostLoanDocument(hid, dpcontext);
+            var resp = await control.PostLoanDocument(dpcontext);
             var doc = Assert.IsType<CreatedODataResult<FinanceDocument>>(resp).Entity;
             documentsCreated.Add(doc.ID);
             Assert.True(doc.Items.Count == 2);

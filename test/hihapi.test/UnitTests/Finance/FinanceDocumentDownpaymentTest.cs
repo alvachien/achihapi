@@ -169,7 +169,7 @@ namespace hihapi.test.UnitTests
 
                 dpcontext.AccountInfo.ExtraDP.DPTmpDocs.Add(tmpdoc);
             }
-            var resp = await control.PostDPDocument(hid, dpcontext);
+            var resp = await control.PostDPDocument(dpcontext);
             var doc = Assert.IsType<CreatedODataResult<FinanceDocument>>(resp).Entity;
             documentsCreated.Add(doc.ID);
             Assert.True(doc.Items.Count == 2);

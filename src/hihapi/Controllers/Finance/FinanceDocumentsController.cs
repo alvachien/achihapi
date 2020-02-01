@@ -411,7 +411,7 @@ namespace hihapi.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> PostLoanDocument(int HomeID, [FromBody]FinanceLoanDocumentCreateContext createContext)
+        public async Task<IActionResult> PostLoanDocument([FromBody]FinanceLoanDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
             {
@@ -428,6 +428,9 @@ namespace hihapi.Controllers
                 return BadRequest("Model State is Invalid");
             }
             if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null
+                || createContext.AccountInfo.HomeID <= 0
+                || createContext.DocumentInfo.HomeID <= 0
+                || createContext.DocumentInfo.HomeID != createContext.AccountInfo.HomeID
                 || createContext.AccountInfo.ExtraLoan == null
                 || createContext.AccountInfo.ExtraLoan.LoanTmpDocs.Count <= 0)
             {
@@ -449,7 +452,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == HomeID && p.User == usrName).Count();
+            var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.AccountInfo.HomeID && p.User == usrName).Count();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -553,7 +556,7 @@ namespace hihapi.Controllers
     
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> PostAssetBuyDocument(int HomeID, [FromBody]FinanceAssetBuyDocumentCreateContext createContext)
+        public async Task<IActionResult> PostAssetBuyDocument([FromBody]FinanceAssetBuyDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
             {
@@ -571,7 +574,7 @@ namespace hihapi.Controllers
             }
             if (createContext == null || createContext.ExtraAsset == null)
                 return BadRequest("No data is inputted");
-            if (HomeID <= 0)
+            if (createContext.HID <= 0)
                 return BadRequest("Not HID inputted");
 
             // User
@@ -589,7 +592,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == HomeID && p.User == usrName).Count();
+            var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.HID && p.User == usrName).Count();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -634,7 +637,7 @@ namespace hihapi.Controllers
             vmFIDoc.DocType = FinanceDocumentType.DocType_AssetBuyIn;
             vmFIDoc.Desp = createContext.Desp;
             vmFIDoc.TranDate = createContext.TranDate;
-            vmFIDoc.HomeID = HomeID;
+            vmFIDoc.HomeID = createContext.HID;
             vmFIDoc.TranCurr = createContext.TranCurr;
 
             var maxItemID = 0;
@@ -737,10 +740,10 @@ namespace hihapi.Controllers
 
             return Created(vmFIDoc);
         }
-        
+
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> PostAssetSellDocument(int HomeID, [FromBody]FinanceAssetSellDocumentCreateContext createContext)
+        public async Task<IActionResult> PostAssetValueChangeDocument([FromBody]FinanceAssetRevaluationDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
             {
@@ -756,7 +759,195 @@ namespace hihapi.Controllers
 
                 return BadRequest("Model State is Invalid");
             }
-            if (HomeID <= 0)
+            if (createContext == null)
+                return BadRequest("No data is inputted");
+            if (createContext.HID <= 0)
+                return BadRequest("Not HID inputted");
+            if (createContext.AssetAccountID <= 0)
+                return BadRequest("Asset Account is invalid");
+            if (createContext.Items.Count != 1)
+                return BadRequest("Items count is not correct");
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.HID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Construct the Doc.
+            var vmFIDoc = new FinanceDocument();
+            vmFIDoc.DocType = FinanceDocumentType.DocType_AssetValChg;
+            vmFIDoc.Desp = createContext.Desp;
+            vmFIDoc.TranDate = createContext.TranDate;
+            vmFIDoc.HomeID = createContext.HID;
+            vmFIDoc.TranCurr = createContext.TranCurr;
+
+            Decimal totalAmount = 0;
+            Int32? rlTranType = null;
+            foreach (var di in createContext.Items)
+            {
+                if (di.ItemID <= 0 || di.TranAmount == 0
+                    || di.AccountID != createContext.AssetAccountID
+                    || (di.TranType != FinanceTransactionType.TranType_AssetValueIncrease
+                        && di.TranType != FinanceTransactionType.TranType_AssetValueDecrease)
+                    || (di.ControlCenterID <= 0 && di.OrderID <= 0))
+                    return BadRequest("Invalid input data in items!");
+
+                if (rlTranType == null)
+                {
+                    rlTranType = di.TranType;
+                }
+                else
+                {
+                    if (rlTranType.Value != di.TranType)
+                    {
+                        return BadRequest("Cannot support different trantype");
+                    }
+                }
+
+                totalAmount += di.TranAmount;
+
+                vmFIDoc.Items.Add(di);
+            }
+
+            // Basic check - TBD
+            //try
+            //{
+            //    FinanceDocumentController.FinanceDocumentBasicCheck(vmFIDoc);
+            //}
+            //catch(Exception exp)
+            //{
+            //}
+            // Perfrom the doc. validation
+            //await FinanceDocumentsController.FinanceDocumentBasicValidationAsync(vmFIDoc, conn);
+
+            // Additional check 1.account is a valid asset?
+            var query = (from account in this._context.FinanceAccount
+                         join assetaccount in this._context.FinanceAccountExtraAS on account.ID equals assetaccount.AccountID
+                         where account.ID == createContext.AssetAccountID
+                         select new { Status = account.Status, RefSellDoc = assetaccount.RefenceSoldDocumentID }).FirstOrDefault();
+            if (query.Status != FinanceAccountStatus.Normal)
+            {
+                return BadRequest("Account status is not normal");
+            }
+            if (query.RefSellDoc != null)
+            {
+                return BadRequest("Asset has soldout doc already");
+            }
+            // Additional check 2. the inputted date is valid > must be the later than all existing transactions;
+            var query2 = (from docitem in this._context.FinanceDocumentItem
+                          join docheader in this._context.FinanceDocument on docitem.DocID equals docheader.ID
+                          where docitem.AccountID == createContext.AssetAccountID
+                          orderby docheader.TranDate descending
+                          select new { TranDate = docheader.TranDate }).FirstOrDefault();
+            if (createContext.TranDate < query2.TranDate)
+                return BadRequest("Tran. data is invalid");
+            // Additional check 3. Fetch current balance
+            var query3 = (from acntbal in this._context.FinanceReporAccountGroupView
+                          where acntbal.AccountID == createContext.AssetAccountID
+                          select acntbal.Balance).First();
+            if (query3 <= 0)
+                return BadRequest("Balance is less than zero");
+            // Additional check 4: the balance with the inputted value
+            var nCmpRst = Decimal.Compare(query3, totalAmount);
+            if (nCmpRst > 0)
+            {
+                if (rlTranType.Value != FinanceTransactionType.TranType_AssetValueDecrease)
+                {
+                    return BadRequest("Tran type is wrong");
+                }
+            }
+            else if (nCmpRst < 0)
+            {
+                if (rlTranType.Value != FinanceTransactionType.TranType_AssetValueIncrease)
+                {
+                    return BadRequest("Tran type is wrong");
+                }
+            }
+            else if (nCmpRst == 0)
+            {
+                return BadRequest("Current balance equals to new value");
+            }
+
+            // Update the database
+            var errorString = "";
+            var errorOccur = false;
+            var origdocid = 0;
+            try
+            {
+                // 1. Create the document
+                var docEntity = _context.FinanceDocument.Add(vmFIDoc);
+                await _context.SaveChangesAsync();
+                origdocid = docEntity.Entity.ID;
+
+                vmFIDoc = docEntity.Entity;
+            }
+            catch (Exception exp)
+            {
+                errorOccur = true;
+                errorString = exp.Message;
+            }
+            finally
+            {
+                // Remove new created object
+                if (errorOccur)
+                {
+                    try
+                    {
+                        if (origdocid > 0)
+                        {
+                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + origdocid.ToString());
+                        }
+                    }
+                    catch (Exception exp2)
+                    {
+                        System.Diagnostics.Debug.WriteLine(exp2.Message);
+                    }
+                }
+            }
+
+            if (errorOccur)
+            {
+                return BadRequest(errorString);
+            }
+
+            return Created(vmFIDoc);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> PostAssetSellDocument([FromBody]FinanceAssetSellDocumentCreateContext createContext)
+        {
+            if (!ModelState.IsValid)
+            {
+#if DEBUG
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+#endif
+
+                return BadRequest("Model State is Invalid");
+            }
+            if (createContext.HID <= 0)
                 return BadRequest("Not HID inputted");
             if (createContext.AssetAccountID <= 0)
                 return BadRequest("Asset Account is invalid");
@@ -780,7 +971,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == HomeID && p.User == usrName).Count();
+            var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.HID && p.User == usrName).Count();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -791,7 +982,7 @@ namespace hihapi.Controllers
             vmFIDoc.DocType = FinanceDocumentType.DocType_AssetSoldOut;
             vmFIDoc.Desp = createContext.Desp;
             vmFIDoc.TranDate = createContext.TranDate;
-            vmFIDoc.HomeID = HomeID;
+            vmFIDoc.HomeID = createContext.HID;
             vmFIDoc.TranCurr = createContext.TranCurr;
             Decimal totalAmt = 0;
             var maxItemID = 0;
@@ -819,6 +1010,10 @@ namespace hihapi.Controllers
             if (query.Status != FinanceAccountStatus.Normal)
             {
                 return BadRequest("Account status is not normal");
+            }
+            if (query.RefSellDoc != null)
+            {
+                return BadRequest("Asset has soldout doc already");
             }
 
             // Check 2: check the inputted date is valid > must be the later than all existing transactions;

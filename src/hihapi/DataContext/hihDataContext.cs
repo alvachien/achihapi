@@ -38,7 +38,7 @@ namespace hihapi.Models
         public DbSet<FinanceControlCenter> FinanceControlCenter { get; set; }
         public DbSet<FinanceOrder> FinanceOrder { get; set; }
         public DbSet<FinanceOrderSRule> FinanceOrderSRule { get; set; }
-        public DbSet<FianceDocumentItemView> FianceDocumentItemView { get; set; }
+        public DbSet<FinanceDocumentItemView> FinanceDocumentItemView { get; set; }
         public DbSet<FinanceReporAccountGroupView> FinanceReporAccountGroupView { get; set; }
         public DbSet<FinanceReporAccountGroupAndExpenseView> FinanceReporAccountGroupAndExpenseView { get; set; }
         public DbSet<FinanceReportAccountBalanceView> FinanceReportAccountBalanceView { get; set; }
@@ -390,7 +390,7 @@ namespace hihapi.Models
                     .HasConstraintName("FK_t_fin_order_srule_order");
             });
 
-            modelBuilder.Entity<FianceDocumentItemView>(entity =>
+            modelBuilder.Entity<FinanceDocumentItemView>(entity =>
             {
                 entity.HasNoKey();
                 entity.ToView("V_FIN_DOCUMENT_ITEM");
