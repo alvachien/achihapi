@@ -56,14 +56,14 @@ namespace hihapi.Models
         public Int16 TotalMonths { get; set; }
         public Decimal InterestRate { get; set; }
         [DataType(DataType.Date)]
-        public Date StartDate { get; set; }
+        public DateTime StartDate { get; set; }
         public Boolean InterestFreeLoan { get; set; }
         public LoanRepaymentMethod RepaymentMethod { get; set; }
         [DataType(DataType.Date)]
-        public Date? EndDate { get; set; }
+        public DateTime? EndDate { get; set; }
         public Int16? RepayDayInMonth { get; set; }
         [DataType(DataType.Date)]
-        public Date? FirstRepayDate { get; set; }
+        public DateTime? FirstRepayDate { get; set; }
 
         public void doVerify()
         {
