@@ -12,11 +12,11 @@ using Microsoft.AspNet.OData.Query;
 
 namespace hihapi.Controllers
 {
-    public class FinanceDocumentItemViewController : ODataController
+    public class FinanceDocumentItemViewsController : ODataController
     {
         private readonly hihDataContext _context;
 
-        public FinanceDocumentItemViewController(hihDataContext context)
+        public FinanceDocumentItemViewsController(hihDataContext context)
         {
             _context = context;
         }
