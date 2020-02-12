@@ -144,11 +144,20 @@ namespace hihapi.Models
         public FinanceAccount AccountInfo { get; set; }
     }
 
+    #region Loan related
     public sealed class FinanceLoanDocumentCreateContext
     {
         public FinanceDocument DocumentInfo { get; set; }
         public FinanceAccount AccountInfo { get; set; }
     }
+
+    public sealed class FinanceLoanRepayDocumentCreateContext
+    {
+        public int LoanTemplateDocumentID { get; set; }
+        public int HomeID { get; set; }
+        public FinanceDocument DocumentInfo { get; set; }
+    }
+    #endregion
 
     #region Asset related
     public abstract class FinanceAssetDocumentCreateContext
@@ -200,4 +209,5 @@ namespace hihapi.Models
         public Int32 AssetAccountID { get; set; }
     }
     #endregion
+
 }

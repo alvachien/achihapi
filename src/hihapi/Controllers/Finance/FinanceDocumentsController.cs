@@ -1045,7 +1045,6 @@ namespace hihapi.Controllers
             nitem.DocumentHeader = vmFIDoc;
             vmFIDoc.Items.Add(nitem);
 
-
             var ncmprst = Decimal.Compare(query3, createContext.TranAmount);
             if (ncmprst > 0)
             {
@@ -1077,10 +1076,12 @@ namespace hihapi.Controllers
                 nitem.DocumentHeader = vmFIDoc;
                 vmFIDoc.Items.Add(nitem2);
             }
+
             // Database update
             var errorString = "";
             var errorOccur = false;
             var origdocid = 0;
+
             try
             {
                 // 1. Create the document
