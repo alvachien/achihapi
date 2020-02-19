@@ -44,59 +44,33 @@ namespace hihapi.test.UnitTests
         [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserA, true)]
         public async Task TestCase1(int hid, string currency, string user, Boolean islegacy)
         {
-            List<int> accountsCreated = new List<int>();
-            List<int> controlCentersCreated = new List<int>();
-            List<int> ordersCreated = new List<int>();
             List<int> documentsCreated = new List<int>();
             var context = this.fixture.GetCurrentDataContext();
 
             // 0. Prepare the context for current home
-            if (hid > 0)
+            if (hid == DataSetupUtility.Home1ID)
             {
-                // Account
-                var accountObject = new FinanceAccount()
-                {
-                    HomeID = hid,
-                    Name = "Account 3.1",
-                    CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
-                    Owner = user
-                };
-                var ea1 = context.FinanceAccount.Add(accountObject);
-                // Control center
-                var controlCenterObject = new FinanceControlCenter()
-                {
-                    HomeID = hid,
-                    Name = "Control Center 3.1",
-                    Comment = "Comment 3.1",
-                    Owner = user
-                };
-                var ec1 = context.FinanceControlCenter.Add(controlCenterObject);
-                // Order
-                var orderObject = new FinanceOrder()
-                {
-                    HomeID = hid,
-                    Name = "Order 3.1",
-                    Comment = "Comment 3.1"
-                };
-                var srule1 = new FinanceOrderSRule()
-                {
-                    Order = orderObject,
-                    RuleID = 1,
-                    ControlCenterID = ec1.Entity.ID,
-                    Precent = 100
-                };
-                orderObject.SRule.Add(srule1);
-                var eord1 = context.FinanceOrder.Add(orderObject);
-                await context.SaveChangesAsync();
-
-                accountsCreated.Add(ea1.Entity.ID);
-                controlCentersCreated.Add(ec1.Entity.ID);
-                ordersCreated.Add(eord1.Entity.ID);
+                fixture.InitHome1TestData(context);
             }
-            else
+            else if (hid == DataSetupUtility.Home2ID)
             {
-                Assert.Equal(1, 2); // Quit!
+                fixture.InitHome2TestData(context);
             }
+            else if(hid == DataSetupUtility.Home3ID)
+            {
+                fixture.InitHome3TestData(context);
+            }
+            else if (hid == DataSetupUtility.Home4ID)
+            {
+                fixture.InitHome4TestData(context);
+            }
+            else if (hid == DataSetupUtility.Home5ID)
+            {
+                fixture.InitHome5TestData(context);
+            }
+            var account = context.FinanceAccount.Where(p => p.HomeID == hid && p.Status != FinanceAccountStatus.Closed).FirstOrDefault();
+            var cc = context.FinanceControlCenter.Where(p => p.HomeID == hid).FirstOrDefault();
+            // var orders = context.FinanceOrder.Where(p => p.HomeID == hid).ToList();
 
             // 1. Buy an asset
             var control = new FinanceDocumentsController(context);
@@ -110,7 +84,7 @@ namespace hihapi.test.UnitTests
             // 1a. Prepare data
             var assetbuycontext = new FinanceAssetBuyDocumentCreateContext();
             assetbuycontext.AccountOwner = user;
-            assetbuycontext.ControlCenterID = controlCentersCreated[0];
+            assetbuycontext.ControlCenterID = cc.ID;
             assetbuycontext.Desp = "Test buy in";
             // assetbuycontext.ExtraAsset = 
             assetbuycontext.HID = hid;
@@ -127,8 +101,8 @@ namespace hihapi.test.UnitTests
                     Desp = "Item 1.1",
                     TranType = 3,
                     TranAmount = 2000,
-                    AccountID = accountsCreated[0],
-                    ControlCenterID = controlCentersCreated[0],
+                    AccountID = account.ID,
+                    ControlCenterID = cc.ID,
                 };
                 assetbuycontext.Items.Add(item2);
             }
@@ -150,10 +124,9 @@ namespace hihapi.test.UnitTests
             {
                 foreach (var docitem in doc.Items)
                 {
-                    if (docitem.AccountID != accountsCreated[0])
+                    if (docitem.AccountID != account.ID)
                     {
                         assetacntid = docitem.AccountID;
-                        accountsCreated.Add(docitem.AccountID);
 
                         var acnt = context.FinanceAccount.Find(docitem.AccountID);
                         Assert.NotNull(acnt);
@@ -191,7 +164,7 @@ namespace hihapi.test.UnitTests
             // Okay, now sell it
             var assetsellcontext = new FinanceAssetSellDocumentCreateContext();
             assetsellcontext.AssetAccountID = assetacntid;
-            assetsellcontext.ControlCenterID = controlCentersCreated[0];
+            assetsellcontext.ControlCenterID = cc.ID;
             assetsellcontext.Desp = "Test sell";
             assetsellcontext.HID = hid;
             assetsellcontext.TranAmount = 1000;
@@ -204,8 +177,8 @@ namespace hihapi.test.UnitTests
                 Desp = "Item 2.1",
                 TranType = FinanceTransactionType.TranType_AssetSoldoutIncome,
                 TranAmount = 1000,
-                AccountID = accountsCreated[0],
-                ControlCenterID = controlCentersCreated[0],
+                AccountID = account.ID,
+                ControlCenterID = cc.ID,
             };
             assetsellcontext.Items.Add(item);
 
@@ -216,12 +189,8 @@ namespace hihapi.test.UnitTests
             // Last, clear all created objects
             foreach (var docid in documentsCreated)
                 this.fixture.DeleteDocument(context, docid);
-            foreach (var aid in accountsCreated)
-                this.fixture.DeleteAccount(context, aid);
-            foreach (var ccid in controlCentersCreated)
-                this.fixture.DeleteControlCenter(context, ccid);
-            foreach (var ordid in ordersCreated)
-                this.fixture.DeleteOrder(context, ordid);
+            if (assetacntid > 0)
+                this.fixture.DeleteAccount(context, assetacntid);
             await context.SaveChangesAsync();
 
             await context.DisposeAsync();

@@ -45,147 +45,58 @@ namespace hihapi.test.UnitTests
         [InlineData(DataSetupUtility.Home2ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserB)]
         public async Task TestCase1(int hid, string currency, string user)
         {
-            List<FinanceAccount> accountsCreated = new List<FinanceAccount>();
-            List<FinanceControlCenter> controlCentersCreated = new List<FinanceControlCenter>();
-            List<FinanceOrder> ordersCreated = new List<FinanceOrder>();
-            List<FinanceDocument> documentsCreated = new List<FinanceDocument>();
-            FinanceAccount accountObject = null;
-            FinanceControlCenter controlCenterObject = null;
-            FinanceOrder orderObject = null;
-            FinanceDocument documentObject = null;
+            List<int> documentsCreated = new List<int>();
             var context = this.fixture.GetCurrentDataContext();
 
             // 0a. Prepare the context for other homes to test the filters
             var secondhid = hid;
-            var secondcurrency = "";
             if (hid == DataSetupUtility.Home1ID)
             {
                 if (user == DataSetupUtility.UserA || user == DataSetupUtility.UserB)
                 {
                     secondhid = DataSetupUtility.Home3ID;
-                    secondcurrency = DataSetupUtility.Home3BaseCurrency;
                 }
                 else if (user == DataSetupUtility.UserC)
                 {
                     secondhid = DataSetupUtility.Home4ID;
-                    secondcurrency = DataSetupUtility.Home4BaseCurrency;
                 }
                 else if (user == DataSetupUtility.UserD)
                 {
                     secondhid = DataSetupUtility.Home5ID;
-                    secondcurrency = DataSetupUtility.Home5BaseCurrency;
                 }
             }
             else if (hid == DataSetupUtility.Home2ID)
             {
                 secondhid = DataSetupUtility.Home3ID;
-                secondcurrency = DataSetupUtility.Home3BaseCurrency;
-            }
-            if (secondhid != hid)
-            {
-                // Account
-                accountObject = new FinanceAccount()
-                {
-                    HomeID = secondhid,
-                    Name = "Account 3.1",
-                    CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
-                    Owner = user
-                };
-                var ea1 = context.FinanceAccount.Add(accountObject);
-                accountsCreated.Add(ea1.Entity);
-                // Control center
-                controlCenterObject = new FinanceControlCenter()
-                {
-                    HomeID = secondhid,
-                    Name = "Control Center 3.1",
-                    Comment = "Comment 3.1",
-                    Owner = user
-                };
-                var ec1 = context.FinanceControlCenter.Add(controlCenterObject);
-                controlCentersCreated.Add(ec1.Entity);
-                // Order
-                orderObject = new FinanceOrder()
-                {
-                    HomeID = secondhid,
-                    Name = "Order 3.1",
-                    Comment = "Comment 3.1"
-                };
-                var srule1 = new FinanceOrderSRule()
-                {
-                    Order = orderObject,
-                    RuleID = 1,
-                    ControlCenterID = ec1.Entity.ID,
-                    Precent = 100
-                };
-                orderObject.SRule.Add(srule1);
-                var eord1 = context.FinanceOrder.Add(orderObject);
-                ordersCreated.Add(eord1.Entity);
-                // Document
-                documentObject = new FinanceDocument()
-                {
-                    HomeID = secondhid,
-                    DocType = FinanceDocumentType.DocType_Normal,
-                    TranCurr = secondcurrency,
-                    Desp = "Test 1"
-                };
-                var item1 = new FinanceDocumentItem()
-                {
-                    DocumentHeader = documentObject,
-                    ItemID = 1,
-                    Desp = "Item 1.1",
-                    TranType = 2, // Wage
-                    TranAmount = 10,
-                    AccountID = ea1.Entity.ID,
-                    ControlCenterID = ec1.Entity.ID,
-                };
-                documentObject.Items.Add(item1);
-                var edoc1 = context.FinanceDocument.Add(documentObject);
-                documentsCreated.Add(edoc1.Entity);
-                await context.SaveChangesAsync();
             }
 
-            // 0b. Prepare the context for current home
-            if (hid > 0)
+            if (hid == DataSetupUtility.Home1ID || secondhid == DataSetupUtility.Home1ID)
             {
-                // Account
-                accountObject = new FinanceAccount()
-                {
-                    HomeID = hid,
-                    Name = "Account 3.1",
-                    CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
-                    Owner = user
-                };
-                var ea1 = context.FinanceAccount.Add(accountObject);
-                accountsCreated.Add(ea1.Entity);
-                // Control center
-                controlCenterObject = new FinanceControlCenter()
-                {
-                    HomeID = hid,
-                    Name = "Control Center 3.1",
-                    Comment = "Comment 3.1",
-                    Owner = user
-                };
-                var ec1 = context.FinanceControlCenter.Add(controlCenterObject);
-                controlCentersCreated.Add(ec1.Entity);
-                // Order
-                orderObject = new FinanceOrder()
-                {
-                    HomeID = hid,
-                    Name = "Order 3.1",
-                    Comment = "Comment 3.1"
-                };
-                var srule1 = new FinanceOrderSRule()
-                {
-                    Order = orderObject,
-                    RuleID = 1,
-                    ControlCenterID = ec1.Entity.ID,
-                    Precent = 100
-                };
-                orderObject.SRule.Add(srule1);
-                var eord1 = context.FinanceOrder.Add(orderObject);
-                ordersCreated.Add(eord1.Entity);
-                await context.SaveChangesAsync();
+                fixture.InitHome1TestData(context);
             }
+            else if (hid == DataSetupUtility.Home2ID || secondhid == DataSetupUtility.Home2ID)
+            {
+                fixture.InitHome2TestData(context);
+            }
+            else if (hid == DataSetupUtility.Home3ID || secondhid == DataSetupUtility.Home3ID)
+            {
+                fixture.InitHome3TestData(context);
+            }
+            else if (hid == DataSetupUtility.Home4ID || secondhid == DataSetupUtility.Home4ID)
+            {
+                fixture.InitHome4TestData(context);
+            }
+            else if (hid == DataSetupUtility.Home5ID || secondhid == DataSetupUtility.Home5ID)
+            {
+                fixture.InitHome5TestData(context);
+            }
+            var account = context.FinanceAccount.Where(p => p.HomeID == hid && p.Status != FinanceAccountStatus.Closed).FirstOrDefault();
+            var cc = context.FinanceControlCenter.Where(p => p.HomeID == hid).FirstOrDefault();
+            var existamt = (from homemem in context.HomeMembers
+                            join findoc in context.FinanceDocument
+                            on new { homemem.HomeID, homemem.User } equals new { findoc.HomeID, User = user }
+                            select findoc.ID).ToList().Count();
+            var existamt_curhome = context.FinanceDocument.Where(p => p.HomeID == hid).Count();
 
             // 1. Create first docs.
             var control = new FinanceDocumentsController(context);
@@ -210,8 +121,8 @@ namespace hihapi.test.UnitTests
                 Desp = "Item 1.1",
                 TranType = 2, // Wage
                 TranAmount = 10,
-                AccountID = accountsCreated.First(p => p.HomeID == hid).ID,
-                ControlCenterID = controlCentersCreated.First(p => p.HomeID == hid).ID,
+                AccountID = account.ID,
+                ControlCenterID = cc.ID,
             };
             doc.Items.Add(item);
             var rst = await control.Post(doc);
@@ -220,7 +131,7 @@ namespace hihapi.test.UnitTests
             Assert.Equal(rst2.Entity.TranCurr, doc.TranCurr);
             Assert.Equal(rst2.Entity.Desp, doc.Desp);
             var firstdocid = rst2.Entity.ID;
-            documentsCreated.Add(rst2.Entity);
+            documentsCreated.Add(firstdocid);
             Assert.True(firstdocid > 0);
 
             // 2a. Now read the whole orders (without home id)
@@ -228,10 +139,9 @@ namespace hihapi.test.UnitTests
             var req = UnitTestUtility.GetHttpRequest(httpctx, "GET", queryUrl);
             var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceDocument>(this.model);
             var options = UnitTestUtility.GetODataQueryOptions<FinanceDocument>(odatacontext, req);
-            var expectedamt = documentsCreated.Where(p => p.HomeID == hid).Count() + 1;
             var rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(expectedamt, rst3.Cast<FinanceDocument>().Count());
+            Assert.Equal(existamt + 1, rst3.Cast<FinanceDocument>().Count());
 
             // 2b. Now read the whole orders (with home id)
             queryUrl = "http://localhost/api/FinanceDocuments?$filter=HomeID eq " + hid.ToString();
@@ -240,7 +150,7 @@ namespace hihapi.test.UnitTests
             options = UnitTestUtility.GetODataQueryOptions<FinanceDocument>(odatacontext, req);
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(1, rst3.Cast<FinanceDocument>().Count());
+            Assert.Equal(existamt_curhome + 1, rst3.Cast<FinanceDocument>().Count());
 
             // 3. Now create another one!
             doc = new FinanceDocument()
@@ -257,8 +167,8 @@ namespace hihapi.test.UnitTests
                 Desp = "Item 2.1",
                 TranType = 2, // Wage
                 TranAmount = 10,
-                AccountID = accountsCreated.First(p => p.HomeID == hid).ID,
-                OrderID = ordersCreated.FirstOrDefault(p => p.HomeID == hid)?.ID,
+                AccountID = account.ID,
+                ControlCenterID = cc.ID
             };
             doc.Items.Add(item);
             rst = await control.Post(doc);
@@ -287,16 +197,12 @@ namespace hihapi.test.UnitTests
             // 6. Now read the whole documents
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(1, rst3.Cast<FinanceDocument>().Count());
+            Assert.Equal(existamt_curhome + 1, rst3.Cast<FinanceDocument>().Count());
 
             // Last, clear all created objects
-            context.FinanceDocument.RemoveRange(documentsCreated);
-            context.FinanceAccount.RemoveRange(accountsCreated);
-            context.FinanceControlCenter.RemoveRange(controlCentersCreated);
-            context.FinanceOrder.RemoveRange(ordersCreated);
+            foreach(var did in documentsCreated)
+                this.fixture.DeleteDocument(context, did);
             await context.SaveChangesAsync();
-
-            Assert.Equal(0, context.FinanceDocumentItem.Where(p => p.DocID == firstdocid).Count());
 
             await context.DisposeAsync();
         }

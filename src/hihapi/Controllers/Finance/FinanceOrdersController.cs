@@ -134,11 +134,11 @@ namespace hihapi.Controllers
                 return BadRequest();
 
             _context.FinanceOrder.Add(order);
-            foreach(var rule in order.SRule)
-            {
-                rule.Order = order;
-                _context.FinanceOrderSRule.Add(rule);
-            }
+            //foreach(var rule in order.SRule)
+            //{
+            //    rule.Order = order;
+            //    _context.FinanceOrderSRule.Add(rule);
+            //}
             await _context.SaveChangesAsync();
 
             return Created(order);

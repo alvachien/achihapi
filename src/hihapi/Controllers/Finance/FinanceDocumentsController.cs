@@ -484,65 +484,51 @@ namespace hihapi.Controllers
             var errorOccur = false;
             var origdocid = 0;
             var dpaccountid = 0;
-            try
+
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
-                await _context.SaveChangesAsync();
-                origdocid = docEntity.Entity.ID;
-
-                // 2, Create the account
-                createContext.AccountInfo.ExtraLoan.RefDocID = origdocid;
-                var acntEntity = _context.FinanceAccount.Add(createContext.AccountInfo);
-                await _context.SaveChangesAsync();
-                dpaccountid = acntEntity.Entity.ID;
-
-                // 3, Update the document
-                var itemid = docEntity.Entity.Items.ElementAt(0).ItemID;
-                // _context.Attach(docEntity);
-
-                var ndi = new FinanceDocumentItem();
-                ndi.ItemID = ++itemid;
-                ndi.AccountID = dpaccountid;
-                ndi.ControlCenterID = docEntity.Entity.Items.ElementAt(0).ControlCenterID;
-                ndi.OrderID = docEntity.Entity.Items.ElementAt(0).OrderID;
-                ndi.Desp = docEntity.Entity.Items.ElementAt(0).Desp;
-                ndi.TranAmount = docEntity.Entity.Items.ElementAt(0).TranAmount;
-                ndi.UseCurr2 = docEntity.Entity.Items.ElementAt(0).UseCurr2;
-                if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_BorrowFrom)
-                    ndi.TranType = FinanceTransactionType.TranType_BorrowFrom;
-                else if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_LendTo)
-                    ndi.TranType = FinanceTransactionType.TranType_LendTo;
-                docEntity.Entity.Items.Add(ndi);
-
-                docEntity.State = EntityState.Modified;
-
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception exp)
-            {
-                errorOccur = true;
-                errorString = exp.Message;
-            }
-            finally
-            {
-                // Remove new created object
-                if (errorOccur)
+                try
                 {
-                    try
-                    {
-                        if (origdocid > 0)
-                        {
-                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + origdocid.ToString());
-                        }
-                        if (dpaccountid > 0)
-                        {
-                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = " + dpaccountid.ToString());
-                        }
-                    }
-                    catch (Exception exp2)
-                    {
-                        System.Diagnostics.Debug.WriteLine(exp2.Message);
-                    }
+                    // 1. Create document
+                    var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
+                    await _context.SaveChangesAsync();
+                    origdocid = docEntity.Entity.ID;
+
+                    // 2, Create the account
+                    createContext.AccountInfo.ExtraLoan.RefDocID = origdocid;
+                    var acntEntity = _context.FinanceAccount.Add(createContext.AccountInfo);
+                    await _context.SaveChangesAsync();
+                    dpaccountid = acntEntity.Entity.ID;
+
+                    // 3, Update the document
+                    var itemid = docEntity.Entity.Items.ElementAt(0).ItemID;
+                    // _context.Attach(docEntity);
+
+                    var ndi = new FinanceDocumentItem();
+                    ndi.ItemID = ++itemid;
+                    ndi.AccountID = dpaccountid;
+                    ndi.ControlCenterID = docEntity.Entity.Items.ElementAt(0).ControlCenterID;
+                    ndi.OrderID = docEntity.Entity.Items.ElementAt(0).OrderID;
+                    ndi.Desp = docEntity.Entity.Items.ElementAt(0).Desp;
+                    ndi.TranAmount = docEntity.Entity.Items.ElementAt(0).TranAmount;
+                    ndi.UseCurr2 = docEntity.Entity.Items.ElementAt(0).UseCurr2;
+                    if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_BorrowFrom)
+                        ndi.TranType = FinanceTransactionType.TranType_BorrowFrom;
+                    else if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_LendTo)
+                        ndi.TranType = FinanceTransactionType.TranType_LendTo;
+                    docEntity.Entity.Items.Add(ndi);
+
+                    docEntity.State = EntityState.Modified;
+
+                    await _context.SaveChangesAsync();
+
+                    transaction.Commit();
+                }
+                catch (Exception exp)
+                {
+                    errorOccur = true;
+                    errorString = exp.Message;
+                    transaction.Rollback();
                 }
             }
 
@@ -672,64 +658,49 @@ namespace hihapi.Controllers
             var errorOccur = false;
             var origdocid = 0;
             var assetaccountid = 0;
-            try
+
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                // 1. Create the document
-                var docEntity = _context.FinanceDocument.Add(vmFIDoc);
-                await _context.SaveChangesAsync();
-                origdocid = docEntity.Entity.ID;
-
-                // 2, Create the account
-                vmAccount.ExtraAsset.RefenceBuyDocumentID = origdocid;
-                var acntEntity = _context.FinanceAccount.Add(vmAccount);
-                await _context.SaveChangesAsync();
-                assetaccountid = acntEntity.Entity.ID;
-
-                // 3. Update the document by adding one more item
-                var nitem = new FinanceDocumentItem();
-                nitem.ItemID = ++maxItemID;
-                nitem.AccountID = assetaccountid;
-                nitem.TranAmount = createContext.TranAmount;
-                nitem.Desp = vmFIDoc.Desp;
-                nitem.TranType = FinanceTransactionType.TranType_OpeningAsset;
-                if (createContext.ControlCenterID.HasValue)
-                    nitem.ControlCenterID = createContext.ControlCenterID.Value;
-                if (createContext.OrderID.HasValue)
-                    nitem.OrderID = createContext.OrderID.Value;
-                nitem.DocumentHeader = vmFIDoc;
-                docEntity.Entity.Items.Add(nitem);
-
-                docEntity.State = EntityState.Modified;
-
-                await _context.SaveChangesAsync();
-
-                vmFIDoc = docEntity.Entity;
-            }
-            catch (Exception exp)
-            {
-                errorOccur = true;
-                errorString = exp.Message;
-            }
-            finally
-            {
-                // Remove new created object
-                if (errorOccur)
+                try
                 {
-                    try
-                    {
-                        if (origdocid > 0)
-                        {
-                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + origdocid.ToString());
-                        }
-                        if (assetaccountid > 0)
-                        {
-                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = " + assetaccountid.ToString());
-                        }
-                    }
-                    catch (Exception exp2)
-                    {
-                        System.Diagnostics.Debug.WriteLine(exp2.Message);
-                    }
+                    // 1. Create the document
+                    var docEntity = _context.FinanceDocument.Add(vmFIDoc);
+                    await _context.SaveChangesAsync();
+                    origdocid = docEntity.Entity.ID;
+
+                    // 2, Create the account
+                    vmAccount.ExtraAsset.RefenceBuyDocumentID = origdocid;
+                    var acntEntity = _context.FinanceAccount.Add(vmAccount);
+                    await _context.SaveChangesAsync();
+                    assetaccountid = acntEntity.Entity.ID;
+
+                    // 3. Update the document by adding one more item
+                    var nitem = new FinanceDocumentItem();
+                    nitem.ItemID = ++maxItemID;
+                    nitem.AccountID = assetaccountid;
+                    nitem.TranAmount = createContext.TranAmount;
+                    nitem.Desp = vmFIDoc.Desp;
+                    nitem.TranType = FinanceTransactionType.TranType_OpeningAsset;
+                    if (createContext.ControlCenterID.HasValue)
+                        nitem.ControlCenterID = createContext.ControlCenterID.Value;
+                    if (createContext.OrderID.HasValue)
+                        nitem.OrderID = createContext.OrderID.Value;
+                    nitem.DocumentHeader = vmFIDoc;
+                    docEntity.Entity.Items.Add(nitem);
+
+                    docEntity.State = EntityState.Modified;
+
+                    await _context.SaveChangesAsync();
+
+                    vmFIDoc = docEntity.Entity;
+
+                    transaction.Commit();
+                }
+                catch (Exception exp)
+                {
+                    errorOccur = true;
+                    errorString = exp.Message;
+                    transaction.Rollback();
                 }
             }
 
@@ -888,36 +859,25 @@ namespace hihapi.Controllers
             var errorString = "";
             var errorOccur = false;
             var origdocid = 0;
-            try
-            {
-                // 1. Create the document
-                var docEntity = _context.FinanceDocument.Add(vmFIDoc);
-                await _context.SaveChangesAsync();
-                origdocid = docEntity.Entity.ID;
 
-                vmFIDoc = docEntity.Entity;
-            }
-            catch (Exception exp)
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                errorOccur = true;
-                errorString = exp.Message;
-            }
-            finally
-            {
-                // Remove new created object
-                if (errorOccur)
+                try
                 {
-                    try
-                    {
-                        if (origdocid > 0)
-                        {
-                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + origdocid.ToString());
-                        }
-                    }
-                    catch (Exception exp2)
-                    {
-                        System.Diagnostics.Debug.WriteLine(exp2.Message);
-                    }
+                    // 1. Create the document
+                    var docEntity = _context.FinanceDocument.Add(vmFIDoc);
+                    await _context.SaveChangesAsync();
+                    origdocid = docEntity.Entity.ID;
+
+                    vmFIDoc = docEntity.Entity;
+
+                    transaction.Commit();
+                }
+                catch (Exception exp)
+                {
+                    errorOccur = true;
+                    errorString = exp.Message;
+                    transaction.Rollback();
                 }
             }
 
@@ -1082,36 +1042,24 @@ namespace hihapi.Controllers
             var errorOccur = false;
             var origdocid = 0;
 
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                // 1. Create the document
-                var docEntity = _context.FinanceDocument.Add(vmFIDoc);
-                await _context.SaveChangesAsync();
-                origdocid = docEntity.Entity.ID;
-
-                vmFIDoc = docEntity.Entity;
-            }
-            catch (Exception exp)
-            {
-                errorOccur = true;
-                errorString = exp.Message;
-            }
-            finally
-            {
-                // Remove new created object
-                if (errorOccur)
+                try
                 {
-                    try
-                    {
-                        if (origdocid > 0)
-                        {
-                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + origdocid.ToString());
-                        }
-                    }
-                    catch (Exception exp2)
-                    {
-                        System.Diagnostics.Debug.WriteLine(exp2.Message);
-                    }
+                    // 1. Create the document
+                    var docEntity = _context.FinanceDocument.Add(vmFIDoc);
+                    await _context.SaveChangesAsync();
+                    origdocid = docEntity.Entity.ID;
+
+                    vmFIDoc = docEntity.Entity;
+
+                    transaction.Commit();
+                }
+                catch (Exception exp)
+                {
+                    errorOccur = true;
+                    errorString = exp.Message;
+                    transaction.Rollback();
                 }
             }
 

@@ -1,12 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using Xunit;
 using System.Linq;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Sqlite;
 using hihapi.Models;
 using hihapi.Controllers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNet.OData.Results;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.OData.Edm;
@@ -15,16 +19,15 @@ using hihapi.Utilities;
 namespace hihapi.test.UnitTests
 {
     [Collection("HIHAPI_UnitTests#1")]
-    public class FinanceDocumentDownpaymentTest: IDisposable
+    public class FinanceTmpDPDocumentsControllerTest : IDisposable
     {
-        private SqliteDatabaseFixture fixture = null;
+        SqliteDatabaseFixture fixture = null;
         private ServiceProvider provider = null;
         private IEdmModel model = null;
 
-        public FinanceDocumentDownpaymentTest(SqliteDatabaseFixture fixture)
+        public FinanceTmpDPDocumentsControllerTest(SqliteDatabaseFixture fixture)
         {
             this.fixture = fixture;
-
             this.provider = UnitTestUtility.GetServiceProvider();
             this.model = UnitTestUtility.GetEdmModel<FinanceDocument>(provider, "FinanceDocuments");
         }
@@ -71,7 +74,7 @@ namespace hihapi.test.UnitTests
             var account = context.FinanceAccount.Where(p => p.HomeID == hid && p.Status != FinanceAccountStatus.Closed).FirstOrDefault();
             var cc = context.FinanceControlCenter.Where(p => p.HomeID == hid).FirstOrDefault();
 
-            // 1. Create first DP docs.
+            // 1. Create DP docs.
             var control = new FinanceDocumentsController(context);
             var userclaim = DataSetupUtility.GetClaimForUser(user);
             var httpctx = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
@@ -94,10 +97,10 @@ namespace hihapi.test.UnitTests
                 DocumentHeader = dpcontext.DocumentInfo,
                 ItemID = 1,
                 Desp = "Item 1.1",
-                TranType = doctype == FinanceDocumentType.DocType_AdvancePayment 
+                TranType = doctype == FinanceDocumentType.DocType_AdvancePayment
                     ? FinanceTransactionType.TranType_AdvancePaymentOut
                     : FinanceTransactionType.TranType_AdvanceReceiveIn,
-                TranAmount = 1200,                
+                TranAmount = 1200,
                 AccountID = account.ID,
                 ControlCenterID = cc.ID,
             };
@@ -128,7 +131,7 @@ namespace hihapi.test.UnitTests
                 RepeatType = RepeatFrequency.Month,
                 Desp = item.Desp,
             });
-            foreach(var rst in rsts)
+            foreach (var rst in rsts)
             {
                 var tmpdoc = new FinanceTmpDPDocument
                 {
@@ -148,36 +151,17 @@ namespace hihapi.test.UnitTests
             documentCreated = doc.ID;
             Assert.True(doc.Items.Count == 2);
 
-            // Now check in the databse
-            foreach (var docitem in doc.Items)
+            // 2. Switch to second controller
+            var tmpcontrol = new FinanceTmpDPDocumentsController(context);
+            tmpcontrol.ControllerContext = new ControllerContext()
             {
-                if (docitem.AccountID != account.ID)
-                {
-                    accountCreated = docitem.AccountID;
+                HttpContext = httpctx
+            };
+            var tmpdocs = tmpcontrol.Get();
+            Assert.NotEmpty(tmpdocs);
+            Assert.Equal(rsts.Count, tmpdocs.Count());
 
-                    var acnt = context.FinanceAccount.Find(docitem.AccountID);
-                    Assert.NotNull(acnt);
-                    if (doctype == FinanceDocumentType.DocType_AdvancePayment)
-                        Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_AdvancePayment);
-                    if (doctype == FinanceDocumentType.DocType_AdvanceReceive)
-                        Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_AdvanceReceive);
-                    var acntExtraDP = context.FinanceAccountExtraDP.Find(docitem.AccountID);
-                    Assert.NotNull(acntExtraDP);
-                    Assert.True(acntExtraDP.RefenceDocumentID == doc.ID);
-
-                    var tmpdocs = context.FinanceTmpDPDocument.Where(p => p.AccountID == docitem.AccountID).OrderBy(p => p.TransactionDate).ToList();
-                    Assert.True(rsts.Count == tmpdocs.Count);
-
-                    foreach(var rst in rsts)
-                    {
-                        DateTime dat = rst.TranDate;
-                        var tdoc = tmpdocs.Find(p => p.TransactionDate.Date == dat);
-                        Assert.NotNull(tdoc);
-                        Assert.True(rst.TranAmount == tdoc.TranAmount);
-                        Assert.True(tdoc.AccountID == acntExtraDP.AccountID);
-                    }
-                }
-            }
+            // 3. Create repay document
 
             // Last, clear all created objects
             if (documentCreated > 0)

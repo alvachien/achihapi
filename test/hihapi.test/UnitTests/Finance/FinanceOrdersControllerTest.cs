@@ -45,163 +45,38 @@ namespace hihapi.test.UnitTests
         [InlineData(DataSetupUtility.Home2ID, DataSetupUtility.UserB)]
         public async Task TestCase1(int hid, string user)
         {
-            // 0. Prepare entries for other homes
-            List<FinanceControlCenter> ccInOtherHomes = new List<FinanceControlCenter>();
-            List<FinanceOrder> ordInOtherHomes = new List<FinanceOrder>();
             var context = this.fixture.GetCurrentDataContext();
-
-            var secondhid = hid;
             if (hid == DataSetupUtility.Home1ID)
             {
-                if (user == DataSetupUtility.UserA || user == DataSetupUtility.UserB)
-                {
-                    secondhid = DataSetupUtility.Home3ID;
-                    var cc1 = new FinanceControlCenter()
-                    {
-                        HomeID = secondhid,
-                        Name = "Control Center 2.1",
-                        Comment = "Comment 2.1",
-                        Owner = user
-                    };
-                    var ec1 = context.FinanceControlCenter.Add(cc1);
-                    ccInOtherHomes.Add(ec1.Entity);
-
-                    var ord1 = new FinanceOrder()
-                    {
-                        HomeID = secondhid,
-                        Name = "Order 2.1",
-                        Comment = "Comment 2.1"
-                    };
-                    var srule1 = new FinanceOrderSRule()
-                    {
-                        Order = ord1,
-                        RuleID = 1,
-                        ControlCenterID = ec1.Entity.ID,
-                        Precent = 100
-                    };
-                    ord1.SRule.Add(srule1);
-                    var eord1 = context.FinanceOrder.Add(ord1);
-                    ordInOtherHomes.Add(eord1.Entity);
-                    context.SaveChanges();
-                }
-                else if (user == DataSetupUtility.UserC)
-                {
-                    secondhid = DataSetupUtility.Home4ID;
-                    var cc1 = new FinanceControlCenter()
-                    {
-                        HomeID = secondhid,
-                        Name = "Control Center 4.1",
-                        Comment = "Comment 4.1",
-                        Owner = user
-                    };
-                    var ec1 = context.FinanceControlCenter.Add(cc1);
-                    ccInOtherHomes.Add(ec1.Entity);
-
-                    var ord1 = new FinanceOrder()
-                    {
-                        HomeID = secondhid,
-                        Name = "Order 4.1",
-                        Comment = "Comment 4.1"
-                    };
-                    var srule1 = new FinanceOrderSRule()
-                    {
-                        Order = ord1,
-                        RuleID = 1,
-                        ControlCenterID = ec1.Entity.ID,
-                        Precent = 100
-                    };
-                    ord1.SRule.Add(srule1);
-                    var eord1 = context.FinanceOrder.Add(ord1);
-                    ordInOtherHomes.Add(eord1.Entity);
-                    context.SaveChanges();
-                }
-                else if (user == DataSetupUtility.UserD)
-                {
-                    secondhid = DataSetupUtility.Home5ID;
-                    var cc1 = new FinanceControlCenter()
-                    {
-                        HomeID = secondhid,
-                        Name = "Control Center 5.1",
-                        Comment = "Comment 5.1",
-                        Owner = user
-                    };
-                    var ec1 = context.FinanceControlCenter.Add(cc1);
-                    ccInOtherHomes.Add(ec1.Entity);
-
-                    var ord1 = new FinanceOrder()
-                    {
-                        HomeID = secondhid,
-                        Name = "Order 5.1",
-                        Comment = "Comment 5.1"
-                    };
-                    var srule1 = new FinanceOrderSRule()
-                    {
-                        Order = ord1,
-                        RuleID = 1,
-                        ControlCenterID = ec1.Entity.ID,
-                        Precent = 100
-                    };
-                    ord1.SRule.Add(srule1);
-                    var eord1 = context.FinanceOrder.Add(ord1);
-                    ordInOtherHomes.Add(eord1.Entity);
-                    context.SaveChanges();
-                }
+                fixture.InitHome1TestData(context);
             }
-            else if(hid == DataSetupUtility.Home2ID)
+            if (hid == DataSetupUtility.Home2ID)
             {
-                secondhid = DataSetupUtility.Home3ID;
-                var cc1 = new FinanceControlCenter()
-                {
-                    HomeID = secondhid,
-                    Name = "Control Center 3.1",
-                    Comment = "Comment 3.1",
-                    Owner = user
-                };
-                var ec1 = context.FinanceControlCenter.Add(cc1);
-                ccInOtherHomes.Add(ec1.Entity);
-
-                var ord1 = new FinanceOrder()
-                {
-                    HomeID = secondhid,
-                    Name = "Order 3.1",
-                    Comment = "Comment 3.1"
-                };
-                var srule1 = new FinanceOrderSRule()
-                {
-                    Order = ord1,
-                    RuleID = 1,
-                    ControlCenterID = ec1.Entity.ID,
-                    Precent = 100
-                };
-                ord1.SRule.Add(srule1);
-                var eord1 = context.FinanceOrder.Add(ord1);
-                ordInOtherHomes.Add(eord1.Entity);
-                context.SaveChanges();
+                fixture.InitHome2TestData(context);
+            }
+            if (hid == DataSetupUtility.Home3ID)
+            {
+                fixture.InitHome3TestData(context);
+            }
+            if (hid == DataSetupUtility.Home4ID)
+            {
+                fixture.InitHome4TestData(context);
+            }
+            if (hid == DataSetupUtility.Home5ID)
+            {
+                fixture.InitHome5TestData(context);
             }
 
-            // 1. Setup control centers
-            var cccontrol = new FinanceControlCentersController(context);
+            // 1. Prepare dta
             var userclaim = DataSetupUtility.GetClaimForUser(user);
             var httpctx = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
-            cccontrol.ControllerContext = new ControllerContext()
-            {
-                HttpContext = httpctx
-            };
-            await cccontrol.Post(new FinanceControlCenter()
-            {
-                HomeID = hid,
-                Name = "Control Center 1",
-                Comment = "Comment 1",
-                Owner = user
-            });
-            await cccontrol.Post(new FinanceControlCenter()
-            {
-                HomeID = hid,
-                Name = "Control Center 2",
-                Comment = "Comment 2",
-                Owner = user
-            });
             var listCCs = context.FinanceControlCenter.Where(p => p.HomeID == hid).ToList<FinanceControlCenter>();
+
+            var existamt = (from homemem in context.HomeMembers
+                              join finord in context.FinanceOrder
+                              on new { homemem.HomeID, homemem.User } equals new { finord.HomeID, User = user }
+                              select finord.ID).ToList().Count();
+            var existamt_curhome = context.FinanceOrder.Where(p => p.HomeID == hid).Count();
 
             // 2. Create order
             var control = new FinanceOrdersController(context);
@@ -236,9 +111,8 @@ namespace hihapi.test.UnitTests
             var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceOrder>(this.model);
             var options = UnitTestUtility.GetODataQueryOptions<FinanceOrder>(odatacontext, req);
             var rst3 = control.Get(options);
-            var expacntamt = ordInOtherHomes.Count() + 1;
             Assert.NotNull(rst3);
-            Assert.Equal(expacntamt, rst3.Cast<FinanceOrder>().Count());
+            Assert.Equal(existamt + 1, rst3.Cast<FinanceOrder>().Count());
 
             // 3a. Read the order out (with Home ID)
             queryUrl = "http://localhost/api/FinanceOrders?$filter=HomeID eq " + hid.ToString();
@@ -246,9 +120,8 @@ namespace hihapi.test.UnitTests
             //var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceOrder>(this.model);
             options = UnitTestUtility.GetODataQueryOptions<FinanceOrder>(odatacontext, req);
             rst3 = control.Get(options);
-            expacntamt = 1;
             Assert.NotNull(rst3);
-            Assert.Equal(expacntamt, rst3.Cast<FinanceOrder>().Count());
+            Assert.Equal(existamt_curhome + 1, rst3.Cast<FinanceOrder>().Count());
 
             // 4. Change one order
             var norder = rst2.Entity;
@@ -268,13 +141,7 @@ namespace hihapi.test.UnitTests
             // 6. Read the order again
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(0, rst3.Cast<FinanceOrder>().Count());
-
-            // Last, delete all pre-created objects.
-            context.FinanceControlCenter.RemoveRange(listCCs);
-            context.FinanceOrder.RemoveRange(ordInOtherHomes);
-            context.FinanceControlCenter.RemoveRange(ccInOtherHomes);
-            context.SaveChanges();
+            Assert.Equal(existamt_curhome, rst3.Cast<FinanceOrder>().Count());
 
             await context.DisposeAsync();
         }

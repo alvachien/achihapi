@@ -72,6 +72,47 @@ namespace hihapi.test
             return context;
         }
 
+        public void InitHome1TestData(hihDataContext context)
+        {
+            if (!this.IsHome1DataInitialized)
+            {
+                DataSetupUtility.CreateTestingData_Home1(context);
+                this.IsHome1DataInitialized = true;
+            }
+        }
+        public void InitHome2TestData(hihDataContext context)
+        {
+            if (!this.IsHome2DataInitialized)
+            {
+                DataSetupUtility.CreateTestingData_Home2(context);
+                this.IsHome2DataInitialized = true;
+            }
+        }
+        public void InitHome3TestData(hihDataContext context)
+        {
+            if (!this.IsHome3DataInitialized)
+            {
+                DataSetupUtility.CreateTestingData_Home3(context);
+                this.IsHome3DataInitialized = true;
+            }
+        }
+        public void InitHome4TestData(hihDataContext context)
+        {
+            if (!this.IsHome4DataInitialized)
+            {
+                DataSetupUtility.CreateTestingData_Home4(context);
+                this.IsHome4DataInitialized = true;
+            }
+        }
+        public void InitHome5TestData(hihDataContext context)
+        {
+            if (!this.IsHome5DataInitialized)
+            {
+                DataSetupUtility.CreateTestingData_Home5(context);
+                this.IsHome5DataInitialized = true;
+            }
+        }
+
         public void DeleteAccount(hihDataContext context, int acntid)
         {
             context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = " + acntid.ToString());
@@ -93,6 +134,11 @@ namespace hihapi.test
         }
 
         protected SqliteConnection DBConnection { get; private set; }
+        public bool IsHome1DataInitialized { get; private set; }
+        public bool IsHome2DataInitialized { get; private set; }
+        public bool IsHome3DataInitialized { get; private set; }
+        public bool IsHome4DataInitialized { get; private set; }
+        public bool IsHome5DataInitialized { get; private set; }
         //public hihDataContext CurrentDataContext { get; private set; }
     }
 }

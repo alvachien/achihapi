@@ -42,7 +42,10 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            return _context.FinanceTmpDPDocument;
+            return from homemem in _context.HomeMembers
+                    join fintdpd in _context.FinanceTmpDPDocument
+                    on new { homemem.HomeID, homemem.User } equals new { fintdpd.HomeID, User = usrName }
+                    select fintdpd;
         }
 
         [HttpPost]

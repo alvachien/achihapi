@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Security.Claims;
 using hihapi.Models;
+using hihapi.Controllers;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -20,7 +21,6 @@ namespace hihapi.test
         public static List<FinanceAssetCategory> FinanceAssetCategories { get; private set; }
         public static List<FinanceDocumentType> FinanceDocumentTypes { get; private set; }
         public static List<FinanceTransactionType> FinanceTransactionTypes { get; private set; }
-
 
         /// <summary>
         /// Testing data
@@ -90,6 +90,7 @@ namespace hihapi.test
             }, "mock"));
         }
 
+        #region Create tables and Views
         public static void CreateDatabaseTables(DatabaseFacade database) 
         {
             // Home defines
@@ -533,7 +534,9 @@ namespace hihapi.test
                        table_a.balance - table_b.balance as balance
                  from table_a inner join table_b on table_a.accountid = table_b.accountid ");
         }
+        #endregion
 
+        #region Update table with system data and configuration data
         public static void InitializeSystemTables(hihDataContext db)
         {
             InitialTable_DBVersion(db);
@@ -586,7 +589,9 @@ namespace hihapi.test
             db.HomeDefines.AddRange(DataSetupUtility.HomeDefines);
             db.HomeMembers.AddRange(DataSetupUtility.HomeMembers);
         }
+        #endregion
 
+        #region Setup system data and configuration data
         private static void SetupTable_HomeDefineAndMember()
         {
             // Home 1
@@ -720,6 +725,7 @@ namespace hihapi.test
                 Createdby = UserD
             });
         }
+        
         private static void SetupTable_DBVersion()
         {
             // Versions
@@ -967,5 +973,1564 @@ namespace hihapi.test
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 77, Name = "医药费", Expense = true, ParID = 75, Comment = "医药费" });
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 78, Name = "保健品费", Expense = true, ParID = 75, Comment = "保健品费" });
         }
+        #endregion
+
+        #region Setup testing data
+        private static List<int> NotAllowedTranTypes
+        {
+            get
+            {
+                return new List<int>
+                {
+                    1,
+                    37,
+                    60,
+                    80,
+                    81,
+                    82,
+                    86,
+                    87,
+                    88,
+                    89,
+                    90,
+                    91,
+                    92,
+                    93,
+                };
+            }
+        }
+        /// <summary>
+        /// Home 1
+        ///     [Host] User A
+        ///     User B
+        ///     User C
+        ///     User D
+        /// 
+        ///  Accounts:
+        ///     Cash Account 1, owned by User A
+        ///     Cash Account 2, owned by User B
+        ///     Cash Account 3, owned by User C
+        ///     Cash Account 4, owned by User D
+        ///     Deposit Account 5, owned by User A
+        ///     Deposit Account 6, owned by User A, Closed
+        ///     Deposit Account 7, owned by User A
+        ///     Deposit Account 8, owned by User B
+        ///     Deposit Account 9, owned by User B
+        ///     Deposit Account 10, owned by User C
+        ///     Deposit Account 11, owned by User D
+        ///     Creditcard Account 12, owned by User A
+        ///     Creditcard Account 13, owned by User A
+        ///     Creditcard Account 14, owned by User B
+        ///     Creditcard Account 15, owned by User B, Closed
+        ///     Creditcard Account 16, owned by User B
+        ///     Virtual Account 17, owned by User A
+        ///     Virtual Account 18, owned by User B
+        ///     
+        /// Control centers
+        ///     CC 1, no owner
+        ///         CC2, parent: CC1
+        ///             CC3, parent CC2, owned by user A
+        ///             CC4, parent CC2, owned by user B
+        ///             CC5, parent CC2, no owner
+        ///                 CC6, parent CC5, owned by user C
+        ///                 CC7, parent CC5, owned by user D
+        ///         CC8, parent: CC1, no owner
+        ///        
+        /// Orders
+        ///     Order 1, valid from (-12 months to -6 months)
+        ///         Rule: CC3 25%, CC4 25%, and CC8 50%
+        ///     Order 2, valid from (-7 months to 5 months)
+        ///         Rule: CC3 25%, CC4 25% and CC5 50%
+        ///     Order 3, valid from (4 months to 16 months)
+        ///         Rule: CC6 50%, CC7 50%
+        /// 
+        /// </summary>
+        public static void CreateTestingData_Home1(hihDataContext db)
+        {
+            // Accounts
+            #region Accounts
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 1,
+                HomeID = Home1ID,
+                Name = "Cash Account 1",
+                Owner = UserA,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 2,
+                HomeID = Home1ID,
+                Name = "Cash Account 2",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 3,
+                HomeID = Home1ID,
+                Name = "Cash Account 3",
+                Owner = UserC,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 4,
+                HomeID = Home1ID,
+                Name = "Cash Account 4",
+                Owner = UserD,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 5,
+                HomeID = Home1ID,
+                Name = "Deposit Account 5",
+                Owner = UserA,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 6,
+                HomeID = Home1ID,
+                Name = "Deposit Account 6",
+                Owner = UserA,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Closed,
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 7,
+                HomeID = Home1ID,
+                Name = "Deposit Account 7",
+                Owner = UserA,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 8,
+                HomeID = Home1ID,
+                Name = "Deposit Account 8",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Normal,
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 9,
+                HomeID = Home1ID,
+                Name = "Depoist Account 9",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Normal,
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 10,
+                HomeID = Home1ID,
+                Name = "Depoist Account 10",
+                Owner = UserC,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Normal,
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 11,
+                HomeID = Home1ID,
+                Name = "Depoist Account 11",
+                Owner = UserD,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Normal,
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 12,
+                HomeID = Home1ID,
+                Name = "Creditcard Account 12",
+                Owner = UserA,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Normal,
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 13,
+                HomeID = Home1ID,
+                Name = "Creditcard Account 13",
+                Owner = UserA,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Normal,
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 14,
+                HomeID = Home1ID,
+                Name = "Creditcard Account 14",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Normal,
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 15,
+                HomeID = Home1ID,
+                Name = "Creditcard Account 15",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Closed,
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 16,
+                HomeID = Home1ID,
+                Name = "Creditcard Account 16",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Normal,
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 17,
+                HomeID = Home1ID,
+                Name = "Virutal Account 17",
+                Owner = UserA,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_VirtualAccount,
+                Status = FinanceAccountStatus.Normal,
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 18,
+                HomeID = Home1ID,
+                Name = "Virutal Account 18",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_VirtualAccount,
+                Status = FinanceAccountStatus.Normal,
+            });
+            #endregion
+            // Control centers
+            #region Control Centers
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 1,
+                HomeID = Home1ID,
+                Name = "CC1",
+                Comment = "CC1"
+            });
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 2,
+                HomeID = Home1ID,
+                Name = "CC2",
+                ParentID = 1,
+                Comment = "CC2"
+            });
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 3,
+                HomeID = Home1ID,
+                Name = "CC3",
+                ParentID = 2,
+                Owner = UserA,
+                Comment = "CC3"
+            });
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 4,
+                HomeID = Home1ID,
+                Name = "CC4",
+                ParentID = 2,
+                Owner = UserB,
+                Comment = "CC4"
+            });
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 5,
+                HomeID = Home1ID,
+                Name = "CC5",
+                ParentID = 2,
+                Comment = "CC5"
+            });
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 6,
+                HomeID = Home1ID,
+                Name = "CC6",
+                ParentID = 5,
+                Owner = UserC,
+                Comment = "CC6"
+            });
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 7,
+                HomeID = Home1ID,
+                Name = "CC7",
+                ParentID = 5,
+                Owner = UserD,
+                Comment = "CC7"
+            });
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 8,
+                HomeID = Home1ID,
+                Name = "CC8",
+                ParentID = 1,
+                Comment = "CC8"
+            });
+            #endregion
+            // Orders
+            #region Orders
+            db.FinanceOrder.Add(new FinanceOrder
+            {
+                ID = 1,
+                HomeID = Home1ID,
+                Name = "Order 1",
+                ValidFrom = DateTime.Today.AddMonths(-12),
+                ValidTo = DateTime.Today.AddMonths(-6),
+                SRule = new FinanceOrderSRule[]
+                {
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 1,
+                        ControlCenterID = 3,
+                        Precent = 25
+                    },
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 2,
+                        ControlCenterID = 4,
+                        Precent = 25
+                    },
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 3,
+                        ControlCenterID = 8,
+                        Precent = 50
+                    },
+                }
+            });
+            db.FinanceOrder.Add(new FinanceOrder
+            {
+                ID = 2,
+                HomeID = Home1ID,
+                Name = "Order 2",
+                ValidFrom = DateTime.Today.AddMonths(-7),
+                ValidTo = DateTime.Today.AddMonths(5),
+                SRule = new FinanceOrderSRule[]
+                {
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 1,
+                        ControlCenterID = 3,
+                        Precent = 25
+                    },
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 2,
+                        ControlCenterID = 4,
+                        Precent = 25
+                    },
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 3,
+                        ControlCenterID = 5,
+                        Precent = 50
+                    },
+                }
+            });
+            db.FinanceOrder.Add(new FinanceOrder
+            {
+                ID = 3,
+                HomeID = Home1ID,
+                Name = "Order 3",
+                ValidFrom = DateTime.Today.AddMonths(4),
+                ValidTo = DateTime.Today.AddMonths(16),
+                SRule = new FinanceOrderSRule[]
+                {
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 1,
+                        ControlCenterID = 6,
+                        Precent = 50
+                    },
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 2,
+                        ControlCenterID = 7,
+                        Precent = 50
+                    },
+                }
+            });
+            #endregion
+            // Documents
+            #region Documents
+            // -12 - -7
+            var acnts = new int[]
+            {
+                1, 2, 3, 4, 5, 6, 8, 12, 14, 15
+            };
+            var ccs = new int[]
+            {
+                1, 2, 3, 4, 5, 6, 7, 8
+            };
+            var ords = new int[]
+            {
+                1
+            };
+            for(int i = -12; i < -7; i ++)
+            {
+                var dt1 = DateTime.Today.AddMonths(i);
+                var dt2 = DateTime.Today.AddMonths(i + 1);
+                while(dt1 <= dt2)
+                {
+                    dt1 = dt1.AddDays(1);
+                    var docamt = new Random().Next(0, 3);
+                    while (docamt-- > 0)
+                    {
+                        var ndoc = new FinanceDocument
+                        {
+                            TranDate = dt1,
+                            HomeID = Home1ID,
+                            Desp = dt1.ToShortDateString(),
+                            DocType = FinanceDocumentType.DocType_Normal,
+                            TranCurr = Home1BaseCurrency,
+                        };
+                        var docitemcnt = new Random().Next(0, 3);
+                        while (docitemcnt-- >= 0)
+                        {
+                            var ndocitem = new FinanceDocumentItem
+                            {
+                                ItemID = (docitemcnt + 2),
+                                AccountID = acnts[new Random().Next(0, acnts.Length - 1)],
+                                TranAmount = new decimal(new Random().NextDouble() * 100),
+                            };
+                            var ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            while (NotAllowedTranTypes.Exists(p => p == ttid))
+                            {
+                                ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            };
+                            ndocitem.TranType = ttid;
+                            if (new Random().NextDouble() > 0.7)
+                            {
+                                ndocitem.OrderID = ords[0];
+                            }
+                            else
+                            {
+                                ndocitem.ControlCenterID = ccs[new Random().Next(0, ccs.Length - 1)];
+                            }
+                            ndoc.Items.Add(ndocitem);
+                        }
+
+                        db.FinanceDocument.Add(ndoc);
+                    }
+                }
+            }
+            // -7 - -6
+            ords = new int[]
+            {
+                1,
+                2
+            };
+            for (int i = -7; i < -6; i++)
+            {
+                var dt1 = DateTime.Today.AddMonths(i);
+                var dt2 = DateTime.Today.AddMonths(i + 1);
+                while (dt1 <= dt2)
+                {
+                    dt1 = dt1.AddDays(1);
+                    var docamt = new Random().Next(0, 3);
+                    while (docamt-- > 0)
+                    {
+                        var ndoc = new FinanceDocument
+                        {
+                            TranDate = dt1,
+                            HomeID = Home1ID,
+                            Desp = dt1.ToShortDateString(),
+                            DocType = FinanceDocumentType.DocType_Normal,
+                            TranCurr = Home1BaseCurrency,
+                        };
+                        var docitemcnt = new Random().Next(1, 3);
+                        while (docitemcnt-- >= 0)
+                        {
+                            var ndocitem = new FinanceDocumentItem
+                            {
+                                ItemID = (docitemcnt + 2),
+                                AccountID = acnts[new Random().Next(0, acnts.Length - 1)],
+                                TranAmount = new decimal(new Random().NextDouble() * 100),
+                            };
+                            var ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            while (NotAllowedTranTypes.Exists(p => p == ttid))
+                            {
+                                ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            };
+                            ndocitem.TranType = ttid;
+                            if (new Random().NextDouble() > 0.7)
+                            {
+                                ndocitem.OrderID = ords[new Random().Next(0, 1)];
+                            }
+                            else
+                            {
+                                ndocitem.ControlCenterID = ccs[new Random().Next(0, ccs.Length - 1)];
+                            }
+                            ndoc.Items.Add(ndocitem);
+                        }
+
+                        db.FinanceDocument.Add(ndoc);
+                    }
+                }
+            }
+            // -6 - 4
+            ords = new int[]
+            {
+                2
+            };
+            for (int i = -6; i < 4; i += 2)
+            {
+                var dt1 = DateTime.Today.AddMonths(i);
+                var dt2 = DateTime.Today.AddMonths(i + 2);
+                while (dt1 <= dt2)
+                {
+                    dt1 = dt1.AddDays(2);
+                    var docamt = new Random().Next(0, 1);
+                    while (docamt-- > 0)
+                    {
+                        var ndoc = new FinanceDocument
+                        {
+                            TranDate = dt1,
+                            HomeID = Home1ID,
+                            Desp = dt1.ToShortDateString(),
+                            DocType = FinanceDocumentType.DocType_Normal,
+                            TranCurr = Home1BaseCurrency,
+                        };
+                        var docitemcnt = new Random().Next(1, 3);
+                        while (docitemcnt-- >= 0)
+                        {
+                            var ndocitem = new FinanceDocumentItem
+                            {
+                                ItemID = (docitemcnt + 2),
+                                AccountID = acnts[new Random().Next(0, acnts.Length - 1)],
+                                TranAmount = new decimal(new Random().NextDouble() * 100),
+                            };
+                            var ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            while (NotAllowedTranTypes.Exists(p => p == ttid))
+                            {
+                                ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            };
+                            ndocitem.TranType = ttid;
+                            if (new Random().NextDouble() > 0.7)
+                            {
+                                ndocitem.OrderID = ords[0];
+                            }
+                            else
+                            {
+                                ndocitem.ControlCenterID = ccs[new Random().Next(0, ccs.Length - 1)];
+                            }
+                            ndoc.Items.Add(ndocitem);
+                        }
+                        db.FinanceDocument.Add(ndoc);
+                    }
+                }
+            }
+            // 4 - 5
+            ords = new int[]
+            {
+                2,
+                3
+            };
+            for (int i = 4; i < 5; i++)
+            {
+                var dt1 = DateTime.Today.AddMonths(i);
+                var dt2 = DateTime.Today.AddMonths(i + 1);
+                while (dt1 <= dt2)
+                {
+                    dt1 = dt1.AddDays(3);
+                    var docamt = new Random().Next(0, 1);
+                    while (docamt-- > 0)
+                    {
+                        var ndoc = new FinanceDocument
+                        {
+                            TranDate = dt1,
+                            HomeID = Home1ID,
+                            Desp = dt1.ToShortDateString(),
+                            DocType = FinanceDocumentType.DocType_Normal,
+                            TranCurr = Home1BaseCurrency,
+                        };
+                        var docitemcnt = new Random().Next(1, 3);
+                        while (docitemcnt-- >= 0)
+                        {
+                            var ndocitem = new FinanceDocumentItem
+                            {
+                                ItemID = (docitemcnt + 2),
+                                AccountID = acnts[new Random().Next(0, acnts.Length - 1)],
+                                TranAmount = new decimal(new Random().NextDouble() * 100),
+                            };
+                            var ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            while (NotAllowedTranTypes.Exists(p => p == ttid))
+                            {
+                                ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            };
+                            ndocitem.TranType = ttid;
+                            if (new Random().NextDouble() > 0.7)
+                            {
+                                ndocitem.OrderID = ords[new Random().Next(0, 1)];
+                            }
+                            else
+                            {
+                                ndocitem.ControlCenterID = ccs[new Random().Next(0, ccs.Length - 1)];
+                            }
+                            ndoc.Items.Add(ndocitem);
+                        }
+                        db.FinanceDocument.Add(ndoc);
+                    }
+                }
+            }
+            // 5 - 16
+            ords = new int[]
+            {
+                3
+            };
+            for (int i = 5; i < 16; i += 3)
+            {
+                var dt1 = DateTime.Today.AddMonths(i);
+                var dt2 = DateTime.Today.AddMonths(i + 3);
+                while (dt1 <= dt2)
+                {
+                    dt1 = dt1.AddDays(7);
+                    var docamt = new Random().Next(0, 1);
+                    while (docamt-- > 0)
+                    {
+                        var ndoc = new FinanceDocument
+                        {
+                            TranDate = dt1,
+                            HomeID = Home1ID,
+                            Desp = dt1.ToShortDateString(),
+                            DocType = FinanceDocumentType.DocType_Normal,
+                            TranCurr = Home1BaseCurrency,
+                        };
+                        var docitemcnt = new Random().Next(1, 3);
+                        while (docitemcnt-- >= 0)
+                        {
+                            var ndocitem = new FinanceDocumentItem
+                            {
+                                ItemID = (docitemcnt + 2),
+                                AccountID = acnts[new Random().Next(0, acnts.Length - 1)],
+                                TranAmount = new decimal(new Random().NextDouble() * 100),
+                            };
+                            var ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            while (NotAllowedTranTypes.Exists(p => p == ttid))
+                            {
+                                ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            };
+                            ndocitem.TranType = ttid;
+                            if (new Random().NextDouble() > 0.7)
+                            {
+                                ndocitem.OrderID = ords[0];
+                            }
+                            else
+                            {
+                                ndocitem.ControlCenterID = ccs[new Random().Next(0, ccs.Length - 1)];
+                            }
+                            ndoc.Items.Add(ndocitem);
+                        }
+
+                        db.FinanceDocument.Add(ndoc);
+                    }
+                }
+            }
+            #endregion
+
+            // Save it
+            db.SaveChanges();
+        }
+        
+        /// <summary>
+        /// Home 2
+        ///     [Host] User B
+        /// 
+        ///  Accounts:
+        ///     Cash Account 101, owned by User B
+        ///     Deposit Account 102, owned by User B
+        ///     Deposit Account 103, owned by User B, Closed
+        ///     Creditcard Account 104, owned by User B
+        ///     Creditcard Account 105, owned by User B, Closed
+        ///     Virtual Account 106, owned by User B
+        ///     
+        /// Control centers
+        ///     CC 101, owned by user B
+        ///        
+        /// Orders
+        ///     Order 101, valid from (-12 months to 1 months)
+        ///         Rule: CC101 100%
+        ///     Order 102, valid from (-1 months to 24 months)
+        ///         Rule: CC101 100%
+        /// 
+        /// </summary>
+        public static void CreateTestingData_Home2(hihDataContext db, int hid = Home2ID)
+        {
+            // Accounts
+            #region Accounts
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 101,
+                HomeID = hid,
+                Name = "Cash Account 101",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 102,
+                HomeID = hid,
+                Name = "Deposit Account 102",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 103,
+                HomeID = hid,
+                Name = "Deposit Account 103",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Closed
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 104,
+                HomeID = hid,
+                Name = "Creditcard Account 104",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 105,
+                HomeID = hid,
+                Name = "Creditcard Account 105",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Closed
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 106,
+                HomeID = hid,
+                Name = "Virtual Account 106",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_VirtualAccount,
+                Status = FinanceAccountStatus.Normal
+            });
+            #endregion
+            // Control centers
+            #region Control Centers
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 101,
+                HomeID = hid,
+                Name = "CC101",
+                Comment = "CC101",
+                Owner = UserB
+            });
+            #endregion
+            // Orders
+            #region Orders
+            db.FinanceOrder.Add(new FinanceOrder
+            {
+                ID = 101,
+                HomeID = hid,
+                Name = "Order 101",
+                ValidFrom = DateTime.Today.AddMonths(-12),
+                ValidTo = DateTime.Today.AddDays(5),
+                SRule = new FinanceOrderSRule[]
+                {
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 1,
+                        ControlCenterID = 101,
+                        Precent = 100
+                    },
+                }
+            });
+            db.FinanceOrder.Add(new FinanceOrder
+            {
+                ID = 102,
+                HomeID = hid,
+                Name = "Order 102",
+                ValidFrom = DateTime.Today.AddMonths(-1),
+                ValidTo = DateTime.Today.AddMonths(24),
+                SRule = new FinanceOrderSRule[]
+                {
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 1,
+                        ControlCenterID = 101,
+                        Precent = 100
+                    },
+                }
+            });
+            #endregion
+            // Documents
+            #region Documents
+            // -12 - -1
+            var acnts = new int[]
+            {
+                101, 102, 104, 106
+            };
+            for (int i = -12; i < -1; i++)
+            {
+                var dt1 = DateTime.Today.AddMonths(i);
+                var dt2 = DateTime.Today.AddMonths(i + 1);
+                while (dt1 <= dt2)
+                {
+                    dt1 = dt1.AddDays(1);
+                    var docamt = new Random().Next(0, 1);
+                    while (docamt-- > 0)
+                    {
+                        var ndoc = new FinanceDocument
+                        {
+                            TranDate = dt1,
+                            HomeID = hid,
+                            Desp = dt1.ToShortDateString(),
+                            DocType = FinanceDocumentType.DocType_Normal,
+                            TranCurr = Home2BaseCurrency,
+                        };
+                        var docitemcnt = new Random().Next(1, 3);
+                        while (docitemcnt-- >= 0)
+                        {
+                            var ndocitem = new FinanceDocumentItem
+                            {
+                                ItemID = (docitemcnt + 2),
+                                AccountID = acnts[new Random().Next(0, acnts.Length - 1)],
+                                TranAmount = new decimal(new Random().NextDouble() * 100),
+                            };
+                            var ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            while (NotAllowedTranTypes.Exists(p => p == ttid))
+                            {
+                                ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            };
+                            ndocitem.TranType = ttid;
+                            if (new Random().NextDouble() > 0.7)
+                            {
+                                ndocitem.OrderID = 101;
+                            }
+                            else
+                            {
+                                ndocitem.ControlCenterID = 101;
+                            }
+                            ndoc.Items.Add(ndocitem);
+                        }
+
+                        db.FinanceDocument.Add(ndoc);
+                    }
+                }
+            }
+            // -1 - 1
+            var ords = new int[]
+            {
+                101,
+                102
+            };
+            for (int i = -1; i < 1; i++)
+            {
+                var dt1 = DateTime.Today.AddMonths(i);
+                var dt2 = DateTime.Today.AddMonths(i + 1);
+                while (dt1 <= dt2)
+                {
+                    dt1 = dt1.AddDays(3);
+                    var docamt = new Random().Next(0, 1);
+                    while (docamt-- > 0)
+                    {
+                        var ndoc = new FinanceDocument
+                        {
+                            TranDate = dt1,
+                            HomeID = hid,
+                            Desp = dt1.ToShortDateString(),
+                            DocType = FinanceDocumentType.DocType_Normal,
+                            TranCurr = Home2BaseCurrency,
+                        };
+                        var docitemcnt = new Random().Next(1, 3);
+                        while (docitemcnt-- >= 0)
+                        {
+                            var ndocitem = new FinanceDocumentItem
+                            {
+                                ItemID = (docitemcnt + 2),
+                                AccountID = acnts[new Random().Next(0, acnts.Length - 1)],
+                                TranAmount = new decimal(new Random().NextDouble() * 100),
+                            };
+                            var ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            while (NotAllowedTranTypes.Exists(p => p == ttid))
+                            {
+                                ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            };
+                            ndocitem.TranType = ttid;
+                            if (new Random().NextDouble() > 0.7)
+                            {
+                                ndocitem.OrderID = ords[new Random().Next(0, 1)];
+                            }
+                            else
+                            {
+                                ndocitem.ControlCenterID = 101;
+                            }
+
+                            ndoc.Items.Add(ndocitem);
+                        }
+                        db.FinanceDocument.Add(ndoc);
+                    }
+                }
+            }
+            // 1 - 24
+            ords = new int[]
+            {
+                102
+            };
+            for (int i = 1; i < 24; i += 3)
+            {
+                var dt1 = DateTime.Today.AddMonths(i);
+                var dt2 = DateTime.Today.AddMonths(i + 3);
+                while (dt1 <= dt2)
+                {
+                    dt1 = dt1.AddDays(1);
+                    var docamt = new Random().Next(0, 1);
+                    while (docamt-- > 0)
+                    {
+                        var ndoc = new FinanceDocument
+                        {
+                            TranDate = dt1,
+                            HomeID = hid,
+                            Desp = dt1.ToShortDateString(),
+                            DocType = FinanceDocumentType.DocType_Normal,
+                            TranCurr = Home2BaseCurrency,
+                        };
+                        var docitemcnt = new Random().Next(1, 3);
+                        while (docitemcnt-- >= 0)
+                        {
+                            var ndocitem = new FinanceDocumentItem
+                            {
+                                ItemID = (docitemcnt + 2),
+                                AccountID = acnts[new Random().Next(0, acnts.Length - 1)],
+                                TranAmount = new decimal(new Random().NextDouble() * 100),
+                            };
+                            var ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            while (NotAllowedTranTypes.Exists(p => p == ttid))
+                            {
+                                ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            };
+                            ndocitem.TranType = ttid;
+                            if (new Random().NextDouble() > 0.7)
+                            {
+                                ndocitem.OrderID = ords[0];
+                            }
+                            else
+                            {
+                                ndocitem.ControlCenterID = 101;
+                            }
+
+                            ndoc.Items.Add(ndocitem);
+                        }
+                        db.FinanceDocument.Add(ndoc);
+                    }
+                }
+            }
+            #endregion
+
+            // Save it
+            db.SaveChanges();
+        }
+        
+        /// <summary>
+        /// Home 3
+        ///     [Host] User A
+        ///     User B
+        /// 
+        ///  Accounts:
+        ///     Cash Account 201, owned by User A
+        ///     Cash Account 202, owned by User B
+        ///     Deposit Account 203, owned by User A
+        ///     Deposit Account 204, owned by User B, Closed
+        ///     Deposit Account 205, owned by User B
+        ///     Creditcard Account 206, owned by User A
+        ///     Creditcard Account 207, owned by User B
+        ///     Creditcard Account 208, owned by User B, Closed
+        ///     Virtual Account 209, owned by User A
+        ///     Virtual Account 210, owned by User B
+        ///     
+        /// Control centers
+        ///     CC 201, no owner
+        ///         CC 202, owned by User A
+        ///         CC 203, owned by User B
+        ///        
+        /// Orders
+        ///     Order 201, valid from (-12 months to 12 months)
+        ///         Rule: CC201 100%
+        ///     Order 202, valid from (-12 months to 12 months)
+        ///         Rule: CC202 80%, CC203 20%
+        /// 
+        /// </summary>
+        public static void CreateTestingData_Home3(hihDataContext db, int hid = Home3ID)
+        {
+            // Accounts
+            #region Accounts
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 201,
+                HomeID = hid,
+                Name = "Cash Account 201",
+                Owner = UserA,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 202,
+                HomeID = hid,
+                Name = "Deposit Account 202",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 203,
+                HomeID = hid,
+                Name = "Deposit Account 203",
+                Owner = UserA,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 204,
+                HomeID = hid,
+                Name = "Deposit Account 204",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Closed
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 205,
+                HomeID = hid,
+                Name = "Deposit Account 205",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 206,
+                HomeID = hid,
+                Name = "Creditcard Account 206",
+                Owner = UserA,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 207,
+                HomeID = hid,
+                Name = "Creditcard Account 207",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 208,
+                HomeID = hid,
+                Name = "Creditcard Account 208",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Closed
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 209,
+                HomeID = hid,
+                Name = "Virtual Account 209",
+                Owner = UserA,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_VirtualAccount,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 210,
+                HomeID = hid,
+                Name = "Virtual Account 210",
+                Owner = UserB,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_VirtualAccount,
+                Status = FinanceAccountStatus.Normal
+            });
+            #endregion
+            // Control centers
+            #region Control Centers
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 201,
+                HomeID = hid,
+                Name = "CC201",
+                Comment = "CC201",
+            });
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 202,
+                HomeID = hid,
+                Name = "CC202",
+                Comment = "CC202",
+                ParentID = 201,
+                Owner = UserA,
+            });
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 203,
+                HomeID = hid,
+                Name = "CC203",
+                Comment = "CC203",
+                ParentID = 201,
+                Owner = UserB,
+            });
+            #endregion
+            // Orders
+            #region Orders
+            db.FinanceOrder.Add(new FinanceOrder
+            {
+                ID = 201,
+                HomeID = hid,
+                Name = "Order 201",
+                ValidFrom = DateTime.Today.AddMonths(-12),
+                ValidTo = DateTime.Today.AddMonths(12),
+                SRule = new FinanceOrderSRule[]
+                {
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 1,
+                        ControlCenterID = 201,
+                        Precent = 100
+                    },
+                }
+            });
+            db.FinanceOrder.Add(new FinanceOrder
+            {
+                ID = 202,
+                HomeID = hid,
+                Name = "Order 202",
+                ValidFrom = DateTime.Today.AddMonths(-12),
+                ValidTo = DateTime.Today.AddMonths(12),
+                SRule = new FinanceOrderSRule[]
+                {
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 1,
+                        ControlCenterID = 202,
+                        Precent = 80
+                    },
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 2,
+                        ControlCenterID = 203,
+                        Precent = 20
+                    },
+                }
+            });
+            #endregion
+            // Documents
+            #region Documents
+            // -12 - 12
+            var acnts = new int[]
+            {
+                201, 202, 203, 205, 206, 207, 209, 210,
+                // 204, 208
+            };
+            var ccs = new int[]
+            {
+                201, 202, 203,
+            };
+            var ords = new int[]
+            {
+                201,
+                202
+            };
+            for (int i = -12; i < 0; i++)
+            {
+                var dt1 = DateTime.Today.AddMonths(i);
+                var dt2 = DateTime.Today.AddMonths(i + 1);
+                while (dt1 <= dt2)
+                {
+                    dt1 = dt1.AddDays(1);
+                    var docamt = new Random().Next(0, 2);
+                    while (docamt-- > 0)
+                    {
+                        var ndoc = new FinanceDocument
+                        {
+                            TranDate = dt1,
+                            HomeID = hid,
+                            Desp = dt1.ToShortDateString(),
+                            DocType = FinanceDocumentType.DocType_Normal,
+                            TranCurr = Home3BaseCurrency,
+                        };
+                        var docitemcnt = new Random().Next(1, 3);
+                        while(docitemcnt -- >= 0)
+                        {
+                            var ndocitem = new FinanceDocumentItem
+                            {
+                                ItemID = (docitemcnt + 2),
+                                AccountID = acnts[new Random().Next(0, acnts.Length - 1)],
+                                TranAmount = new decimal(new Random().NextDouble() * 100),
+                            };
+                            var ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            while (NotAllowedTranTypes.Exists(p => p == ttid))
+                            {
+                                ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            };
+                            ndocitem.TranType = ttid;
+                            if (new Random().NextDouble() > 0.7)
+                            {
+                                ndocitem.OrderID = ords[new Random().Next(0, ords.Length - 1)]; ;
+                            }
+                            else
+                            {
+                                ndocitem.ControlCenterID = ccs[new Random().Next(0, ccs.Length - 1)]; ;
+                            }
+                            ndoc.Items.Add(ndocitem);
+                        }
+
+                        db.FinanceDocument.Add(ndoc);
+                    }
+                }
+            }
+            #endregion
+
+            // Save it
+            db.SaveChanges();
+        }
+
+        /// <summary>
+        /// Home 4
+        ///     [Host] User C
+        /// 
+        ///  Accounts:
+        ///     Cash Account 301, owned by User C
+        ///     Deposit Account 302, owned by User C
+        ///     Creditcard Account 303, owned by User C
+        ///     Creditcard Account 304, owned by User C, Closed
+        ///     Virtual Account 305, owned by User C
+        ///     
+        /// Control centers
+        ///     CC 301, owned by user C
+        ///        
+        /// Orders
+        ///     Order 301, valid from (-12 months to 12 months)
+        ///         Rule: CC301 100%
+        ///         
+        /// </summary>
+        public static void CreateTestingData_Home4(hihDataContext db, int hid = Home4ID)
+        {
+            // Accounts
+            #region Accounts
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 301,
+                HomeID = hid,
+                Name = "Cash Account 301",
+                Owner = UserC,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 302,
+                HomeID = hid,
+                Name = "Deposit Account 302",
+                Owner = UserC,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 303,
+                HomeID = hid,
+                Name = "Creditcard Account 303",
+                Owner = UserC,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 304,
+                HomeID = hid,
+                Name = "Creditcard Account 304",
+                Owner = UserC,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Closed
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 305,
+                HomeID = hid,
+                Name = "Virtual Account 305",
+                Owner = UserC,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_VirtualAccount,
+                Status = FinanceAccountStatus.Normal
+            });
+            #endregion
+            // Control centers
+            #region Control Centers
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 301,
+                HomeID = hid,
+                Name = "CC301",
+                Comment = "CC301",
+                Owner = UserC
+            });
+            #endregion
+            // Orders
+            #region Orders
+            db.FinanceOrder.Add(new FinanceOrder
+            {
+                ID = 301,
+                HomeID = hid,
+                Name = "Order 301",
+                ValidFrom = DateTime.Today.AddMonths(-12),
+                ValidTo = DateTime.Today.AddMonths(12),
+                SRule = new FinanceOrderSRule[]
+                {
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 1,
+                        ControlCenterID = 301,
+                        Precent = 100
+                    },
+                }
+            });
+            #endregion
+            // Documents
+            #region Documents
+            // -12 - 0
+            var acnts = new int[]
+            {
+                301, 302, 303, 305
+                // 304
+            };
+            for (int i = -12; i < 0; i++)
+            {
+                var dt1 = DateTime.Today.AddMonths(i);
+                var dt2 = DateTime.Today.AddMonths(i + 1);
+                while (dt1 <= dt2)
+                {
+                    dt1 = dt1.AddDays(1);
+                    var docamt = new Random().Next(0, 2);
+                    while (docamt-- > 0)
+                    {
+                        var ndoc = new FinanceDocument
+                        {
+                            TranDate = dt1,
+                            HomeID = hid,
+                            Desp = dt1.ToShortDateString(),
+                            DocType = FinanceDocumentType.DocType_Normal,
+                            TranCurr = Home4BaseCurrency,
+                        };
+                        var docitemcnt = new Random().Next(1, 3);
+                        while(docitemcnt-- >= 0)
+                        {
+                            var ndocitem = new FinanceDocumentItem
+                            {
+                                ItemID = (docitemcnt + 2),
+                                AccountID = acnts[new Random().Next(0, acnts.Length - 1)],
+                                TranAmount = new decimal(new Random().NextDouble() * 100),
+                            };
+                            var ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            while (NotAllowedTranTypes.Exists(p => p == ttid))
+                            {
+                                ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            };
+                            ndocitem.TranType = ttid;
+                            if (new Random().NextDouble() > 0.7)
+                            {
+                                ndocitem.OrderID = 301;
+                            }
+                            else
+                            {
+                                ndocitem.ControlCenterID = 301;
+                            }
+                            ndoc.Items.Add(ndocitem);
+                        }
+                        db.FinanceDocument.Add(ndoc);
+                    }
+                }
+            }
+            #endregion
+
+            // Save it
+            db.SaveChanges();
+        }
+
+        /// <summary>
+        /// Home 4
+        ///     [Host] User D
+        /// 
+        ///  Accounts:
+        ///     Cash Account 401, owned by User D
+        ///     Deposit Account 402, owned by User D
+        ///     Creditcard Account 403, owned by User D
+        ///     Creditcard Account 404, owned by User D, Closed
+        ///     Virtual Account 405, owned by User D
+        ///     
+        /// Control centers
+        ///     CC 401, owned by user D
+        ///        
+        /// Orders
+        ///     Order 401, valid from (-12 months to 12 months)
+        ///         Rule: CC401 100%
+        ///         
+        /// </summary>
+        public static void CreateTestingData_Home5(hihDataContext db, int hid = Home5ID)
+        {
+            // Accounts
+            #region Accounts
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 401,
+                HomeID = hid,
+                Name = "Cash Account 401",
+                Owner = UserD,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 402,
+                HomeID = hid,
+                Name = "Deposit Account 402",
+                Owner = UserD,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Deposit,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 403,
+                HomeID = hid,
+                Name = "Creditcard Account 403",
+                Owner = UserD,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Normal
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 404,
+                HomeID = hid,
+                Name = "Creditcard Account 404",
+                Owner = UserD,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_Creditcard,
+                Status = FinanceAccountStatus.Closed
+            });
+            db.FinanceAccount.Add(new FinanceAccount()
+            {
+                ID = 405,
+                HomeID = hid,
+                Name = "Virtual Account 405",
+                Owner = UserD,
+                CategoryID = FinanceAccountCategoriesController.AccountCategory_VirtualAccount,
+                Status = FinanceAccountStatus.Normal
+            });
+            #endregion
+            // Control centers
+            #region Control Centers
+            db.FinanceControlCenter.Add(new FinanceControlCenter
+            {
+                ID = 401,
+                HomeID = hid,
+                Name = "CC401",
+                Comment = "CC401",
+                Owner = UserD
+            });
+            #endregion
+            // Orders
+            #region Orders
+            db.FinanceOrder.Add(new FinanceOrder
+            {
+                ID = 401,
+                HomeID = hid,
+                Name = "Order 401",
+                ValidFrom = DateTime.Today.AddMonths(-12),
+                ValidTo = DateTime.Today.AddMonths(12),
+                SRule = new FinanceOrderSRule[]
+                {
+                    new FinanceOrderSRule
+                    {
+                        RuleID = 1,
+                        ControlCenterID = 401,
+                        Precent = 100
+                    },
+                }
+            });
+            #endregion
+            // Documents
+            #region Documents
+            // -12 - 0
+            var acnts = new int[]
+            {
+                401, 402, 403, 405
+                // 404
+            };
+            for (int i = -12; i < 0; i++)
+            {
+                var dt1 = DateTime.Today.AddMonths(i);
+                var dt2 = DateTime.Today.AddMonths(i + 1);
+                while (dt1 <= dt2)
+                {
+                    dt1 = dt1.AddDays(1);
+                    var docamt = new Random().Next(0, 2);
+                    while (docamt-- > 0)
+                    {
+                        var ndoc = new FinanceDocument
+                        {
+                            TranDate = dt1,
+                            HomeID = hid,
+                            Desp = dt1.ToShortDateString(),
+                            DocType = FinanceDocumentType.DocType_Normal,
+                            TranCurr = Home5BaseCurrency,
+                        };
+                        var docitemcnt = new Random().Next(1, 3);
+                        while (docitemcnt-- >= 0)
+                        {
+                            var ndocitem = new FinanceDocumentItem
+                            {
+                                ItemID = (docitemcnt + 2),
+                                AccountID = acnts[new Random().Next(0, acnts.Length - 1)],
+                                TranAmount = new decimal(new Random().NextDouble() * 100),
+                            };
+                            var ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            while (NotAllowedTranTypes.Exists(p => p == ttid))
+                            {
+                                ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
+                            };
+                            ndocitem.TranType = ttid;
+                            if (new Random().NextDouble() > 0.7)
+                            {
+                                ndocitem.OrderID = 301;
+                            }
+                            else
+                            {
+                                ndocitem.ControlCenterID = 301;
+                            }
+                            ndoc.Items.Add(ndocitem);
+                        }
+                        db.FinanceDocument.Add(ndoc);
+                    }
+                }
+            }
+            #endregion
+
+            // Save it
+            db.SaveChanges();
+        }
+        #endregion
     }
 }

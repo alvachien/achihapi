@@ -57,8 +57,7 @@ namespace hihapi.test.UnitTests
             var context = this.fixture.GetCurrentDataContext();
             var secondhid = hid;
 
-            // 0. Create accounts for other homes
-            List<FinanceAccount> acntInOtherHomes = new List<FinanceAccount>();
+            // 0. Initialize data
             if (hid == DataSetupUtility.Home1ID)
             {
                 if (user == DataSetupUtility.UserA || user == DataSetupUtility.UserB)
@@ -78,18 +77,26 @@ namespace hihapi.test.UnitTests
             {
                 secondhid = DataSetupUtility.Home3ID;
             }
-            if (secondhid != hid)
+
+            if (hid == DataSetupUtility.Home1ID || secondhid == DataSetupUtility.Home1ID)
             {
-                var acnt1 = new FinanceAccount()
-                {
-                    HomeID = secondhid,
-                    Name = "Account " + secondhid.ToString() + ".1_cash",
-                    CategoryID = ctgyid,
-                    Owner = user
-                };
-                var ec1 = context.FinanceAccount.Add(acnt1);
-                acntInOtherHomes.Add(ec1.Entity);
-                context.SaveChanges();
+                fixture.InitHome1TestData(context);
+            }
+            if(hid == DataSetupUtility.Home2ID || secondhid == DataSetupUtility.Home2ID)
+            {
+                fixture.InitHome2TestData(context);
+            }
+            if(hid == DataSetupUtility.Home3ID || secondhid == DataSetupUtility.Home3ID)
+            {
+                fixture.InitHome3TestData(context);
+            }
+            if (hid == DataSetupUtility.Home4ID || secondhid == DataSetupUtility.Home4ID)
+            {
+                fixture.InitHome4TestData(context);
+            }
+            if (hid == DataSetupUtility.Home5ID || secondhid == DataSetupUtility.Home5ID)
+            {
+                fixture.InitHome5TestData(context);
             }
 
             // 0a. Prepare the context
@@ -100,6 +107,10 @@ namespace hihapi.test.UnitTests
             {
                 HttpContext = httpctx
             };
+            var acntamt = (from homemem in context.HomeMembers
+                              join finacnt in context.FinanceAccount
+                              on new { homemem.HomeID, homemem.User } equals new { finacnt.HomeID, User = user }
+                              select finacnt.ID).ToList().Count();
 
             // 1. Create first account
             var acnt = new FinanceAccount()
@@ -125,9 +136,9 @@ namespace hihapi.test.UnitTests
             var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceAccount>(this.model);
             var options = UnitTestUtility.GetODataQueryOptions<FinanceAccount>(odatacontext, req);
             var rst3 = control.Get(options);
-            var expacntamt = acntInOtherHomes.Count() + 1;
+
             Assert.NotNull(rst3);
-            Assert.Equal(expacntamt, rst3.Cast<FinanceAccount>().Count());
+            Assert.Equal(acntamt + 1, rst3.Cast<FinanceAccount>().Count());
 
             // 2a. Read the whole accounts (with home ID applied)
             queryUrl = "http://localhost/api/FinanceAccounts?$filter=HomeID eq " + hid.ToString();
@@ -135,9 +146,9 @@ namespace hihapi.test.UnitTests
             //var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceAccount>(this.model);
             options = UnitTestUtility.GetODataQueryOptions<FinanceAccount>(odatacontext, req);
             rst3 = control.Get(options);
-            expacntamt = 1;
+            acntamt = context.FinanceAccount.Where(p => p.HomeID == hid).Count();
             Assert.NotNull(rst3);
-            Assert.Equal(expacntamt, rst3.Cast<FinanceAccount>().Count());
+            Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
 
             // 3. Now create another one!
             acnt = new FinanceAccount()
@@ -176,7 +187,8 @@ namespace hihapi.test.UnitTests
             // 6. Now read the whole accounts
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(1, rst3.Cast<FinanceAccount>().Count());
+            acntamt = context.FinanceAccount.Where(p => p.HomeID == hid).Count();
+            Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
 
             // 7. Delete the first account
             rst5 = await control.Delete(firstacntid);
@@ -187,11 +199,8 @@ namespace hihapi.test.UnitTests
             // 8. Now read the whole control centers
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(0, rst3.Cast<FinanceAccount>().Count());
-
-            // LAST. Remove all pre-created control center
-            context.FinanceAccount.RemoveRange(acntInOtherHomes);
-            await context.SaveChangesAsync();
+            acntamt = context.FinanceAccount.Where(p => p.HomeID == hid).Count();
+            Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
 
             await context.DisposeAsync();
         }
