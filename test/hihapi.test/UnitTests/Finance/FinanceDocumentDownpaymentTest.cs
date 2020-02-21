@@ -111,8 +111,8 @@ namespace hihapi.test.UnitTests
                         : FinanceAccountCategoriesController.AccountCategory_AdvanceReceive,
                 Owner = user
             };
-            var startdate = new DateTime();
-            var enddate = startdate.AddMonths(6);
+            var startdate = DateTime.Today;
+            var enddate = DateTime.Today.AddMonths(6);
             dpcontext.AccountInfo.ExtraDP = new FinanceAccountExtraDP()
             {
                 StartDate = startdate,

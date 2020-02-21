@@ -114,8 +114,8 @@ namespace hihapi.test.UnitTests
                         : FinanceAccountCategoriesController.AccountCategory_AdvanceReceive,
                 Owner = user
             };
-            var startdate = new DateTime();
-            var enddate = startdate.AddMonths(6);
+            var startdate = DateTime.Today;
+            var enddate = DateTime.Today.AddMonths(6);
             dpcontext.AccountInfo.ExtraDP = new FinanceAccountExtraDP()
             {
                 StartDate = startdate,
@@ -150,6 +150,11 @@ namespace hihapi.test.UnitTests
             var doc = Assert.IsType<CreatedODataResult<FinanceDocument>>(resp).Entity;
             documentCreated = doc.ID;
             Assert.True(doc.Items.Count == 2);
+            foreach(var did in doc.Items)
+            {
+                if (did.AccountID != account.ID)
+                    accountCreated = did.AccountID;
+            }
 
             // 2. Switch to second controller
             var tmpcontrol = new FinanceTmpDPDocumentsController(context);
@@ -164,6 +169,7 @@ namespace hihapi.test.UnitTests
             // 3. Create repay document
 
             // Last, clear all created objects
+
             if (documentCreated > 0)
                 this.fixture.DeleteDocument(context, documentCreated);
             if (accountCreated > 0)

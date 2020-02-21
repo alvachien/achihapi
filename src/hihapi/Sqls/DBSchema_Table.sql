@@ -253,8 +253,8 @@ CREATE TABLE [dbo].[t_fin_tmpdoc_dp] (
     [CREATEDAT]       DATE            CONSTRAINT [DF_t_fin_tmpdoc_dp_CREATEDAT] DEFAULT (getdate()) NULL,
     [UPDATEDBY]       NVARCHAR (40)   NULL,
     [UPDATEDAT]       DATE            CONSTRAINT [DF_t_fin_tmpdoc_dp_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_fin_tmpdoc_dp] PRIMARY KEY CLUSTERED ([DOCID] ASC)
---    CONSTRAINT [FK_t_fin_tmpdocdp_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT [PK_t_fin_tmpdoc_dp] PRIMARY KEY CLUSTERED ([DOCID] ASC),
+    CONSTRAINT [FK_t_fin_tmpdocdp_account] FOREIGN KEY ([ACCOUNTID]) REFERENCES [t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
@@ -508,8 +508,8 @@ CREATE TABLE [dbo].[t_fin_tmpdoc_loan] (
     [CREATEDAT]       DATE            CONSTRAINT [DF_t_fin_tmpdoc_loan_CREATEDAT] DEFAULT (getdate()) NULL,
     [UPDATEDBY]       NVARCHAR (40)   NULL,
     [UPDATEDAT]       DATE            CONSTRAINT [DF_t_fin_tmpdoc_loan_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_fin_tmpdoc_loan] PRIMARY KEY CLUSTERED ([DOCID] ASC)
---    CONSTRAINT [FK_t_fin_tmpdocloan_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT [PK_t_fin_tmpdoc_loan] PRIMARY KEY CLUSTERED ([DOCID] ASC),
+    CONSTRAINT [FK_t_fin_tmpdocloan_account] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 

@@ -178,7 +178,8 @@ namespace hihapi.test
 	            REFDOCID int NOT NULL,
 	            DEFRRDAYS nvarchar(100) NULL,
 	            COMMENT nvarchar(45) NULL, 
-                CONSTRAINT FK_t_fin_account_ext_dp_id FOREIGN KEY(ACCOUNTID) REFERENCES t_fin_account(ID) ON DELETE CASCADE ON UPDATE CASCADE
+                CONSTRAINT FK_t_fin_account_ext_dp_id FOREIGN KEY(ACCOUNTID) REFERENCES t_fin_account(ID)
+                    ON DELETE CASCADE ON UPDATE CASCADE
                 ) "
             );
 
@@ -261,7 +262,8 @@ namespace hihapi.test
 	            PRECENT int NOT NULL,
 	            COMMENT nvarchar(45) NULL,
                 CONSTRAINT PK_t_fin_order PRIMARY KEY(ORDID, RULEID),
-                CONSTRAINT FK_t_fin_order_srule_order FOREIGN KEY (ORDID) REFERENCES t_fin_order ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+                CONSTRAINT FK_t_fin_order_srule_order FOREIGN KEY (ORDID) REFERENCES t_fin_order ([ID]) 
+                    ON DELETE CASCADE ON UPDATE CASCADE
                 )");
 
             // Template DP
@@ -279,7 +281,9 @@ namespace hihapi.test
 	            CREATEDBY nvarchar(40) NULL,
 	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(40) NULL,
-	            UPDATEDAT date NULL DEFAULT CURRENT_DATE
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE,
+                CONSTRAINT FK_t_fin_tmpdoc_dp_account FOREIGN KEY (ACCOUNTID) REFERENCES T_FIN_ACCOUNT (ID) 
+                    ON DELETE CASCADE ON UPDATE CASCADE
                 )");
 
             // Tran. type
@@ -314,7 +318,8 @@ namespace hihapi.test
                 REFDOC_BUY  INT            NOT NULL,
                 COMMENT     NVARCHAR (100) NULL,
                 REFDOC_SOLD INT            NULL,
-                CONSTRAINT FK_t_fin_account_ext_as_ACNTID FOREIGN KEY (ACCOUNTID) REFERENCES t_fin_account (ID) ON DELETE CASCADE ON UPDATE CASCADE
+                CONSTRAINT FK_t_fin_account_ext_as_ACNTID FOREIGN KEY (ACCOUNTID) REFERENCES t_fin_account (ID)
+                    ON DELETE CASCADE ON UPDATE CASCADE
                 )");
 
             // Account Extra Loan
@@ -330,7 +335,8 @@ namespace hihapi.test
                 ENDDATE       DATE            DEFAULT CURRENT_DATE,
                 PAYINGACCOUNT INT             NULL,
                 PARTNER       NVARCHAR (50)   NULL,
-                CONSTRAINT FK_t_fin_account_ext_loan_ID FOREIGN KEY (ACCOUNTID) REFERENCES t_fin_account (ID) ON DELETE CASCADE ON UPDATE CASCADE
+                CONSTRAINT FK_t_fin_account_ext_loan_ID FOREIGN KEY (ACCOUNTID) REFERENCES t_fin_account (ID)
+                    ON DELETE CASCADE ON UPDATE CASCADE
                 )");
 
             // Template Loan
@@ -348,7 +354,9 @@ namespace hihapi.test
 	            CREATEDBY nvarchar(40) NULL,
 	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(40) NULL,
-	            UPDATEDAT date NULL DEFAULT CURRENT_DATE 
+	            UPDATEDAT date NULL DEFAULT CURRENT_DATE,
+                CONSTRAINT FK_t_fin_tmpdoc_loan_account FOREIGN KEY (ACCOUNTID) REFERENCES t_fin_account (ID)
+                    ON DELETE CASCADE ON UPDATE CASCADE
                 )");
 
             // DB version

@@ -192,4 +192,3 @@ namespace hihapi.test.UnitTests
         }
     }
 }
-
