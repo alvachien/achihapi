@@ -461,6 +461,10 @@ INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (11,'2018.12
 -- Updated at 2019.4.20
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (12,'2019.4.20');
 
+-------------------------------------------------------------------------------------------------------------------
+-- Updated at 2020.2.28
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (13,'2020.02.28');
+
 ---------------------------------
 -- TODO...
 
