@@ -39,7 +39,11 @@ namespace hihapi.Models
         [Column("COMMENT", TypeName="NVARCHAR(45)")]
         public String Comment { get; set; }
 
-        //public HomeDefine CurrentHome { get; set; }
+        public HomeDefine CurrentHome { get; set; }
+
+        public FinanceDocumentType(): base()
+        {
+        }
 
         public override bool IsValid(hihDataContext context)
         {

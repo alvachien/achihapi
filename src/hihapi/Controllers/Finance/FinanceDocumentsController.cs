@@ -279,6 +279,20 @@ namespace hihapi.Controllers
             {
                 return BadRequest("Invalid inputted data");
             }
+            // Check tmp doc ID
+            var tmpdocids = new Dictionary<int, int>();
+            foreach(var tmpdoc in createContext.AccountInfo.ExtraDP.DPTmpDocs)
+            {
+                if (tmpdoc.DocumentID <= 0)
+                {
+                    return BadRequest("Invalid document ID");
+                }
+                if (tmpdocids.ContainsKey(tmpdoc.DocumentID))
+                {
+                    return BadRequest("Duplicated Document ID found: " + tmpdoc.DocumentID);
+                }
+                tmpdocids.Add(tmpdoc.DocumentID, tmpdoc.DocumentID);
+            }
 
             // User
             String usrName = String.Empty;
@@ -339,67 +353,52 @@ namespace hihapi.Controllers
             var errorOccur = false;
             var origdocid = 0;
             var dpaccountid = 0;
-            try
-            {
-                var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
-                await _context.SaveChangesAsync();
-                origdocid = docEntity.Entity.ID;
 
-                // 2, Create the account
-                createContext.AccountInfo.ExtraDP.RefenceDocumentID = origdocid;
-                var acntEntity = _context.FinanceAccount.Add(createContext.AccountInfo);
-                await _context.SaveChangesAsync();
-                dpaccountid = acntEntity.Entity.ID;
-
-                // 3, Update the document
-                var itemid = docEntity.Entity.Items.ElementAt(0).ItemID;
-                // _context.Attach(docEntity);
-                
-                var ndi = new FinanceDocumentItem();
-                ndi.ItemID = ++itemid;
-                ndi.AccountID = dpaccountid;
-                ndi.ControlCenterID = docEntity.Entity.Items.ElementAt(0).ControlCenterID;
-                ndi.OrderID = docEntity.Entity.Items.ElementAt(0).OrderID;
-                ndi.Desp = docEntity.Entity.Items.ElementAt(0).Desp;
-                ndi.TranAmount = docEntity.Entity.Items.ElementAt(0).TranAmount;
-                ndi.UseCurr2 = docEntity.Entity.Items.ElementAt(0).UseCurr2;
-                if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvancePayment)
-                    ndi.TranType = FinanceTransactionType.TranType_OpeningAsset;
-                else if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvanceReceive)
-                    ndi.TranType = FinanceTransactionType.TranType_OpeningLiability;
-                docEntity.Entity.Items.Add(ndi);
-
-                docEntity.State = EntityState.Modified;
-                
-                await _context.SaveChangesAsync();
-            }
-            catch(Exception exp)
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                errorOccur = true;
-                errorString = exp.Message;
-            }
-            finally
-            {
-                // Remove new created object
-                if (errorOccur)
+                try
                 {
-                    try
-                    {
-                        if (origdocid > 0)
-                        {
-                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + origdocid.ToString());
-                        }
-                        if (dpaccountid > 0)
-                        {
-                            _context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = " + dpaccountid.ToString());
-                        }
-                    }
-                    catch(Exception exp2)
-                    {
-                        System.Diagnostics.Debug.WriteLine(exp2.Message);
-                    }
+                    var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
+                    await _context.SaveChangesAsync();
+                    origdocid = docEntity.Entity.ID;
+
+                    // 2, Create the account
+                    createContext.AccountInfo.ExtraDP.RefenceDocumentID = origdocid;
+                    var acntEntity = _context.FinanceAccount.Add(createContext.AccountInfo);
+                    await _context.SaveChangesAsync();
+                    dpaccountid = acntEntity.Entity.ID;
+
+                    // 3, Update the document
+                    var itemid = docEntity.Entity.Items.ElementAt(0).ItemID;
+                    // _context.Attach(docEntity);
+
+                    var ndi = new FinanceDocumentItem();
+                    ndi.ItemID = ++itemid;
+                    ndi.AccountID = dpaccountid;
+                    ndi.ControlCenterID = docEntity.Entity.Items.ElementAt(0).ControlCenterID;
+                    ndi.OrderID = docEntity.Entity.Items.ElementAt(0).OrderID;
+                    ndi.Desp = docEntity.Entity.Items.ElementAt(0).Desp;
+                    ndi.TranAmount = docEntity.Entity.Items.ElementAt(0).TranAmount;
+                    ndi.UseCurr2 = docEntity.Entity.Items.ElementAt(0).UseCurr2;
+                    if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvancePayment)
+                        ndi.TranType = FinanceTransactionType.TranType_OpeningAsset;
+                    else if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvanceReceive)
+                        ndi.TranType = FinanceTransactionType.TranType_OpeningLiability;
+                    docEntity.Entity.Items.Add(ndi);
+
+                    docEntity.State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+                }
+                catch (Exception exp)
+                {
+                    errorOccur = true;
+                    errorString = exp.Message;
+                    transaction.Rollback();
                 }
             }
+
 
             if (errorOccur)
             {
@@ -435,6 +434,20 @@ namespace hihapi.Controllers
                 || createContext.AccountInfo.ExtraLoan.LoanTmpDocs.Count <= 0)
             {
                 return BadRequest("Invalid inputted data");
+            }
+            // Check tmp doc ID
+            var tmpdocids = new Dictionary<int, int>();
+            foreach (var tmpdoc in createContext.AccountInfo.ExtraLoan.LoanTmpDocs)
+            {
+                if (tmpdoc.DocumentID <= 0)
+                {
+                    return BadRequest("Invalid document ID");
+                }
+                if (tmpdocids.ContainsKey(tmpdoc.DocumentID))
+                {
+                    return BadRequest("Duplicated Document ID found: " + tmpdoc.DocumentID);
+                }
+                tmpdocids.Add(tmpdoc.DocumentID, tmpdoc.DocumentID);
             }
 
             // User

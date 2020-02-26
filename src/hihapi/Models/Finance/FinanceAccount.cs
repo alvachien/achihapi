@@ -52,6 +52,10 @@ namespace hihapi.Models
         [Column("STATUS", TypeName="TINYINT")]
         public FinanceAccountStatus? Status { get; set; }
 
+        public FinanceAccount(): base()
+        {
+        }
+
         public override bool IsValid(hihDataContext context)
         {
             if (!base.IsValid(context))
@@ -72,7 +76,7 @@ namespace hihapi.Models
             return true;
         }
 
-        // public HomeDefine CurrentHome { get; set; }
+        public HomeDefine CurrentHome { get; set; }
         public FinanceAccountExtraDP ExtraDP { get; set; }
         // public FinanceAccountExtraLoan ExtraLoan { get; set; }
         public FinanceAccountExtraAS ExtraAsset { get; set; }

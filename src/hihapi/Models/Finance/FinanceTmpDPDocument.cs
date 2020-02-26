@@ -12,6 +12,7 @@ namespace hihapi.Models
         [Column("DOCID", TypeName="INT")]
         public Int32 DocumentID { get; set; }
 
+        [Key]
         [Required]
         [Column("HID", TypeName="INT")]
         public Int32 HomeID { get; set; }
@@ -19,6 +20,7 @@ namespace hihapi.Models
         [Column("REFDOCID", TypeName="INT")]
         public Int32? ReferenceDocumentID { get; set; }
 
+        [Key]
         [Required]
         [Column("ACCOUNTID", TypeName="INT")]
         public Int32 AccountID { get; set; }

@@ -131,10 +131,12 @@ namespace hihapi.test.UnitTests
                 TotalMonths = dpcontext.AccountInfo.ExtraLoan.TotalMonths.Value,
                 FirstRepayDate = new DateTime(2020, 2, 15)
             });
+            var tmpdocid = 1;
             foreach (var rst in rsts)
             {
                 var tmpdoc = new FinanceTmpLoanDocument
                 {
+                    DocumentID = tmpdocid++,
                     TransactionAmount = rst.TranAmount,
                     InterestAmount = rst.InterestAmount,
                     TransactionDate = rst.TranDate,

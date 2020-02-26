@@ -128,10 +128,12 @@ namespace hihapi.test.UnitTests
                 RepeatType = RepeatFrequency.Month,
                 Desp = item.Desp,
             });
+            var tmpdocid = 1;
             foreach(var rst in rsts)
             {
                 var tmpdoc = new FinanceTmpDPDocument
                 {
+                    DocumentID = tmpdocid ++,
                     TranAmount = rst.TranAmount,
                     TransactionDate = rst.TranDate,
                     HomeID = hid,

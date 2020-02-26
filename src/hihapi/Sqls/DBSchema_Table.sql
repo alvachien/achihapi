@@ -15,8 +15,8 @@ CREATE TABLE [dbo].[t_language] (
 );
 CREATE TABLE [dbo].[t_dbversion] (
     [VersionID]    INT      NOT NULL,
-    [ReleasedDate] DATETIME NOT NULL,
-    [AppliedDate]  DATETIME CONSTRAINT [DF_t_dbversion_AppliedDate] DEFAULT (getdate()) NOT NULL,
+    [ReleasedDate] DATE     NOT NULL,
+    [AppliedDate]  DATE     CONSTRAINT [DF_t_dbversion_AppliedDate] DEFAULT (getdate()) NOT NULL,
     CONSTRAINT [PK_t_dbversion] PRIMARY KEY CLUSTERED ([VersionID] ASC)
 );
 
@@ -30,9 +30,9 @@ CREATE TABLE [dbo].[t_homedef] (
     [HOST]      NVARCHAR (50) NOT NULL,
     [BASECURR]  NVARCHAR (5)  NOT NULL,
     [CREATEDBY] NVARCHAR (50) NOT NULL,
-    [CREATEDAT] DATE          NULL,
+    [CREATEDAT] DATE          CONSTRAINT [DF_t_homedef_CREATEDAT] DEFAULT (getdate()) NULL,
     [UPDATEDBY] NVARCHAR (50) NULL,
-    [UPDATEDAT] DATE          NULL,
+    [UPDATEDAT] DATE          CONSTRAINT [DF_t_homedef_UPDATEDAT] DEFAULT (getdate()) NULL,
     CONSTRAINT [PK_t_homedef] PRIMARY KEY CLUSTERED ([ID] ASC),
     CONSTRAINT [UK_t_homedef_NAME] UNIQUE NONCLUSTERED ([NAME] ASC)
 );
@@ -286,10 +286,10 @@ CREATE TABLE [dbo].[t_fin_account_ext_dp] (
     [DEFRRDAYS] NVARCHAR (100) NULL,
     [COMMENT]   NVARCHAR (45)  NULL,
     CONSTRAINT [PK_t_fin_account_ext_dp] PRIMARY KEY CLUSTERED ([ACCOUNTID] ASC),
-    CONSTRAINT [FK_t_fin_account_ext_dp_id] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT [FK_t_fin_account_ext_dp_ACNT] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE TABLE [dbo].[t_fin_tmpdoc_dp] (
-    [DOCID]           INT             IDENTITY (1, 1) NOT NULL,
+    [DOCID]           INT             NOT NULL,
     [HID]             INT             NOT NULL,
     [REFDOCID]        INT             NULL,
     [ACCOUNTID]       INT             NOT NULL,
@@ -303,8 +303,8 @@ CREATE TABLE [dbo].[t_fin_tmpdoc_dp] (
     [CREATEDAT]       DATE            CONSTRAINT [DF_t_fin_tmpdoc_dp_CREATEDAT] DEFAULT (getdate()) NULL,
     [UPDATEDBY]       NVARCHAR (40)   NULL,
     [UPDATEDAT]       DATE            CONSTRAINT [DF_t_fin_tmpdoc_dp_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_fin_tmpdoc_dp] PRIMARY KEY CLUSTERED ([DOCID] ASC),
-    CONSTRAINT [FK_t_fin_tmpdocdp_account] FOREIGN KEY ([ACCOUNTID]) REFERENCES [t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT [PK_t_fin_tmpdoc_dp] PRIMARY KEY CLUSTERED (DOCID ASC,  ACCOUNTID ASC, HID ASC),
+    CONSTRAINT [FK_t_fin_tmpdocdp_ACCOUNTEXT] FOREIGN KEY ([ACCOUNTID]) REFERENCES [t_fin_account_ext_dp] ([ACCOUNTID]) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE TABLE [dbo].[t_fin_account_ext_as] (
     [ACCOUNTID]   INT            NOT NULL,
@@ -314,12 +314,12 @@ CREATE TABLE [dbo].[t_fin_account_ext_as] (
     [COMMENT]     NVARCHAR (100) NULL,
     [REFDOC_SOLD] INT            NULL,
     CONSTRAINT [PK_t_fin_account_ext_as] PRIMARY KEY CLUSTERED ([ACCOUNTID] ASC),
-    CONSTRAINT [FK_t_fin_account_ext_as_ACNTID] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT [FK_t_fin_account_ext_as_CTGYID] FOREIGN KEY ([CTGYID]) REFERENCES [dbo].[t_fin_asset_ctgy] ([ID])
+    CONSTRAINT [FK_t_fin_account_ext_as_ACNT] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT [FK_t_fin_account_ext_as_CTGY] FOREIGN KEY ([CTGYID]) REFERENCES [dbo].[t_fin_asset_ctgy] ([ID])
 );
 CREATE TABLE [dbo].[t_fin_account_ext_loan] (
     [ACCOUNTID]     INT             NOT NULL,
-    [STARTDATE]     DATETIME        NOT NULL,
+    [STARTDATE]     DATET           NOT NULL,
     [ANNUALRATE]    DECIMAL (17, 2) NULL,
     [INTERESTFREE]  BIT             NULL,
     [REPAYMETHOD]   TINYINT         NULL,
@@ -330,11 +330,11 @@ CREATE TABLE [dbo].[t_fin_account_ext_loan] (
     [PAYINGACCOUNT] INT             NULL,
     [PARTNER]       NVARCHAR (50)   NULL,
     CONSTRAINT [PK_t_fin_account_ext_loan] PRIMARY KEY CLUSTERED ([ACCOUNTID] ASC),
-    CONSTRAINT [FK_t_fin_account_ext_loan_ID] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT [FK_t_fin_account_ext_loan_ACNT] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE TABLE [dbo].[t_fin_account_ext_loan_h] (
     [ACCOUNTID]     INT             NOT NULL,
-    [STARTDATE]     DATETIME        NOT NULL,
+    [STARTDATE]     DATE            NOT NULL,
     [ANNUALRATE]    DECIMAL (17, 2) NULL,
     [INTERESTFREE]  BIT             NULL,
     [REPAYMETHOD]   TINYINT         NULL,
@@ -345,10 +345,10 @@ CREATE TABLE [dbo].[t_fin_account_ext_loan_h] (
     [PAYINGACCOUNT] INT             NULL,
     [PARTNER]       NVARCHAR (50)   NULL,
     CONSTRAINT [PK_t_fin_account_ext_loan_h] PRIMARY KEY CLUSTERED ([ACCOUNTID] ASC),
-    CONSTRAINT [FK_t_fin_account_ext_loan_h_ID] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT [FK_t_fin_account_ext_loan_h_ACNT] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE TABLE [dbo].[t_fin_tmpdoc_loan] (
-    [DOCID]           INT             IDENTITY (1, 1) NOT NULL,
+    [DOCID]           INT             NOT NULL,
     [HID]             INT             NOT NULL,
     [REFDOCID]        INT             NULL,
     [ACCOUNTID]       INT             NOT NULL,
@@ -362,8 +362,8 @@ CREATE TABLE [dbo].[t_fin_tmpdoc_loan] (
     [CREATEDAT]       DATE            CONSTRAINT [DF_t_fin_tmpdoc_loan_CREATEDAT] DEFAULT (getdate()) NULL,
     [UPDATEDBY]       NVARCHAR (40)   NULL,
     [UPDATEDAT]       DATE            CONSTRAINT [DF_t_fin_tmpdoc_loan_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_fin_tmpdoc_loan] PRIMARY KEY CLUSTERED ([DOCID] ASC),
-    CONSTRAINT [FK_t_fin_tmpdocloan_account] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT [PK_t_fin_tmpdoc_loan] PRIMARY KEY CLUSTERED (DOCID ASC,  ACCOUNTID ASC, HID ASC),
+    CONSTRAINT [FK_t_fin_tmpdoc_loan_ACCOUNTEXT] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account_ext_loan] ([ACCOUNTID]) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE TABLE [dbo].[t_fin_account_ext_cc] (
     [ACCOUNTID]       INT            NOT NULL,
@@ -374,7 +374,7 @@ CREATE TABLE [dbo].[t_fin_account_ext_cc] (
     [BANK]            NVARCHAR (50)  NULL,
     [VALIDDATE]       DATETIME       NULL,
     CONSTRAINT [PK_t_fin_account_ext_cc] PRIMARY KEY CLUSTERED ([ACCOUNTID] ASC),
-    CONSTRAINT [FK_t_fin_account_ext_cc_ID] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT [FK_t_fin_account_ext_cc_ACNT] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE [dbo].[t_fin_controlcenter] (
@@ -569,9 +569,9 @@ CREATE TABLE [dbo].[t_event] (
     [ID]           INT            IDENTITY (1, 1) NOT NULL,
     [HID]          INT            NOT NULL,
     [Name]         NVARCHAR (50)  NOT NULL,
-    [StartTime]    DATETIME       CONSTRAINT [DF_t_event_StartTime] DEFAULT (getdate()) NOT NULL,
-    [EndTime]      DATETIME       NULL,
-    [CompleteTime] DATETIME       NULL,
+    [StartTime]    DATE           CONSTRAINT [DF_t_event_StartTime] DEFAULT (getdate()) NOT NULL,
+    [EndTime]      DATE           NULL,
+    [CompleteTime] DATE           NULL,
     [Content]      NVARCHAR (MAX) NULL,
     [IsPublic]     BIT            CONSTRAINT [DF_t_event_IsPublic] DEFAULT ((1)) NOT NULL,
     [Assignee]     NVARCHAR (40)  NULL,

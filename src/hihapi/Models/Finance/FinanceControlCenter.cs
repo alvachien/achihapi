@@ -33,7 +33,11 @@ namespace hihapi.Models
         [Column("OWNER", TypeName="NVARCHAR(40)")]
         public String Owner { get; set; }
 
-        //public HomeDefine CurrentHome { get; set; }
+        public HomeDefine CurrentHome { get; set; }
+
+        public FinanceControlCenter(): base()
+        {
+        }
 
         public override bool IsValid(hihDataContext context)
         {

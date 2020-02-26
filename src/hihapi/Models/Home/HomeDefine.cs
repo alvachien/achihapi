@@ -12,6 +12,14 @@ namespace hihapi.Models
         public HomeDefine(): base()
         {
             HomeMembers = new HashSet<HomeMember>();
+            FinanceAccountCategories = new HashSet<FinanceAccountCategory>();
+            FinanceAssetCategories = new HashSet<FinanceAssetCategory>();
+            FinanceDocumentTypes = new HashSet<FinanceDocumentType>();
+            FinanceTransactionTypes = new HashSet<FinanceTransactionType>();
+            FinanceAccounts = new HashSet<FinanceAccount>();
+            FinanceControlCenters = new HashSet<FinanceControlCenter>();
+            FinanceOrders = new HashSet<FinanceOrder>();
+            FinanceDocuments = new HashSet<FinanceDocument>();
         }
 
         [Key]
@@ -38,16 +46,15 @@ namespace hihapi.Models
         public String BaseCurrency { get; set; }
 
         public ICollection<HomeMember> HomeMembers { get; set; }
-        //public ICollection<FinanceAccountCategory> FinanceAccountCategories { get; set; }
-        //public ICollection<FinanceAssetCategory> FinanceAssetCategories { get; set; }
-        //public ICollection<FinanceDocumentType> FinanceDocumentTypes { get; set; }
-        //public ICollection<FinanceTransactionType> FinanceTransactionTypes { get; set; }
-        //public ICollection<FinanceAccount> FinanceAccounts { get; set; }
-        //public ICollection<FinanceAccountExtraDP> FinanceAccountExtraDPs { get; set; }
-        //public ICollection<FinanceAccountExtraAS> FinanceAccountExtraASs { get; set; }
-        //public ICollection<FinanceControlCenter> FinanceControlCenters { get; set; }        
-        //public ICollection<FinanceOrder> FinanceOrders { get; set; }
-        //public ICollection<FinanceDocument> FinanceDocuments { get; set; }
+        // Finance
+        public ICollection<FinanceAccountCategory> FinanceAccountCategories { get; set; }
+        public ICollection<FinanceAssetCategory> FinanceAssetCategories { get; set; }
+        public ICollection<FinanceDocumentType> FinanceDocumentTypes { get; set; }
+        public ICollection<FinanceTransactionType> FinanceTransactionTypes { get; set; }
+        public ICollection<FinanceAccount> FinanceAccounts { get; set; }
+        public ICollection<FinanceControlCenter> FinanceControlCenters { get; set; }        
+        public ICollection<FinanceOrder> FinanceOrders { get; set; }
+        public ICollection<FinanceDocument> FinanceDocuments { get; set; }
 
         public override bool IsValid(hihDataContext context)
         {

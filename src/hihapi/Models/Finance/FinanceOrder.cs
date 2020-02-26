@@ -86,7 +86,7 @@ namespace hihapi.Models
         }
 
         public ICollection<FinanceOrderSRule> SRule { get; set; }
-        //public HomeDefine CurrentHome { get; set; }
+        public HomeDefine CurrentHome { get; set; }
     }
 
     [Table("T_FIN_ORDER_SRULE")]

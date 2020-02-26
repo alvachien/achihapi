@@ -62,6 +62,7 @@ namespace hihapi.Models
         [NotMapped]
         public Decimal? TranAmount { get; set; }
 
+        public HomeDefine CurrentHome { get; set; }
         public ICollection<FinanceDocumentItem> Items { get; set; }
 
         public override bool IsValid(hihDataContext context)

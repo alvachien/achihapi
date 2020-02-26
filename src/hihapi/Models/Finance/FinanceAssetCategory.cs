@@ -25,8 +25,13 @@ namespace hihapi.Models
         [Column("DESP", TypeName="NVARCHAR(50)")]
         public String Desp { get; set; }
 
-        //public HomeDefine CurrentHome { get; set; }
-        //public ICollection<FinanceAccountExtraAS> AccountExtraAsset { get; set; }
+        public HomeDefine CurrentHome { get; set; }
+        public ICollection<FinanceAccountExtraAS> AccountExtraAsset { get; set; }
+
+        public FinanceAssetCategory(): base()
+        {
+            AccountExtraAsset = new HashSet<FinanceAccountExtraAS>();
+        }
 
         public override bool IsValid(hihDataContext context)
         {

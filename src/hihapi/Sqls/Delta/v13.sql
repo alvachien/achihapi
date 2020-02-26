@@ -1,5 +1,16 @@
 ﻿-- Remove unnecessary foreign keys
 
+-- dbo.t_homedef
+IF EXISTS ( select * from INFORMATION_SCHEMA.COLUMNS
+	where TABLE_NAME = 't_homedef'
+	and ( COLUMN_NAME = 'CREATEDAT' OR COLUMN_NAME = 'UPDATEDAT' )
+	AND COLUMN_DEFAULT IS NULL
+	 )
+BEGIN
+	ALTER TABLE [dbo].[t_homedef] ADD CONSTRAINT [DF_t_homedef_CREATEDAT]  DEFAULT (getdate()) FOR [CREATEDAT];
+	ALTER TABLE [dbo].[t_homedef] ADD CONSTRAINT [DF_t_homedef_UPDATEDAT]  DEFAULT (getdate()) FOR [UPDATEDAT];
+END;
+
 -- dbo.t_dbversion
 IF EXISTS( select * from INFORMATION_SCHEMA.COLUMNS
 	WHERE TABLE_NAME = 'T_DBVERSION'
@@ -165,6 +176,14 @@ BEGIN
 		ON DELETE CASCADE;
 END;
 
+IF EXISTS ( select * from INFORMATION_SCHEMA.COLUMNS
+	WHERE TABLE_NAME = 't_fin_account_ext_loan'
+	AND COLUMN_NAME = 'STARTDATE' AND DATA_TYPE = 'datetime' )
+BEGIN
+	ALTER TABLE dbo.t_fin_account_ext_loan
+		 ALTER COLUMN  STARTDATE date not null;
+END;
+
 -- dbo.t_fin_account_ext_loan_h
 IF EXISTS ( select * from INFORMATION_SCHEMA.TABLE_CONSTRAINTS
 	WHERE TABLE_NAME = 't_fin_account_ext_loan_h'
@@ -178,6 +197,19 @@ BEGIN
 		ON UPDATE CASCADE
 		ON DELETE CASCADE;
 END;
+
+IF EXISTS ( select * from INFORMATION_SCHEMA.COLUMNS
+	WHERE TABLE_NAME = 't_fin_account_ext_loan_h'
+	AND COLUMN_NAME = 'STARTDATE' AND DATA_TYPE = 'datetime' )
+BEGIN
+	ALTER TABLE dbo.t_fin_account_ext_loan_h
+		 ALTER COLUMN  STARTDATE date not null;
+END;
+
+ALTER TABLE dbo.t_fin_account_ext_loan_h
+	DROP CONSTRAINT PK_t_fin_account_ext_loan_h;
+ALTER TABLE dbo.t_fin_account_ext_loan_h
+	ADD CONSTRAINT PK_t_fin_account_ext_loan_h PRIMARY KEY (ACCOUNTID ASC, STARTDATE ASC);
 
 -- dbo.t_fin_tmpdoc_loan
 IF EXISTS( select * from INFORMATION_SCHEMA.TABLE_CONSTRAINTS
@@ -231,6 +263,24 @@ BEGIN
 			 ON UPDATE  CASCADE 
 			 ON DELETE  CASCADE;
 END;
+
+-- dbo.t_lib_person
+IF EXISTS( select * from INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+	WHERE TABLE_NAME = 't_lib_person'
+	AND CONSTRAINT_NAME = 'FK_t_lib_person_t_lib_HID' )
+BEGIN 
+	ALTER TABLE dbo.t_lib_person
+		DROP CONSTRAINT FK_t_lib_person_t_lib_HID;
+
+	ALTER TABLE dbo.t_lib_person WITH CHECK ADD  CONSTRAINT FK_t_lib_person_HID FOREIGN KEY(HID)
+	REFERENCES dbo.t_homedef (ID)
+	ON UPDATE CASCADE
+	ON DELETE CASCADE;
+
+	ALTER TABLE dbo.t_lib_person CHECK CONSTRAINT FK_t_lib_person_HID;
+
+END;
+
 
 -- Set the version
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (13,'2020.02.28');
