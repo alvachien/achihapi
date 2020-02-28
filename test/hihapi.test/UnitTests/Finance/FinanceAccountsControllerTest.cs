@@ -19,6 +19,7 @@ namespace hihapi.test.UnitTests
         private SqliteDatabaseFixture fixture = null;
         private ServiceProvider provider = null;
         private IEdmModel model = null;
+        private List<Int32> accountsCreated = new List<Int32>();
 
         public FinanceAccountsControllerTest(SqliteDatabaseFixture fixture)
         {
@@ -30,6 +31,8 @@ namespace hihapi.test.UnitTests
 
         public void Dispose()
         {
+            CleanupCreatedEntries();
+
             if (this.provider != null)
             {
                 this.provider.Dispose();
@@ -129,6 +132,7 @@ namespace hihapi.test.UnitTests
             Assert.Equal(rst2.Entity.Owner, user);
             var firstacntid = rst2.Entity.ID;
             Assert.True(firstacntid > 0);
+            accountsCreated.Add(firstacntid);
 
             // 2. Now read the whole accounts (no home ID applied)
             var queryUrl = "http://localhost/api/FinanceAccounts";
@@ -168,6 +172,7 @@ namespace hihapi.test.UnitTests
             Assert.Equal(rst2.Entity.Owner, acnt.Owner);
             var secondacntid = rst2.Entity.ID;
             Assert.True(secondacntid > 0);
+            accountsCreated.Add(secondacntid);
 
             // 4. Change one account
             acnt.Comment = "Comment 2 Updated";
@@ -196,13 +201,28 @@ namespace hihapi.test.UnitTests
             rst6 = Assert.IsType<StatusCodeResult>(rst5);
             Assert.Equal(204, rst6.StatusCode);
 
-            // 8. Now read the whole control centers
+            // 8. Now read the whole accounts
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
             acntamt = context.FinanceAccount.Where(p => p.HomeID == hid).Count();
             Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
 
+            accountsCreated.Clear();
+
             await context.DisposeAsync();
+        }
+
+        private void CleanupCreatedEntries()
+        {
+            if (accountsCreated.Count > 0)
+            {
+                var context = this.fixture.GetCurrentDataContext();
+                foreach (var acntcrt in accountsCreated)
+                    fixture.DeleteAccount(context, acntcrt);
+
+                accountsCreated.Clear();
+                context.SaveChanges();
+            }
         }
     }
 }

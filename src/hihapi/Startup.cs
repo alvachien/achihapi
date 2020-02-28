@@ -217,9 +217,13 @@ namespace hihapi
             modelBuilder.Namespace = typeof(Currency).Namespace;
             // Function on DP template documents
             var tmpTpDocEntity = modelBuilder.EntityType<FinanceTmpDPDocument>();
-            tmpTpDocEntity
+            var tmpTpDocPostFunc =
+                tmpTpDocEntity
                 .Function("PostDocument")
                 .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            //tmpTpDocPostFunc.Parameter<int>("DocID");
+            //tmpTpDocPostFunc.Parameter<int>("AccountID");
+            //tmpTpDocPostFunc.Parameter<int>("HomeID");
             // Action on Loan template documents: Repay document
             var tmpLoanDocEntity = modelBuilder.EntityType<FinanceTmpLoanDocument>();
             tmpLoanDocEntity

@@ -19,6 +19,7 @@ namespace hihapi.test.UnitTests
         private SqliteDatabaseFixture fixture = null;
         private ServiceProvider provider = null;
         private IEdmModel model = null;
+        private List<Int32> ordersCreated = new List<Int32>();
 
         public FinanceOrdersControllerTest(SqliteDatabaseFixture fixture)
         {
@@ -30,6 +31,8 @@ namespace hihapi.test.UnitTests
 
         public void Dispose()
         {
+            CleanupCreatedEntries();
+
             if (this.provider != null)
             {
                 this.provider.Dispose();
@@ -104,6 +107,7 @@ namespace hihapi.test.UnitTests
             Assert.Equal(rst2.Entity.Name, ord.Name);
             var oid = rst2.Entity.ID;
             Assert.True(oid > 0);
+            ordersCreated.Add(oid);
 
             // 3. Read the order out (without Home ID)
             var queryUrl = "http://localhost/api/FinanceOrders";
@@ -137,6 +141,7 @@ namespace hihapi.test.UnitTests
             var rst6 = Assert.IsType<StatusCodeResult>(rst5);
             Assert.Equal(204, rst6.StatusCode);
             Assert.Equal(0, context.FinanceOrderSRule.Where(p => p.OrderID == oid).Count());
+            ordersCreated.Clear();
 
             // 6. Read the order again
             rst3 = control.Get(options);
@@ -144,6 +149,19 @@ namespace hihapi.test.UnitTests
             Assert.Equal(existamt_curhome, rst3.Cast<FinanceOrder>().Count());
 
             await context.DisposeAsync();
+        }
+
+        private void CleanupCreatedEntries()
+        {
+            if (ordersCreated.Count > 0)
+            {
+                var context = this.fixture.GetCurrentDataContext();
+                foreach (var ord in ordersCreated)
+                    fixture.DeleteOrder(context, ord);
+
+                ordersCreated.Clear();
+                context.SaveChanges();
+            }
         }
     }
 }

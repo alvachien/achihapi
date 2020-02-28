@@ -19,6 +19,7 @@ namespace hihapi.test.UnitTests
         private SqliteDatabaseFixture fixture = null;
         private ServiceProvider provider = null;
         private IEdmModel model = null;
+        private List<int> documentsCreated = new List<int>();
 
         public FinanceDocumentsControllerTest(SqliteDatabaseFixture fixture)
         {
@@ -30,6 +31,8 @@ namespace hihapi.test.UnitTests
 
         public void Dispose()
         {
+            CleanupCreatedEntries();
+
             if (this.provider != null)
             {
                 this.provider.Dispose();
@@ -45,7 +48,6 @@ namespace hihapi.test.UnitTests
         [InlineData(DataSetupUtility.Home2ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserB)]
         public async Task TestCase1(int hid, string currency, string user)
         {
-            List<int> documentsCreated = new List<int>();
             var context = this.fixture.GetCurrentDataContext();
 
             // 0a. Prepare the context for other homes to test the filters
@@ -200,11 +202,23 @@ namespace hihapi.test.UnitTests
             Assert.Equal(existamt_curhome + 1, rst3.Cast<FinanceDocument>().Count());
 
             // Last, clear all created objects
-            foreach(var did in documentsCreated)
-                this.fixture.DeleteDocument(context, did);
+            CleanupCreatedEntries();
             await context.SaveChangesAsync();
 
             await context.DisposeAsync();
+        }
+
+        private void CleanupCreatedEntries()
+        {
+            if (documentsCreated.Count > 0)
+            {
+                var context = this.fixture.GetCurrentDataContext();
+                foreach (var acntcrt in documentsCreated)
+                    fixture.DeleteDocument(context, acntcrt);
+
+                documentsCreated.Clear();
+                context.SaveChanges();
+            }
         }
     }
 }

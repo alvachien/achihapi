@@ -19,6 +19,7 @@ namespace hihapi.test.UnitTests
         private SqliteDatabaseFixture fixture = null;
         private ServiceProvider provider = null;
         private IEdmModel model = null;
+        private List<Int32> ccsCreated = new List<Int32>();
 
         public FinanceControlCentersControllerTest(SqliteDatabaseFixture fixture)
         {
@@ -30,12 +31,15 @@ namespace hihapi.test.UnitTests
 
         public void Dispose()
         {
+            CleanupCreatedEntries();
+
             if (this.provider != null)
             {
                 this.provider.Dispose();
                 this.provider = null;
             }
         }
+
 
         [Theory]
         [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA)]
@@ -98,6 +102,7 @@ namespace hihapi.test.UnitTests
             Assert.Equal(rst2.Entity.Owner, cc.Owner);
             var firstccid = rst2.Entity.ID;
             Assert.True(firstccid > 0);
+            ccsCreated.Add(firstccid);
 
             // 2. Now read the whole control centers (without Home ID)
             var queryUrl = @"http://localhost/api/FinanceControlCenters";
@@ -134,6 +139,7 @@ namespace hihapi.test.UnitTests
             Assert.Equal(rst2.Entity.Owner, cc.Owner);
             var sndccid = rst2.Entity.ID;
             Assert.True(sndccid > 0);
+            ccsCreated.Add(sndccid);
 
             // 4. Change one control center
             cc.Owner = DataSetupUtility.UserB;
@@ -166,7 +172,22 @@ namespace hihapi.test.UnitTests
             Assert.NotNull(rst3);
             Assert.Equal(existccamt_curhome, rst3.Cast<FinanceControlCenter>().Count());
 
+            ccsCreated.Clear();
+
             context.Dispose();
+        }
+
+        private void CleanupCreatedEntries()
+        {
+            if (ccsCreated.Count > 0)
+            {
+                var context = this.fixture.GetCurrentDataContext();
+                foreach (var cc in ccsCreated)
+                    fixture.DeleteControlCenter(context, cc);
+
+                ccsCreated.Clear();
+                context.SaveChanges();
+            }
         }
     }
 }

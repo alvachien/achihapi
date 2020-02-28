@@ -15,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.OData.Edm;
 using hihapi.Utilities;
+using System.Collections.Generic;
 
 namespace hihapi.test.UnitTests
 {
@@ -24,6 +25,8 @@ namespace hihapi.test.UnitTests
         SqliteDatabaseFixture fixture = null;
         private ServiceProvider provider = null;
         private IEdmModel model = null;
+        private List<Int32> accountsCreated = new List<Int32>();
+        private List<Int32> documentsCreated = new List<Int32>();
 
         public FinanceTmpDPDocumentsControllerTest(SqliteDatabaseFixture fixture)
         {
@@ -34,6 +37,7 @@ namespace hihapi.test.UnitTests
 
         public void Dispose()
         {
+            CleanupCreatedEntries();
             if (this.provider != null)
             {
                 this.provider.Dispose();
@@ -46,8 +50,6 @@ namespace hihapi.test.UnitTests
         [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserA, FinanceDocumentType.DocType_AdvanceReceive)]
         public async Task TestCase1(int hid, string currency, string user, short doctype)
         {
-            var accountCreated = 0;
-            var documentCreated = 0;
             var context = this.fixture.GetCurrentDataContext();
 
             // 0. Prepare the context for current home
@@ -150,12 +152,12 @@ namespace hihapi.test.UnitTests
             }
             var resp = await control.PostDPDocument(dpcontext);
             var doc = Assert.IsType<CreatedODataResult<FinanceDocument>>(resp).Entity;
-            documentCreated = doc.ID;
+            documentsCreated.Add(doc.ID);
             Assert.True(doc.Items.Count == 2);
             foreach(var did in doc.Items)
             {
                 if (did.AccountID != account.ID)
-                    accountCreated = did.AccountID;
+                    accountsCreated.Add(did.AccountID);
             }
 
             // 2. Switch to second controller
@@ -167,18 +169,41 @@ namespace hihapi.test.UnitTests
             var tmpdocs = tmpcontrol.Get();
             Assert.NotEmpty(tmpdocs);
             Assert.Equal(rsts.Count, tmpdocs.Count());
+            var dpdocs = tmpdocs.Cast<FinanceTmpDPDocument>();
 
             // 3. Create repay document
+            foreach(var dpdoc in dpdocs)
+            {
+                var repaydocresp = tmpcontrol.PostDocument(dpdoc.DocumentID);
+                var repaydoc = Assert.IsType<FinanceDocument>(repaydocresp);
+                Assert.True(repaydoc.ID > 0);
+                documentsCreated.Add(repaydoc.ID);
 
-            // Last, clear all created objects
+                // Check in the database
+                var dpdocInDB = context.FinanceTmpDPDocument.Where(p => p.DocumentID == dpdoc.DocumentID).SingleOrDefault();
+                Assert.NotNull(dpdocInDB);
+                Assert.NotNull(dpdocInDB.ReferenceDocumentID);
+            }
 
-            if (documentCreated > 0)
-                this.fixture.DeleteDocument(context, documentCreated);
-            if (accountCreated > 0)
-                this.fixture.DeleteAccount(context, accountCreated);
             await context.SaveChangesAsync();
 
+            CleanupCreatedEntries();
+
             await context.DisposeAsync();
+        }
+
+        private void CleanupCreatedEntries()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            foreach (var doccrt in documentsCreated)
+                fixture.DeleteDocument(context, doccrt);
+            foreach (var acntcrt in accountsCreated)
+                fixture.DeleteAccount(context, acntcrt);
+
+            documentsCreated.Clear();
+            accountsCreated.Clear();
+
+            context.SaveChanges();
         }
     }
 }

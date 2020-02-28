@@ -50,7 +50,7 @@ namespace hihapi.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> PostDocument(int key)
+        public async Task<IActionResult> PostDocument(int DocID, int AccontID, int HomeID)
         {
             // User
             String usrName = String.Empty;
@@ -67,7 +67,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var tpdoc = await _context.FinanceTmpDPDocument.FindAsync(key);
+            var tpdoc = await _context.FinanceTmpDPDocument.FindAsync();
             if (tpdoc == null)
             {
                 return NotFound();
