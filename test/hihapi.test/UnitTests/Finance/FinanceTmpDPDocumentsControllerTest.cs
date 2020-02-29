@@ -114,7 +114,8 @@ namespace hihapi.test.UnitTests
                 CategoryID = doctype == FinanceDocumentType.DocType_AdvancePayment
                         ? FinanceAccountCategoriesController.AccountCategory_AdvancePayment
                         : FinanceAccountCategoriesController.AccountCategory_AdvanceReceive,
-                Owner = user
+                Owner = user,
+                Status = FinanceAccountStatus.Normal,
             };
             var startdate = DateTime.Today;
             var enddate = DateTime.Today.AddMonths(6);
@@ -174,18 +175,16 @@ namespace hihapi.test.UnitTests
             // 3. Create repay document
             foreach(var dpdoc in dpdocs)
             {
-                var repaydocresp = tmpcontrol.PostDocument(dpdoc.DocumentID);
-                var repaydoc = Assert.IsType<FinanceDocument>(repaydocresp);
-                Assert.True(repaydoc.ID > 0);
-                documentsCreated.Add(repaydoc.ID);
+                var repaydocresp = await tmpcontrol.PostDocument(dpdoc.DocumentID, dpdoc.AccountID, dpdoc.HomeID);
+                var repaydoc = Assert.IsType<CreatedODataResult<FinanceDocument>>(repaydocresp);
+                Assert.True(repaydoc.Entity.ID > 0);
+                documentsCreated.Add(repaydoc.Entity.ID);
 
                 // Check in the database
                 var dpdocInDB = context.FinanceTmpDPDocument.Where(p => p.DocumentID == dpdoc.DocumentID).SingleOrDefault();
                 Assert.NotNull(dpdocInDB);
                 Assert.NotNull(dpdocInDB.ReferenceDocumentID);
             }
-
-            await context.SaveChangesAsync();
 
             CleanupCreatedEntries();
 

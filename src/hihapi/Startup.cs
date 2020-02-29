@@ -227,7 +227,7 @@ namespace hihapi
             // Action on Loan template documents: Repay document
             var tmpLoanDocEntity = modelBuilder.EntityType<FinanceTmpLoanDocument>();
             tmpLoanDocEntity
-                .Function("PostRepayDocument")
+                .Action("PostRepayDocument")
                 .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
 
             var model = modelBuilder.GetEdmModel();

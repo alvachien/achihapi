@@ -461,19 +461,19 @@ namespace hihapi.Models
             modelBuilder.Entity<FinanceReporAccountGroupView>(entity =>
             {
                 entity.HasNoKey();
-                entity.ToView("v_fin_grp_acnt");
+                entity.ToView("V_FIN_GRP_ACNT");
             });
 
             modelBuilder.Entity<FinanceReporAccountGroupAndExpenseView>(entity =>
             {
                 entity.HasNoKey();
-                entity.ToView("v_fin_grp_acnt_tranexp");
+                entity.ToView("V_FIN_GRP_ACNT_TRANEXP");
             });
 
             modelBuilder.Entity<FinanceReportAccountBalanceView>(entity =>
             {
                 entity.HasNoKey();
-                entity.ToView("v_fin_report_bs");
+                entity.ToView("V_FIN_REPORT_BS");
             });
         }
     }

@@ -50,7 +50,7 @@ namespace hihapi.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> PostDocument(int DocID, int AccontID, int HomeID)
+        public async Task<IActionResult> PostDocument([FromODataUri]int DocumentID, int AccontID, int HomeID)
         {
             // User
             String usrName = String.Empty;
@@ -67,7 +67,9 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var tpdoc = await _context.FinanceTmpDPDocument.FindAsync();
+            var tpdoc = _context.FinanceTmpDPDocument
+                .Where(p => p.DocumentID == DocumentID && p.AccountID == AccontID && p.HomeID == HomeID)
+                .SingleOrDefault();
             if (tpdoc == null)
             {
                 return NotFound();
@@ -84,6 +86,7 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
+            var homes = hms.ToList();
 
             // Check 2: Document posted already?
             if (tpdoc.ReferenceDocumentID.HasValue && tpdoc.ReferenceDocumentID.Value > 0)
@@ -105,7 +108,7 @@ namespace hihapi.Controllers
             findoc.DocType = FinanceDocumentType.DocType_Normal;
             findoc.HomeID = tpdoc.HomeID;
             //findoc.TranAmount = vmTmpDoc.TranAmount;
-            findoc.TranCurr = hms.ElementAt(0).BaseCurrency;
+            findoc.TranCurr = homes[0].BaseCurrency;
             findoc.TranDate = tpdoc.TransactionDate;
             findoc.CreatedAt = DateTime.Now;
             var findocitem = new FinanceDocumentItem
@@ -127,7 +130,6 @@ namespace hihapi.Controllers
             var errorOccur = false;
             var origdocid = 0;
 
-            //_context.Database. = Console.WriteLine;
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try

@@ -20,6 +20,8 @@ namespace hihapi.test.UnitTests
         private SqliteDatabaseFixture fixture = null;
         private ServiceProvider provider = null;
         private IEdmModel model = null;
+        private List<Int32> accountsCreated = new List<Int32>();
+        private List<Int32> documentsCreated = new List<Int32>();
 
         public FinanceDocumentLoanTest(SqliteDatabaseFixture fixture)
         {
@@ -31,6 +33,8 @@ namespace hihapi.test.UnitTests
 
         public void Dispose()
         {
+            CleanupCreatedEntries();
+
             if (this.provider != null)
             {
                 this.provider.Dispose();
@@ -43,8 +47,6 @@ namespace hihapi.test.UnitTests
         [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserA, FinanceDocumentType.DocType_LendTo)]
         public async Task TestCase1(int hid, string currency, string user, short doctype)
         {
-            var accountCreated = 0;
-            var documentCreated = 0;
             var context = this.fixture.GetCurrentDataContext();
 
             // 0. Prepare the context for current home
@@ -109,7 +111,8 @@ namespace hihapi.test.UnitTests
                 CategoryID = doctype == FinanceDocumentType.DocType_BorrowFrom 
                     ? FinanceAccountCategoriesController.AccountCategory_BorrowFrom
                     : FinanceAccountCategoriesController.AccountCategory_LendTo,
-                Owner = user
+                Owner = user,
+                Status = FinanceAccountStatus.Normal,
             };
             var startdate = new DateTime(2020, 1, 10);
             var enddate = new DateTime(2021, 1, 10);
@@ -150,7 +153,7 @@ namespace hihapi.test.UnitTests
             }
             var resp = await control.PostLoanDocument(dpcontext);
             var doc = Assert.IsType<CreatedODataResult<FinanceDocument>>(resp).Entity;
-            documentCreated = doc.ID;
+            documentsCreated.Add(doc.ID);
             Assert.True(doc.Items.Count == 2);
 
             // Now check in the databse
@@ -158,7 +161,7 @@ namespace hihapi.test.UnitTests
             {
                 if (docitem.AccountID != account.ID)
                 {
-                    accountCreated = docitem.AccountID;
+                    accountsCreated.Add(docitem.AccountID);
 
                     var acnt = context.FinanceAccount.Find(docitem.AccountID);
                     Assert.NotNull(acnt);
@@ -184,13 +187,23 @@ namespace hihapi.test.UnitTests
             }
 
             // Last, clear all created objects
-            if (documentCreated > 0)
-                this.fixture.DeleteDocument(context, documentCreated);
-            if (accountCreated > 0)
-                this.fixture.DeleteAccount(context, accountCreated);
-            await context.SaveChangesAsync();
+            CleanupCreatedEntries();
 
             await context.DisposeAsync();
+        }
+
+        private void CleanupCreatedEntries()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            foreach (var doccrt in documentsCreated)
+                fixture.DeleteDocument(context, doccrt);
+            foreach (var acntcrt in accountsCreated)
+                fixture.DeleteAccount(context, acntcrt);
+
+            documentsCreated.Clear();
+            accountsCreated.Clear();
+
+            context.SaveChanges();
         }
     }
 }

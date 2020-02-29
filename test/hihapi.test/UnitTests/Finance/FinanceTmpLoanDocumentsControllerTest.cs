@@ -1,29 +1,27 @@
-﻿using System;
-using Xunit;
-using System.Linq;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Sqlite;
+﻿using hihapi.Controllers;
 using hihapi.Models;
-using hihapi.Controllers;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNet.OData.Results;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNet.OData.Extensions;
-using Microsoft.OData.Edm;
 using hihapi.Utilities;
+using Microsoft.AspNet.OData.Extensions;
+using Microsoft.AspNet.OData.Results;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OData.Edm;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace hihapi.test.UnitTests
 {
     [Collection("HIHAPI_UnitTests#1")]
-    public class FinanceTmpLoanDocumentsControllerTest: IDisposable
+    public class FinanceTmpLoanDocumentsControllerTest : IDisposable
     {
         SqliteDatabaseFixture fixture = null;
         private ServiceProvider provider = null;
         private IEdmModel model = null;
+        private List<Int32> accountsCreated = new List<Int32>();
+        private List<Int32> documentsCreated = new List<Int32>();
 
         public FinanceTmpLoanDocumentsControllerTest(SqliteDatabaseFixture fixture)
         {
@@ -34,6 +32,8 @@ namespace hihapi.test.UnitTests
 
         public void Dispose()
         {
+            CleanupCreatedEntries();
+
             if (this.provider != null)
             {
                 this.provider.Dispose();
@@ -44,10 +44,8 @@ namespace hihapi.test.UnitTests
         [Theory]
         [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserA, FinanceDocumentType.DocType_BorrowFrom)]
         [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.UserA, FinanceDocumentType.DocType_LendTo)]
-        public async Task TestCase1(int hid, string currency, string user, short doctype)
+        public async Task TestCase1_InterestFree(int hid, string currency, string user, short doctype)
         {
-            var accountCreated = 0;
-            var documentCreated = 0;
             var context = this.fixture.GetCurrentDataContext();
 
             // 0. Prepare the context for current home
@@ -112,7 +110,8 @@ namespace hihapi.test.UnitTests
                 CategoryID = doctype == FinanceDocumentType.DocType_BorrowFrom
                     ? FinanceAccountCategoriesController.AccountCategory_BorrowFrom
                     : FinanceAccountCategoriesController.AccountCategory_LendTo,
-                Owner = user
+                Owner = user,
+                Status = FinanceAccountStatus.Normal,
             };
             var startdate = new DateTime(2020, 1, 10);
             var enddate = new DateTime(2021, 1, 10);
@@ -129,7 +128,7 @@ namespace hihapi.test.UnitTests
                 RepaymentMethod = dpcontext.AccountInfo.ExtraLoan.RepaymentMethod.Value,
                 InterestFreeLoan = dpcontext.AccountInfo.ExtraLoan.InterestFree.Value,
                 StartDate = dpcontext.AccountInfo.ExtraLoan.StartDate,
-                TotalAmount = 12000,
+                TotalAmount = 1200,
                 EndDate = dpcontext.AccountInfo.ExtraLoan.EndDate,
                 TotalMonths = dpcontext.AccountInfo.ExtraLoan.TotalMonths.Value,
                 FirstRepayDate = new DateTime(2020, 2, 15)
@@ -153,19 +152,97 @@ namespace hihapi.test.UnitTests
             }
             var resp = await control.PostLoanDocument(dpcontext);
             var doc = Assert.IsType<CreatedODataResult<FinanceDocument>>(resp).Entity;
-            documentCreated = doc.ID;
+            documentsCreated.Add(doc.ID);
+            var dpacntid = -1;
+            foreach (var docitem in doc.Items)
+            {
+                if (docitem.AccountID != account.ID)
+                {
+                    dpacntid = docitem.AccountID;
+                    accountsCreated.Add(dpacntid);
+                }
+            }
             Assert.True(doc.Items.Count == 2);
 
-            // Do the posting
+            // 2. Switch to second controller
+            var tmpcontrol = new FinanceTmpLoanDocumentsController(context);
+            tmpcontrol.ControllerContext = new ControllerContext()
+            {
+                HttpContext = httpctx
+            };
+            var tmpdocs = tmpcontrol.Get();
+            Assert.NotEmpty(tmpdocs);
+            Assert.Equal(rsts.Count, tmpdocs.Count());
+            var dpdocs = tmpdocs.Cast<FinanceTmpLoanDocument>();
+
+            // 3. Create repay document
+            foreach (var dpdoc in dpdocs)
+            {
+                var contxt = new FinanceLoanRepayDocumentCreateContext();
+                contxt.HomeID = hid;
+                contxt.LoanTemplateDocumentID = dpdoc.DocumentID;
+                contxt.DocumentInfo = new FinanceDocument
+                {
+                    DocType = FinanceDocumentType.DocType_Repay,
+                    HomeID = hid,
+                    Desp = dpdoc.Description,
+                    TranCurr = currency,
+                };
+                contxt.DocumentInfo.Items.Add(new FinanceDocumentItem
+                {
+                    ItemID = 1,
+                    AccountID = dpdoc.AccountID,
+                    TranAmount = dpdoc.TransactionAmount,
+                    ControlCenterID = dpdoc.ControlCenterID,
+                    OrderID = dpdoc.OrderID,
+                    TranType = doctype == FinanceDocumentType.DocType_BorrowFrom
+                        ? FinanceTransactionType.TranType_RepaymentOut
+                        : FinanceTransactionType.TranType_RepaymentIn
+                });
+                contxt.DocumentInfo.Items.Add(new FinanceDocumentItem
+                {
+                    ItemID = 2,
+                    AccountID = account.ID,
+                    TranAmount = dpdoc.TransactionAmount,
+                    ControlCenterID = dpdoc.ControlCenterID,
+                    OrderID = dpdoc.OrderID,
+                    TranType = doctype == FinanceDocumentType.DocType_BorrowFrom
+                        ? FinanceTransactionType.TranType_RepaymentIn
+                        : FinanceTransactionType.TranType_RepaymentOut
+                });
+                var repaydocresp = await tmpcontrol.PostRepayDocument(contxt);
+                var repaydoc = Assert.IsType<CreatedODataResult<FinanceDocument>>(repaydocresp);
+                Assert.True(repaydoc.Entity.ID > 0);
+                documentsCreated.Add(repaydoc.Entity.ID);
+
+                // Check in the database
+                var dpdocInDB = context.FinanceTmpLoanDocument.Where(p => p.DocumentID == dpdoc.DocumentID).SingleOrDefault();
+                Assert.NotNull(dpdocInDB);
+                Assert.NotNull(dpdocInDB.ReferenceDocumentID);
+            }
+
+            // 4. Now the account shall be closed automatically
+            var account2 = context.FinanceAccount.Where(p => p.HomeID == hid && p.ID == account.ID).FirstOrDefault();
+            Assert.True(account2.Status == FinanceAccountStatus.Closed);
 
             // Last, clear all created objects
-            if (documentCreated > 0)
-                this.fixture.DeleteDocument(context, documentCreated);
-            if (accountCreated > 0)
-                this.fixture.DeleteAccount(context, accountCreated);
-            await context.SaveChangesAsync();
+            CleanupCreatedEntries();
 
             await context.DisposeAsync();
+        }
+
+        private void CleanupCreatedEntries()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            foreach (var doccrt in documentsCreated)
+                fixture.DeleteDocument(context, doccrt);
+            foreach (var acntcrt in accountsCreated)
+                fixture.DeleteAccount(context, acntcrt);
+
+            documentsCreated.Clear();
+            accountsCreated.Clear();
+
+            context.SaveChanges();
         }
     }
 }

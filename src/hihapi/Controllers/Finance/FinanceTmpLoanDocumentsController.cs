@@ -1,21 +1,14 @@
-﻿using System;
-using System.Linq;
-using System.IO;
-using System.Collections.Generic;
-using Microsoft.AspNet.OData;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Microsoft.AspNetCore.Authorization;
+﻿using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
-using hihapi.Exceptions;
-using Microsoft.AspNet.OData.Query;
+using Microsoft.AspNet.OData;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace hihapi.Controllers.Finance
+namespace hihapi.Controllers
 {
     public sealed class FinanceTmpLoanDocumentsController : ODataController
     {
@@ -139,6 +132,10 @@ namespace hihapi.Controllers.Finance
             {
                 acntBalance = acntBalInfo.Balance;
             }
+            else
+            {
+                throw new BadRequestException("No balance");
+            }
 
             // Only four tran. types are allowed
             if (loanAccountHeader.CategoryID == FinanceAccountCategoriesController.AccountCategory_BorrowFrom)
@@ -178,7 +175,6 @@ namespace hihapi.Controllers.Finance
                 throw new BadRequestException("Amount is not equal!");
             }
 
-
             // The post here is:
             // 1. Post a repayment document with the content from this template doc
             // 2. Update the template doc with REFDOCID
@@ -204,7 +200,7 @@ namespace hihapi.Controllers.Finance
                     docLoanTmp.ReferenceDocumentID = origdocid;
                     _context.FinanceTmpLoanDocument.Update(docLoanTmp);
                     _context.SaveChanges();
-                    
+
                     // 3. In case balance is zero, update the account status
                     if (Decimal.Compare(acntBalance, 0) == 0)
                     {

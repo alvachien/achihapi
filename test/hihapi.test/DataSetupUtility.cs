@@ -129,9 +129,9 @@ namespace hihapi.test
                 USERFROM NVARCHAR (50) NOT NULL,
                 TITLE    NVARCHAR (20) NOT NULL,
                 CONTENT  NVARCHAR (50) NULL,
-                READFLAG BIT           DEFAULT 0 NOT NULL,
-                SEND_DEL BIT           DEFAULT 0 NULL,
-                REV_DEL  BIT           DEFAULT 0 NULL,
+                READFLAG BOOLEAN       DEFAULT 0 NOT NULL,
+                SEND_DEL BOOLEAN       DEFAULT 0 NULL,
+                REV_DEL  BOOLEAN       DEFAULT 0 NULL,
                 CONSTRAINT FK_t_homemsg_HID FOREIGN KEY (HID) REFERENCES T_HOMEDEF(ID) ON DELETE CASCADE ON UPDATE CASCADE
             )");
 
@@ -146,19 +146,19 @@ namespace hihapi.test
 	            UPDATEDAT date NULL DEFAULT CURRENT_DATE )");
 
             // Language
-            database.ExecuteSqlRaw(@"CREATE TABLE t_language (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_LANGUAGE (
 	            LCID int PRIMARY KEY NOT NULL,
 	            ISONAME nvarchar(20) NOT NULL,
 	            ENNAME nvarchar(100) NOT NULL,
 	            NAVNAME nvarchar(100) NOT NULL,
-	            APPFLAG bit NULL )");
+	            APPFLAG BOOLEAN NULL )");
 
             // Finance account category
             database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_ACCOUNT_CTGY (
 	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
 	            HID int NULL,
 	            NAME nvarchar(30) NOT NULL,
-	            ASSETFLAG bit NOT NULL DEFAULT 1,
+	            ASSETFLAG BOOLEAN NOT NULL DEFAULT 1,
 	            COMMENT nvarchar(45) NULL,
 	            CREATEDBY nvarchar(40) NULL,
 	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
@@ -198,7 +198,7 @@ namespace hihapi.test
             );
 
             // Control center
-            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_controlcenter (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_CONTROLCENTER (
 	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
 	            HID int NOT NULL,
 	            NAME nvarchar(30) NOT NULL,
@@ -212,7 +212,7 @@ namespace hihapi.test
                 CONSTRAINT FK_t_fin_cc_HID FOREIGN KEY (HID) REFERENCES T_HOMEDEF (ID) ON DELETE CASCADE ON UPDATE CASCADE )");
 
             // Finance doc. type
-            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_doc_type (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_DOC_TYPE (
 	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
 	            HID int NULL,
 	            NAME nvarchar(30) NOT NULL,
@@ -226,7 +226,7 @@ namespace hihapi.test
             );
 
             // Document
-            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_document (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_DOCUMENT (
 	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
 	            HID int NOT NULL,
 	            DOCTYPE smallint NOT NULL,
@@ -234,8 +234,8 @@ namespace hihapi.test
 	            TRANCURR nvarchar(5) NOT NULL,
 	            DESP nvarchar(45) NOT NULL,
 	            EXGRATE decimal(17, 4) NULL,
-	            EXGRATE_PLAN bit NULL,
-	            EXGRATE_PLAN2 bit NULL,
+	            EXGRATE_PLAN BOOLEAN NULL,
+	            EXGRATE_PLAN2 BOOLEAN NULL,
 	            TRANCURR2 nvarchar(5) NULL,
 	            EXGRATE2 decimal(17, 4) NULL,
 	            CREATEDBY nvarchar(40) NULL,
@@ -245,13 +245,13 @@ namespace hihapi.test
                 CONSTRAINT FK_t_fin_document_HID FOREIGN KEY (HID) REFERENCES T_HOMEDEF (ID) ON DELETE CASCADE ON UPDATE CASCADE )");
 
             // Document Item
-            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_document_item (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_DOCUMENT_ITEM (
 	            DOCID int NOT NULL, 
 	            ITEMID int NOT NULL,
 	            ACCOUNTID int NOT NULL,
 	            TRANTYPE int NOT NULL,
 	            TRANAMOUNT decimal(17, 2) NOT NULL,
-	            USECURR2 bit NULL,
+	            USECURR2 BOOLEAN NULL,
 	            CONTROLCENTERID int NULL,
 	            ORDERID int NULL,
 	            DESP nvarchar(45) NULL,
@@ -261,7 +261,7 @@ namespace hihapi.test
                 )");
 
             // Order
-            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_order (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_ORDER (
 	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
 	            HID int NOT NULL,
 	            NAME nvarchar(30) NOT NULL,
@@ -276,7 +276,7 @@ namespace hihapi.test
                     REFERENCES T_HOMEDEF (ID) ON DELETE CASCADE ON UPDATE CASCADE )");
 
             // Order Srule
-            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_order_srule (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_ORDER_SRULE (
 	            ORDID int NOT NULL, 
 	            RULEID int NOT NULL,
 	            CONTROLCENTERID int NOT NULL,
@@ -288,7 +288,7 @@ namespace hihapi.test
                 )");
 
             // Template DP
-            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_tmpdoc_dp (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_TMPDOC_DP (
 	            DOCID int NOT NULL,
 	            HID int NOT NULL,
 	            REFDOCID int NULL,
@@ -309,11 +309,11 @@ namespace hihapi.test
                 )");
 
             // Tran. type
-            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_tran_type (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_TRAN_TYPE (
 	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
 	            HID int NULL,
 	            NAME nvarchar(30) NOT NULL,
-	            EXPENSE bit NOT NULL,
+	            EXPENSE BOOLEAN NOT NULL,
 	            PARID int NULL,
 	            COMMENT nvarchar(45) NULL,
 	            CREATEDBY nvarchar(40) NULL,
@@ -325,7 +325,7 @@ namespace hihapi.test
                 )");
 
             // Asset category
-            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_asset_ctgy (
+            database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_ASSET_CTGY (
 	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
 	            HID int NULL,
 	            NAME nvarchar(50) NOT NULL,
@@ -357,7 +357,7 @@ namespace hihapi.test
                 ACCOUNTID     INT      PRIMARY KEY NOT NULL,
                 STARTDATE     DATE            NOT NULL,
                 ANNUALRATE    DECIMAL (17, 2) NULL,
-                INTERESTFREE  BIT             NULL,
+                INTERESTFREE  BOOLEAN         NULL,
                 REPAYMETHOD   TINYINT         NULL,
                 TOTALMONTH    SMALLINT        NULL,
                 REFDOCID      INT             NOT NULL,
@@ -374,7 +374,7 @@ namespace hihapi.test
                 ACCOUNTID     INT             NOT NULL,
                 STARTDATE     DATE            NOT NULL,
                 ANNUALRATE    DECIMAL (17, 2) NULL,
-                INTERESTFREE  BIT             NULL,
+                INTERESTFREE  BOOLEAN         NULL,
                 REPAYMETHOD   TINYINT         NULL,
                 TOTALMONTH    SMALLINT        NULL,
                 REFDOCID      INT             NOT NULL,
@@ -463,8 +463,10 @@ namespace hihapi.test
                     TRANCURR,
                     TRANAMOUNT_ORG,
                     TRANAMOUNT,
-                    CASE WHEN USECURR2 IS NULL AND EXGRATE IS NOT NULL AND EXGRATE <> 0 THEN TRANAMOUNT * EXGRATE / 100                         
-                         WHEN USECURR2 IS NOT NULL AND EXGRATE2 IS NOT NULL AND EXGRATE2 <> 0 THEN TRANAMOUNT * EXGRATE2 / 100
+                    CASE WHEN ( USECURR2 IS NULL OR USECURR2 = '' ) AND EXGRATE IS NOT NULL AND EXGRATE != 0 
+                            THEN TRANAMOUNT * EXGRATE / 100                         
+                         WHEN USECURR2 IS NOT NULL AND USECURR2 != '' AND EXGRATE2 IS NOT NULL AND EXGRATE2 != 0
+                            THEN TRANAMOUNT * EXGRATE2 / 100
                          ELSE TRANAMOUNT
                     END AS TRANAMOUNT_LC,
                     CONTROLCENTERID,
@@ -503,25 +505,25 @@ namespace hihapi.test
                         LEFT OUTER JOIN T_FIN_ORDER ON V_FIN_DOCUMENT_ITEM.ORDERID = T_FIN_ORDER.ID");
 
             // View
-            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_grp_acnt
+            database.ExecuteSqlRaw(@"CREATE VIEW V_FIN_GRP_ACNT
                 AS
-                SELECT hid,
-                       accountid,
-		               sum(tranamount_lc) AS balance_lc
-                    from
-                        v_fin_document_item
-		                group by hid, accountid");
+                SELECT HID,
+                       ACCOUNTID,
+		               SUM(TRANAMOUNT_LC) AS BALANCE_LC
+                    FROM
+                        V_FIN_DOCUMENT_ITEM
+		                GROUP BY HID, ACCOUNTID");
 
             // View
-            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_grp_acnt_tranexp
+            database.ExecuteSqlRaw(@"CREATE VIEW V_FIN_GRP_ACNT_TRANEXP
                 AS
-                SELECT hid,
-                       accountid,
+                SELECT HID,
+                       ACCOUNTID,
 		               TRANTYPE_EXP,
-		               sum(tranamount_lc) AS balance_lc
+		               SUM(TRANAMOUNT_LC) AS BALANCE_LC
                     from
-                        v_fin_document_item
-		                group by hid, accountid, TRANTYPE_EXP");
+                        V_FIN_DOCUMENT_ITEM
+		                GROUP BY HID, ACCOUNTID, TRANTYPE_EXP");
 
             // View
             //database.ExecuteSqlRaw(@"CREATE VIEW v_fin_report_bs
@@ -565,30 +567,25 @@ namespace hihapi.test
             //     LEFT OUTER JOIN v_fin_grp_acnt_tranexp ON t_fin_account.ID = v_fin_grp_acnt_tranexp.accountid
             //      AND v_fin_grp_acnt_tranexp.trantype_exp = 1 ) tab_b
             //     ON tab_a.ACCOUNTID = tab_b.ACCOUNTID");
-            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_report_bs
+
+            database.ExecuteSqlRaw(@"CREATE VIEW V_FIN_REPORT_BS
                 AS 
-                WITH table_a AS (
-                SELECT a1.hid,
-                    a2.accountid,
-                    case when a2.balance_lc IS null then 0.0 else a2.balance_lc end as balance
-                 FROM t_fin_account as a1
-                    LEFT OUTER JOIN v_fin_grp_acnt_tranexp as a2 
-                    on a1.ID = a2.accountid and a2.trantype_exp = 0),
-
-                table_b AS (
-                SELECT b1.hid,
-                    b2.accountid,
-                    case when b2.balance_lc IS null then 0.0 else b2.balance_lc end as balance
-                 FROM t_fin_account as b1
-                    LEFT OUTER JOIN v_fin_grp_acnt_tranexp as b2 
-                    on b1.ID = b2.accountid and b2.trantype_exp = 1)
-
-                select table_a.hid,
-                       table_a.accountid,
-                       table_a.balance as debit_balance,
-                       table_b.balance as credit_balance,
-                       table_a.balance - table_b.balance as balance
-                 from table_a inner join table_b on table_a.accountid = table_b.accountid ");
+                SELECT HID, ACCOUNTID, DEBIT_BALANCE, CREDIT_BALANCE, 
+                    DEBIT_BALANCE - CREDIT_BALANCE AS BALANCE
+                FROM (
+                    SELECT c.HID, 
+                        c.ACCOUNTID,
+                        c.DEBIT_BALANCE,
+                        CASE WHEN d.BALANCE_LC IS NULL THEN 0 ELSE d.BALANCE_LC END AS CREDIT_BALANCE
+                    FROM
+                    ( SELECT a.HID, a.ID AS ACCOUNTID, 
+                            CASE WHEN b.BALANCE_LC IS NULL THEN 0 ELSE b.BALANCE_LC END AS DEBIT_BALANCE
+                        FROM T_FIN_ACCOUNT as a 
+                        LEFT OUTER JOIN (SELECT HID, ACCOUNTID, BALANCE_LC FROM V_FIN_GRP_ACNT_TRANEXP WHERE TRANTYPE_EXP == 0) as b
+                        ON a.ID == b.ACCOUNTID AND a.HID == b.HID ) as c
+                    LEFT OUTER JOIN (SELECT HID, ACCOUNTID, BALANCE_LC FROM V_FIN_GRP_ACNT_TRANEXP WHERE TRANTYPE_EXP == 1) as d
+                    ON c.HID == d.HID AND c.ACCOUNTID == d.ACCOUNTID 
+                )");
         }
         #endregion
 

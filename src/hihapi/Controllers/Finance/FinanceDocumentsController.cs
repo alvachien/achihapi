@@ -270,8 +270,11 @@ namespace hihapi.Controllers
 
                 return BadRequest("Model State is Invalid");
             }
-            if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null 
+            if (createContext == null
+                || createContext.DocumentInfo == null
+                || createContext.AccountInfo == null 
                 || createContext.AccountInfo.HomeID <= 0
+                || createContext.AccountInfo.Status != FinanceAccountStatus.Normal
                 || createContext.DocumentInfo.HomeID <= 0
                 || createContext.DocumentInfo.HomeID != createContext.AccountInfo.HomeID
                 || createContext.AccountInfo.ExtraDP == null
@@ -428,6 +431,7 @@ namespace hihapi.Controllers
             }
             if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null
                 || createContext.AccountInfo.HomeID <= 0
+                || createContext.AccountInfo.Status != FinanceAccountStatus.Normal
                 || createContext.DocumentInfo.HomeID <= 0
                 || createContext.DocumentInfo.HomeID != createContext.AccountInfo.HomeID
                 || createContext.AccountInfo.ExtraLoan == null
