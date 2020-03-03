@@ -384,7 +384,7 @@ namespace hihapi.test.UnitTests
             results = CommonUtility.WorkoutRepeatedDatesWithAmount(vm);
 
             // Total count
-            Assert.Equal(results.Count, 10);
+            Assert.Equal(10, results.Count);
             Int32 i = 0;
             foreach (var rst in results)
             {

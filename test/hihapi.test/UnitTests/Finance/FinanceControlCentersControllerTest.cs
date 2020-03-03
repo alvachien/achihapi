@@ -183,7 +183,7 @@ namespace hihapi.test.UnitTests
             {
                 var context = this.fixture.GetCurrentDataContext();
                 foreach (var cc in ccsCreated)
-                    fixture.DeleteControlCenter(context, cc);
+                    fixture.DeleteFinanceControlCenter(context, cc);
 
                 ccsCreated.Clear();
                 context.SaveChanges();

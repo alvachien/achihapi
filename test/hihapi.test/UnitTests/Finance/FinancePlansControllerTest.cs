@@ -46,7 +46,7 @@ namespace hihapi.test.UnitTests
             {
                 var context = this.fixture.GetCurrentDataContext();
                 foreach (var ord in plansCreated)
-                    fixture.DeletePlan(context, ord);
+                    fixture.DeleteFinancePlan(context, ord);
 
                 plansCreated.Clear();
                 context.SaveChanges();

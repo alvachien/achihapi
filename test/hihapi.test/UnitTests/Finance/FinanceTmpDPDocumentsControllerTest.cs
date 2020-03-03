@@ -38,6 +38,7 @@ namespace hihapi.test.UnitTests
         public void Dispose()
         {
             CleanupCreatedEntries();
+
             if (this.provider != null)
             {
                 this.provider.Dispose();
@@ -203,9 +204,9 @@ namespace hihapi.test.UnitTests
         {
             var context = this.fixture.GetCurrentDataContext();
             foreach (var doccrt in documentsCreated)
-                fixture.DeleteDocument(context, doccrt);
+                fixture.DeleteFinanceDocument(context, doccrt);
             foreach (var acntcrt in accountsCreated)
-                fixture.DeleteAccount(context, acntcrt);
+                fixture.DeleteFinanceAccount(context, acntcrt);
 
             documentsCreated.Clear();
             accountsCreated.Clear();

@@ -157,7 +157,7 @@ namespace hihapi.test.UnitTests
             {
                 var context = this.fixture.GetCurrentDataContext();
                 foreach (var ord in ordersCreated)
-                    fixture.DeleteOrder(context, ord);
+                    fixture.DeleteFinanceOrder(context, ord);
 
                 ordersCreated.Clear();
                 context.SaveChanges();

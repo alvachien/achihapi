@@ -113,29 +113,39 @@ namespace hihapi.test
             }
         }
 
-        public void DeleteAccount(hihDataContext context, int acntid)
+        public void DeleteFinanceAccount(hihDataContext context, int acntid)
         {
             context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = " + acntid.ToString());
         }
 
-        public void DeleteControlCenter(hihDataContext context, int ccid)
+        public void DeleteFinanceControlCenter(hihDataContext context, int ccid)
         {
             context.Database.ExecuteSqlRaw("DELETE FROM t_fin_controlcenter WHERE ID = " + ccid.ToString());
         }
 
-        public void DeleteOrder(hihDataContext context, int ordid)
+        public void DeleteFinanceOrder(hihDataContext context, int ordid)
         {
             context.Database.ExecuteSqlRaw("DELETE FROM t_fin_order WHERE ID = " + ordid.ToString());
         }
 
-        public void DeletePlan(hihDataContext context, int planid)
+        public void DeleteFinancePlan(hihDataContext context, int planid)
         {
             context.Database.ExecuteSqlRaw("DELETE FROM t_fin_plan WHERE ID = " + planid.ToString());
         }
 
-        public void DeleteDocument(hihDataContext context, int docid)
+        public void DeleteFinanceDocument(hihDataContext context, int docid)
         {
             context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + docid.ToString());
+        }
+
+        public void DeleteLearnCategory(hihDataContext context, int ctgyid)
+        {
+            context.Database.ExecuteSqlRaw("DELETE FROM t_learn_ctgy WHERE ID = " + ctgyid.ToString());
+        }
+
+        public void DeleteLearnObject(hihDataContext context, int ctgyid)
+        {
+            context.Database.ExecuteSqlRaw("DELETE FROM t_learn_obj WHERE ID = " + ctgyid.ToString());
         }
 
         protected SqliteConnection DBConnection { get; private set; }

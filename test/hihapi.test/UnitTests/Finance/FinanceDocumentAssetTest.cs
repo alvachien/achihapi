@@ -188,9 +188,9 @@ namespace hihapi.test.UnitTests
 
             // Last, clear all created objects
             foreach (var docid in documentsCreated)
-                this.fixture.DeleteDocument(context, docid);
+                this.fixture.DeleteFinanceDocument(context, docid);
             if (assetacntid > 0)
-                this.fixture.DeleteAccount(context, assetacntid);
+                this.fixture.DeleteFinanceAccount(context, assetacntid);
             await context.SaveChangesAsync();
 
             await context.DisposeAsync();

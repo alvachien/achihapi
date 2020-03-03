@@ -93,6 +93,7 @@ namespace hihapi.test
         #region Create tables and Views
         public static void CreateDatabaseTables(DatabaseFacade database) 
         {
+            #region Home Define
             // Home defines
             database.ExecuteSqlRaw(@"CREATE TABLE T_HOMEDEF (
 	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -134,7 +135,9 @@ namespace hihapi.test
                 REV_DEL  BOOLEAN       DEFAULT 0 NULL,
                 CONSTRAINT FK_t_homemsg_HID FOREIGN KEY (HID) REFERENCES T_HOMEDEF(ID) ON DELETE CASCADE ON UPDATE CASCADE
             )");
+            #endregion
 
+            #region System tables
             // Currency
             database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_CURRENCY (
 	            CURR nvarchar(5) PRIMARY KEY NOT NULL,
@@ -152,7 +155,16 @@ namespace hihapi.test
 	            ENNAME nvarchar(100) NOT NULL,
 	            NAVNAME nvarchar(100) NOT NULL,
 	            APPFLAG BOOLEAN NULL )");
+            
+            // DB version
+            database.ExecuteSqlRaw(@"CREATE TABLE T_DBVERSION (
+                VersionID    INT      PRIMARY KEY NOT NULL,
+                ReleasedDate DATE     NOT NULL,
+                AppliedDate  DATE     NOT NULL DEFAULT CURRENT_DATE
+                )");
+            #endregion
 
+            #region Finance
             // Finance account category
             database.ExecuteSqlRaw(@"CREATE TABLE T_FIN_ACCOUNT_CTGY (
 	            ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -428,14 +440,9 @@ namespace hihapi.test
                 CONSTRAINT FK_t_fin_plan_HID FOREIGN KEY (HID) 
                     REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
             );");
+            #endregion
 
-            // DB version
-            database.ExecuteSqlRaw(@"CREATE TABLE T_DBVERSION (
-                VersionID    INT      PRIMARY KEY NOT NULL,
-                ReleasedDate DATE     NOT NULL,
-                AppliedDate  DATE     NOT NULL DEFAULT CURRENT_DATE
-                )");
-
+            #region Learn
             // Learn category
             database.ExecuteSqlRaw(@"CREATE TABLE t_learn_ctgy (
                 ID          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -464,6 +471,7 @@ namespace hihapi.test
                 CONSTRAINT FK_t_learn_obj_HID FOREIGN KEY (HID) 
                     REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
             )");
+            #endregion
         }
 
         public static void CreateDatabaseViews(DatabaseFacade database)
@@ -1136,7 +1144,7 @@ namespace hihapi.test
         ///     Virtual Account 17, owned by User A
         ///     Virtual Account 18, owned by User B
         ///     
-        /// Control centers
+        ///  Control centers
         ///     CC 1, no owner
         ///         CC2, parent: CC1
         ///             CC3, parent CC2, owned by user A
@@ -1146,14 +1154,23 @@ namespace hihapi.test
         ///                 CC7, parent CC5, owned by user D
         ///         CC8, parent: CC1, no owner
         ///        
-        /// Orders
+        ///  Orders
         ///     Order 1, valid from (-12 months to -6 months)
         ///         Rule: CC3 25%, CC4 25%, and CC8 50%
         ///     Order 2, valid from (-7 months to 5 months)
         ///         Rule: CC3 25%, CC4 25% and CC5 50%
         ///     Order 3, valid from (4 months to 16 months)
         ///         Rule: CC6 50%, CC7 50%
-        /// 
+        ///         
+        ///  Learn Category
+        ///     Category 1
+        ///     Category 2
+        ///     
+        ///  Learn Object
+        ///     Object 1 (with Category 1)
+        ///     Object 2 (with Category 1)
+        ///     Object 3 (with Category 2)
+        ///     
         /// </summary>
         public static void CreateTestingData_Home1(hihDataContext db)
         {
@@ -1751,6 +1768,51 @@ namespace hihapi.test
                     }
                 }
             }
+            #endregion
+
+            // Learn category
+            #region Learn Category
+            db.LearnCategories.Add(new LearnCategory
+            {
+                ID = 1,
+                HomeID = Home1ID,
+                Name = "Learn Categor 1",
+                Comment = "Comment of Learn Categor 1",
+            });
+            db.LearnCategories.Add(new LearnCategory
+            {
+                ID = 2,
+                HomeID = Home1ID,
+                Name = "Learn Categorg 2",
+                Comment = "Comment of Learn Categorg 2",
+            });
+            #endregion
+            // Learn object
+            #region Learn object
+            db.LearnObjects.Add(new LearnObject
+            {
+                ID = 1,
+                HomeID = Home1ID,
+                CategoryID = 1,
+                Name = "Object 1",
+                Content = " Content of object 1"
+            });
+            db.LearnObjects.Add(new LearnObject
+            {
+                ID = 2,
+                HomeID = Home1ID,
+                CategoryID = 1,
+                Name = "Object 2",
+                Content = " Content of object 2"
+            });
+            db.LearnObjects.Add(new LearnObject
+            {
+                ID = 3,
+                HomeID = Home1ID,
+                CategoryID = 2,
+                Name = "Object 3",
+                Content = " Content of object 3"
+            });
             #endregion
 
             // Save it

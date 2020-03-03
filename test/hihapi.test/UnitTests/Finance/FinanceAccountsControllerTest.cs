@@ -218,7 +218,7 @@ namespace hihapi.test.UnitTests
             {
                 var context = this.fixture.GetCurrentDataContext();
                 foreach (var acntcrt in accountsCreated)
-                    fixture.DeleteAccount(context, acntcrt);
+                    fixture.DeleteFinanceAccount(context, acntcrt);
 
                 accountsCreated.Clear();
                 context.SaveChanges();
