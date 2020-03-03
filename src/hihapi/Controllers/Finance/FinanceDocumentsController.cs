@@ -530,9 +530,9 @@ namespace hihapi.Controllers
                     ndi.TranAmount = docEntity.Entity.Items.ElementAt(0).TranAmount;
                     ndi.UseCurr2 = docEntity.Entity.Items.ElementAt(0).UseCurr2;
                     if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_BorrowFrom)
-                        ndi.TranType = FinanceTransactionType.TranType_BorrowFrom;
+                        ndi.TranType = FinanceTransactionType.TranType_OpeningLiability;
                     else if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_LendTo)
-                        ndi.TranType = FinanceTransactionType.TranType_LendTo;
+                        ndi.TranType = FinanceTransactionType.TranType_OpeningAsset;
                     docEntity.Entity.Items.Add(ndi);
 
                     docEntity.State = EntityState.Modified;

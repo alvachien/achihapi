@@ -155,10 +155,14 @@ namespace hihapi.test.UnitTests
             var doc = Assert.IsType<CreatedODataResult<FinanceDocument>>(resp).Entity;
             documentsCreated.Add(doc.ID);
             Assert.True(doc.Items.Count == 2);
+            var dpacntid = -1;
             foreach(var did in doc.Items)
             {
                 if (did.AccountID != account.ID)
-                    accountsCreated.Add(did.AccountID);
+                {
+                    dpacntid = did.AccountID;
+                    accountsCreated.Add(dpacntid);
+                }
             }
 
             // 2. Switch to second controller
@@ -185,6 +189,10 @@ namespace hihapi.test.UnitTests
                 Assert.NotNull(dpdocInDB);
                 Assert.NotNull(dpdocInDB.ReferenceDocumentID);
             }
+
+            // Check the account status
+            var account2 = context.FinanceAccount.Where(p => p.HomeID == hid && p.ID == dpacntid).FirstOrDefault();
+            Assert.True(account2.Status == FinanceAccountStatus.Closed);
 
             CleanupCreatedEntries();
 

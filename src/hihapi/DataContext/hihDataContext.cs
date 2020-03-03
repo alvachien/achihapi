@@ -38,6 +38,7 @@ namespace hihapi.Models
         public DbSet<FinanceControlCenter> FinanceControlCenter { get; set; }
         public DbSet<FinanceOrder> FinanceOrder { get; set; }
         public DbSet<FinanceOrderSRule> FinanceOrderSRule { get; set; }
+        public DbSet<FinancePlan> FinancePlan { get; set; }
         public DbSet<FinanceDocumentItemView> FinanceDocumentItemView { get; set; }
         public DbSet<FinanceReporAccountGroupView> FinanceReporAccountGroupView { get; set; }
         public DbSet<FinanceReporAccountGroupAndExpenseView> FinanceReporAccountGroupAndExpenseView { get; set; }
@@ -452,6 +453,33 @@ namespace hihapi.Models
                     .HasForeignKey(d => d.OrderID)
                     .HasConstraintName("FK_t_fin_order_srule_order");
             });
+            modelBuilder.Entity<FinancePlan>(entity => {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.ID)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.FinancePlans)
+                    .HasForeignKey(d => d.HomeID)
+                    .HasConstraintName("FK_t_fin_plan_HID");
+            });
+
 
             modelBuilder.Entity<FinanceDocumentItemView>(entity =>
             {

@@ -1,4 +1,4 @@
-using hihapi.Exceptions;
+﻿using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.AspNet.OData;
@@ -13,18 +13,17 @@ using System.Threading.Tasks;
 
 namespace hihapi.Controllers
 {
-    public sealed class FinanceOrdersController : ODataController
+    public sealed class FinancePlansController : ODataController
     {
         private readonly hihDataContext _context;
 
-        public FinanceOrdersController(hihDataContext context)
+        public FinancePlansController(hihDataContext context)
         {
             _context = context;
         }
 
-        /// GET: /FinanceOrders
         [Authorize]
-        public IQueryable Get(ODataQueryOptions<FinanceOrder> option)
+        public IQueryable Get(ODataQueryOptions<FinancePlan> option)
         {
             String usrName = String.Empty;
             try
@@ -42,46 +41,14 @@ namespace hihapi.Controllers
             var query = from hmem in _context.HomeMembers
                         where hmem.User == usrName
                         select new { HomeID = hmem.HomeID } into hids
-                        join ords in _context.FinanceOrder on hids.HomeID equals ords.HomeID
+                        join ords in _context.FinancePlan on hids.HomeID equals ords.HomeID
                         select ords;
 
             return option.ApplyTo(query);
         }
 
-        // The Route will never reach following codes...
-        // 
-        //[EnableQuery]
-        //[Authorize]
-        //public SingleResult<FinanceOrder> Get([FromODataUri]Int32 ordid)
-        //{
-        //    String usrName = String.Empty;
-        //    try
-        //    {
-        //        usrName = HIHAPIUtility.GetUserID(this);
-        //        if (String.IsNullOrEmpty(usrName))
-        //            throw new UnauthorizedAccessException();
-        //    }
-        //    catch
-        //    {
-        //        throw new UnauthorizedAccessException();
-        //    }
-
-        //    var hidquery = from hmem in _context.HomeMembers
-        //                   where hmem.User == usrName
-        //                   select new { HomeID = hmem.HomeID };
-        //    var ordquery = from ord in _context.FinanceOrder
-        //                    where ord.ID == ordid
-        //                    select ord;
-        //    var rstquery = from ord in ordquery
-        //                   join hid in hidquery
-        //                   on ord.HomeID equals hid.HomeID
-        //                   select ord;
-
-        //    return SingleResult.Create(rstquery);
-        //}
-
         [Authorize]
-        public async Task<IActionResult> Post([FromBody] FinanceOrder order)
+        public async Task<IActionResult> Post([FromBody] FinancePlan plan)
         {
             if (!ModelState.IsValid)
             {
@@ -99,7 +66,7 @@ namespace hihapi.Controllers
             }
 
             // Check
-            if (!order.IsValid(this._context))
+            if (!plan.IsValid(this._context))
             {
                 return BadRequest();
             }
@@ -120,20 +87,20 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == order.HomeID && p.User == usrName).Count();
+            var hms = _context.HomeMembers.Where(p => p.HomeID == plan.HomeID && p.User == usrName).Count();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
             }
 
-            _context.FinanceOrder.Add(order);
+            _context.FinancePlan.Add(plan);
             await _context.SaveChangesAsync();
 
-            return Created(order);
+            return Created(plan);
         }
 
         [Authorize]
-        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceOrder update)
+        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinancePlan update)
         {
             if (!ModelState.IsValid)
             {
@@ -186,7 +153,7 @@ namespace hihapi.Controllers
             }
             catch (DbUpdateConcurrencyException exp)
             {
-                if (!_context.FinanceOrder.Any(p => p.ID == key))
+                if (!_context.FinancePlan.Any(p => p.ID == key))
                 {
                     return NotFound();
                 }
@@ -202,7 +169,7 @@ namespace hihapi.Controllers
         [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
-            var cc = await _context.FinanceOrder.FindAsync(key);
+            var cc = await _context.FinancePlan.FindAsync(key);
             if (cc == null)
             {
                 return NotFound();
@@ -233,7 +200,7 @@ namespace hihapi.Controllers
             if (!cc.IsDeleteAllowed(this._context))
                 return BadRequest();
 
-            _context.FinanceOrder.Remove(cc);
+            _context.FinancePlan.Remove(cc);
             await _context.SaveChangesAsync();
 
             return StatusCode(204); // HttpStatusCode.NoContent

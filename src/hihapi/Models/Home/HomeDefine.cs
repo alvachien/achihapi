@@ -19,6 +19,7 @@ namespace hihapi.Models
             FinanceAccounts = new HashSet<FinanceAccount>();
             FinanceControlCenters = new HashSet<FinanceControlCenter>();
             FinanceOrders = new HashSet<FinanceOrder>();
+            FinancePlans = new HashSet<FinancePlan>();
             FinanceDocuments = new HashSet<FinanceDocument>();
         }
 
@@ -54,6 +55,7 @@ namespace hihapi.Models
         public ICollection<FinanceAccount> FinanceAccounts { get; set; }
         public ICollection<FinanceControlCenter> FinanceControlCenters { get; set; }        
         public ICollection<FinanceOrder> FinanceOrders { get; set; }
+        public ICollection<FinancePlan> FinancePlans { get; set; }
         public ICollection<FinanceDocument> FinanceDocuments { get; set; }
 
         public override bool IsValid(hihDataContext context)

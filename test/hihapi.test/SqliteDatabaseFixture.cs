@@ -128,6 +128,11 @@ namespace hihapi.test
             context.Database.ExecuteSqlRaw("DELETE FROM t_fin_order WHERE ID = " + ordid.ToString());
         }
 
+        public void DeletePlan(hihDataContext context, int planid)
+        {
+            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_plan WHERE ID = " + planid.ToString());
+        }
+
         public void DeleteDocument(hihDataContext context, int docid)
         {
             context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + docid.ToString());

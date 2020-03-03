@@ -158,17 +158,21 @@ namespace hihapi.Controllers
             }
 
             // Check the amount
-            decimal totalOut = createContext.DocumentInfo.Items.Where(item => item.TranType == FinanceTransactionType.TranType_RepaymentOut).Sum(item2 => item2.TranAmount);
-            decimal totalIn = createContext.DocumentInfo.Items.Where(item => item.TranType == FinanceTransactionType.TranType_RepaymentIn).Sum(item2 => item2.TranAmount);
+            decimal totalOut = createContext.DocumentInfo.Items
+                .Where(item => item.TranType == FinanceTransactionType.TranType_RepaymentOut)
+                .Sum(item2 => item2.TranAmount);
+            decimal totalIn = createContext.DocumentInfo.Items
+                .Where(item => item.TranType == FinanceTransactionType.TranType_RepaymentIn)
+                .Sum(item2 => item2.TranAmount);
             //decimal totalintOut = repaydoc.Items.Where(item => (item.TranType == FinanceTranTypeViewModel.TranType_InterestOut)).Sum(item2 => item2.TranAmount);
             // New account balance
-            if (loanAccountHeader.CategoryID == FinanceAccountCategoriesController.AccountCategory_BorrowFrom)
+            if (loanAccountHeader.CategoryID == FinanceAccountCategoriesController.AccountCategory_LendTo)
             {
-                acntBalance += totalOut;
+                acntBalance -= totalOut;
             }
-            else if (loanAccountHeader.CategoryID == FinanceAccountCategoriesController.AccountCategory_LendTo)
+            else if (loanAccountHeader.CategoryID == FinanceAccountCategoriesController.AccountCategory_BorrowFrom)
             {
-                acntBalance -= totalIn;
+                acntBalance += totalIn;
             }
             if (totalOut != totalIn)
             {
@@ -184,9 +188,8 @@ namespace hihapi.Controllers
             var errorString = "";
             var errorOccur = false;
             var origdocid = 0;
-            FinanceDocument findoc = null; ;
+            FinanceDocument findoc = null;
 
-            //_context.Database. = Console.WriteLine;
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try

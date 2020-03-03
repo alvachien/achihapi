@@ -91,16 +91,31 @@ namespace hihapi.Controllers
             // Check 2: Document posted already?
             if (tpdoc.ReferenceDocumentID.HasValue && tpdoc.ReferenceDocumentID.Value > 0)
             {
-                return BadRequest("Tmp Doc not existed yet or has been posted");
+                throw new BadRequestException("Tmp Doc not existed yet or has been posted");
             }
             if (!tpdoc.ControlCenterID.HasValue && !tpdoc.OrderID.HasValue)
             {
-                return BadRequest("Tmp doc lack of control center or order");
+                throw new BadRequestException("Tmp doc lack of control center or order");
             }
             if (tpdoc.TranAmount == 0)
             {
-                return BadRequest("Tmp doc lack of amount");
+                throw new BadRequestException("Tmp doc lack of amount");
             }
+
+            // Left items
+            var dpAccount = _context.FinanceAccount.Where(p => p.ID == AccontID && p.HomeID == HomeID).SingleOrDefault();
+            if (dpAccount == null)
+            {
+                throw new BadRequestException("Cannot find Account");
+            }
+            else if (dpAccount.Status != FinanceAccountStatus.Normal)
+            {
+                throw new BadRequestException("Account status is not Normal");
+            }
+
+            var leftItemsCnt = _context.FinanceTmpDPDocument
+                .Where(p => p.AccountID == AccontID && p.HomeID == HomeID && p.DocumentID != DocumentID && p.ReferenceDocumentID == null)
+                .Count();
 
             // Save it to normal doc.
             var findoc = new FinanceDocument();
@@ -144,9 +159,17 @@ namespace hihapi.Controllers
                     _context.FinanceTmpDPDocument.Update(tpdoc);
                     _context.SaveChanges();
 
+                    // 3. Close DP account
+                    if (leftItemsCnt == 0)
+                    {
+                        dpAccount.Status = FinanceAccountStatus.Closed;
+                        _context.FinanceAccount.Update(dpAccount);
+                        _context.SaveChanges();
+                    }
+
                     findoc = docEntity.Entity;
 
-                    transaction.Commit();
+                    await transaction.CommitAsync();
                 }
                 catch (Exception exp)
                 {

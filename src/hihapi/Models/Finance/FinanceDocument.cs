@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.OData.Edm;
@@ -29,7 +30,7 @@ namespace hihapi.Models
         public Int16 DocType { get; set; }
         
         [Required]
-        [Column("TRANDATE", TypeName = "date")]
+        [Column("TRANDATE", TypeName = "DATE")]
         [DataType(DataType.Date)]
         public DateTime TranDate { get; set; }
         
@@ -75,12 +76,13 @@ namespace hihapi.Models
 
             foreach (var item in Items)
             {
-                if (!item.IsValid())
+                if (!item.IsValid(context))
                     return false;
             }
 
             return true;
         }
+
         public override bool IsDeleteAllowed(hihDataContext context)
         {
             return base.IsDeleteAllowed(context);
@@ -90,6 +92,10 @@ namespace hihapi.Models
     [Table("T_FIN_DOCUMENT_ITEM")]
     public sealed class FinanceDocumentItem
     {
+        public FinanceDocumentItem()
+        {
+        }
+
         [Key]
         [Column("DOCID", TypeName="INT")]
         public Int32 DocID { get; set; }
@@ -125,13 +131,27 @@ namespace hihapi.Models
 
         public FinanceDocument DocumentHeader { get; set; }
 
-        public bool IsValid()
+        public bool IsValid(hihDataContext context)
         {
+            var isvalid = true;
             if (ItemID <= 0)
-                return false;
-            if (AccountID <= 0)
-                return false;
-            return true;
+                isvalid = false;
+            if (isvalid)
+            {
+                if (AccountID <= 0)
+                    isvalid = false;
+                else
+                    isvalid = context.FinanceAccount.Where(p => p.ID == AccountID).Count() == 1;
+            }
+            if (isvalid)
+            {
+                if (TranType <= 0)
+                    isvalid = false;
+                else
+                    isvalid = context.FinTransactionType.Where(p => p.ID == TranType).Count() == 1;
+            }
+
+            return isvalid;
         }
     }
 

@@ -407,6 +407,28 @@ namespace hihapi.test
                 CONSTRAINT FK_t_fin_tmpdoc_loan_ACCOUNTEXT FOREIGN KEY (ACCOUNTID)
                     REFERENCES t_fin_account_ext_loan (ACCOUNTID) ON DELETE CASCADE ON UPDATE CASCADE)");
 
+            // Finance Plan
+            database.ExecuteSqlRaw(@"CREATE TABLE t_fin_plan (
+                ID           INTEGER PRIMARY KEY AUTOINCREMENT,
+                HID          INT             NOT NULL,
+                PTYPE        TINYINT         NOT NULL DEFAULT 0,
+                ACCOUNTID    INT             NULL,
+                ACNTCTGYID   INT             NULL,
+                CCID         INT             NULL,
+                TTID         INT             NULL,
+                STARTDATE    DATE            NOT NULL,
+                TGTDATE      DATE            NOT NULL,
+                TGTBAL       DECIMAL (17, 2) NOT NULL,
+                TRANCURR     NVARCHAR (5)    NOT NULL,
+                DESP         NVARCHAR (50)   NOT NULL,
+                CREATEDBY    NVARCHAR (50)   NULL,
+                CREATEDAT    DATE            NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY    NVARCHAR (50)   NULL,
+                UPDATEDAT    DATE            NULL DEFAULT CURRENT_DATE,
+                CONSTRAINT FK_t_fin_plan_HID FOREIGN KEY (HID) 
+                    REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            );");
+
             // DB version
             database.ExecuteSqlRaw(@"CREATE TABLE T_DBVERSION (
                 VersionID    INT      PRIMARY KEY NOT NULL,
@@ -576,7 +598,7 @@ namespace hihapi.test
                     SELECT c.HID, 
                         c.ACCOUNTID,
                         c.DEBIT_BALANCE,
-                        CASE WHEN d.BALANCE_LC IS NULL THEN 0 ELSE d.BALANCE_LC END AS CREDIT_BALANCE
+                        CASE WHEN d.BALANCE_LC IS NULL THEN 0 ELSE -1 * d.BALANCE_LC END AS CREDIT_BALANCE
                     FROM
                     ( SELECT a.HID, a.ID AS ACCOUNTID, 
                             CASE WHEN b.BALANCE_LC IS NULL THEN 0 ELSE b.BALANCE_LC END AS DEBIT_BALANCE
@@ -794,6 +816,7 @@ namespace hihapi.test
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (10,'2018.11.3');
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (11,'2018.12.20');
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (12,'2019.4.20');
+            // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (13,'2020.2.29');
             DBVersions.Add(new DBVersion()
             {
                 VersionID = 1,

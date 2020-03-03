@@ -161,6 +161,7 @@ namespace hihapi
             modelBuilder.EnumType<FinanceAccountStatus>();
             modelBuilder.EnumType<RepeatFrequency>();
             modelBuilder.EnumType<LoanRepaymentMethod>();
+            modelBuilder.EnumType<FinancePlanTypeEnum>();
             modelBuilder.EntitySet<FinanceControlCenter>("FinanceControlCenters");
             modelBuilder.EntitySet<FinanceAccount>("FinanceAccounts");
             modelBuilder.EntitySet<FinanceAccountExtraDP>("FinanceAccountExtraDPs");
@@ -169,6 +170,7 @@ namespace hihapi
             modelBuilder.EntitySet<FinanceTmpLoanDocument>("FinanceTmpLoanDocuments");
             modelBuilder.EntitySet<FinanceOrder>("FinanceOrders");
             modelBuilder.EntitySet<FinanceOrderSRule>("FinanceOrderSRules");
+            modelBuilder.EntitySet<FinancePlan>("FinancePlans");
             modelBuilder.EntitySet<FinanceDocument>("FinanceDocuments");
             modelBuilder.EntitySet<FinanceDocumentItem>("FinanceDocumentItems");
             modelBuilder.EntitySet<FinanceDocumentItemView>("FinanceDocumentItemViews");
