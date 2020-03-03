@@ -435,6 +435,35 @@ namespace hihapi.test
                 ReleasedDate DATE     NOT NULL,
                 AppliedDate  DATE     NOT NULL DEFAULT CURRENT_DATE
                 )");
+
+            // Learn category
+            database.ExecuteSqlRaw(@"CREATE TABLE t_learn_ctgy (
+                ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+                HID         INT           NULL,
+                PARID       INT           NULL,
+                NAME        NVARCHAR (45) NOT NULL,
+                COMMENT     NVARCHAR (50) NULL,
+                CREATEDBY   NVARCHAR (40) NULL,
+                CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY   NVARCHAR (40) NULL,
+                UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+                CONSTRAINT  FK_t_learn_ctgy_HID FOREIGN KEY (HID)
+                    REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
+            // Learn object
+            database.ExecuteSqlRaw(@"CREATE TABLE t_learn_obj (
+                ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+                HID         INT            NOT NULL,
+                CATEGORY    INT            NULL,
+                NAME        NVARCHAR (45)  NULL,
+                CONTENT     TEXT           NULL,
+                CREATEDBY   NVARCHAR (40)  NULL,
+                CREATEDAT   DATE           NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY   NVARCHAR (40)  NULL,
+                UPDATEDAT   DATE           NULL DEFAULT CURRENT_DATE,
+                CONSTRAINT FK_t_learn_obj_HID FOREIGN KEY (HID) 
+                    REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
         }
 
         public static void CreateDatabaseViews(DatabaseFacade database)

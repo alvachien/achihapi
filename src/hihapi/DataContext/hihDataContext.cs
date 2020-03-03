@@ -43,6 +43,8 @@ namespace hihapi.Models
         public DbSet<FinanceReporAccountGroupView> FinanceReporAccountGroupView { get; set; }
         public DbSet<FinanceReporAccountGroupAndExpenseView> FinanceReporAccountGroupAndExpenseView { get; set; }
         public DbSet<FinanceReportAccountBalanceView> FinanceReportAccountBalanceView { get; set; }
+        public DbSet<LearnCategory> LearnCategories { get; set; }
+        public DbSet<LearnObject> LearnObjects { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -479,8 +481,6 @@ namespace hihapi.Models
                     .HasForeignKey(d => d.HomeID)
                     .HasConstraintName("FK_t_fin_plan_HID");
             });
-
-
             modelBuilder.Entity<FinanceDocumentItemView>(entity =>
             {
                 entity.HasNoKey();
@@ -491,17 +491,74 @@ namespace hihapi.Models
                 entity.HasNoKey();
                 entity.ToView("V_FIN_GRP_ACNT");
             });
-
             modelBuilder.Entity<FinanceReporAccountGroupAndExpenseView>(entity =>
             {
                 entity.HasNoKey();
                 entity.ToView("V_FIN_GRP_ACNT_TRANEXP");
             });
-
             modelBuilder.Entity<FinanceReportAccountBalanceView>(entity =>
             {
                 entity.HasNoKey();
                 entity.ToView("V_FIN_REPORT_BS");
+            });
+
+            modelBuilder.Entity<LearnCategory>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.ID)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.LearnCategories)
+                    .HasForeignKey(d => d.HomeID)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_t_learn_ctgy_HID");
+            });
+            modelBuilder.Entity<LearnObject>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.ID)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.LearnObjects)
+                    .HasForeignKey(d => d.HomeID)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_t_learn_obj_HID");
             });
         }
     }

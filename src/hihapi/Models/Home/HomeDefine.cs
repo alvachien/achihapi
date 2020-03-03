@@ -12,6 +12,8 @@ namespace hihapi.Models
         public HomeDefine(): base()
         {
             HomeMembers = new HashSet<HomeMember>();
+            LearnCategories = new HashSet<LearnCategory>();
+            LearnObjects = new HashSet<LearnObject>();
             FinanceAccountCategories = new HashSet<FinanceAccountCategory>();
             FinanceAssetCategories = new HashSet<FinanceAssetCategory>();
             FinanceDocumentTypes = new HashSet<FinanceDocumentType>();
@@ -57,6 +59,8 @@ namespace hihapi.Models
         public ICollection<FinanceOrder> FinanceOrders { get; set; }
         public ICollection<FinancePlan> FinancePlans { get; set; }
         public ICollection<FinanceDocument> FinanceDocuments { get; set; }
+        public ICollection<LearnCategory> LearnCategories { get; set; }
+        public ICollection<LearnObject> LearnObjects { get; set; }
 
         public override bool IsValid(hihDataContext context)
         {

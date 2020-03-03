@@ -154,6 +154,8 @@ namespace hihapi
             modelBuilder.EnumType<HomeMemberRelationType>();
             modelBuilder.EntitySet<HomeDefine>("HomeDefines");
             modelBuilder.EntitySet<HomeMember>("HomeMembers");
+            modelBuilder.EntitySet<LearnCategory>("LearnCategories");
+            modelBuilder.EntitySet<LearnObject>("LearnObjects");
             modelBuilder.EntitySet<FinanceAccountCategory>("FinanceAccountCategories");
             modelBuilder.EntitySet<FinanceAssetCategory>("FinanceAssetCategories");
             modelBuilder.EntitySet<FinanceDocumentType>("FinanceDocumentTypes");

@@ -26,7 +26,7 @@ namespace hihapi.test.UnitTests
             this.fixture = fixture;
 
             this.provider = UnitTestUtility.GetServiceProvider();
-            this.model = UnitTestUtility.GetEdmModel<FinanceOrder>(provider, "FinanceOrders");
+            this.model = UnitTestUtility.GetEdmModel<FinancePlan>(provider, "FinancePlans");
         }
 
         public void Dispose()
@@ -162,7 +162,6 @@ namespace hihapi.test.UnitTests
             // 1. Prepare dta
             var userclaim = DataSetupUtility.GetClaimForUser(user);
             var httpctx = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
-            var listCCs = context.FinanceControlCenter.Where(p => p.HomeID == hid).ToList<FinanceControlCenter>();
 
             var existamt = (from homemem in context.HomeMembers
                             join finplan in context.FinancePlan
@@ -229,7 +228,7 @@ namespace hihapi.test.UnitTests
             Assert.Equal(204, rst6.StatusCode);
             plansCreated.Clear();
 
-            // 6. Read the order again
+            // 6. Read the plan again
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
             Assert.Equal(existamt_curhome, rst3.Cast<FinancePlan>().Count());
