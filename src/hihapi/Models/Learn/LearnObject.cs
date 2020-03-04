@@ -35,5 +35,41 @@ namespace hihapi.Models
         public LearnObject() : base()
         {
         }
+
+        public override bool IsValid(hihDataContext context)
+        {
+            var bValid = base.IsValid(context);
+            if (!bValid)
+                return false;
+
+            if (bValid && HomeID <= 0)
+                return false;
+
+            if (bValid && CategoryID <= 0)
+                return false;
+
+            if (bValid && String.IsNullOrEmpty(Name))
+                bValid = false;
+
+            if (bValid && String.IsNullOrEmpty(Content))
+                bValid = false;
+
+            if (bValid && context != null)
+            {
+                bValid = context.HomeDefines.Where(p => p.ID == HomeID).Count() == 1;
+                if (bValid)
+                {
+                    bValid = context.LearnCategories
+                        .Where(p => p.ID == CategoryID && (p.HomeID == null || p.HomeID == HomeID))
+                        .Count() == 1;
+                }
+            }
+            return bValid;
+        }
+
+        public override bool IsDeleteAllowed(hihDataContext context)
+        {
+            return base.IsDeleteAllowed(context);
+        }
     }
 }

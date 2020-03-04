@@ -41,9 +41,39 @@ namespace hihapi.test.UnitTests
         }
 
         [Theory]
+        [InlineData(DataSetupUtility.Home1ID)]
+        [InlineData(DataSetupUtility.Home2ID)]
+        public void TestModel(int hid)
+        {
+            var obj = new LearnObject();
+            Assert.False(obj.IsValid(null));
+
+            obj.HomeID = hid;
+            obj.CategoryID = 12;
+            obj.Name = "test";
+            obj.Content = "test";
+            Assert.True(obj.IsValid(null));
+
+            obj.HomeID = 0;
+            Assert.False(obj.IsValid(null));
+
+            obj.HomeID = hid;
+            obj.CategoryID = 0;
+            Assert.False(obj.IsValid(null));
+
+            obj.CategoryID = 12;
+            obj.Name = "";
+            Assert.False(obj.IsValid(null));
+
+            obj.Name = "test";
+            obj.Content = "";
+            Assert.False(obj.IsValid(null));
+        }
+
+        [Theory]
         [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA)]
         [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserB)]
-        public async Task TestCase1(int hid, string user)
+        public async Task TestController(int hid, string user)
         {
             var context = this.fixture.GetCurrentDataContext();
             var control = new LearnObjectsController(context);

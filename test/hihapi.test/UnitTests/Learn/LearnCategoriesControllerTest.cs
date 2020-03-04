@@ -41,9 +41,46 @@ namespace hihapi.test.UnitTests
         }
 
         [Theory]
+        [InlineData(DataSetupUtility.Home1ID)]
+        [InlineData(DataSetupUtility.Home2ID)]
+        public void TestModel(int hid)
+        {
+            var ctgy = new LearnCategory();
+            Assert.False(ctgy.IsValid(null));
+
+            // Name
+            ctgy.Name = "Test";
+            //ctgy.HomeID = hid;
+            Assert.True(ctgy.IsValid(null));
+
+            // Parent ID
+            ctgy.ParentID = 999;
+            Assert.False(ctgy.IsValid(null));
+
+            ctgy.HomeID = hid;
+            Assert.True(ctgy.IsValid(null));
+
+            var dbcontext = this.fixture.GetCurrentDataContext();
+            // Initialize data
+            if (hid == DataSetupUtility.Home1ID)
+            {
+                fixture.InitHome1TestData(dbcontext);
+            }
+            else if (hid == DataSetupUtility.Home2ID)
+            {
+                fixture.InitHome2TestData(dbcontext);
+            }
+            Assert.False(ctgy.IsValid(dbcontext));
+            ctgy.ParentID = null;
+            Assert.True(ctgy.IsValid(dbcontext));
+            ctgy.HomeID = 999;
+            Assert.False(ctgy.IsValid(dbcontext));
+        }
+
+        [Theory]
         [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserA)]
         [InlineData(DataSetupUtility.Home1ID, DataSetupUtility.UserB)]
-        public async Task TestCase1(int hid, string user)
+        public async Task TestController(int hid, string user)
         {
             var context = this.fixture.GetCurrentDataContext();
             var control = new LearnCategoriesController(context);
