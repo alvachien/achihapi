@@ -44,17 +44,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest("Model State is Invalid");
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             // Checks
@@ -64,7 +54,7 @@ namespace hihapi.Controllers
                 || createContext.DocumentInfo == null
                 || createContext.DocumentInfo.DocType != FinanceDocumentType.DocType_Repay)
             {
-                return BadRequest("Invalid inputted data");
+                throw new BadRequestException("Invalid inputted data");
             }
 
             // Check 1: User
@@ -111,8 +101,8 @@ namespace hihapi.Controllers
             var loanAccountHeader = _context.FinanceAccount.Where(p => p.ID == docLoanTmp.AccountID).FirstOrDefault();
             if (loanAccountHeader == null
                 || loanAccountHeader.Status != FinanceAccountStatus.Normal
-                || !(loanAccountHeader.CategoryID == FinanceAccountCategoriesController.AccountCategory_BorrowFrom
-                    || loanAccountHeader.CategoryID == FinanceAccountCategoriesController.AccountCategory_LendTo)
+                || !(loanAccountHeader.CategoryID == FinanceAccountCategory.AccountCategory_BorrowFrom
+                    || loanAccountHeader.CategoryID == FinanceAccountCategory.AccountCategory_LendTo)
                     )
             {
                 throw new BadRequestException("Account not exist or account has wrong status or account has wrong category");
@@ -138,14 +128,14 @@ namespace hihapi.Controllers
             }
 
             // Only four tran. types are allowed
-            if (loanAccountHeader.CategoryID == FinanceAccountCategoriesController.AccountCategory_BorrowFrom)
+            if (loanAccountHeader.CategoryID == FinanceAccountCategory.AccountCategory_BorrowFrom)
             {
                 ninvaliditems = createContext.DocumentInfo.Items.Where(item => item.TranType != FinanceTransactionType.TranType_InterestOut
                     && item.TranType != FinanceTransactionType.TranType_RepaymentOut
                     && item.TranType != FinanceTransactionType.TranType_RepaymentIn)
                     .Count();
             }
-            else if (loanAccountHeader.CategoryID == FinanceAccountCategoriesController.AccountCategory_LendTo)
+            else if (loanAccountHeader.CategoryID == FinanceAccountCategory.AccountCategory_LendTo)
             {
                 ninvaliditems = createContext.DocumentInfo.Items.Where(item => item.TranType != FinanceTransactionType.TranType_InterestIn
                     && item.TranType != FinanceTransactionType.TranType_RepaymentOut
@@ -166,11 +156,11 @@ namespace hihapi.Controllers
                 .Sum(item2 => item2.TranAmount);
             //decimal totalintOut = repaydoc.Items.Where(item => (item.TranType == FinanceTranTypeViewModel.TranType_InterestOut)).Sum(item2 => item2.TranAmount);
             // New account balance
-            if (loanAccountHeader.CategoryID == FinanceAccountCategoriesController.AccountCategory_LendTo)
+            if (loanAccountHeader.CategoryID == FinanceAccountCategory.AccountCategory_LendTo)
             {
                 acntBalance -= totalOut;
             }
-            else if (loanAccountHeader.CategoryID == FinanceAccountCategoriesController.AccountCategory_BorrowFrom)
+            else if (loanAccountHeader.CategoryID == FinanceAccountCategory.AccountCategory_BorrowFrom)
             {
                 acntBalance += totalIn;
             }
@@ -226,7 +216,7 @@ namespace hihapi.Controllers
 
             if (errorOccur)
             {
-                return BadRequest(errorString);
+                throw new DBOperationException(errorString);
             }
 
             return Created(findoc);

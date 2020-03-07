@@ -161,7 +161,7 @@ namespace hihapi.test.IntegrationTests
             {
                 HomeID = DataSetupUtility.Home1ID,
                 Name = "Account 1",
-                CategoryID = FinanceAccountCategoriesController.AccountCategory_Cash,
+                CategoryID = FinanceAccountCategory.AccountCategory_Cash,
                 Owner = DataSetupUtility.UserA
             };
             kjson = JsonConvert.SerializeObject(acnt, jsetting);

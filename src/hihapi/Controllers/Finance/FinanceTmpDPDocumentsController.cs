@@ -181,7 +181,7 @@ namespace hihapi.Controllers
 
             if (errorOccur)
             {
-                return BadRequest(errorString);
+                throw new DBOperationException(errorString);
             }
 
             return Created(findoc);

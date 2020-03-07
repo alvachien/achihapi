@@ -18,18 +18,6 @@ namespace hihapi.Controllers
 {
     public class FinanceAccountCategoriesController : ODataController
     {
-        public const Int32 AccountCategory_AdvancePayment = 8;
-        public const Int32 AccountCategory_Asset = 7;
-        public const Int32 AccountCategory_BorrowFrom = 9;
-        public const Int32 AccountCategory_LendTo = 10;
-        public const Int32 AccountCategory_AdvanceReceive = 11;
-        public const Int32 AccountCategory_Insurance = 12;
-        public const Int32 AccountCategory_Cash = 1; // Cash
-        public const Int32 AccountCategory_Deposit = 2;
-        public const Int32 AccountCategory_Creditcard = 3;
-        public const Int32 AccountCategory_AccountPayable = 4;
-        public const Int32 AccountCategory_AccountReceivable = 5;
-        public const Int32 AccountCategory_VirtualAccount = 6;
         private readonly hihDataContext _context;
 
         public FinanceAccountCategoriesController(hihDataContext context)
@@ -99,23 +87,13 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             // Check
             if (!ctgy.IsValid(this._context) || !ctgy.HomeID.HasValue)
             {
-                return BadRequest();
+                throw new BadRequestException("Inputted object IsValid failed");
             }
 
             // User
@@ -154,20 +132,12 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
             if (key != update.ID)
             {
-                return BadRequest();
+                throw new BadRequestException("ID mismatched");
             }
 
             // User

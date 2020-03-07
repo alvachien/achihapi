@@ -35,6 +35,19 @@ namespace hihapi.Models
         {
         }
 
+        public const Int32 AccountCategory_AdvancePayment = 8;
+        public const Int32 AccountCategory_Asset = 7;
+        public const Int32 AccountCategory_BorrowFrom = 9;
+        public const Int32 AccountCategory_LendTo = 10;
+        public const Int32 AccountCategory_AdvanceReceive = 11;
+        public const Int32 AccountCategory_Insurance = 12;
+        public const Int32 AccountCategory_Cash = 1; // Cash
+        public const Int32 AccountCategory_Deposit = 2;
+        public const Int32 AccountCategory_Creditcard = 3;
+        public const Int32 AccountCategory_AccountPayable = 4;
+        public const Int32 AccountCategory_AccountReceivable = 5;
+        public const Int32 AccountCategory_VirtualAccount = 6;
+
         public override bool IsValid(hihDataContext context)
         {
             return base.IsValid(context);

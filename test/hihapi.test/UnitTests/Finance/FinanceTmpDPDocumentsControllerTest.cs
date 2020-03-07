@@ -113,8 +113,8 @@ namespace hihapi.test.UnitTests
                 HomeID = hid,
                 Name = "Account_8" + ".1",
                 CategoryID = doctype == FinanceDocumentType.DocType_AdvancePayment
-                        ? FinanceAccountCategoriesController.AccountCategory_AdvancePayment
-                        : FinanceAccountCategoriesController.AccountCategory_AdvanceReceive,
+                        ? FinanceAccountCategory.AccountCategory_AdvancePayment
+                        : FinanceAccountCategory.AccountCategory_AdvanceReceive,
                 Owner = user,
                 Status = FinanceAccountStatus.Normal,
             };

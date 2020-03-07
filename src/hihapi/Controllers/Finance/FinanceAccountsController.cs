@@ -89,17 +89,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             // User
@@ -138,21 +128,12 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
             if (key != update.ID)
             {
-                return BadRequest();
+                throw new BadRequestException("ID mismatched");
             }
 
             // User

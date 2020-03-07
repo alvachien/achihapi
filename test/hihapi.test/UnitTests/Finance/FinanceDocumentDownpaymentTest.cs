@@ -109,8 +109,8 @@ namespace hihapi.test.UnitTests
                 HomeID = hid,
                 Name = "Account_8" + ".1",
                 CategoryID = doctype == FinanceDocumentType.DocType_AdvancePayment
-                        ? FinanceAccountCategoriesController.AccountCategory_AdvancePayment
-                        : FinanceAccountCategoriesController.AccountCategory_AdvanceReceive,
+                        ? FinanceAccountCategory.AccountCategory_AdvancePayment
+                        : FinanceAccountCategory.AccountCategory_AdvanceReceive,
                 Owner = user,
                 Status = FinanceAccountStatus.Normal,
             };
@@ -163,9 +163,9 @@ namespace hihapi.test.UnitTests
                     var acnt = context.FinanceAccount.Find(docitem.AccountID);
                     Assert.NotNull(acnt);
                     if (doctype == FinanceDocumentType.DocType_AdvancePayment)
-                        Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_AdvancePayment);
+                        Assert.True(acnt.CategoryID == FinanceAccountCategory.AccountCategory_AdvancePayment);
                     if (doctype == FinanceDocumentType.DocType_AdvanceReceive)
-                        Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_AdvanceReceive);
+                        Assert.True(acnt.CategoryID == FinanceAccountCategory.AccountCategory_AdvanceReceive);
                     var acntExtraDP = context.FinanceAccountExtraDP.Find(docitem.AccountID);
                     Assert.NotNull(acntExtraDP);
                     Assert.True(acntExtraDP.RefenceDocumentID == doc.ID);

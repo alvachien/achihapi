@@ -102,20 +102,11 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             if (!homedef.IsValid(this._context))
-                return BadRequest();
+                throw new BadRequestException("Inputted object IsValid Failed");
 
             // User
             String usrName = String.Empty;
@@ -144,20 +135,12 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
             if (key != update.ID)
             {
-                return BadRequest();
+                throw new BadRequestException("Inputted ID mismatched");
             }
 
             // User
@@ -183,14 +166,14 @@ namespace hihapi.Controllers
             }
 
             if (!update.IsValid(this._context))
-                return BadRequest();
+                throw new BadRequestException("Inputted Object IsValid Failed");
 
             // Find out the home define
             var existinghd = _context.HomeDefines.Find(key);
 
             if (existinghd == null)
             {
-                return NotFound();
+                throw new NotFoundException("Inputted Object Not Found");
             }
             else
             {
@@ -227,7 +210,7 @@ namespace hihapi.Controllers
             {
                 if (!_context.HomeDefines.Any(p => p.ID == key))
                 {
-                    return NotFound();
+                    throw new NotFoundException("Inputted Object Not Found");
                 }
                 else
                 {
@@ -266,12 +249,12 @@ namespace hihapi.Controllers
             var cc = await _context.HomeDefines.FindAsync(key);
             if (cc == null)
             {
-                return NotFound();
+                throw new NotFoundException("Inputted Object Not Found");
             }
 
             // Perform the checks
             if (!cc.IsDeleteAllowed(this._context))
-                return BadRequest();
+                throw new BadRequestException("Inputted Object IsDeleteAllowed Failed");
 
             _context.HomeDefines.Remove(cc);
             await _context.SaveChangesAsync();

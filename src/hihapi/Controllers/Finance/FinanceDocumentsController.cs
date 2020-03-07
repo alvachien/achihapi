@@ -89,21 +89,11 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             // Check document type, DP, Asset, loan document is not allowed
-            if(document.DocType == FinanceDocumentType.DocType_AdvancePayment
+            if (document.DocType == FinanceDocumentType.DocType_AdvancePayment
                 || document.DocType == FinanceDocumentType.DocType_AdvanceReceive
                 || document.DocType == FinanceDocumentType.DocType_AssetBuyIn
                 || document.DocType == FinanceDocumentType.DocType_AssetSoldOut
@@ -111,7 +101,7 @@ namespace hihapi.Controllers
                 || document.DocType == FinanceDocumentType.DocType_BorrowFrom
                 || document.DocType == FinanceDocumentType.DocType_LendTo)
             {
-                return BadRequest("Document type is not allowed");
+                throw new BadRequestException("Document type is not allowed");
             }
 
             // User
@@ -150,21 +140,12 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
             if (key != update.ID)
             {
-                return BadRequest();
+                throw new BadRequestException("Inputted ID mismatched");
             }
 
             // User
@@ -258,18 +239,9 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception != null ? err.Exception.Message : err.ErrorMessage);
-                    }
-                }
-#endif
-
-                return BadRequest("Model State is Invalid");
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
             if (createContext == null
                 || createContext.DocumentInfo == null
                 || createContext.AccountInfo == null 
@@ -280,7 +252,7 @@ namespace hihapi.Controllers
                 || createContext.AccountInfo.ExtraDP == null
                 || createContext.AccountInfo.ExtraDP.DPTmpDocs.Count <= 0)
             {
-                return BadRequest("Invalid inputted data");
+                throw new BadRequestException("Invalid inputted data");
             }
             // Check tmp doc ID
             var tmpdocids = new Dictionary<int, int>();
@@ -288,11 +260,11 @@ namespace hihapi.Controllers
             {
                 if (tmpdoc.DocumentID <= 0)
                 {
-                    return BadRequest("Invalid document ID");
+                    throw new BadRequestException("Invalid document ID");
                 }
                 if (tmpdocids.ContainsKey(tmpdoc.DocumentID))
                 {
-                    return BadRequest("Duplicated Document ID found: " + tmpdoc.DocumentID);
+                    throw new BadRequestException("Duplicated Document ID found: " + tmpdoc.DocumentID);
                 }
                 tmpdocids.Add(tmpdoc.DocumentID, tmpdoc.DocumentID);
             }
@@ -322,32 +294,32 @@ namespace hihapi.Controllers
             if (!(createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvancePayment
                 || createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvanceReceive))
             {
-                return BadRequest("Invalid document type");
+                throw new BadRequestException("Invalid document type");
             }
             if (createContext.DocumentInfo.Items.Count != 1)
             {
-                return BadRequest("It shall be only one line item in DP docs");
+                throw new BadRequestException("It shall be only one line item in DP docs");
             }
             // Check on the data
             if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvancePayment)
             {
                 if (createContext.DocumentInfo.Items.ElementAt(0).TranType != FinanceTransactionType.TranType_AdvancePaymentOut)
-                    return BadRequest("Invalid tran. type for advance payment");
+                    throw new BadRequestException("Invalid tran. type for advance payment");
             }
             else if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_AdvanceReceive)
             {
                 if (createContext.DocumentInfo.Items.ElementAt(0).TranType != FinanceTransactionType.TranType_AdvanceReceiveIn)
-                    return BadRequest("Invalid tran. type for advance receive");
+                    throw new BadRequestException("Invalid tran. type for advance receive");
             }
             foreach (var tmpdocitem in createContext.AccountInfo.ExtraDP.DPTmpDocs)
             {
                 if (!tmpdocitem.ControlCenterID.HasValue && !tmpdocitem.OrderID.HasValue)
                 {
-                    return BadRequest("Tmp Doc Item miss control center or order");
+                    throw new BadRequestException("Tmp Doc Item miss control center or order");
                 }
                 if (tmpdocitem.TranAmount == 0)
                 {
-                    return BadRequest("Tmp Doc Item miss amount");
+                    throw new BadRequestException("Tmp Doc Item miss amount");
                 }
             }
 
@@ -401,11 +373,10 @@ namespace hihapi.Controllers
                     transaction.Rollback();
                 }
             }
-
-
+            
             if (errorOccur)
             {
-                return BadRequest(errorString);
+                throw new BadRequestException(errorString);
             }
 
             return Created(createContext.DocumentInfo);
@@ -417,18 +388,9 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest("Model State is Invalid");
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
             if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null
                 || createContext.AccountInfo.HomeID <= 0
                 || createContext.AccountInfo.Status != FinanceAccountStatus.Normal
@@ -437,7 +399,7 @@ namespace hihapi.Controllers
                 || createContext.AccountInfo.ExtraLoan == null
                 || createContext.AccountInfo.ExtraLoan.LoanTmpDocs.Count <= 0)
             {
-                return BadRequest("Invalid inputted data");
+                throw new BadRequestException("Invalid inputted data");
             }
             // Check tmp doc ID
             var tmpdocids = new Dictionary<int, int>();
@@ -445,11 +407,11 @@ namespace hihapi.Controllers
             {
                 if (tmpdoc.DocumentID <= 0)
                 {
-                    return BadRequest("Invalid document ID");
+                    throw new BadRequestException("Invalid document ID");
                 }
                 if (tmpdocids.ContainsKey(tmpdoc.DocumentID))
                 {
-                    return BadRequest("Duplicated Document ID found: " + tmpdoc.DocumentID);
+                    throw new BadRequestException("Duplicated Document ID found: " + tmpdoc.DocumentID);
                 }
                 tmpdocids.Add(tmpdoc.DocumentID, tmpdoc.DocumentID);
             }
@@ -478,21 +440,21 @@ namespace hihapi.Controllers
             if (!(createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_BorrowFrom
                 || createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_LendTo))
             {
-                return BadRequest("Invalid document type");
+                throw new BadRequestException("Invalid document type");
             }
             if (createContext.DocumentInfo.Items.Count != 1)
             {
-                return BadRequest("Only one item doc is supported by far");
+                throw new BadRequestException("Only one item doc is supported by far");
             }
             foreach (var tdoc in createContext.AccountInfo.ExtraLoan.LoanTmpDocs)
             {
                 if (!tdoc.ControlCenterID.HasValue && !tdoc.OrderID.HasValue)
                 {
-                    return BadRequest("Either control center or order shall be specified in Loan Template doc");
+                    throw new BadRequestException("Either control center or order shall be specified in Loan Template doc");
                 }
                 if (tdoc.TransactionAmount <= 0)
                 {
-                    return BadRequest("Amount is zero!");
+                    throw new BadRequestException("Amount is zero!");
                 }
             }
 
@@ -551,7 +513,7 @@ namespace hihapi.Controllers
 
             if (errorOccur)
             {
-                return BadRequest(errorString);
+                throw new BadRequestException(errorString);
             }
 
             return Created(createContext.DocumentInfo);
@@ -563,22 +525,13 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest("Model State is Invalid");
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
             if (createContext == null || createContext.ExtraAsset == null)
-                return BadRequest("No data is inputted");
+                throw new BadRequestException("No data is inputted");
             if (createContext.HID <= 0)
-                return BadRequest("Not HID inputted");
+                throw new BadRequestException("Not HID inputted");
 
             // User
             String usrName = String.Empty;
@@ -603,22 +556,22 @@ namespace hihapi.Controllers
 
             // Do basic checks
             if (String.IsNullOrEmpty(createContext.TranCurr) || String.IsNullOrEmpty(createContext.ExtraAsset.Name))
-                return BadRequest("Invalid input data");
+                throw new BadRequestException("Invalid input data");
             if (createContext.IsLegacy.HasValue && createContext.IsLegacy.Value)
             {
                 if (createContext.Items.Count > 0)
-                    return BadRequest("Invalid input data");
+                    throw new BadRequestException("Invalid input data");
             }
             else
             {
                 if (createContext.Items.Count <= 0)
-                    return BadRequest("Invalid input data");
+                    throw new BadRequestException("Invalid input data");
             }
 
             foreach (var di in createContext.Items)
             {
                 if (di.TranAmount == 0 || di.AccountID <= 0 || di.TranType <= 0 || (di.ControlCenterID <= 0 && di.OrderID <= 0))
-                    return BadRequest("Invalid input data in items!");
+                    throw new BadRequestException("Invalid input data in items!");
             }
 
             // Construct the Account
@@ -626,7 +579,7 @@ namespace hihapi.Controllers
             vmAccount.HomeID = createContext.HID;
             vmAccount.Name = createContext.ExtraAsset.Name;
             vmAccount.Status = FinanceAccountStatus.Normal;
-            vmAccount.CategoryID = FinanceAccountCategoriesController.AccountCategory_Asset;
+            vmAccount.CategoryID = FinanceAccountCategory.AccountCategory_Asset;
             vmAccount.ExtraAsset = new FinanceAccountExtraAS();
             vmAccount.Owner = createContext.AccountOwner;
             vmAccount.Comment = createContext.ExtraAsset.Comment;
@@ -655,7 +608,7 @@ namespace hihapi.Controllers
                 {
                     if (di.ItemID <= 0 || di.TranAmount == 0 || di.AccountID <= 0
                         || (di.ControlCenterID <= 0 && di.OrderID <= 0))
-                        return BadRequest("Invalid input data in items!");
+                        throw new BadRequestException("Invalid input data in items!");
 
                     // Todo: new check the tran. type is an expense!
 
@@ -667,7 +620,7 @@ namespace hihapi.Controllers
                 }
 
                 if (totalAmt != createContext.TranAmount)
-                    return BadRequest("Amount is not even");
+                    throw new BadRequestException("Amount is not even");
             }
 
             // Database update
@@ -723,7 +676,7 @@ namespace hihapi.Controllers
 
             if (errorOccur)
             {
-                return BadRequest(errorString);
+                throw new BadRequestException(errorString);
             }
 
             return Created(vmFIDoc);
@@ -735,26 +688,17 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest("Model State is Invalid");
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
             if (createContext == null)
-                return BadRequest("No data is inputted");
+                throw new BadRequestException("No data is inputted");
             if (createContext.HID <= 0)
-                return BadRequest("Not HID inputted");
+                throw new BadRequestException("Not HID inputted");
             if (createContext.AssetAccountID <= 0)
-                return BadRequest("Asset Account is invalid");
+                throw new BadRequestException("Asset Account is invalid");
             if (createContext.Items.Count != 1)
-                return BadRequest("Items count is not correct");
+                throw new BadRequestException("Items count is not correct");
 
             // User
             String usrName = String.Empty;
@@ -831,11 +775,11 @@ namespace hihapi.Controllers
                          select new { Status = account.Status, RefSellDoc = assetaccount.RefenceSoldDocumentID }).FirstOrDefault();
             if (query.Status != FinanceAccountStatus.Normal)
             {
-                return BadRequest("Account status is not normal");
+                throw new BadRequestException("Account status is not normal");
             }
             if (query.RefSellDoc != null)
             {
-                return BadRequest("Asset has soldout doc already");
+                throw new BadRequestException("Asset has soldout doc already");
             }
             // Additional check 2. the inputted date is valid > must be the later than all existing transactions;
             var query2 = (from docitem in this._context.FinanceDocumentItem
@@ -844,32 +788,32 @@ namespace hihapi.Controllers
                           orderby docheader.TranDate descending
                           select new { TranDate = docheader.TranDate }).FirstOrDefault();
             if (createContext.TranDate < query2.TranDate)
-                return BadRequest("Tran. data is invalid");
+                throw new BadRequestException("Tran. data is invalid");
             // Additional check 3. Fetch current balance
             var query3 = (from acntbal in this._context.FinanceReporAccountGroupView
                           where acntbal.AccountID == createContext.AssetAccountID
                           select acntbal.Balance).First();
             if (query3 <= 0)
-                return BadRequest("Balance is less than zero");
+                throw new BadRequestException("Balance is less than zero");
             // Additional check 4: the balance with the inputted value
             var nCmpRst = Decimal.Compare(query3, totalAmount);
             if (nCmpRst > 0)
             {
                 if (rlTranType.Value != FinanceTransactionType.TranType_AssetValueDecrease)
                 {
-                    return BadRequest("Tran type is wrong");
+                    throw new BadRequestException("Tran type is wrong");
                 }
             }
             else if (nCmpRst < 0)
             {
                 if (rlTranType.Value != FinanceTransactionType.TranType_AssetValueIncrease)
                 {
-                    return BadRequest("Tran type is wrong");
+                    throw new BadRequestException("Tran type is wrong");
                 }
             }
             else if (nCmpRst == 0)
             {
-                return BadRequest("Current balance equals to new value");
+                throw new BadRequestException("Current balance equals to new value");
             }
 
             // Update the database
@@ -900,7 +844,7 @@ namespace hihapi.Controllers
 
             if (errorOccur)
             {
-                return BadRequest(errorString);
+                throw new BadRequestException(errorString);
             }
 
             return Created(vmFIDoc);
@@ -912,26 +856,17 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest("Model State is Invalid");
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
             if (createContext.HID <= 0)
-                return BadRequest("Not HID inputted");
+                throw new BadRequestException("Not HID inputted");
             if (createContext.AssetAccountID <= 0)
-                return BadRequest("Asset Account is invalid");
+                throw new BadRequestException("Asset Account is invalid");
             if (createContext.TranAmount <= 0)
-                return BadRequest("Amount is less than zero");
+                throw new BadRequestException("Amount is less than zero");
             if (createContext.Items.Count <= 0)
-                return BadRequest("No items inputted");
+                throw new BadRequestException("No items inputted");
 
             // User
             String usrName = String.Empty;
@@ -968,7 +903,7 @@ namespace hihapi.Controllers
                 if (di.ItemID <= 0 || di.TranAmount == 0 || di.AccountID <= 0
                     || di.TranType != FinanceTransactionType.TranType_AssetSoldoutIncome
                     || (di.ControlCenterID <= 0 && di.OrderID <= 0))
-                    return BadRequest("Invalid input data in items!");
+                    throw new BadRequestException("Invalid input data in items!");
 
                 totalAmt += di.TranAmount;
                 vmFIDoc.Items.Add(di);
@@ -977,7 +912,7 @@ namespace hihapi.Controllers
                     maxItemID = di.ItemID;
             }
             if (Decimal.Compare(totalAmt, createContext.TranAmount) != 0)
-                return BadRequest("Amount is not even");
+                throw new BadRequestException("Amount is not even");
 
             // Check 1: check account is a valid asset?
             var query = (from account in this._context.FinanceAccount
@@ -986,11 +921,11 @@ namespace hihapi.Controllers
                         select new { Status = account.Status, RefSellDoc = assetaccount.RefenceSoldDocumentID }).FirstOrDefault();
             if (query.Status != FinanceAccountStatus.Normal)
             {
-                return BadRequest("Account status is not normal");
+                throw new BadRequestException("Account status is not normal");
             }
             if (query.RefSellDoc != null)
             {
-                return BadRequest("Asset has soldout doc already");
+                throw new BadRequestException("Asset has soldout doc already");
             }
 
             // Check 2: check the inputted date is valid > must be the later than all existing transactions;
@@ -1000,14 +935,14 @@ namespace hihapi.Controllers
                          orderby docheader.TranDate descending
                          select new { TranDate = docheader.TranDate }).FirstOrDefault();
             if (createContext.TranDate < query2.TranDate)
-                return BadRequest("Tran. data is invalid");
+                throw new BadRequestException("Tran. data is invalid");
 
             // Check 3. Fetch current balance
             var query3 = (from acntbal in this._context.FinanceReporAccountGroupView
                          where acntbal.AccountID == createContext.AssetAccountID
                          select acntbal.Balance).First();
             if (query3 <= 0)
-                return BadRequest("Balance is less than zero");
+                throw new BadRequestException("Balance is less than zero");
 
             var nitem = new FinanceDocumentItem();
             nitem.ItemID = ++maxItemID;
@@ -1082,7 +1017,7 @@ namespace hihapi.Controllers
 
             if (errorOccur)
             {
-                return BadRequest(errorString);
+                throw new BadRequestException(errorString);
             }
 
             return Created(vmFIDoc);

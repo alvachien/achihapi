@@ -14,6 +14,7 @@ using Moq;
 using System.Security.Claims;
 using System.Collections.Generic;
 using Microsoft.AspNet.OData;
+using hihapi.Exceptions;
 
 namespace hihapi.test.UnitTests
 {
@@ -206,7 +207,7 @@ namespace hihapi.test.UnitTests
             }
             catch (Exception exp)
             {
-                Assert.IsType<BadRequestResult>(exp);
+                Assert.IsType<BadRequestException>(exp);
             }
             context.FinAccountCategories.Remove(fakeCtgy.Entity);
             await context.SaveChangesAsync();

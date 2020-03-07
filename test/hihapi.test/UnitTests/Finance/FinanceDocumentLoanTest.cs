@@ -109,8 +109,8 @@ namespace hihapi.test.UnitTests
                 HomeID = hid,
                 Name = "Account_8" + ".1",
                 CategoryID = doctype == FinanceDocumentType.DocType_BorrowFrom 
-                    ? FinanceAccountCategoriesController.AccountCategory_BorrowFrom
-                    : FinanceAccountCategoriesController.AccountCategory_LendTo,
+                    ? FinanceAccountCategory.AccountCategory_BorrowFrom
+                    : FinanceAccountCategory.AccountCategory_LendTo,
                 Owner = user,
                 Status = FinanceAccountStatus.Normal,
             };
@@ -166,9 +166,9 @@ namespace hihapi.test.UnitTests
                     var acnt = context.FinanceAccount.Find(docitem.AccountID);
                     Assert.NotNull(acnt);
                     if (doctype == FinanceDocumentType.DocType_BorrowFrom)
-                        Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_BorrowFrom);
+                        Assert.True(acnt.CategoryID == FinanceAccountCategory.AccountCategory_BorrowFrom);
                     else if (doctype == FinanceDocumentType.DocType_LendTo)
-                        Assert.True(acnt.CategoryID == FinanceAccountCategoriesController.AccountCategory_LendTo);
+                        Assert.True(acnt.CategoryID == FinanceAccountCategory.AccountCategory_LendTo);
                     var acntExtraLoan = context.FinanceAccountExtraLoan.Find(docitem.AccountID);
                     Assert.NotNull(acntExtraLoan);
                     Assert.True(acntExtraLoan.RefDocID == doc.ID);

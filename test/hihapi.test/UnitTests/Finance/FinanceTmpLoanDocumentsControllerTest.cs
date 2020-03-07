@@ -108,8 +108,8 @@ namespace hihapi.test.UnitTests
                 HomeID = hid,
                 Name = "Account_8" + ".1",
                 CategoryID = doctype == FinanceDocumentType.DocType_BorrowFrom
-                    ? FinanceAccountCategoriesController.AccountCategory_BorrowFrom
-                    : FinanceAccountCategoriesController.AccountCategory_LendTo,
+                    ? FinanceAccountCategory.AccountCategory_BorrowFrom
+                    : FinanceAccountCategory.AccountCategory_LendTo,
                 Owner = user,
                 Status = FinanceAccountStatus.Normal,
             };
@@ -298,8 +298,8 @@ namespace hihapi.test.UnitTests
                 HomeID = hid,
                 Name = "Account_8A" + ".1",
                 CategoryID = doctype == FinanceDocumentType.DocType_BorrowFrom
-                    ? FinanceAccountCategoriesController.AccountCategory_BorrowFrom
-                    : FinanceAccountCategoriesController.AccountCategory_LendTo,
+                    ? FinanceAccountCategory.AccountCategory_BorrowFrom
+                    : FinanceAccountCategory.AccountCategory_LendTo,
                 Owner = user,
                 Status = FinanceAccountStatus.Normal,
             };

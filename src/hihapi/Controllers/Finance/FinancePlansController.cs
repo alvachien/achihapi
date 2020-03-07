@@ -52,23 +52,13 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             // Check
             if (!plan.IsValid(this._context))
             {
-                return BadRequest();
+                throw new BadRequestException("Check IsValid failed");
             }
 
             // User
@@ -104,21 +94,12 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
             if (key != update.ID)
             {
-                return BadRequest();
+                throw new BadRequestException("Inputted ID mismatched");
             }
 
             // User
@@ -144,7 +125,7 @@ namespace hihapi.Controllers
             }
 
             if (!update.IsValid(this._context))
-                return BadRequest();
+                throw new BadRequestException("Inputted Object IsValid failed");
 
             _context.Entry(update).State = EntityState.Modified;
             try
@@ -155,7 +136,7 @@ namespace hihapi.Controllers
             {
                 if (!_context.FinancePlan.Any(p => p.ID == key))
                 {
-                    return NotFound();
+                    throw new NotFoundException("Inputted ID not found");
                 }
                 else
                 {
@@ -172,7 +153,7 @@ namespace hihapi.Controllers
             var cc = await _context.FinancePlan.FindAsync(key);
             if (cc == null)
             {
-                return NotFound();
+                throw new NotFoundException("Inputted ID not found");
             }
 
             // User
@@ -198,7 +179,7 @@ namespace hihapi.Controllers
             }
 
             if (!cc.IsDeleteAllowed(this._context))
-                return BadRequest();
+                throw new BadRequestException("Inputted ID IsDeleteAllowed failed");
 
             _context.FinancePlan.Remove(cc);
             await _context.SaveChangesAsync();

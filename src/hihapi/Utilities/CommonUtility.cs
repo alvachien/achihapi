@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using hihapi.Exceptions;
 using hihapi.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace hihapi.Utilities
 {
@@ -25,6 +27,23 @@ namespace hihapi.Utilities
 
     internal static class HIHAPIUtility
     {
+        internal static void HandleModalStateError(ModelStateDictionary modelState)
+        {
+            string strModalError = "";
+            foreach (var value in modelState.Values)
+            {
+                foreach (var err in value.Errors)
+                {
+                    strModalError = err.Exception?.Message;
+#if DEBUG
+                    System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+#endif
+                }
+            }
+
+            throw new BadRequestException("Modal State Failed: " + strModalError);
+        }
+
         internal static String GetUserID(Microsoft.AspNetCore.Mvc.ControllerBase ctrl)
         {
             return ctrl.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

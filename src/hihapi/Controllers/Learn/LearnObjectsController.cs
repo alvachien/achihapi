@@ -56,23 +56,13 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             // Check
             if (!obj.IsValid(this._context))
             {
-                return BadRequest();
+                throw new BadRequestException("Inputted Object IsValid Failed");
             }
 
             // User
@@ -108,21 +98,11 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
             if (key != update.ID)
             {
-                return BadRequest();
+                throw new BadRequestException("Inputted ID mismatched");
             }
 
             // User
@@ -148,7 +128,7 @@ namespace hihapi.Controllers
             }
 
             if (!update.IsValid(this._context))
-                return BadRequest();
+                throw new BadRequestException("Inputted Object IsValid Failed");
 
             _context.Entry(update).State = EntityState.Modified;
             try
@@ -159,7 +139,7 @@ namespace hihapi.Controllers
             {
                 if (!_context.LearnObjects.Any(p => p.ID == key))
                 {
-                    return NotFound();
+                    throw new NotFoundException("Inputted Object Not Found");
                 }
                 else
                 {
@@ -202,7 +182,7 @@ namespace hihapi.Controllers
             }
 
             if (!cc.IsDeleteAllowed(this._context))
-                return BadRequest();
+                throw new BadRequestException("Inputted Object IsDeleteAllowed");
 
             _context.LearnObjects.Remove(cc);
             await _context.SaveChangesAsync();

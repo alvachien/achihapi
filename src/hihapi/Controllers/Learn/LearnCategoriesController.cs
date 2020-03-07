@@ -85,23 +85,13 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             // Check
             if (!ctgy.IsValid(this._context) || !ctgy.HomeID.HasValue)
             {
-                return BadRequest();
+                throw new BadRequestException("Inputted Object IsValid Failed");
             }
 
             // User
@@ -126,9 +116,6 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            if (!ctgy.IsValid(this._context))
-                return BadRequest();
-
             _context.LearnCategories.Add(ctgy);
             await _context.SaveChangesAsync();
 
@@ -140,20 +127,11 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
-                    }
-                }
-#endif
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
             if (key != update.ID)
             {
-                return BadRequest();
+                throw new BadRequestException("Inputted ID mismatched");
             }
 
             // User
@@ -190,7 +168,7 @@ namespace hihapi.Controllers
             {
                 if (!_context.LearnCategories.Any(p => p.ID == key))
                 {
-                    return NotFound();
+                    throw new NotFoundException("Inputted ID not found");
                 }
                 else
                 {
@@ -207,7 +185,7 @@ namespace hihapi.Controllers
             var cc = await _context.LearnCategories.FindAsync(key);
             if (cc == null)
             {
-                return NotFound();
+                throw new NotFoundException("Inputted Object Not Found");
             }
 
             // User
@@ -233,7 +211,7 @@ namespace hihapi.Controllers
             }
 
             if (!cc.IsDeleteAllowed(this._context))
-                return BadRequest();
+                throw new BadRequestException("Inputted Object IsDeleteAllowed");
 
             _context.LearnCategories.Remove(cc);
             await _context.SaveChangesAsync();
