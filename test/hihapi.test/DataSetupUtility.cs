@@ -21,6 +21,7 @@ namespace hihapi.test
         public static List<FinanceAssetCategory> FinanceAssetCategories { get; private set; }
         public static List<FinanceDocumentType> FinanceDocumentTypes { get; private set; }
         public static List<FinanceTransactionType> FinanceTransactionTypes { get; private set; }
+        public static List<LearnCategory> LearnCategories { get; private set; }
 
         /// <summary>
         /// Testing data
@@ -69,6 +70,7 @@ namespace hihapi.test
             FinanceAssetCategories = new List<FinanceAssetCategory>();
             FinanceDocumentTypes = new List<FinanceDocumentType>();
             FinanceTransactionTypes = new List<FinanceTransactionType>();
+            LearnCategories = new List<LearnCategory>();
 
             // Setup tables
             SetupTable_DBVersion();
@@ -79,6 +81,7 @@ namespace hihapi.test
             SetupTable_FinDocumentType();
             SetupTable_FinAssertCategory();
             SetupTable_FinTransactionType();
+            SetupTable_LearnCategory();
         }
 
         public static ClaimsPrincipal GetClaimForUser(String usr)
@@ -91,7 +94,7 @@ namespace hihapi.test
         }
 
         #region Create tables and Views
-        public static void CreateDatabaseTables(DatabaseFacade database) 
+        public static void CreateDatabaseTables(DatabaseFacade database)
         {
             #region Home Define
             // Home defines
@@ -155,7 +158,7 @@ namespace hihapi.test
 	            ENNAME nvarchar(100) NOT NULL,
 	            NAVNAME nvarchar(100) NOT NULL,
 	            APPFLAG BOOLEAN NULL )");
-            
+
             // DB version
             database.ExecuteSqlRaw(@"CREATE TABLE T_DBVERSION (
                 VersionID    INT      PRIMARY KEY NOT NULL,
@@ -658,6 +661,7 @@ namespace hihapi.test
             InitialTable_FinAssetCategory(db);
             InitialTable_FinDocumentType(db);
             InitialTable_FinTransactionType(db);
+            InitialTable_LearnCategory(db);
             db.SaveChanges();
         }
 
@@ -694,6 +698,10 @@ namespace hihapi.test
         private static void InitialTable_FinTransactionType(hihDataContext db)
         {
             db.FinTransactionType.AddRange(DataSetupUtility.FinanceTransactionTypes);
+        }
+        private static void InitialTable_LearnCategory(hihDataContext db)
+        {
+            db.LearnCategories.AddRange(DataSetupUtility.LearnCategories);
         }
 
         private static void InitialTable_HomeDefineAndMember(hihDataContext db)
@@ -1091,32 +1099,54 @@ namespace hihapi.test
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 77, Name = "医药费", Expense = true, ParID = 75, Comment = "医药费" });
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 78, Name = "保健品费", Expense = true, ParID = 75, Comment = "保健品费" });
         }
+
+        private static void SetupTable_LearnCategory()
+        {
+            LearnCategories.Add(new LearnCategory() { ID = 1, ParentID = null, Name = "语文", Comment = "语文" });
+            LearnCategories.Add(new LearnCategory() { ID = 2, ParentID = 1, Name = "诗词", Comment = "唐诗宋词等" });
+            LearnCategories.Add(new LearnCategory() { ID = 3, ParentID = 1, Name = "识字", Comment = "拼音认读和笔画等" });
+            LearnCategories.Add(new LearnCategory() { ID = 4, ParentID = 1, Name = "文言文", Comment = "文言文等" });
+            LearnCategories.Add(new LearnCategory() { ID = 5, ParentID = 1, Name = "古典名著", Comment = "古典名著等" });
+
+            LearnCategories.Add(new LearnCategory() { ID = 6, ParentID = null, Name = "数学", Comment = "数学类" });
+            LearnCategories.Add(new LearnCategory() { ID = 7, ParentID = 6, Name = "算术", Comment = "加减法" });
+            LearnCategories.Add(new LearnCategory() { ID = 8, ParentID = 6, Name = "代数", Comment = "代数" });
+            LearnCategories.Add(new LearnCategory() { ID = 9, ParentID = 6, Name = "几何", Comment = "几何类" });
+
+            LearnCategories.Add(new LearnCategory() { ID = 10, ParentID = null, Name = "英语", Comment = "英语" });
+            LearnCategories.Add(new LearnCategory() { ID = 11, ParentID = 10, Name = "词汇", Comment = "英语词汇" });
+            LearnCategories.Add(new LearnCategory() { ID = 12, ParentID = 10, Name = "语法", Comment = "英语语法" });
+
+            LearnCategories.Add(new LearnCategory() { ID = 13, ParentID = null, Name = "日语", Comment = "日语类" });
+            LearnCategories.Add(new LearnCategory() { ID = 14, ParentID = 13, Name = "词汇", Comment = "日语词汇" });
+            LearnCategories.Add(new LearnCategory() { ID = 15, ParentID = 13, Name = "语法", Comment = "日语语法" });
+        }
         #endregion
 
         #region Setup testing data
         private static List<int> NotAllowedTranTypes
-        {
-            get
             {
-                return new List<int>
+                get
                 {
-                    1,
-                    37,
-                    60,
-                    80,
-                    81,
-                    82,
-                    86,
-                    87,
-                    88,
-                    89,
-                    90,
-                    91,
-                    92,
-                    93,
-                };
+                    return new List<int>
+                    {
+                        1,
+                        37,
+                        60,
+                        80,
+                        81,
+                        82,
+                        86,
+                        87,
+                        88,
+                        89,
+                        90,
+                        91,
+                        92,
+                        93,
+                    };
+                }
             }
-        }
         /// <summary>
         /// Home 1
         ///     [Host] User A
@@ -1774,17 +1804,17 @@ namespace hihapi.test
             #region Learn Category
             db.LearnCategories.Add(new LearnCategory
             {
-                ID = 1,
+                ID = 21,
                 HomeID = Home1ID,
-                Name = "Learn Categor 1",
-                Comment = "Comment of Learn Categor 1",
+                Name = "Learn Categor 21",
+                Comment = "Comment of Learn Categor 21",
             });
             db.LearnCategories.Add(new LearnCategory
             {
-                ID = 2,
+                ID = 22,
                 HomeID = Home1ID,
-                Name = "Learn Categorg 2",
-                Comment = "Comment of Learn Categorg 2",
+                Name = "Learn Categorg 22",
+                Comment = "Comment of Learn Categorg 22",
             });
             #endregion
             // Learn object
@@ -1801,7 +1831,7 @@ namespace hihapi.test
             {
                 ID = 2,
                 HomeID = Home1ID,
-                CategoryID = 1,
+                CategoryID = 21,
                 Name = "Object 2",
                 Content = " Content of object 2"
             });
@@ -1809,7 +1839,7 @@ namespace hihapi.test
             {
                 ID = 3,
                 HomeID = Home1ID,
-                CategoryID = 2,
+                CategoryID = 22,
                 Name = "Object 3",
                 Content = " Content of object 3"
             });
