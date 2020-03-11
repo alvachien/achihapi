@@ -114,4 +114,13 @@ namespace hihapi.Models
         [Column("BALANCE", TypeName = "Decimal(17, 2)")]
         public Decimal Balance { get; set; }
     }
+
+    public sealed class FinanceReportByAccount : FinanceReportAccountBalanceView
+    {
+    }
+    
+    public class FinanceReportControlCenterBalanceView
+    {
+
+    }
 }

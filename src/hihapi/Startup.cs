@@ -176,6 +176,11 @@ namespace hihapi
             modelBuilder.EntitySet<FinanceDocument>("FinanceDocuments");
             modelBuilder.EntitySet<FinanceDocumentItem>("FinanceDocumentItems");
             modelBuilder.EntitySet<FinanceDocumentItemView>("FinanceDocumentItemViews");
+            var acntBalRpt = modelBuilder.EntitySet<FinanceReportByAccount>("FinanceReportByAccounts");
+            acntBalRpt.EntityType.HasKey(p => new {
+                p.HomeID,
+                p.AccountID,
+            });
             modelBuilder.ComplexType<RepeatedDates>();
             modelBuilder.ComplexType<RepeatDatesCalculationInput>();
             modelBuilder.ComplexType<RepeatedDatesWithAmount>();
