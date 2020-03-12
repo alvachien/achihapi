@@ -181,6 +181,18 @@ namespace hihapi
                 p.HomeID,
                 p.AccountID,
             });
+            var ccBalRpt = modelBuilder.EntitySet<FinanceReportByControlCenter>("FinanceReportByControlCenters");
+            ccBalRpt.EntityType.HasKey(p => new
+            {
+                p.HomeID,
+                p.ControlCenterID,
+            });
+            var ordBalRpt = modelBuilder.EntitySet<FinanceReportByOrder>("FinanceReportByOrders");
+            ordBalRpt.EntityType.HasKey(p => new
+            {
+                p.HomeID,
+                p.OrderID,
+            });
             modelBuilder.ComplexType<RepeatedDates>();
             modelBuilder.ComplexType<RepeatDatesCalculationInput>();
             modelBuilder.ComplexType<RepeatedDatesWithAmount>();

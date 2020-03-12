@@ -630,10 +630,10 @@ namespace hihapi.test
             //      AND v_fin_grp_acnt_tranexp.trantype_exp = 1 ) tab_b
             //     ON tab_a.ACCOUNTID = tab_b.ACCOUNTID");
 
-            database.ExecuteSqlRaw(@"CREATE VIEW V_FIN_REPORT_BS
-                AS 
-                SELECT HID, ACCOUNTID, DEBIT_BALANCE, CREDIT_BALANCE, 
-                    DEBIT_BALANCE - CREDIT_BALANCE AS BALANCE
+            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_report_bs
+                AS
+                SELECT e.HID, e.ACCOUNTID, e.DEBIT_BALANCE, e.CREDIT_BALANCE, 
+                    e.DEBIT_BALANCE - e.CREDIT_BALANCE AS BALANCE
                 FROM (
                     SELECT c.HID, 
                         c.ACCOUNTID,
@@ -643,11 +643,91 @@ namespace hihapi.test
                     ( SELECT a.HID, a.ID AS ACCOUNTID, 
                             CASE WHEN b.BALANCE_LC IS NULL THEN 0 ELSE b.BALANCE_LC END AS DEBIT_BALANCE
                         FROM T_FIN_ACCOUNT as a 
-                        LEFT OUTER JOIN (SELECT HID, ACCOUNTID, BALANCE_LC FROM V_FIN_GRP_ACNT_TRANEXP WHERE TRANTYPE_EXP == 0) as b
-                        ON a.ID == b.ACCOUNTID AND a.HID == b.HID ) as c
-                    LEFT OUTER JOIN (SELECT HID, ACCOUNTID, BALANCE_LC FROM V_FIN_GRP_ACNT_TRANEXP WHERE TRANTYPE_EXP == 1) as d
-                    ON c.HID == d.HID AND c.ACCOUNTID == d.ACCOUNTID 
-                )");
+                        LEFT OUTER JOIN (SELECT HID, ACCOUNTID, BALANCE_LC FROM V_FIN_GRP_ACNT_TRANEXP WHERE TRANTYPE_EXP = 0) as b
+			                ON a.ID = b.ACCOUNTID AND a.HID = b.HID 
+	                ) as c
+	                LEFT OUTER JOIN (SELECT HID, ACCOUNTID, BALANCE_LC FROM V_FIN_GRP_ACNT_TRANEXP WHERE TRANTYPE_EXP = 1) as d
+		                ON c.HID = d.HID AND c.ACCOUNTID = d.ACCOUNTID 
+	                ) as e");
+
+            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_grp_cc
+                AS
+                SELECT  hid,
+                        controlcenterid,
+		                sum(tranamount_lc) AS balance_lc
+                FROM v_fin_document_item
+		        WHERE controlcenterid IS NOT NULL
+		        GROUP BY hid, controlcenterid");
+
+            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_grp_cc_tranexp
+                AS
+                SELECT  hid,
+                        controlcenterid,
+		                TRANTYPE_EXP,
+		                sum(tranamount_lc) AS balance_lc
+                FROM v_fin_document_item
+		        WHERE controlcenterid IS NOT NULL
+		        GROUP BY HID, controlcenterid, TRANTYPE_EXP");
+
+            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_report_cc
+                AS 
+                SELECT e.HID, e.CONTROLCENTERID, e.DEBIT_BALANCE, e.CREDIT_BALANCE, 
+                    e.DEBIT_BALANCE - e.CREDIT_BALANCE AS BALANCE
+                FROM (
+                    SELECT c.HID, 
+                        c.CONTROLCENTERID,
+                        c.DEBIT_BALANCE,
+                        CASE WHEN d.BALANCE_LC IS NULL THEN 0 ELSE -1 * d.BALANCE_LC END AS CREDIT_BALANCE
+                    FROM
+                    ( SELECT a.HID, a.ID AS CONTROLCENTERID, 
+                            CASE WHEN b.BALANCE_LC IS NULL THEN 0 ELSE b.BALANCE_LC END AS DEBIT_BALANCE
+                        FROM T_FIN_CONTROLCENTER as a 
+                        LEFT OUTER JOIN (SELECT HID, CONTROLCENTERID, BALANCE_LC FROM V_FIN_GRP_CC_TRANEXP WHERE TRANTYPE_EXP = 0) as b
+			                ON a.ID = b.CONTROLCENTERID AND a.HID = b.HID 
+	                ) as c
+	                LEFT OUTER JOIN (SELECT HID, CONTROLCENTERID, BALANCE_LC FROM V_FIN_GRP_CC_TRANEXP WHERE TRANTYPE_EXP = 1) as d
+		                ON c.HID = d.HID AND c.CONTROLCENTERID = d.CONTROLCENTERID
+	                ) as e");
+
+            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_grp_ord
+                AS
+                SELECT  hid,
+                        orderid,
+		                sum(tranamount_lc) AS balance_lc
+                FROM v_fin_document_item
+		        WHERE orderid IS NOT NULL
+		        GROUP BY hid, orderid");
+
+            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_grp_order_tranexp
+                AS
+                SELECT  HID,
+                        ORDERID,
+		                TRANTYPE_EXP,
+		                sum(tranamount_lc) AS balance_lc
+                FROM
+                        v_fin_document_item
+		                WHERE ORDERID IS NOT NULL
+		                GROUP BY HID, ORDERID, TRANTYPE_EXP");
+
+            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_report_order
+                AS 
+                SELECT e.HID, e.ORDERID, e.DEBIT_BALANCE, e.CREDIT_BALANCE, 
+                    e.DEBIT_BALANCE - e.CREDIT_BALANCE AS BALANCE
+                FROM (
+                    SELECT c.HID, 
+                        c.ORDERID,
+                        c.DEBIT_BALANCE,
+                        CASE WHEN d.BALANCE_LC IS NULL THEN 0 ELSE -1 * d.BALANCE_LC END AS CREDIT_BALANCE
+                    FROM
+                    ( SELECT a.HID, a.ID AS ORDERID, 
+                            CASE WHEN b.BALANCE_LC IS NULL THEN 0 ELSE b.BALANCE_LC END AS DEBIT_BALANCE
+                        FROM T_FIN_ORDER as a 
+                        LEFT OUTER JOIN (SELECT HID, ORDERID, BALANCE_LC FROM v_fin_grp_order_tranexp WHERE TRANTYPE_EXP = 0) as b
+			                ON a.ID = b.ORDERID AND a.HID = b.HID 
+	                ) as c
+	                LEFT OUTER JOIN (SELECT HID, ORDERID, BALANCE_LC FROM v_fin_grp_order_tranexp WHERE TRANTYPE_EXP = 1) as d
+		                ON c.HID = d.HID AND c.ORDERID = d.ORDERID
+	                ) as e");
         }
         #endregion
 
@@ -926,6 +1006,11 @@ namespace hihapi.test
             {
                 VersionID = 13,
                 ReleasedDate = new DateTime(2020, 2, 28)
+            });
+            DBVersions.Add(new DBVersion()
+            {
+                VersionID = 14,
+                ReleasedDate = new DateTime(2020, 3, 12)
             });
         }
 

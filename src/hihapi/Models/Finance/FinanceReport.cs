@@ -61,6 +61,7 @@ namespace hihapi.Models
         public string ItemDesp { get; set; }
     }
 
+    #region Account report
     public class FinanceReporAccountGroupView
     {
         [Column("HID", TypeName = "INT")]
@@ -96,15 +97,6 @@ namespace hihapi.Models
         [Column("ACCOUNTID", TypeName = "INT")]
         public Int32 AccountID { get; set; }
 
-        //[Column("ACCOUNTNAME", TypeName = "NVARCHAR(50)")]
-        //public string AccountName { get; set; }
-
-        //[Column("ACCOUNTCTGYID", TypeName = "INT")]
-        //public Int32 AccountCategoryID { get; set; }
-
-        //[Column("ACCOUNTCTGYNAME", TypeName = "NVARCHAR(50)")]
-        //public string AccountCategoryName { get; set; }
-
         [Column("DEBIT_BALANCE", TypeName = "Decimal(17, 2)")]
         public Decimal DebitBalance { get; set; }
 
@@ -118,9 +110,107 @@ namespace hihapi.Models
     public sealed class FinanceReportByAccount : FinanceReportAccountBalanceView
     {
     }
-    
+    #endregion
+
+    #region Control center report
+    public class FinanceReportControlCenterGroupView
+    {
+        [Column("HID", TypeName = "INT")]
+        public Int32 HomeID { get; set; }
+
+        [Column("CONTROLCENTERID", TypeName = "INT")]
+        public Int32 ControlCenterID { get; set; }
+
+        [Column("BALANCE_LC", TypeName = "Decimal(17, 2)")]
+        public Decimal Balance { get; set; }
+    }
+
+    public class FinanceReportControlCenterGroupAndExpenseView
+    {
+        [Column("HID", TypeName = "INT")]
+        public Int32 HomeID { get; set; }
+
+        [Column("CONTROLCENTERID", TypeName = "INT")]
+        public Int32 ControlCenterID { get; set; }
+
+        [Column("TRANTYPE_EXP", TypeName = "BIT")]
+        public Boolean IsExpense { get; set; }
+
+        [Column("BALANCE_LC", TypeName = "Decimal(17, 2)")]
+        public Decimal Balance { get; set; }
+    }
+
     public class FinanceReportControlCenterBalanceView
     {
+        [Column("HID", TypeName = "INT")]
+        public Int32 HomeID { get; set; }
 
+        [Column("CONTROLCENTERID", TypeName = "INT")]
+        public Int32 ControlCenterID { get; set; }
+
+        [Column("DEBIT_BALANCE", TypeName = "Decimal(17, 2)")]
+        public Decimal DebitBalance { get; set; }
+
+        [Column("CREDIT_BALANCE", TypeName = "Decimal(17, 2)")]
+        public Decimal CreditBalance { get; set; }
+
+        [Column("BALANCE", TypeName = "Decimal(17, 2)")]
+        public Decimal Balance { get; set; }
     }
+
+    public sealed class FinanceReportByControlCenter : FinanceReportControlCenterBalanceView
+    {
+    }
+    #endregion
+
+    #region Order report
+    public class FinanceReportOrderGroupView
+    {
+        [Column("HID", TypeName = "INT")]
+        public Int32 HomeID { get; set; }
+
+        [Column("ORDERID", TypeName = "INT")]
+        public Int32 OrderID { get; set; }
+
+        [Column("BALANCE_LC", TypeName = "Decimal(17, 2)")]
+        public Decimal Balance { get; set; }
+    }
+
+    public class FinanceReportOrderGroupAndExpenseView
+    {
+        [Column("HID", TypeName = "INT")]
+        public Int32 HomeID { get; set; }
+
+        [Column("ORDERID", TypeName = "INT")]
+        public Int32 OrderID { get; set; }
+
+        [Column("TRANTYPE_EXP", TypeName = "BIT")]
+        public Boolean IsExpense { get; set; }
+
+        [Column("BALANCE_LC", TypeName = "Decimal(17, 2)")]
+        public Decimal Balance { get; set; }
+    }
+
+    public class FinanceReportOrderBalanceView
+    {
+        [Column("HID", TypeName = "INT")]
+        public Int32 HomeID { get; set; }
+
+        [Column("ORDERID", TypeName = "INT")]
+        public Int32 OrderID { get; set; }
+
+        [Column("DEBIT_BALANCE", TypeName = "Decimal(17, 2)")]
+        public Decimal DebitBalance { get; set; }
+
+        [Column("CREDIT_BALANCE", TypeName = "Decimal(17, 2)")]
+        public Decimal CreditBalance { get; set; }
+
+        [Column("BALANCE", TypeName = "Decimal(17, 2)")]
+        public Decimal Balance { get; set; }
+    }
+
+    public sealed class FinanceReportByOrder : FinanceReportOrderBalanceView
+    {
+    }
+    #endregion
 }

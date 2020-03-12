@@ -318,46 +318,23 @@ GO
 
 CREATE VIEW [dbo].[v_fin_report_bs]
 AS 
-SELECT tab_a.[hid],
-	   tab_a.[accountid],
-	   tab_a.[ACCOUNTNAME],
-	   tab_a.[ACCOUNTCTGYID],
-	   tab_a.[ACCOUNTCTGYNAME],
-        tab_a.[balance_lc] AS [debit_balance],
-        tab_b.[balance_lc] AS [credit_balance],
-        (tab_a.[balance_lc] - tab_b.[balance_lc]) AS [balance]
- FROM 
-	(SELECT 
-		[t_fin_account].[ID] AS [ACCOUNTID],
-		[t_fin_account].[HID] AS [HID],
-		[t_fin_account].[NAME] AS [ACCOUNTNAME],
-		[t_fin_account_ctgy].[ID] AS [ACCOUNTCTGYID],
-		[t_fin_account_ctgy].[NAME] AS [ACCOUNTCTGYNAME],
-		(case
-            when ([v_fin_grp_acnt_tranexp].[balance_lc] is not null) then [v_fin_grp_acnt_tranexp].[balance_lc]
-            else 0.0
-        end) AS [balance_lc]
-	FROM [dbo].[t_fin_account]
-	JOIN [dbo].[t_fin_account_ctgy] ON [t_fin_account].CTGYID = [t_fin_account_ctgy].[ID]
-	LEFT OUTER JOIN [dbo].[v_fin_grp_acnt_tranexp] ON [t_fin_account].[ID] = [v_fin_grp_acnt_tranexp].[accountid]
-		AND [v_fin_grp_acnt_tranexp].[trantype_exp] = 0 ) tab_a
-
-	JOIN 
-
-	( SELECT [t_fin_account].[ID] AS [ACCOUNTID],
-		[t_fin_account].[NAME] AS [ACCOUNTNAME],
-		[t_fin_account_ctgy].[ID] AS [ACCOUNTCTGYID],
-		[t_fin_account_ctgy].[NAME] AS [ACCOUNTCTGYNAME],
-		(case
-            when ([v_fin_grp_acnt_tranexp].[balance_lc] is not null) then [v_fin_grp_acnt_tranexp].[balance_lc] * -1
-            else 0.0
-        end) AS [balance_lc]
-	FROM [dbo].[t_fin_account]
-	JOIN [dbo].[t_fin_account_ctgy] ON [t_fin_account].CTGYID = [t_fin_account_ctgy].[ID]
-	LEFT OUTER JOIN [dbo].[v_fin_grp_acnt_tranexp] ON [t_fin_account].[ID] = [v_fin_grp_acnt_tranexp].[accountid]
-		AND [v_fin_grp_acnt_tranexp].[trantype_exp] = 1 ) tab_b
-
-	ON tab_a.[ACCOUNTID] = tab_b.[ACCOUNTID]
+	SELECT e.HID, e.ACCOUNTID, e.DEBIT_BALANCE, e.CREDIT_BALANCE, 
+        e.DEBIT_BALANCE - e.CREDIT_BALANCE AS BALANCE
+    FROM (
+        SELECT c.HID, 
+            c.ACCOUNTID,
+            c.DEBIT_BALANCE,
+            CASE WHEN d.BALANCE_LC IS NULL THEN 0 ELSE -1 * d.BALANCE_LC END AS CREDIT_BALANCE
+        FROM
+        ( SELECT a.HID, a.ID AS ACCOUNTID, 
+                CASE WHEN b.BALANCE_LC IS NULL THEN 0 ELSE b.BALANCE_LC END AS DEBIT_BALANCE
+            FROM T_FIN_ACCOUNT as a 
+            LEFT OUTER JOIN (SELECT HID, ACCOUNTID, BALANCE_LC FROM V_FIN_GRP_ACNT_TRANEXP WHERE TRANTYPE_EXP = 0) as b
+			    ON a.ID = b.ACCOUNTID AND a.HID = b.HID 
+	    ) as c
+	    LEFT OUTER JOIN (SELECT HID, ACCOUNTID, BALANCE_LC FROM V_FIN_GRP_ACNT_TRANEXP WHERE TRANTYPE_EXP = 1) as d
+		    ON c.HID = d.HID AND c.ACCOUNTID = d.ACCOUNTID 
+	    ) as e
 GO
 
 
@@ -417,37 +394,23 @@ GO
 
 create view [dbo].[v_fin_report_cc]
 AS 
-SELECT tab_a.[CONTROLCENTERID],
-	   tab_a.[HID],
-	   tab_a.[CONTROLCENTERNAME],
-       tab_a.[balance_lc] AS [debit_balance],
-       tab_b.[balance_lc] AS [credit_balance],
-        (tab_a.[balance_lc] - tab_b.[balance_lc]) AS [balance]
- FROM 
-	(SELECT [t_fin_controlcenter].[ID] AS [CONTROLCENTERID],
-		[t_fin_controlcenter].[HID] AS [HID],
-		[t_fin_controlcenter].[NAME] AS [CONTROLCENTERNAME],
-		(case
-            when ([v_fin_grp_cc_tranexp].[balance_lc] is not null) then [v_fin_grp_cc_tranexp].[balance_lc]
-            else 0.0
-        end) AS [balance_lc]
-	FROM [dbo].[t_fin_controlcenter]
-	LEFT OUTER JOIN [dbo].[v_fin_grp_cc_tranexp] ON [t_fin_controlcenter].[ID] = [v_fin_grp_cc_tranexp].controlcenterid
-		AND [v_fin_grp_cc_tranexp].[trantype_exp] = 0 ) tab_a
-
-	JOIN 
-
-	( SELECT [t_fin_controlcenter].[ID] AS [CONTROLCENTERID],
-		[t_fin_controlcenter].[NAME] AS [CONTROLCENTERNAME],
-		(case
-            when ([v_fin_grp_cc_tranexp].[balance_lc] is not null) then [v_fin_grp_cc_tranexp].[balance_lc] * -1
-            else 0.0
-        end) AS [balance_lc]
-	FROM [dbo].[t_fin_controlcenter]
-	LEFT OUTER JOIN [dbo].[v_fin_grp_cc_tranexp] ON [t_fin_controlcenter].[ID] = [v_fin_grp_cc_tranexp].controlcenterid
-		AND [v_fin_grp_cc_tranexp].[trantype_exp] = 1 ) tab_b
-
-	ON tab_a.[CONTROLCENTERID] = tab_b.[CONTROLCENTERID]
+SELECT e.HID, e.CONTROLCENTERID, e.DEBIT_BALANCE, e.CREDIT_BALANCE, 
+    e.DEBIT_BALANCE - e.CREDIT_BALANCE AS BALANCE
+FROM (
+    SELECT c.HID, 
+        c.CONTROLCENTERID,
+        c.DEBIT_BALANCE,
+        CASE WHEN d.BALANCE_LC IS NULL THEN 0 ELSE -1 * d.BALANCE_LC END AS CREDIT_BALANCE
+    FROM
+    ( SELECT a.HID, a.ID AS CONTROLCENTERID, 
+            CASE WHEN b.BALANCE_LC IS NULL THEN 0 ELSE b.BALANCE_LC END AS DEBIT_BALANCE
+        FROM T_FIN_CONTROLCENTER as a 
+        LEFT OUTER JOIN (SELECT HID, CONTROLCENTERID, BALANCE_LC FROM V_FIN_GRP_CC_TRANEXP WHERE TRANTYPE_EXP = 0) as b
+			ON a.ID = b.CONTROLCENTERID AND a.HID = b.HID 
+	) as c
+	LEFT OUTER JOIN (SELECT HID, CONTROLCENTERID, BALANCE_LC FROM V_FIN_GRP_CC_TRANEXP WHERE TRANTYPE_EXP = 1) as d
+		ON c.HID = d.HID AND c.CONTROLCENTERID = d.CONTROLCENTERID
+	) as e
 
 GO
 

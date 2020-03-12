@@ -43,6 +43,12 @@ namespace hihapi.Models
         public DbSet<FinanceReporAccountGroupView> FinanceReporAccountGroupView { get; set; }
         public DbSet<FinanceReporAccountGroupAndExpenseView> FinanceReporAccountGroupAndExpenseView { get; set; }
         public DbSet<FinanceReportAccountBalanceView> FinanceReportAccountBalanceView { get; set; }
+        public DbSet<FinanceReportControlCenterGroupView> FinanceReportControlCenterGroupView { get; set; }
+        public DbSet<FinanceReportControlCenterGroupAndExpenseView> FinanceReportControlCenterGroupAndExpenseView { get; set; }
+        public DbSet<FinanceReportControlCenterBalanceView> FinanceReportControlCenterBalanceView { get; set; }
+        public DbSet<FinanceReportOrderGroupView> FinanceReportOrderGroupView { get; set; }
+        public DbSet<FinanceReportOrderGroupAndExpenseView> FinanceReportOrderGroupAndExpenseView { get; set; }
+        public DbSet<FinanceReportOrderBalanceView> FinanceReportOrderBalanceView { get; set; }
         public DbSet<LearnCategory> LearnCategories { get; set; }
         public DbSet<LearnObject> LearnObjects { get; set; }
 
@@ -500,6 +506,36 @@ namespace hihapi.Models
             {
                 entity.HasNoKey();
                 entity.ToView("V_FIN_REPORT_BS");
+            });
+            modelBuilder.Entity<FinanceReportControlCenterGroupView>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("V_FIN_GRP_CC");
+            });
+            modelBuilder.Entity<FinanceReportControlCenterGroupAndExpenseView>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("V_FIN_GRP_CC_TRANEXP");
+            });
+            modelBuilder.Entity<FinanceReportControlCenterBalanceView>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("V_FIN_REPORT_CC");
+            });
+            modelBuilder.Entity<FinanceReportOrderGroupView>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("V_FIN_GRP_ORD");
+            });
+            modelBuilder.Entity<FinanceReportOrderGroupAndExpenseView>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("V_FIN_GRP_ORD_TRANEXP");
+            });
+            modelBuilder.Entity<FinanceReportOrderBalanceView>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("V_FIN_REPORT_ORDER");
             });
 
             modelBuilder.Entity<LearnCategory>(entity =>

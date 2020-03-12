@@ -1,5 +1,11 @@
-﻿using hihapi.Models;
+﻿using hihapi.Exceptions;
+using hihapi.Models;
+using hihapi.Utilities;
 using Microsoft.AspNet.OData;
+using Microsoft.AspNet.OData.Query;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,12 +22,28 @@ namespace hihapi.Controllers
             _context = context;
         }
 
+        [Authorize]
         [EnableQuery]
         public IQueryable<FinanceReportByAccount> Get()
         {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             List<FinanceReportAccountBalanceView> arsts 
-                = (from acntbal in _context.FinanceReportAccountBalanceView
-                   select acntbal).ToList();
+                = (from hmem in _context.HomeMembers
+                   where hmem.User == usrName
+                   select new { HomeID = hmem.HomeID } into hids
+                   join bal in _context.FinanceReportAccountBalanceView on hids.HomeID equals bal.HomeID
+                   select bal).ToList();
 
             List<FinanceReportByAccount> listRsts = new List<FinanceReportByAccount>();
             foreach(var rst in arsts)
