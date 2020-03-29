@@ -239,12 +239,11 @@ namespace hihapi
             // Function on DP template documents
             var tmpTpDocEntity = modelBuilder.EntityType<FinanceTmpDPDocument>();
             var tmpTpDocPostFunc =
-                tmpTpDocEntity
-                .Function("PostDocument")
+                tmpTpDocEntity.Collection.Function("PostDocument")
                 .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            //tmpTpDocPostFunc.Parameter<int>("DocID");
-            //tmpTpDocPostFunc.Parameter<int>("AccountID");
-            //tmpTpDocPostFunc.Parameter<int>("HomeID");
+            tmpTpDocPostFunc.Parameter<int>("DocumentID");
+            tmpTpDocPostFunc.Parameter<int>("AccountID");
+            tmpTpDocPostFunc.Parameter<int>("HomeID");
             // Action on Loan template documents: Repay document
             var tmpLoanDocEntity = modelBuilder.EntityType<FinanceTmpLoanDocument>();
             tmpLoanDocEntity

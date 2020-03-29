@@ -50,7 +50,7 @@ namespace hihapi.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> PostDocument([FromODataUri]int DocumentID, int AccontID, int HomeID)
+        public async Task<IActionResult> PostDocument(int DocumentID, int AccontID, int HomeID)
         {
             // User
             String usrName = String.Empty;
