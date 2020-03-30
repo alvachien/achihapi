@@ -50,7 +50,7 @@ namespace hihapi.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> PostDocument(int DocumentID, int AccontID, int HomeID)
+        public async Task<IActionResult> PostDocument([FromBody]FinanceTmpDPDocumentPostContext context)
         {
             // User
             String usrName = String.Empty;
@@ -68,7 +68,7 @@ namespace hihapi.Controllers
             }
 
             var tpdoc = _context.FinanceTmpDPDocument
-                .Where(p => p.DocumentID == DocumentID && p.AccountID == AccontID && p.HomeID == HomeID)
+                .Where(p => p.DocumentID == context.DocumentID && p.AccountID == context.AccountID && p.HomeID == context.HomeID)
                 .SingleOrDefault();
             if (tpdoc == null)
             {
@@ -103,18 +103,18 @@ namespace hihapi.Controllers
             }
 
             // Left items
-            var dpAccount = _context.FinanceAccount.Where(p => p.ID == AccontID && p.HomeID == HomeID).SingleOrDefault();
+            var dpAccount = _context.FinanceAccount.Where(p => p.ID == context.AccountID && p.HomeID == context.HomeID).SingleOrDefault();
             if (dpAccount == null)
             {
                 throw new BadRequestException("Cannot find Account");
             }
-            else if (dpAccount.Status != FinanceAccountStatus.Normal)
+            else if (!(dpAccount.Status == null || dpAccount.Status == FinanceAccountStatus.Normal))
             {
                 throw new BadRequestException("Account status is not Normal");
             }
 
             var leftItemsCnt = _context.FinanceTmpDPDocument
-                .Where(p => p.AccountID == AccontID && p.HomeID == HomeID && p.DocumentID != DocumentID && p.ReferenceDocumentID == null)
+                .Where(p => p.AccountID == context.AccountID && p.HomeID == context.HomeID && p.DocumentID != context.DocumentID && p.ReferenceDocumentID == null)
                 .Count();
 
             // Save it to normal doc.

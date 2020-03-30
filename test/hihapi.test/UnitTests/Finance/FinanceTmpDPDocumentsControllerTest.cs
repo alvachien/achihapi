@@ -180,7 +180,13 @@ namespace hihapi.test.UnitTests
             // 3. Create repay document
             foreach(var dpdoc in dpdocs)
             {
-                var repaydocresp = await tmpcontrol.PostDocument(dpdoc.DocumentID, dpdoc.AccountID, dpdoc.HomeID);
+                var dppostcontext = new FinanceTmpDPDocumentPostContext()
+                {
+                    DocumentID = dpdoc.DocumentID,
+                    AccountID = dpdoc.AccountID,
+                    HomeID = dpdoc.HomeID,
+                };
+                var repaydocresp = await tmpcontrol.PostDocument(dppostcontext);
                 var repaydoc = Assert.IsType<CreatedODataResult<FinanceDocument>>(repaydocresp);
                 Assert.True(repaydoc.Entity.ID > 0);
                 documentsCreated.Add(repaydoc.Entity.ID);

@@ -50,4 +50,11 @@ namespace hihapi.Models
 
         public FinanceAccountExtraDP AccountExtra { get; set; }
     }
+
+    public sealed class FinanceTmpDPDocumentPostContext
+    {
+        public int DocumentID { get; set; }
+        public int AccountID { get; set; }
+        public int HomeID { get; set; }
+    }
 }
