@@ -600,6 +600,7 @@ namespace hihapi.Utilities
                         {
                             // Decimal dInitMonthIntere = 0;
                             Decimal monthRate = datInput.InterestRate / 12;
+                            Decimal totalAmt = datInput.TotalAmount;
                             //if (nInitDelay > 0)
                             //    dInitMonthIntere = Math.Round(datInput.TotalAmount * (monthRate / 30) * nInitDelay, 2);
                             Decimal d3 = (Decimal)Math.Pow((double)(1 + monthRate), datInput.TotalMonths) - 1;
@@ -618,6 +619,7 @@ namespace hihapi.Utilities
                                 if (i == 0 && nInitDelay > 0)
                                     rst.InterestAmount = Math.Round(rst.InterestAmount + (nInitDelay - 1) * datInput.TotalAmount * monthRate / 30, 2);
 
+                                totalAmt -= rst.TranAmount;
                                 //var diff = rst.TranAmount + rst.InterestAmount - monthRepay;
                                 //if (diff != 0)
                                 //{
@@ -628,6 +630,12 @@ namespace hihapi.Utilities
                                 totalInterestAmt += rst.InterestAmount;
 
                                 listResults.Add(rst);
+                            }
+                            // Rounding
+                            if (totalAmt > 0)
+                            {
+                                // Add it to first item
+                                listResults[0].TranAmount += totalAmt;
                             }
                         }
                         break;
@@ -652,6 +660,12 @@ namespace hihapi.Utilities
                                 totalAmt -= monthPrincipal;
 
                                 listResults.Add(rst);
+                            }
+                            // Rounding
+                            if (totalAmt > 0)
+                            {
+                                // Add it to first item
+                                listResults[0].TranAmount += totalAmt;
                             }
                         }
                         break;

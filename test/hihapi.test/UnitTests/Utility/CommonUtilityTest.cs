@@ -904,7 +904,7 @@ namespace hihapi.test.UnitTests
             Assert.Equal(2020, realdate.Year);
             Assert.Equal(10, realdate.Month);
             Assert.Equal(1, realdate.Day);
-            Assert.True(Math.Abs(16062.62M - results[0].TotalAmount) <= 0.01M);
+            Assert.True(Math.Abs(16062.66M - results[0].TotalAmount) <= 0.01M); // Rounding
         }
 
         [Fact]
