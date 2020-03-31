@@ -152,16 +152,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception != null? err.Exception.Message : err.ErrorMessage);
-                    }
-                }
-#endif
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             return Ok(CommonUtility.WorkoutRepeatedDates(input));
@@ -173,16 +164,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception != null ? err.Exception.Message : err.ErrorMessage);
-                    }
-                }
-#endif
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             return Ok(CommonUtility.WorkoutRepeatedDatesWithAmount(input));
@@ -194,16 +176,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-#if DEBUG
-                foreach (var value in ModelState.Values)
-                {
-                    foreach (var err in value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine(err.Exception != null ? err.Exception.Message : err.ErrorMessage);
-                    }
-                }
-#endif
-                return BadRequest();
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             return Ok(CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(input));

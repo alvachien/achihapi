@@ -599,9 +599,6 @@ namespace hihapi.Utilities
                     case LoanRepaymentMethod.EqualPrincipalAndInterset:
                         {
                             // Decimal dInitMonthIntere = 0;
-                            //每月月供额 =〔贷款本金×月利率×(1＋月利率)＾还款月数〕÷〔(1＋月利率)＾还款月数 - 1〕
-                            //每月应还利息 = 贷款本金×月利率×〔(1 + 月利率) ^ 还款月数 - (1 + 月利率) ^ (还款月序号 - 1)〕÷〔(1 + 月利率) ^ 还款月数 - 1〕
-                            //每月应还本金 = 贷款本金×月利率×(1 + 月利率) ^ (还款月序号 - 1)÷〔(1 + 月利率) ^ 还款月数 - 1〕
                             Decimal monthRate = datInput.InterestRate / 12;
                             //if (nInitDelay > 0)
                             //    dInitMonthIntere = Math.Round(datInput.TotalAmount * (monthRate / 30) * nInitDelay, 2);
@@ -637,11 +634,6 @@ namespace hihapi.Utilities
 
                     case LoanRepaymentMethod.EqualPrincipal:
                         {
-                            // 每月月供额 = (贷款本金÷还款月数) + (贷款本金 - 已归还本金累计额)×月利率
-                            // 每月应还本金 = 贷款本金÷还款月数
-                            // 每月应还利息 = 剩余本金×月利率 = (贷款本金 - 已归还本金累计额)×月利率
-                            // 每月月供递减额 = 每月应还本金×月利率 = 贷款本金÷还款月数×月利率
-                            // 总利息 = 还款月数×(总贷款额×月利率 - 月利率×(总贷款额÷还款月数)*(还款月数 - 1)÷2 + 总贷款额÷还款月数)
                             Decimal monthRate = datInput.InterestRate / 12;
                             Decimal totalAmt = datInput.TotalAmount;
                             var monthPrincipal = datInput.TotalAmount / datInput.TotalMonths;
@@ -694,7 +686,6 @@ namespace hihapi.Utilities
             }
 
             return listResults;
-
         }
     }
 }
