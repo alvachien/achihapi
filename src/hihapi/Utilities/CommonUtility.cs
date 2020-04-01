@@ -34,9 +34,9 @@ namespace hihapi.Utilities
             {
                 foreach (var err in value.Errors)
                 {
-                    strModalError = err.Exception?.Message;
+                    strModalError = err.Exception != null ? err.Exception.Message : err.ErrorMessage;
 #if DEBUG
-                    System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    System.Diagnostics.Debug.WriteLine("Modal State Failed: " + strModalError);
 #endif
                 }
             }
@@ -632,7 +632,7 @@ namespace hihapi.Utilities
                                 listResults.Add(rst);
                             }
                             // Rounding
-                            if (totalAmt > 0)
+                            if (totalAmt != 0)
                             {
                                 // Add it to first item
                                 listResults[0].TranAmount += totalAmt;
@@ -657,16 +657,16 @@ namespace hihapi.Utilities
                                 if (i == 0 && nInitDelay > 0)
                                     rst.InterestAmount = Math.Round(rst.InterestAmount + (nInitDelay - 1) * datInput.TotalAmount * monthRate / 30, 2);
 
-                                totalAmt -= monthPrincipal;
+                                totalAmt -= rst.TranAmount;
 
                                 listResults.Add(rst);
                             }
                             // Rounding
-                            if (totalAmt > 0)
+                            if (totalAmt != 0)
                             {
-                                // Add it to first item
+                                // Real paid is lower, substract fromfirst item
                                 listResults[0].TranAmount += totalAmt;
-                            }
+                            } 
                         }
                         break;
 

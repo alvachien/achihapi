@@ -30,7 +30,8 @@ namespace hihapi.Controllers
         // Version 12 - 2019.4.20
         // Version 13 - 2020.02.28
         // Version 14 - 2020.03.12
-        public static Int32 CurrentVersion = 14;
+        // Version 15 - 2020.04.01
+        public static Int32 CurrentVersion = 15;
 
         private readonly hihDataContext _context;
 
@@ -82,7 +83,11 @@ namespace hihapi.Controllers
                         if (!_context.TestingMode)
                         {
                             using var dbContextTransaction = _context.Database.BeginTransaction();
-                            _context.Database.ExecuteSqlRaw(strcontent);
+                            var subcontents = strcontent.Split("GO");
+                            foreach(var content in subcontents)
+                            {
+                                _context.Database.ExecuteSqlRaw(content);
+                            }
                             dbContextTransaction.Commit();
                         }
                         else

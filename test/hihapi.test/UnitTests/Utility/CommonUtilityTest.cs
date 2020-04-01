@@ -990,6 +990,40 @@ namespace hihapi.test.UnitTests
             Assert.True(Math.Abs(8530.99M - (results[11].TranAmount + results[11].InterestAmount)) <= 0.01M);
         }
 
+        [Theory]
+        [InlineData(50000.00, 0.05)]
+        public void RepeatedDatesWithAmountAndInterestTest_EqualCEx(Decimal totalAmount, Decimal interestRate)
+        {
+            var vm = new RepeatDatesWithAmountAndInterestCalInput
+            {
+                InterestFreeLoan = false,
+                StartDate = new DateTime(2020, 1, 1),
+                TotalAmount = totalAmount,
+                TotalMonths = 12,
+                InterestRate = interestRate,
+                RepaymentMethod = LoanRepaymentMethod.EqualPrincipal
+            };
+            List<RepeatedDatesWithAmountAndInterest> results = CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(vm);
+
+            var idx = 0;
+            Decimal amtTotal = 0;
+            foreach(var rst in results)
+            {
+                if (idx == 0)
+                {
+                    //Assert.True(Math.Abs(4166.71M - rst.TranAmount) <= 0.01M);
+                }
+                else
+                {
+                    Assert.True(Math.Abs(4166.67M - rst.TranAmount) <= 0.01M);
+                }
+                idx++;
+                amtTotal += rst.TranAmount;
+            }
+
+            Assert.True(Math.Abs(amtTotal - totalAmount) <= 0.01M);
+        }
+
         [Fact]
         public void RepeatedDatesWithAmountAndInterestTest_EqualC()
         {
@@ -1005,11 +1039,11 @@ namespace hihapi.test.UnitTests
             List<RepeatedDatesWithAmountAndInterest> results = CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(vm);
 
             //1   8695.83 8333.34 362.50  91666.67
-            Assert.True(Math.Abs(8333.34M - results[0].TranAmount) <= 0.01M);
+            Assert.True(Math.Abs(8333.37M - results[0].TranAmount) <= 0.01M);
             //Assert.Equal(8168.50M, results[0].TranAmount);
             Assert.True(Math.Abs(362.50M - results[0].InterestAmount) <= 0.01M);
             //Assert.Equal(362.50M, results[0].InterestAmount);
-            Assert.True(Math.Abs(8695.83M - (results[0].TranAmount + results[0].InterestAmount)) <= 0.01M);
+            Assert.True(Math.Abs(8695.87M - (results[0].TranAmount + results[0].InterestAmount)) <= 0.01M);
 
             //2   8665.63 8333.34 332.29  83333.33
             Assert.True(Math.Abs(8333.34M - results[1].TranAmount) <= 0.01M);
@@ -1065,6 +1099,14 @@ namespace hihapi.test.UnitTests
             Assert.True(Math.Abs(8333.34M - results[11].TranAmount) <= 0.01M);
             Assert.True(Math.Abs(30.21M - results[11].InterestAmount) <= 0.01M);
             Assert.True(Math.Abs(8363.54M - (results[11].TranAmount + results[11].InterestAmount)) <= 0.01M);
+
+            // Total amount shall be equal
+            decimal amttotalpaid = 0;
+            foreach(var rst in results)
+            {
+                amttotalpaid += rst.TranAmount;
+            }
+            Assert.True(Math.Abs(amttotalpaid - vm.TotalAmount) < 0.01M);
         }
 
         [Fact]
