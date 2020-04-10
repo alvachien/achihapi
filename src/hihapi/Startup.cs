@@ -39,8 +39,16 @@ namespace hihapi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+#if DEBUG
             this.ConnectionString = Configuration["hihapi:ConnectionString"];
             System.Diagnostics.Debug.WriteLine(this.ConnectionString);
+#else
+#if USE_ALIYUN
+            this.ConnectionString = Configuration.GetConnectionString("AliyunConnection");
+#elif USE_AZURE
+            this.ConnectionString = Configuration.GetConnectionString("AzureConnection");
+#endif
+#endif
 
             if (Environment.EnvironmentName != "IntegrationTest")
             {
@@ -111,11 +119,30 @@ namespace hihapi
                 services.AddAuthentication("Bearer")
                     .AddJwtBearer("Bearer", options =>
                     {
-                        options.Authority = "http://118.178.58.187:5100";
+#if USE_ALIYUN
+                        options.Authority = "https://www.alvachien.com/idserver";
+#elif USE_AZURE
+                        options.Authority = "http://localhost:41016";
+#endif
                         options.RequireHttpsMetadata = false;
 
                         options.Audience = "api.hih";
                     });
+                services.AddCors(options =>
+                {
+                    options.AddPolicy(MyAllowSpecificOrigins, builder =>
+                    {
+                        builder.WithOrigins(
+#if USE_ALIYUN
+                            "https://www.alvachien.com/hih"
+#elif USE_AZURE
+#endif
+                        )
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                    });
+                });
             }
 
             services.AddOData();
