@@ -619,17 +619,17 @@ FROM
 
 GO
 
-/****** Object:  View [dbo].[v_fin_grp_order_tranexp]    Script Date: 2017-04-22 8:47:02 PM ******/
+/****** Object:  View [dbo].[V_FIN_GRP_ORD_TRANEXP]    Script Date: 2017-04-22 8:47:02 PM ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
 
-DROP VIEW IF EXISTS [dbo].[v_fin_grp_order_tranexp]
+DROP VIEW IF EXISTS [dbo].[V_FIN_GRP_ORD_TRANEXP]
 GO
 
-CREATE VIEW [dbo].[v_fin_grp_order_tranexp]
+CREATE VIEW [dbo].[V_FIN_GRP_ORD_TRANEXP]
 AS
 with docitem_curr1_basecurr as 
 (

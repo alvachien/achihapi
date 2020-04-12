@@ -698,7 +698,7 @@ namespace hihapi.test
 		        WHERE orderid IS NOT NULL
 		        GROUP BY hid, orderid");
 
-            database.ExecuteSqlRaw(@"CREATE VIEW v_fin_grp_order_tranexp
+            database.ExecuteSqlRaw(@"CREATE VIEW V_FIN_GRP_ORD_TRANEXP
                 AS
                 SELECT  HID,
                         ORDERID,
@@ -722,10 +722,10 @@ namespace hihapi.test
                     ( SELECT a.HID, a.ID AS ORDERID, 
                             CASE WHEN b.BALANCE_LC IS NULL THEN 0 ELSE b.BALANCE_LC END AS DEBIT_BALANCE
                         FROM T_FIN_ORDER as a 
-                        LEFT OUTER JOIN (SELECT HID, ORDERID, BALANCE_LC FROM v_fin_grp_order_tranexp WHERE TRANTYPE_EXP = 0) as b
+                        LEFT OUTER JOIN (SELECT HID, ORDERID, BALANCE_LC FROM V_FIN_GRP_ORD_TRANEXP WHERE TRANTYPE_EXP = 0) as b
 			                ON a.ID = b.ORDERID AND a.HID = b.HID 
 	                ) as c
-	                LEFT OUTER JOIN (SELECT HID, ORDERID, BALANCE_LC FROM v_fin_grp_order_tranexp WHERE TRANTYPE_EXP = 1) as d
+	                LEFT OUTER JOIN (SELECT HID, ORDERID, BALANCE_LC FROM V_FIN_GRP_ORD_TRANEXP WHERE TRANTYPE_EXP = 1) as d
 		                ON c.HID = d.HID AND c.ORDERID = d.ORDERID
 	                ) as e");
         }
