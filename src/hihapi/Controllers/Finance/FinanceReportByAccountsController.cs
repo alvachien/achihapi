@@ -38,22 +38,40 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            List<FinanceReportAccountBalanceView> arsts 
+            List<FinanceReporAccountGroupAndExpenseView> arsts 
                 = (from hmem in _context.HomeMembers
                    where hmem.User == usrName
                    select new { HomeID = hmem.HomeID } into hids
-                   join bal in _context.FinanceReportAccountBalanceView on hids.HomeID equals bal.HomeID
+                   join bal in _context.FinanceReporAccountGroupAndExpenseView on hids.HomeID equals bal.HomeID
                    select bal).ToList();
 
+            List<FinanceAccount> accounts = (from hmem in _context.HomeMembers
+                                               where hmem.User == usrName
+                                               select new { HomeID = hmem.HomeID } into hids
+                                               join acnt in _context.FinanceAccount on hids.HomeID equals acnt.HomeID
+                                               select acnt).ToList();
+
             List<FinanceReportByAccount> listRsts = new List<FinanceReportByAccount>();
-            foreach(var rst in arsts)
+            foreach(var acnt in accounts)
             {
                 var rst2 = new FinanceReportByAccount();
-                rst2.AccountID = rst.AccountID;
-                rst2.Balance = rst.Balance;
-                rst2.CreditBalance = rst.CreditBalance;
-                rst2.DebitBalance = rst.DebitBalance;
-                rst2.HomeID = rst.HomeID;
+                rst2.AccountID = acnt.ID;
+                arsts.ForEach(action =>
+                {
+                    if (action.AccountID == acnt.ID)
+                    {
+                        if (action.IsExpense)
+                        {
+                            rst2.CreditBalance = -1 * action.Balance;
+                        }
+                        else
+                        {
+                            rst2.DebitBalance = action.Balance;
+                        }
+                    }
+                });
+                rst2.Balance = rst2.DebitBalance - rst2.CreditBalance;
+                rst2.HomeID = acnt.HomeID;
                 
                 listRsts.Add(rst2);
             }

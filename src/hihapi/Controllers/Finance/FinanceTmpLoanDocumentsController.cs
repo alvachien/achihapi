@@ -117,10 +117,21 @@ namespace hihapi.Controllers
             int ninvaliditems = 0;
             Decimal acntBalance = 0M;
             // Balance
-            var acntBalInfo = _context.FinanceReportAccountBalanceView.Where(p => p.AccountID == loanAccountHeader.ID).FirstOrDefault();
-            if (acntBalInfo != null)
+            var acntBalInfo = _context.FinanceReporAccountGroupAndExpenseView.Where(p => p.AccountID == loanAccountHeader.ID).ToList();
+            if (acntBalInfo.Count > 0)
             {
-                acntBalance = acntBalInfo.Balance;
+                acntBalance = 0;
+                acntBalInfo.ForEach(action =>
+                {
+                    if (action.IsExpense)
+                    {
+                        acntBalance += action.Balance;
+                    }
+                    else
+                    {
+                        acntBalance += action.Balance;
+                    }
+                });
             }
             else
             {

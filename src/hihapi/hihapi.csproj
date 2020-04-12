@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UserSecretsId>cf80adf9-ce70-4ce9-bb4e-a73887a492a6</UserSecretsId>
-    <Version>1.0.64</Version>
+    <Version>1.1.66</Version>
     <Authors>Alva Chien</Authors>
     <Product>H.I.H.</Product>
     <Copyright>(C) Alva Chien, 2020</Copyright>
@@ -25,6 +25,7 @@
     <None Remove="Sqls\Delta\v13.sql" />
     <None Remove="Sqls\Delta\v14.sql" />
     <None Remove="Sqls\Delta\v15.sql" />
+    <None Remove="Sqls\Delta\v16.sql" />
     <None Remove="Sqls\Delta\v2.sql" />
     <None Remove="Sqls\Delta\v3.sql" />
     <None Remove="Sqls\Delta\v4.sql" />
@@ -50,6 +51,7 @@
     <EmbeddedResource Include="Sqls\Delta\v13.sql" />
     <EmbeddedResource Include="Sqls\Delta\v14.sql" />
     <EmbeddedResource Include="Sqls\Delta\v15.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v16.sql" />
     <EmbeddedResource Include="Sqls\Delta\v2.sql" />
     <EmbeddedResource Include="Sqls\Delta\v3.sql" />
     <EmbeddedResource Include="Sqls\Delta\v4.sql" />

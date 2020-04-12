@@ -296,13 +296,102 @@ GO
 
 create view [dbo].[v_fin_grp_acnt_tranexp]
 as
-select  [hid] AS [hid],
-        [accountid] AS [accountid],
-		[TRANTYPE_EXP],
-		round(sum([tranamount_lc]), 2) AS [balance_lc]
-    from
-        [v_fin_document_item]
-		group by [hid], [accountid], [TRANTYPE_EXP];
+with docitem_curr1_basecurr as 
+(
+	select a.HID,
+		b.ACCOUNTID,
+		d.Expense,
+		CASE WHEN (d.[EXPENSE] = 1) THEN (b.[TRANAMOUNT] * -1)
+			 WHEN (d.[EXPENSE] = 0) THEN b.[TRANAMOUNT]
+			END as tranamount_lc
+	from t_fin_document as a
+		left outer join t_fin_document_item as b
+			on a.ID = b.DOCID and ( b.USECURR2 is null or b.USECURR2 = '')
+		inner join t_homedef as c
+			on a.HID = c.ID
+			and a.TRANCURR = c.BASECURR
+		inner join t_fin_tran_type as d
+			on b.TRANTYPE = d.ID		
+	),
+docitem_curr1_foreigncurr as 
+(
+	select a.HID,
+		b.ACCOUNTID,
+		d.Expense,
+		CASE WHEN (d.[EXPENSE] = 1) THEN (b.[TRANAMOUNT] * a.[EXGRATE] / 100 * -1)
+			 WHEN (d.[EXPENSE] = 0) THEN b.[TRANAMOUNT] * a.[EXGRATE] / 100
+        END as tranamount_lc
+	from (select HID, a1.ID, EXGRATE from t_fin_document as a1
+		inner join t_homedef as c
+			on a1.HID = c.ID
+			and a1.TRANCURR <> c.BASECURR 
+			and a1.EXGRATE IS NOT NULL) as a
+		left outer join t_fin_document_item as b
+			on a.ID = b.DOCID and ( b.USECURR2 is null or b.USECURR2 = '')
+		inner join t_fin_tran_type as d
+			on b.TRANTYPE = d.ID
+	),
+docitem_curr2_basecurr as 
+(
+	select a.HID,
+		b.ACCOUNTID,
+		d.Expense,
+		CASE WHEN (d.[EXPENSE] = 1) THEN (b.[TRANAMOUNT] * -1)
+			 WHEN (d.[EXPENSE] = 0) THEN b.[TRANAMOUNT]
+			END as tranamount_lc
+	from t_fin_document as a
+		inner join t_homedef as c
+			on a.HID = c.ID
+			and a.TRANCURR2 = c.BASECURR		
+		left outer join t_fin_document_item as b
+			on a.ID = b.DOCID and b.USECURR2 is not null and b.USECURR2 <> ''
+
+		inner join t_fin_tran_type as d
+			on b.TRANTYPE = d.ID
+	),
+docitem_curr2_foreigncurr as 
+(
+	select a.HID,
+		b.ACCOUNTID,
+		d.Expense,
+		CASE WHEN (d.[EXPENSE] = 1) THEN (b.[TRANAMOUNT] * a.[EXGRATE2] / 100 * -1)
+			 WHEN (d.[EXPENSE] = 0) THEN b.[TRANAMOUNT] * a.[EXGRATE2] / 100
+        END as tranamount_lc
+	from (select HID, a1.ID, EXGRATE2 from t_fin_document as a1
+		inner join t_homedef as c
+			on a1.HID = c.ID
+			and a1.TRANCURR2 IS NOT NULL AND a1.TRANCURR2 <> c.BASECURR 
+			and a1.EXGRATE2 IS NOT NULL) as a
+		left outer join t_fin_document_item as b
+			on a.ID = b.DOCID and b.USECURR2 is NOT null AND b.USECURR2 <> ''
+		inner join t_fin_tran_type as d
+			on b.TRANTYPE = d.ID
+	),
+docitems_all as (
+	select hid, accountid, expense, round(sum([tranamount_lc]), 2) AS [balance_lc] 
+	from docitem_curr1_basecurr
+	group by hid, ACCOUNTID, EXPENSE
+
+	union all
+	select hid, accountid, expense, round(sum([tranamount_lc]), 2) AS [balance_lc] 
+	from docitem_curr2_basecurr
+	group by hid, ACCOUNTID, EXPENSE
+
+	union all 
+	select hid, accountid, expense, round(sum([tranamount_lc]), 2) AS [balance_lc] 
+	from docitem_curr1_foreigncurr
+	group by hid, ACCOUNTID, EXPENSE
+
+	union all 
+	select hid, accountid, expense, round(sum([tranamount_lc]), 2) AS [balance_lc] 
+	from docitem_curr2_foreigncurr
+	group by hid, ACCOUNTID, EXPENSE
+	)
+
+select hid, accountid, expense as TRANTYPE_EXP, round(sum([balance_lc]), 2) AS [balance_lc] from
+docitems_all
+group by hid, accountid, expense;
+
 GO
 
 
@@ -372,14 +461,108 @@ GO
 
 CREATE VIEW [dbo].[v_fin_grp_cc_tranexp]
 AS
-SELECT  [hid],		
-        [controlcenterid],
-		[TRANTYPE_EXP],
-		round(sum([tranamount_lc]), 2) AS [balance_lc]
-FROM
-        [v_fin_document_item]
-		WHERE [controlcenterid] IS NOT NULL
-		GROUP BY [HID], [controlcenterid], [TRANTYPE_EXP];
+with docitem_curr1_basecurr as 
+(
+	select a.HID,
+		b.CONTROLCENTERID,
+		d.Expense,
+		CASE WHEN (d.[EXPENSE] = 1) THEN (b.[TRANAMOUNT] * -1)
+			 WHEN (d.[EXPENSE] = 0) THEN b.[TRANAMOUNT]
+			END as tranamount_lc
+	from (select HID, a1.ID from t_fin_document as a1
+		inner join t_homedef as c
+			on a1.HID = c.ID
+			and a1.TRANCURR = c.BASECURR  ) as a
+		left outer join (select DOCID, TRANTYPE, CONTROLCENTERID, TRANAMOUNT FROM t_fin_document_item 
+		WHERE CONTROLCENTERID IS NOT NULL AND ( USECURR2 is null or USECURR2 = '')
+		) as b
+			on a.ID = b.DOCID
+		inner join t_fin_tran_type as d
+			on b.TRANTYPE = d.ID	
+	),
+docitem_curr1_foreigncurr as 
+(
+	select a.HID,
+		b.CONTROLCENTERID,
+		d.Expense,
+		CASE WHEN (d.[EXPENSE] = 1) THEN (b.[TRANAMOUNT] * a.[EXGRATE] / 100 * -1)
+			 WHEN (d.[EXPENSE] = 0) THEN b.[TRANAMOUNT] * a.[EXGRATE] / 100
+        END as tranamount_lc
+	from  (select HID, a1.ID, EXGRATE from t_fin_document as a1
+		inner join t_homedef as c
+			on a1.HID = c.ID
+			and a1.TRANCURR <> c.BASECURR 
+			and a1.EXGRATE IS NOT NULL) as a
+		left outer join (select DOCID, TRANTYPE, CONTROLCENTERID, TRANAMOUNT FROM t_fin_document_item 
+		WHERE CONTROLCENTERID IS NOT NULL AND ( USECURR2 is null or USECURR2 = '')
+		)  as b
+			on a.ID = b.DOCID 
+		inner join t_fin_tran_type as d
+			on b.TRANTYPE = d.ID
+	),
+docitem_curr2_basecurr as 
+(
+	select a.HID,
+		b.CONTROLCENTERID,
+		d.Expense,
+		CASE WHEN (d.[EXPENSE] = 1) THEN (b.[TRANAMOUNT] * -1)
+			 WHEN (d.[EXPENSE] = 0) THEN b.[TRANAMOUNT]
+			END as tranamount_lc
+	from (select HID, a1.ID, EXGRATE2 from t_fin_document as a1
+		inner join t_homedef as c
+			on a1.HID = c.ID
+			and a1.TRANCURR2 = c.BASECURR ) as a
+		left outer join ( select DOCID, TRANTYPE, CONTROLCENTERID, TRANAMOUNT FROM t_fin_document_item 
+			WHERE CONTROLCENTERID IS NOT NULL and USECURR2 is NOT null AND USECURR2 <> '' 
+		) as b
+			on a.ID = b.DOCID
+		inner join t_fin_tran_type as d
+			on b.TRANTYPE = d.ID
+	),
+docitem_curr2_foreigncurr as 
+(
+	select a.HID,
+		b.CONTROLCENTERID,
+		d.Expense,
+		CASE WHEN (d.[EXPENSE] = 1) THEN (b.[TRANAMOUNT] * a.[EXGRATE2] / 100 * -1)
+			 WHEN (d.[EXPENSE] = 0) THEN b.[TRANAMOUNT] * a.[EXGRATE2] / 100
+        END as tranamount_lc
+	from (select HID, a1.ID, EXGRATE2 from t_fin_document as a1
+		inner join t_homedef as c
+			on a1.HID = c.ID
+			and a1.TRANCURR2 IS NOT NULL AND a1.TRANCURR2 <> c.BASECURR 
+			and a1.EXGRATE2 IS NOT NULL) as a
+		left outer join ( select DOCID, TRANTYPE, CONTROLCENTERID, TRANAMOUNT FROM t_fin_document_item 
+			WHERE CONTROLCENTERID IS NOT NULL and USECURR2 is NOT null AND USECURR2 <> '' 
+		) as b			
+			on a.ID = b.DOCID 
+		inner join t_fin_tran_type as d
+			on b.TRANTYPE = d.ID
+	),
+docitems_all as (
+	select hid, CONTROLCENTERID, expense, round(sum([tranamount_lc]), 2) AS [balance_lc] 
+	from docitem_curr1_basecurr
+	group by hid, CONTROLCENTERID, EXPENSE
+
+	union all
+	select hid, CONTROLCENTERID, expense, round(sum([tranamount_lc]), 2) AS [balance_lc] 
+	from docitem_curr2_basecurr
+	group by hid, CONTROLCENTERID, EXPENSE
+
+	union all 
+	select hid, CONTROLCENTERID, expense, round(sum([tranamount_lc]), 2) AS [balance_lc] 
+	from docitem_curr1_foreigncurr
+	group by hid, CONTROLCENTERID, EXPENSE
+
+	union all 
+	select hid, CONTROLCENTERID, expense, round(sum([tranamount_lc]), 2) AS [balance_lc] 
+	from docitem_curr2_foreigncurr
+	group by hid, CONTROLCENTERID, EXPENSE
+	)
+
+select hid, CONTROLCENTERID, expense as TRANTYPE_EXP, round(sum([balance_lc]), 2) AS [balance_lc] from
+docitems_all
+group by hid, CONTROLCENTERID, expense;
 GO
 
 /****** Object:  View [dbo].[v_fin_report_cc]    Script Date: 2017-04-22 8:11:26 PM ******/
@@ -448,14 +631,108 @@ GO
 
 CREATE VIEW [dbo].[v_fin_grp_order_tranexp]
 AS
-SELECT  [HID],
-        [ORDERID],
-		[TRANTYPE_EXP],
-		round(sum([tranamount_lc]), 2) AS [balance_lc]
-FROM
-        [v_fin_document_item]
-		WHERE [ORDERID] IS NOT NULL
-		GROUP BY [HID], [ORDERID], [TRANTYPE_EXP];
+with docitem_curr1_basecurr as 
+(
+	select a.HID,
+		b.ORDERID,
+		d.Expense,
+		CASE WHEN (d.[EXPENSE] = 1) THEN (b.[TRANAMOUNT] * -1)
+			 WHEN (d.[EXPENSE] = 0) THEN b.[TRANAMOUNT]
+			END as tranamount_lc
+	from (select HID, a1.ID from t_fin_document as a1
+		inner join t_homedef as c
+			on a1.HID = c.ID
+			and a1.TRANCURR = c.BASECURR  ) as a
+		left outer join (select DOCID, TRANTYPE, ORDERID, TRANAMOUNT FROM t_fin_document_item 
+		WHERE ORDERID IS NOT NULL AND ( USECURR2 is null or USECURR2 = '')
+		) as b
+			on a.ID = b.DOCID
+		inner join t_fin_tran_type as d
+			on b.TRANTYPE = d.ID	
+	),
+docitem_curr1_foreigncurr as 
+(
+	select a.HID,
+		b.ORDERID,
+		d.Expense,
+		CASE WHEN (d.[EXPENSE] = 1) THEN (b.[TRANAMOUNT] * a.[EXGRATE] / 100 * -1)
+			 WHEN (d.[EXPENSE] = 0) THEN b.[TRANAMOUNT] * a.[EXGRATE] / 100
+        END as tranamount_lc
+	from  (select HID, a1.ID, EXGRATE from t_fin_document as a1
+		inner join t_homedef as c
+			on a1.HID = c.ID
+			and a1.TRANCURR <> c.BASECURR 
+			and a1.EXGRATE IS NOT NULL) as a
+		left outer join (select DOCID, TRANTYPE, ORDERID, TRANAMOUNT FROM t_fin_document_item 
+		WHERE ORDERID IS NOT NULL AND ( USECURR2 is null or USECURR2 = '')
+		)  as b
+			on a.ID = b.DOCID 
+		inner join t_fin_tran_type as d
+			on b.TRANTYPE = d.ID
+	),
+docitem_curr2_basecurr as 
+(
+	select a.HID,
+		b.ORDERID,
+		d.Expense,
+		CASE WHEN (d.[EXPENSE] = 1) THEN (b.[TRANAMOUNT] * -1)
+			 WHEN (d.[EXPENSE] = 0) THEN b.[TRANAMOUNT]
+			END as tranamount_lc
+	from (select HID, a1.ID, EXGRATE2 from t_fin_document as a1
+		inner join t_homedef as c
+			on a1.HID = c.ID
+			and a1.TRANCURR2 = c.BASECURR ) as a
+		left outer join ( select DOCID, TRANTYPE, ORDERID, TRANAMOUNT FROM t_fin_document_item 
+			WHERE ORDERID IS NOT NULL and USECURR2 is NOT null AND USECURR2 <> '' 
+		) as b
+			on a.ID = b.DOCID
+		inner join t_fin_tran_type as d
+			on b.TRANTYPE = d.ID
+	),
+docitem_curr2_foreigncurr as 
+(
+	select a.HID,
+		b.ORDERID,
+		d.Expense,
+		CASE WHEN (d.[EXPENSE] = 1) THEN (b.[TRANAMOUNT] * a.[EXGRATE2] / 100 * -1)
+			 WHEN (d.[EXPENSE] = 0) THEN b.[TRANAMOUNT] * a.[EXGRATE2] / 100
+        END as tranamount_lc
+	from (select HID, a1.ID, EXGRATE2 from t_fin_document as a1
+		inner join t_homedef as c
+			on a1.HID = c.ID
+			and a1.TRANCURR2 IS NOT NULL AND a1.TRANCURR2 <> c.BASECURR 
+			and a1.EXGRATE2 IS NOT NULL) as a
+		left outer join ( select DOCID, TRANTYPE, ORDERID, TRANAMOUNT FROM t_fin_document_item 
+			WHERE ORDERID IS NOT NULL and USECURR2 is NOT null AND USECURR2 <> '' 
+		) as b			
+			on a.ID = b.DOCID 
+		inner join t_fin_tran_type as d
+			on b.TRANTYPE = d.ID
+	),
+docitems_all as (
+	select hid, ORDERID, expense, round(sum([tranamount_lc]), 2) AS [balance_lc] 
+	from docitem_curr1_basecurr
+	group by hid, ORDERID, EXPENSE
+
+	union all
+	select hid, ORDERID, expense, round(sum([tranamount_lc]), 2) AS [balance_lc] 
+	from docitem_curr2_basecurr
+	group by hid, ORDERID, EXPENSE
+
+	union all 
+	select hid, ORDERID, expense, round(sum([tranamount_lc]), 2) AS [balance_lc] 
+	from docitem_curr1_foreigncurr
+	group by hid, ORDERID, EXPENSE
+
+	union all 
+	select hid, ORDERID, expense, round(sum([tranamount_lc]), 2) AS [balance_lc] 
+	from docitem_curr2_foreigncurr
+	group by hid, ORDERID, EXPENSE
+	)
+
+select hid, ORDERID, expense as TRANTYPE_EXP, round(sum([balance_lc]), 2) AS [balance_lc] from
+docitems_all
+group by hid, ORDERID, expense;
 
 GO
 
