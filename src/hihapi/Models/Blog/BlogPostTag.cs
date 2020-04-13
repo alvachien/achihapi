@@ -5,8 +5,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace hihapi.Models
 {
-    [Table("T_BLOG_POST_COLL")]
-    public class BlogPostCollection
+    [Table("T_BLOG_POST_TAG")]
+    public class BlogPostTag
     {
         [Key]
         [Required]
@@ -15,10 +15,9 @@ namespace hihapi.Models
 
         [Key]
         [Required]
-        [Column("CollID", TypeName = "INT")]
-        public int CollectionID { get; set; }
+        [Column("Tag", TypeName = "NVARCHAR(20)")]
+        public string Tag { get; set; }
 
-        public BlogCollection BlogCollection { get; set; }
         public BlogPost BlogPost { get; set; }
     }
 }

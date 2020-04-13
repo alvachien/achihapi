@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using Microsoft.AspNet.OData;
@@ -10,28 +9,29 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using hihapi.Models;
+using hihapi.Utilities;
 
 namespace hihapi.Controllers
 {
-    public class BlogFormatsController : ODataController
+    public class BlogPostTagsController : ODataController
     {
         private readonly hihDataContext _context;
 
-        public BlogFormatsController(hihDataContext context)
+        public BlogPostTagsController(hihDataContext context)
         {
             _context = context;
         }
 
         [EnableQuery]
-        public IQueryable<BlogFormat> Get()
+        public IQueryable<BlogPostTag> Get()
         {
-            return _context.BlogFormats;
+            return _context.BlogPostTags;
         }
 
-        [EnableQuery]
-        public SingleResult<BlogFormat> Get([FromODataUri] int id)
-        {
-            return SingleResult.Create(_context.BlogFormats.Where(p => p.ID == id));
-        }
+        //[EnableQuery]
+        //public SingleResult<BlogPostTag> Get([FromODataUri] int id)
+        //{
+        //    return SingleResult.Create(_context.BlogPostTags.Where(p => p.ID == id));
+        //}
     }
 }

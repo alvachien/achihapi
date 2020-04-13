@@ -51,6 +51,11 @@ namespace hihapi.Models
         // public DbSet<FinanceReportOrderBalanceView> FinanceReportOrderBalanceView { get; set; }
         public DbSet<LearnCategory> LearnCategories { get; set; }
         public DbSet<LearnObject> LearnObjects { get; set; }
+        public DbSet<BlogFormat> BlogFormats { get; set;  }
+        public DbSet<BlogCollection> BlogCollections { get; set; }
+        public DbSet<BlogPost> BlogPosts { get; set; }
+        public DbSet<BlogPostCollection> BlogPostCollections { get; set; }
+        public DbSet<BlogPostTag> BlogPostTags { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -595,6 +600,74 @@ namespace hihapi.Models
                     .HasForeignKey(d => d.HomeID)
                     .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("FK_t_learn_obj_HID");
+            });
+
+            // Blogs part
+            modelBuilder.Entity<BlogFormat>(entity =>
+            {
+            });
+            modelBuilder.Entity<BlogCollection>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.ID)
+                        .UseIdentityColumn();
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                }
+            });
+            modelBuilder.Entity<BlogPost>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.ID)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.ID)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+            });
+
+            modelBuilder.Entity<BlogPostCollection>(entity =>
+            {
+                entity.HasKey(e => new { e.PostID, e.CollectionID });
+
+                entity.HasOne(d => d.BlogCollection)
+                    .WithMany(p => p.BlogPostCollections)
+                    .HasForeignKey(d => d.CollectionID)
+                    .HasConstraintName("FK_t_blog_post_coll_coll");
+                entity.HasOne(d => d.BlogPost)
+                    .WithMany(p => p.BlogPostCollections)
+                    .HasForeignKey(d => d.PostID)
+                    .HasConstraintName("FK_t_blog_post_coll_post");
+            });
+            modelBuilder.Entity<BlogPostTag>(entity =>
+            {
+                entity.HasKey(e => new { e.PostID, e.Tag });
+
+                entity.HasOne(d => d.BlogPost)
+                    .WithMany(p => p.BlogPostTags)
+                    .HasForeignKey(d => d.PostID)
+                    .HasConstraintName("FK_t_blog_post_tag_post");
             });
         }
     }

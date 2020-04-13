@@ -276,6 +276,11 @@ namespace hihapi
             tmpLoanDocEntity.Collection
                 .Action("PostRepayDocument")
                 .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            modelBuilder.EntitySet<BlogFormat>("BlogFormats");
+            modelBuilder.EntitySet<BlogCollection>("BlogCollections");
+            modelBuilder.EntitySet<BlogPost>("BlogPosts");
+            modelBuilder.EntitySet<BlogPostCollection>("BlogPostCollections");
+            modelBuilder.EntitySet<BlogPostTag>("BlogPostTags");
 
             var model = modelBuilder.GetEdmModel();
             app.UseODataBatching();

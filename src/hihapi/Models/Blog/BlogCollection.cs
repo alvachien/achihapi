@@ -8,12 +8,16 @@ namespace hihapi.Models
     [Table("T_BLOG_COLL")]
     public class BlogCollection
     {
+        public BlogCollection()
+        {
+            BlogPostCollections = new HashSet<BlogPostCollection>();
+        }
+
         [Key]
         [Required]
         [Column("ID", TypeName = "INT")]
         public int ID { get; set; }
 
-        [Key]
         [Required]
         [Column("Owner", TypeName = "NVARCHAR(40)")]
         public string Owner { get; set; }
@@ -26,5 +30,7 @@ namespace hihapi.Models
         [StringLength(50)]
         [Column("Comment", TypeName = "NVARCHAR(50)")]
         public string Comment { get; set; }
+
+        public ICollection<BlogPostCollection> BlogPostCollections { get; set; }
     }
 }

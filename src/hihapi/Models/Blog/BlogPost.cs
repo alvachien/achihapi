@@ -13,6 +13,12 @@ namespace hihapi.Models
         public const int BlogPostStatus_PublishAsPrivate = 3;
         public const int BlogPostStatus_Deleted = 4;
 
+        public BlogPost()
+        {
+            BlogPostCollections = new HashSet<BlogPostCollection>();
+            BlogPostTags = new HashSet<BlogPostTag>();
+        }
+
         [Key]
         [Required]
         [Column("ID", TypeName = "INT")]
@@ -45,5 +51,8 @@ namespace hihapi.Models
         [Column("UPDATEDAT")]
         [DataType(DataType.Date)]
         public DateTime? UpdatedAt { get; set; }
+
+        public ICollection<BlogPostCollection> BlogPostCollections { get; set; }
+        public ICollection<BlogPostTag> BlogPostTags { get; set; }
     }
 }
