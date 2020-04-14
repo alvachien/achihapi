@@ -92,6 +92,8 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            ctgy.Createdby = usrName;
+            ctgy.CreatedAt = DateTime.Now;
             _context.FinDocumentTypes.Add(ctgy);
             await _context.SaveChangesAsync();
 
@@ -136,6 +138,8 @@ namespace hihapi.Controllers
             if (!update.IsValid(this._context))
                 throw new BadRequestException("Inputted Object IsValid failed");
 
+            update.UpdatedAt = DateTime.Now;
+            update.Updatedby = usrName;
             _context.Entry(update).State = EntityState.Modified;
             try
             {

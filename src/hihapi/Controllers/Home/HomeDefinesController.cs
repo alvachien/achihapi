@@ -123,6 +123,8 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            homedef.Createdby = usrName;
+            homedef.CreatedAt = DateTime.Now;
             _context.HomeDefines.Add(homedef);
 
             await _context.SaveChangesAsync();
@@ -177,6 +179,8 @@ namespace hihapi.Controllers
             }
             else
             {
+                update.Updatedby = usrName;
+                update.UpdatedAt = DateTime.Now;
                 _context.Entry(existinghd).CurrentValues.SetValues(update);
 
                 var dbmems = _context.HomeMembers.Where(p => p.HomeID == key).ToList();

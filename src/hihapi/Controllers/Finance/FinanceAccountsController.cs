@@ -117,6 +117,8 @@ namespace hihapi.Controllers
             if (!account.IsValid(this._context))
                 return BadRequest();
 
+            account.CreatedAt = DateTime.Now;
+            account.Createdby = usrName;
             _context.FinanceAccount.Add(account);
             await _context.SaveChangesAsync();
 
@@ -161,6 +163,8 @@ namespace hihapi.Controllers
             if (!update.IsValid(this._context))
                 return BadRequest();
 
+            update.Updatedby = usrName;
+            update.UpdatedAt = DateTime.Now;
             _context.Entry(update).State = EntityState.Modified;
             try
             {

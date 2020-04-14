@@ -87,6 +87,8 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            obj.Createdby = usrName;
+            obj.CreatedAt = DateTime.Now;
             _context.LearnObjects.Add(obj);
             await _context.SaveChangesAsync();
 
@@ -130,6 +132,8 @@ namespace hihapi.Controllers
             if (!update.IsValid(this._context))
                 throw new BadRequestException("Inputted Object IsValid Failed");
 
+            update.Updatedby = usrName;
+            update.UpdatedAt = DateTime.Now;
             _context.Entry(update).State = EntityState.Modified;
             try
             {

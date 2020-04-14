@@ -116,6 +116,8 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            order.CreatedAt = DateTime.Now;
+            order.Createdby = usrName;
             _context.FinanceOrder.Add(order);
             await _context.SaveChangesAsync();
 
@@ -160,6 +162,8 @@ namespace hihapi.Controllers
             if (!update.IsValid(this._context))
                 return BadRequest();
 
+            update.Updatedby = usrName;
+            update.UpdatedAt = DateTime.Now;
             _context.Entry(update).State = EntityState.Modified;
             try
             {

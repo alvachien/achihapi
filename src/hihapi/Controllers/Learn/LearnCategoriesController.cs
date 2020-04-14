@@ -116,6 +116,8 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            ctgy.CreatedAt = DateTime.Now;
+            ctgy.Createdby = usrName;
             _context.LearnCategories.Add(ctgy);
             await _context.SaveChangesAsync();
 
@@ -159,6 +161,8 @@ namespace hihapi.Controllers
             if (!update.IsValid(this._context))
                 return BadRequest();
 
+            update.UpdatedAt = DateTime.Now;
+            update.Updatedby = usrName;
             _context.Entry(update).State = EntityState.Modified;
             try
             {

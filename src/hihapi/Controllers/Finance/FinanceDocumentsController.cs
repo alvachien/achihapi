@@ -129,6 +129,8 @@ namespace hihapi.Controllers
             if (!document.IsValid(this._context))
                 return BadRequest();
 
+            document.CreatedAt = DateTime.Now;
+            document.Createdby = usrName;
             _context.FinanceDocument.Add(document);
             await _context.SaveChangesAsync();
 
@@ -173,6 +175,8 @@ namespace hihapi.Controllers
             if (!update.IsValid(this._context))
                 return BadRequest();
 
+            update.UpdatedAt = DateTime.Now;
+            update.Updatedby = usrName;
             _context.Entry(update).State = EntityState.Modified;
             try
             {
@@ -321,6 +325,8 @@ namespace hihapi.Controllers
                 {
                     throw new BadRequestException("Tmp Doc Item miss amount");
                 }
+                tmpdocitem.CreatedAt = DateTime.Now;
+                tmpdocitem.Createdby = usrName;
             }
 
             // Database update
@@ -333,12 +339,16 @@ namespace hihapi.Controllers
             {
                 try
                 {
+                    createContext.DocumentInfo.Createdby = usrName;
+                    createContext.DocumentInfo.CreatedAt = DateTime.Now;
                     var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
                     await _context.SaveChangesAsync();
                     origdocid = docEntity.Entity.ID;
 
                     // 2, Create the account
                     createContext.AccountInfo.ExtraDP.RefenceDocumentID = origdocid;
+                    createContext.AccountInfo.CreatedAt = DateTime.Now;
+                    createContext.AccountInfo.Createdby = usrName;
                     var acntEntity = _context.FinanceAccount.Add(createContext.AccountInfo);
                     await _context.SaveChangesAsync();
                     dpaccountid = acntEntity.Entity.ID;
@@ -456,6 +466,9 @@ namespace hihapi.Controllers
                 {
                     throw new BadRequestException("Amount is zero!");
                 }
+
+                tdoc.Createdby = usrName;
+                tdoc.CreatedAt = DateTime.Now;
             }
 
             // Database update
@@ -469,12 +482,16 @@ namespace hihapi.Controllers
                 try
                 {
                     // 1. Create document
+                    createContext.DocumentInfo.Createdby = usrName;
+                    createContext.DocumentInfo.CreatedAt = DateTime.Now;
                     var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
                     await _context.SaveChangesAsync();
                     origdocid = docEntity.Entity.ID;
 
                     // 2, Create the account
                     createContext.AccountInfo.ExtraLoan.RefDocID = origdocid;
+                    createContext.AccountInfo.CreatedAt = DateTime.Now;
+                    createContext.AccountInfo.Createdby = usrName;
                     var acntEntity = _context.FinanceAccount.Add(createContext.AccountInfo);
                     await _context.SaveChangesAsync();
                     dpaccountid = acntEntity.Entity.ID;
@@ -634,12 +651,16 @@ namespace hihapi.Controllers
                 try
                 {
                     // 1. Create the document
+                    vmFIDoc.Createdby = usrName;
+                    vmFIDoc.CreatedAt = DateTime.Now;
                     var docEntity = _context.FinanceDocument.Add(vmFIDoc);
                     await _context.SaveChangesAsync();
                     origdocid = docEntity.Entity.ID;
 
                     // 2, Create the account
                     vmAccount.ExtraAsset.RefenceBuyDocumentID = origdocid;
+                    vmAccount.CreatedAt = DateTime.Now;
+                    vmAccount.Createdby = usrName;
                     var acntEntity = _context.FinanceAccount.Add(vmAccount);
                     await _context.SaveChangesAsync();
                     assetaccountid = acntEntity.Entity.ID;
@@ -826,6 +847,8 @@ namespace hihapi.Controllers
                 try
                 {
                     // 1. Create the document
+                    vmFIDoc.Createdby = usrName;
+                    vmFIDoc.CreatedAt = DateTime.Now;
                     var docEntity = _context.FinanceDocument.Add(vmFIDoc);
                     await _context.SaveChangesAsync();
                     origdocid = docEntity.Entity.ID;
@@ -999,6 +1022,8 @@ namespace hihapi.Controllers
                 try
                 {
                     // 1. Create the document
+                    vmFIDoc.CreatedAt = DateTime.Now;
+                    vmFIDoc.Createdby = usrName;
                     var docEntity = _context.FinanceDocument.Add(vmFIDoc);
                     await _context.SaveChangesAsync();
                     origdocid = docEntity.Entity.ID;

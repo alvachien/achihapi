@@ -95,6 +95,8 @@ namespace hihapi.Controllers
             if (!ctgy.IsValid(this._context))
                 throw new BadRequestException("Inputted Object IsValid failed");
 
+            ctgy.CreatedAt = DateTime.Now;
+            ctgy.Createdby = usrName;
             _context.FinTransactionType.Add(ctgy);
             await _context.SaveChangesAsync();
 
@@ -139,6 +141,8 @@ namespace hihapi.Controllers
             if (!update.IsValid(this._context))
                 throw new BadRequestException("Inputted Object IsValid failed");
 
+            update.UpdatedAt = DateTime.Now;
+            update.Updatedby = usrName;                 
             _context.Entry(update).State = EntityState.Modified;
             try
             {

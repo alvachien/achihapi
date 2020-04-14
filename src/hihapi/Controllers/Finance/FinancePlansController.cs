@@ -83,6 +83,8 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            plan.Createdby = usrName;
+            plan.CreatedAt = DateTime.Now;
             _context.FinancePlan.Add(plan);
             await _context.SaveChangesAsync();
 
@@ -127,6 +129,8 @@ namespace hihapi.Controllers
             if (!update.IsValid(this._context))
                 throw new BadRequestException("Inputted Object IsValid failed");
 
+            update.UpdatedAt = DateTime.Now;
+            update.Updatedby = usrName;
             _context.Entry(update).State = EntityState.Modified;
             try
             {

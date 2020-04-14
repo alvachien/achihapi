@@ -196,12 +196,16 @@ namespace hihapi.Controllers
                 try
                 {
                     // 1. Create the document
+                    createContext.DocumentInfo.Createdby = usrName;
+                    createContext.DocumentInfo.CreatedAt = DateTime.Now;
                     var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
                     _context.SaveChanges();
                     origdocid = docEntity.Entity.ID;
 
                     // 2. Update the tmp doc
                     docLoanTmp.ReferenceDocumentID = origdocid;
+                    docLoanTmp.UpdatedAt = DateTime.Now;
+                    docLoanTmp.Updatedby = usrName;
                     _context.FinanceTmpLoanDocument.Update(docLoanTmp);
                     _context.SaveChanges();
 
@@ -209,6 +213,8 @@ namespace hihapi.Controllers
                     if (Decimal.Compare(acntBalance, 0) == 0)
                     {
                         loanAccountHeader.Status = FinanceAccountStatus.Closed;
+                        loanAccountHeader.Updatedby = usrName;
+                        loanAccountHeader.UpdatedAt = DateTime.Now;
                         _context.FinanceAccount.Update(loanAccountHeader);
                         _context.SaveChanges();
                     }

@@ -121,6 +121,8 @@ namespace hihapi.Controllers
             if (!ctgy.IsValid(this._context))
                 return BadRequest();
 
+            ctgy.Createdby = usrName;
+            ctgy.CreatedAt = DateTime.Now;
             _context.FinAccountCategories.Add(ctgy);
             await _context.SaveChangesAsync();
 
@@ -165,6 +167,8 @@ namespace hihapi.Controllers
             if (!update.IsValid(this._context))
                 return BadRequest();
 
+            update.UpdatedAt = DateTime.Now;
+            update.Updatedby = usrName;
             _context.Entry(update).State = EntityState.Modified;
             try
             {

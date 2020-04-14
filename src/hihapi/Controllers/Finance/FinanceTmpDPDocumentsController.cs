@@ -150,12 +150,16 @@ namespace hihapi.Controllers
                 try
                 {
                     // 1. Create the document
+                    findoc.CreatedAt = DateTime.Now;
+                    findoc.Createdby = usrName;
                     var docEntity = _context.FinanceDocument.Add(findoc);
                     _context.SaveChanges();
                     origdocid = docEntity.Entity.ID;
 
                     // 2. Update the tmp doc
                     tpdoc.ReferenceDocumentID = origdocid;
+                    tpdoc.UpdatedAt = DateTime.Now;
+                    tpdoc.Updatedby = usrName;
                     _context.FinanceTmpDPDocument.Update(tpdoc);
                     _context.SaveChanges();
 
@@ -163,6 +167,8 @@ namespace hihapi.Controllers
                     if (leftItemsCnt == 0)
                     {
                         dpAccount.Status = FinanceAccountStatus.Closed;
+                        dpAccount.Updatedby = usrName;
+                        dpAccount.UpdatedAt = DateTime.Now;
                         _context.FinanceAccount.Update(dpAccount);
                         _context.SaveChanges();
                     }
