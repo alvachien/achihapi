@@ -16,6 +16,8 @@ namespace hihapi
     {
         public static int Main(string[] args)
         {
+#if DEBUG
+#else
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -31,22 +33,32 @@ namespace hihapi
                     flushToDiskInterval: TimeSpan.FromSeconds(1))
                 //.WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}", theme: AnsiConsoleTheme.Literate)
                 .CreateLogger();
+#endif
 
             try
             {
                 var host = CreateWebHostBuilder(args).Build();
+#if DEBUG
+#else
                 Log.Information("Starting host...");
+#endif
                 host.Run();
                 return 0;
             }
             catch (Exception ex)
             {
+#if DEBUG
+#else
                 Log.Fatal(ex, "Host terminated unexpectedly.");
+#endif
                 return 1;
             }
             finally
             {
+#if DEBUG
+#else
                 Log.CloseAndFlush();
+#endif
             }
         }
 

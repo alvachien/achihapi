@@ -339,3 +339,8 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database 
 healthchecksdb
+
+# Project specific
+uploads/
+src/achihapi/uploads/
+

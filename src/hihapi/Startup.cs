@@ -19,6 +19,7 @@ using Microsoft.AspNet.OData.Batch;
 using hihapi.Models;
 using Microsoft.AspNetCore.Routing;
 using IdentityServer4.AccessTokenValidation;
+using System.IO;
 
 namespace hihapi
 {
@@ -30,11 +31,18 @@ namespace hihapi
         {
             Configuration = configuration;
             Environment = env;
+
+            UploadFolder = Path.Combine(env.ContentRootPath, @"uploads");
+            if (!Directory.Exists(UploadFolder))
+            {
+                Directory.CreateDirectory(UploadFolder);
+            }
         }
 
         public IConfiguration Configuration { get; }
         public IWebHostEnvironment Environment { get; }
         public string ConnectionString { get; private set; }
+        internal static String UploadFolder { get; private set; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
