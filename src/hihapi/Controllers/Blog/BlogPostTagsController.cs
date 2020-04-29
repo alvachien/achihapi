@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using hihapi.Models;
 using hihapi.Utilities;
+using System;
 
 namespace hihapi.Controllers
 {
@@ -25,7 +26,29 @@ namespace hihapi.Controllers
         [EnableQuery]
         public IQueryable<BlogPostTag> Get()
         {
-            return _context.BlogPostTags;
+            // User
+            string usrName;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var tags = from post in _context.BlogPosts
+                       where post.Owner == usrName
+                       select new { PostID = post.ID } into postids
+                       join posttags in _context.BlogPostTags
+                        on postids.PostID equals posttags.PostID
+                       select posttags;
+
+            return tags;
         }
 
         //[EnableQuery]
