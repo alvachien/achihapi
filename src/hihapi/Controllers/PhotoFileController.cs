@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -43,9 +44,6 @@ namespace hihapi.Controllers
             if (Request.Form.Files.Count <= 0)
                 return BadRequest("No Files");
 
-            // Only care about the first file
-            var file = Request.Form.Files[0];
-
             String usrName = String.Empty;
             try
             {
@@ -58,17 +56,70 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var filename1 = file.FileName;
-            var idx1 = filename1.LastIndexOf('.');
-            var fileext = filename1.Substring(idx1);
-            var newfilename = Guid.NewGuid().ToString("N") + fileext;
-
-            using (var fileStream = new FileStream(Path.Combine(Startup.UploadFolder, newfilename), FileMode.Create))
+            var jsonresults = new List<PhotoFileUploadResult>();
+            if (files.Count > 0)
             {
-                await file.CopyToAsync(fileStream);
+                foreach (var file in files)
+                {
+                    var filename1 = file.FileName;
+                    var idx1 = filename1.LastIndexOf('.');
+                    var fileext = filename1.Substring(idx1);
+                    var newfilename = Guid.NewGuid().ToString("N") + fileext;
+
+                    using (var fileStream = new FileStream(Path.Combine(Startup.UploadFolder, newfilename), FileMode.Create))
+                    {
+                        await file.CopyToAsync(fileStream);
+                    }
+
+                    jsonresults.Add(new PhotoFileUploadResult
+                    {
+                        name = filename1,
+                        type = fileext == ".png" ? "image/png" : "image/jpeg",
+                        size = (int)file.Length,
+                        progress = "1.0",
+                        url = "/api/PhotoFile/" + newfilename,
+                        thumbnail_url = "/api/PhotoFile/" + newfilename,
+                        delete_url = "/api/PhotoFile/" + newfilename,
+                        delete_type = "DELETE",
+                    });
+                }
+            }
+            if (Request.Form.Files.Count > 0)
+            {
+                foreach (var file in Request.Form.Files)
+                {
+                    var filename1 = file.FileName;
+                    var idx1 = filename1.LastIndexOf('.');
+                    var fileext = filename1.Substring(idx1);
+                    var newfilename = Guid.NewGuid().ToString("N") + fileext;
+
+                    using (var fileStream = new FileStream(Path.Combine(Startup.UploadFolder, newfilename), FileMode.Create))
+                    {
+                        await file.CopyToAsync(fileStream);
+                    }
+
+                    jsonresults.Add(new PhotoFileUploadResult
+                    {
+                        name = filename1,
+                        type = fileext == ".png" ? "image/png" : "image/jpeg",
+                        size = (int)file.Length,
+                        progress = "1.0",
+                        url = "/api/PhotoFile/" + newfilename,
+                        thumbnail_url = "/api/PhotoFile/" + newfilename,
+                        delete_url = "/api/PhotoFile/" + newfilename,
+                        delete_type = "DELETE",
+                    });
+                }
             }
 
-            return Ok(filename1);
+            if (jsonresults.Count <= 0)
+            {
+                return Problem();
+            }
+            else
+            {
+                return new JsonResult(jsonresults.ToArray());
+            }
         }
 
         // PUT: api/PhotoFile/5
