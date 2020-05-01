@@ -285,6 +285,7 @@ namespace hihapi
                 .Action("PostRepayDocument")
                 .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
             modelBuilder.EntitySet<BlogFormat>("BlogFormats");
+            modelBuilder.EntitySet<BlogUserSetting>("BlogUserSettings");
             modelBuilder.EntitySet<BlogCollection>("BlogCollections");
             modelBuilder.EntitySet<BlogPost>("BlogPosts");
             modelBuilder.EntitySet<BlogPostCollection>("BlogPostCollections");

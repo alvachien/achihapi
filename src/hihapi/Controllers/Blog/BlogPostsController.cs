@@ -25,16 +25,46 @@ namespace hihapi.Controllers
             _context = context;
         }
 
+        [Authorize]
         [EnableQuery]
         public IQueryable<BlogPost> Get()
         {
-            return _context.BlogPosts;
+            string usrName;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            return _context.BlogPosts.Where(p => p.Owner == usrName);
         }
 
+        [Authorize]
         [EnableQuery]
         public SingleResult<BlogPost> Get([FromODataUri] int id)
         {
-            return SingleResult.Create(_context.BlogPosts.Where(p => p.ID == id));
+            string usrName;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            return SingleResult.Create(_context.BlogPosts.Where(p => p.ID == id && p.Owner == usrName));
         }
 
         [Authorize]
@@ -62,6 +92,13 @@ namespace hihapi.Controllers
             catch
             {
                 throw new UnauthorizedAccessException();
+            }
+
+            // Check setting
+            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
+            if (setting == null)
+            {
+                throw new BadRequestException(" User has no setting ");
             }
 
             post.CreatedAt = DateTime.Now;
@@ -103,6 +140,13 @@ namespace hihapi.Controllers
             catch
             {
                 throw new UnauthorizedAccessException();
+            }
+
+            // Check setting
+            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
+            if (setting == null)
+            {
+                throw new BadRequestException(" User has no setting ");
             }
 
             update.UpdatedAt = DateTime.Now;
@@ -152,6 +196,13 @@ namespace hihapi.Controllers
             catch
             {
                 throw new UnauthorizedAccessException();
+            }
+
+            // Check setting
+            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
+            if (setting == null)
+            {
+                throw new BadRequestException(" User has no setting ");
             }
 
             //if (!cc.IsDeleteAllowed(this._context))

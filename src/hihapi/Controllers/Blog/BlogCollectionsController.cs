@@ -10,6 +10,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using hihapi.Models;
 using hihapi.Utilities;
+using Microsoft.AspNetCore.Authorization;
+using System;
+using hihapi.Exceptions;
 
 namespace hihapi.Controllers
 {
@@ -22,10 +25,26 @@ namespace hihapi.Controllers
             _context = context;
         }
 
+        [Authorize]
         [EnableQuery]
         public IQueryable<BlogCollection> Get()
         {
-            return _context.BlogCollections;
+            // User
+            string usrName;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            return _context.BlogCollections.Where(p => p.Owner == usrName);
         }
 
         //[EnableQuery]
@@ -38,11 +57,45 @@ namespace hihapi.Controllers
         /// <summary>
         /// Support for creating BlogCollections
         /// </summary>
+        [Authorize]
         public async Task<IActionResult> Post([FromBody] BlogCollection coll)
         {
             if (!ModelState.IsValid)
             {
                 HIHAPIUtility.HandleModalStateError(ModelState);
+            }
+
+            // User
+            string usrName;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                if (coll.Owner != null)
+                {
+                    if (String.CompareOrdinal(coll.Owner, usrName) != 0)
+                    {
+                        throw new UnauthorizedAccessException();
+                    }
+                }
+                else
+                {
+                    coll.Owner = usrName;
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check setting
+            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
+            if (setting == null)
+            {
+                throw new BadRequestException(" User has no setting ");
             }
 
             _context.BlogCollections.Add(coll);
@@ -55,6 +108,7 @@ namespace hihapi.Controllers
         /// <summary>
         /// Support for updating BlogCollections
         /// </summary>
+        [Authorize]
         public async Task<IActionResult> Put([FromODataUri] int id, [FromBody] BlogCollection update)
         {
             if (!ModelState.IsValid)
@@ -62,6 +116,33 @@ namespace hihapi.Controllers
                 return BadRequest(ModelState);
             }
 
+            // User
+            string usrName;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                if (String.CompareOrdinal(update.Owner, usrName) != 0)
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check setting
+            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
+            if (setting == null)
+            {
+                throw new BadRequestException(" User has no setting ");
+            }
+
+            // Check ID
             if (id != update.ID)
             {
                 return BadRequest();
@@ -91,15 +172,42 @@ namespace hihapi.Controllers
         /// <summary>
         /// Support for deleting BlogCollections by key.
         /// </summary>
+        [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
-            var currency = await _context.BlogCollections.FindAsync(key);
-            if (currency == null)
+            var record = await _context.BlogCollections.FindAsync(key);
+            if (record == null)
             {
                 return NotFound();
             }
 
-            _context.BlogCollections.Remove(currency);
+            // User
+            string usrName;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                if (String.CompareOrdinal(record.Owner, usrName) != 0)
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check setting
+            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
+            if (setting == null)
+            {
+                throw new BadRequestException(" User has no setting ");
+            }
+
+            _context.BlogCollections.Remove(record);
             await _context.SaveChangesAsync();
 
             return StatusCode(204); // HttpStatusCode.NoContent
@@ -109,6 +217,7 @@ namespace hihapi.Controllers
         /// <summary>
         /// Support for partial updates of BlogCollections
         /// </summary>
+        [Authorize]
         public async Task<IActionResult> Patch([FromODataUri] int id, [FromBody] Delta<BlogCollection> coll)
         {
             if (!ModelState.IsValid)
@@ -120,6 +229,32 @@ namespace hihapi.Controllers
             if (entity == null)
             {
                 return NotFound();
+            }
+
+            // User
+            string usrName;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                if (String.CompareOrdinal(entity.Owner, usrName) != 0)
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check setting
+            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
+            if (setting == null)
+            {
+                throw new BadRequestException(" User has no setting ");
             }
 
             coll.Patch(entity);

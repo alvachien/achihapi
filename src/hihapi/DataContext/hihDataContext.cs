@@ -52,6 +52,7 @@ namespace hihapi.Models
         public DbSet<LearnCategory> LearnCategories { get; set; }
         public DbSet<LearnObject> LearnObjects { get; set; }
         public DbSet<BlogFormat> BlogFormats { get; set;  }
+        public DbSet<BlogUserSetting> BlogUserSettings { get; set; }
         public DbSet<BlogCollection> BlogCollections { get; set; }
         public DbSet<BlogPost> BlogPosts { get; set; }
         public DbSet<BlogPostCollection> BlogPostCollections { get; set; }
@@ -603,6 +604,9 @@ namespace hihapi.Models
             });
 
             // Blogs part
+            modelBuilder.Entity<BlogUserSetting>(entity =>
+            {
+            });
             modelBuilder.Entity<BlogFormat>(entity =>
             {
             });

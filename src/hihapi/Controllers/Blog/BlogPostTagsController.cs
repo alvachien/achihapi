@@ -11,6 +11,7 @@ using Newtonsoft.Json.Linq;
 using hihapi.Models;
 using hihapi.Utilities;
 using System;
+using Microsoft.AspNetCore.Authorization;
 
 namespace hihapi.Controllers
 {
@@ -23,6 +24,7 @@ namespace hihapi.Controllers
             _context = context;
         }
 
+        [Authorize]
         [EnableQuery]
         public IQueryable<BlogPostTag> Get()
         {

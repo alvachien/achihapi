@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace hihapi.Models.Blog
+namespace hihapi.Models
 {
     [Table("T_BLOG_SETTING")]
     public class BlogUserSetting

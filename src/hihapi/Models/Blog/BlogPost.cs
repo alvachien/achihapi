@@ -33,8 +33,12 @@ namespace hihapi.Models
         public int Format { get; set; }
 
         [Required]
-        [Column("Title", TypeName = "NVARCHAR(100)")]
+        [Column("Title", TypeName = "NVARCHAR(50)")]
         public string Title { get; set; }
+
+        [Required]
+        [Column("Brief", TypeName = "NVARCHAR(100)")]
+        public string Brief { get; set; }
 
         [Required]
         [Column("Content", TypeName = "NVARCHAR(MAX)")]

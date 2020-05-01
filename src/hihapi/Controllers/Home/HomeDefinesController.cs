@@ -125,6 +125,11 @@ namespace hihapi.Controllers
 
             homedef.Createdby = usrName;
             homedef.CreatedAt = DateTime.Now;
+            foreach(var hmem in homedef.HomeMembers)
+            {
+                hmem.CreatedAt = homedef.CreatedAt;
+                hmem.Createdby = usrName;
+            }
             _context.HomeDefines.Add(homedef);
 
             await _context.SaveChangesAsync();
