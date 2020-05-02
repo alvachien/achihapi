@@ -32,15 +32,19 @@ namespace hihapi.Utilities
 
     public class BlogDeliverUtility
     {
+        const string PostDefineFile = "post_def.json";
+        const string SettingFile = "blog_setting.json";
+        const string PostsFolder = "posts";
+
         public static void UpdatePostSetting(BlogUserSetting setting)
         {
-            string rootFolder = Startup.BlogFolder + "\\" + setting.DeployFolder;
+            string rootFolder = Path.Combine(Startup.BlogFolder, setting.DeployFolder);
             if (!Directory.Exists(rootFolder))
             {
                 Directory.CreateDirectory(rootFolder);
             }
 
-            String fileName = rootFolder + "\\blog_setting.json";
+            String fileName = Path.Combine(rootFolder, SettingFile);
             var sjon = new BlogSettingJson();
             sjon.title = setting.Name;
             sjon.footer = setting.Comment;
@@ -51,8 +55,8 @@ namespace hihapi.Utilities
 
         public static void DeliverPost(string deliveryFolder, BlogPost post, List<BlogCollection> blogCollections)
         {
-            string rootFolder = Startup.BlogFolder + "\\" + deliveryFolder;
-            string postFolder = rootFolder + "\\posts";
+            string rootFolder = Path.Combine(Startup.BlogFolder, deliveryFolder);
+            string postFolder = Path.Combine(rootFolder, PostsFolder);
             if (!Directory.Exists(rootFolder))
             {
                 Directory.CreateDirectory(rootFolder);
@@ -63,7 +67,7 @@ namespace hihapi.Utilities
             }
 
             // Blog define
-            String fileName = rootFolder + "\\post_def.json";
+            String fileName = Path.Combine(rootFolder, PostDefineFile);
             var jsonString = File.ReadAllText(fileName);
             var allposts = JsonSerializer.Deserialize<BlogPostDefJson[]>(jsonString);
             List<BlogPostDefJson> listposts = new List<BlogPostDefJson>(allposts);
@@ -112,25 +116,21 @@ namespace hihapi.Utilities
             File.WriteAllText(fileName, jsonString);
 
             // MD file
-            fileName = postFolder + "\\" + post.ID.ToString() + ".md";
+            fileName = Path.Combine(postFolder, post.ID.ToString() + ".md");
             File.WriteAllText(fileName, post.Content);
         }
  
         public static void RevokePostDeliver(string deliveryFolder, int postid)
         {
-            string rootFolder = Startup.BlogFolder + "\\" + deliveryFolder;
-            string postFolder = rootFolder + "\\posts";
+            string rootFolder = Path.Combine(Startup.BlogFolder, deliveryFolder);
+            string postFolder = Path.Combine(rootFolder, PostsFolder);
             if (!Directory.Exists(rootFolder))
             {
-                Directory.CreateDirectory(rootFolder);
-            }
-            if (!Directory.Exists(postFolder))
-            {
-                Directory.CreateDirectory(postFolder);
+                return;
             }
 
             // Blog define
-            String fileName = rootFolder + "\\post_def.json";
+            String fileName = Path.Combine(rootFolder, PostDefineFile);
             var jsonString = File.ReadAllText(fileName);
             var allposts = JsonSerializer.Deserialize<BlogPostDefJson[]>(jsonString);
             List<BlogPostDefJson> listposts = new List<BlogPostDefJson>(allposts);
@@ -144,7 +144,11 @@ namespace hihapi.Utilities
             }
 
             // MD file
-            fileName = postFolder + "\\" + postid.ToString() + ".md";
+            if (!Directory.Exists(postFolder))
+            {
+                return;
+            }
+            fileName = Path.Combine(postFolder, postid.ToString() + ".md");
             if (File.Exists(fileName))
             {
                 File.Delete(fileName);

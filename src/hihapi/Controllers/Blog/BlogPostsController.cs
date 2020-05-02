@@ -14,20 +14,17 @@ using Microsoft.AspNetCore.Authorization;
 using System;
 using hihapi.Exceptions;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace hihapi.Controllers
 {
     public class BlogPostsController : ODataController
     {
         private readonly hihDataContext _context;
-        private readonly ILogger _logger;
 
-        public BlogPostsController(hihDataContext context,
-            ILogger<BlogPostsController> logger)
+        public BlogPostsController(hihDataContext context)
         {
             _context = context;
-
-            _logger = logger;
         }
 
         [Authorize]
@@ -120,7 +117,8 @@ namespace hihapi.Controllers
                 }
                 catch(Exception exp)
                 {
-                    _logger.LogError("Post Deliver creation failed: " + exp.Message);
+                    //_logger.LogError("Post Deliver creation failed: " + exp.Message);
+                    Log.Error("Post Deliver creation failed: " + exp.Message);
                 }
             }
 
@@ -197,7 +195,8 @@ namespace hihapi.Controllers
             }
             catch (Exception exp)
             {
-                _logger.LogError("Post Deliver updated: " + exp.Message);
+                //_logger.LogError("Post Deliver updated: " + exp.Message);
+                Log.Error("Post Deliver updated: " + exp.Message);
             }
 
             return Ok(update);
@@ -250,8 +249,8 @@ namespace hihapi.Controllers
             }
             catch(Exception exp)
             {
-                // Just skip the error
-                _logger.LogError("Post Deliver deletion failed: " + exp.Message);
+                //_logger.LogError("Post Deliver deletion failed: " + exp.Message);
+                Log.Error("Post Deliver deletion failed: " + exp.Message);
             }
 
             return StatusCode(204); // HttpStatusCode.NoContent
