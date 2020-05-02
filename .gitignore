@@ -342,5 +342,7 @@ healthchecksdb
 
 # Project specific
 uploads/
+blogs/
 src/achihapi/uploads/
+src/achihapi/blogs/
 

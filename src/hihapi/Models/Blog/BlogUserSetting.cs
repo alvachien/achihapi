@@ -24,5 +24,8 @@ namespace hihapi.Models
 
         [Column("ALLOWCOMMENT", TypeName = "BIT")]
         public bool? AllowComment { get; set; }
+
+        [Column("DeployFolder", TypeName = "NVARCHAR(100)")]
+        public string DeployFolder { get; set; }
     }
 }

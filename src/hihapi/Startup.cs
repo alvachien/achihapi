@@ -20,6 +20,8 @@ using hihapi.Models;
 using Microsoft.AspNetCore.Routing;
 using IdentityServer4.AccessTokenValidation;
 using System.IO;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.FileProviders;
 
 namespace hihapi
 {
@@ -37,12 +39,19 @@ namespace hihapi
             {
                 Directory.CreateDirectory(UploadFolder);
             }
+
+            BlogFolder = Path.Combine(env.ContentRootPath, @"blogs");
+            if (!Directory.Exists(BlogFolder))
+            {
+                Directory.CreateDirectory(BlogFolder);
+            }
         }
 
         public IConfiguration Configuration { get; }
         public IWebHostEnvironment Environment { get; }
         public string ConnectionString { get; private set; }
         internal static String UploadFolder { get; private set; }
+        internal static String BlogFolder { get; private set; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -114,7 +123,8 @@ namespace hihapi
                     options.AddPolicy(MyAllowSpecificOrigins, builder =>
                     {
                         builder.WithOrigins(
-                            "http://localhost:29521" // AC HIH
+                            "http://localhost:29521", // AC HIH
+                            "http://localhost:29525" // acblog
                         )
                         .AllowAnyHeader()
                         .AllowAnyMethod()
@@ -142,7 +152,9 @@ namespace hihapi
                     {
                         builder.WithOrigins(
 #if USE_ALIYUN
-                            "https://www.alvachien.com/hih"
+                            "https://www.alvachien.com/hih",
+                            "https://www.alvachien.com/alvablog",
+                            "https://www.alvachien.com/fishblog"
 #elif USE_AZURE
 #endif
                         )
@@ -304,6 +316,19 @@ namespace hihapi
             });
 
             app.UseResponseCaching();
+
+            var cachePeriod = env.EnvironmentName == "Development" ? "60" : "300";
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "blogs")),
+                RequestPath = "/blogs",
+                OnPrepareResponse = ctx =>
+                {
+                    // Requires the following import:
+                    // using Microsoft.AspNetCore.Http;
+                    ctx.Context.Response.Headers.Append("Cache-Control", $"public, max-age={cachePeriod}");
+                }
+            });
         }
     }
 }

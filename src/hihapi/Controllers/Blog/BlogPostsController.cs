@@ -107,6 +107,18 @@ namespace hihapi.Controllers
             _context.BlogPosts.Add(post);
             await _context.SaveChangesAsync();
 
+            if (post.Status == BlogPost.BlogPostStatus_PublishAsPublic)
+            {
+                try
+                {
+                    BlogDeliverUtility.DeliverPost(setting.DeployFolder, post, _context.BlogCollections.Where(p => p.Owner == usrName).ToList());
+                }
+                catch(Exception exp)
+                {
+                    // Just skip it.
+                }
+            }
+
             return Created(post);
         }
 
@@ -167,7 +179,23 @@ namespace hihapi.Controllers
                 }
             }
 
-            return Updated(update);
+            try
+            {
+                if (update.Status == BlogPost.BlogPostStatus_PublishAsPublic)
+                {
+                    BlogDeliverUtility.DeliverPost(setting.DeployFolder, update, _context.BlogCollections.Where(p => p.Owner == usrName).ToList());
+                }
+                else
+                {
+                    BlogDeliverUtility.RevokePostDeliver(setting.DeployFolder, update.ID);
+                }
+            }
+            catch (Exception exp)
+            {
+                // Just skip it.
+            }
+
+            return Ok(update);
         }
 
         [Authorize]
@@ -210,6 +238,15 @@ namespace hihapi.Controllers
 
             _context.BlogPosts.Remove(cc);
             await _context.SaveChangesAsync();
+
+            try
+            {
+                BlogDeliverUtility.RevokePostDeliver(setting.DeployFolder, cc.ID);
+            }
+            catch(Exception exp)
+            {
+                // Just skip the error
+            }
 
             return StatusCode(204); // HttpStatusCode.NoContent
         }
