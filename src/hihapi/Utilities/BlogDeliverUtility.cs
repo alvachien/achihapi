@@ -73,20 +73,31 @@ namespace hihapi.Utilities
                 id = post.ID,
                 title = post.Title,
                 brief = post.Brief,
-                createdat = post.CreatedAt?.ToString(),
             };
-            foreach(var coll in post.BlogPostCollections)
+            if (post.CreatedAt != null)
             {
-                var collname = "";
-                foreach(var bcoll in blogCollections)
+                newpost.createdat = post.CreatedAt.Value.ToString();
+            }
+            else
+            {
+                newpost.createdat = DateTime.Now.ToString();
+            }
+
+            if (blogCollections != null && blogCollections.Count > 0)
+            {
+                foreach (var coll in post.BlogPostCollections)
                 {
-                    if (bcoll.ID == coll.CollectionID)
+                    var collname = "";
+                    foreach (var bcoll in blogCollections)
                     {
-                        collname = bcoll.Name;
+                        if (bcoll.ID == coll.CollectionID)
+                        {
+                            collname = bcoll.Name;
+                        }
                     }
+                    if (!string.IsNullOrEmpty(collname))
+                        newpost.collection.Add(collname);
                 }
-                if (!string.IsNullOrEmpty(collname))
-                    newpost.collection.Add(collname);
             }
             var postidx = listposts.FindIndex(p => p.id == newpost.id);
             if (postidx == -1)

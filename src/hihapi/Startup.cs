@@ -22,6 +22,7 @@ using IdentityServer4.AccessTokenValidation;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
+using Serilog;
 
 namespace hihapi
 {
@@ -187,6 +188,8 @@ namespace hihapi
                 app.UseHsts();
             }
 
+            app.UseSerilogRequestLogging();
+
             // app.UseHttpsRedirection();
             app.UseAuthentication();
             if (Environment.EnvironmentName != "IntegrationTest")
@@ -317,10 +320,10 @@ namespace hihapi
 
             app.UseResponseCaching();
 
-            var cachePeriod = env.EnvironmentName == "Development" ? "60" : "300";
+            var cachePeriod = env.EnvironmentName == "Development" ? "10" : "30";
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "blogs")),
+                FileProvider = new PhysicalFileProvider(BlogFolder),
                 RequestPath = "/blogs",
                 OnPrepareResponse = ctx =>
                 {
