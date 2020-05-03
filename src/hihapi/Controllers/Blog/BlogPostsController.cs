@@ -15,6 +15,7 @@ using System;
 using hihapi.Exceptions;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Microsoft.AspNet.OData.Routing;
 
 namespace hihapi.Controllers
 {
@@ -109,19 +110,6 @@ namespace hihapi.Controllers
             _context.BlogPosts.Add(post);
             await _context.SaveChangesAsync();
 
-            if (post.Status == BlogPost.BlogPostStatus_PublishAsPublic)
-            {
-                try
-                {
-                    BlogDeliverUtility.DeliverPost(setting.DeployFolder, post, _context.BlogCollections.Where(p => p.Owner == usrName).ToList());
-                }
-                catch(Exception exp)
-                {
-                    //_logger.LogError("Post Deliver creation failed: " + exp.Message);
-                    Log.Error("Post Deliver creation failed: " + exp.Message);
-                }
-            }
-
             return Created(post);
         }
 
@@ -182,23 +170,6 @@ namespace hihapi.Controllers
                 }
             }
 
-            try
-            {
-                if (update.Status == BlogPost.BlogPostStatus_PublishAsPublic)
-                {
-                    BlogDeliverUtility.DeliverPost(setting.DeployFolder, update, _context.BlogCollections.Where(p => p.Owner == usrName).ToList());
-                }
-                else
-                {
-                    BlogDeliverUtility.RevokePostDeliver(setting.DeployFolder, update.ID);
-                }
-            }
-            catch (Exception exp)
-            {
-                //_logger.LogError("Post Deliver updated: " + exp.Message);
-                Log.Error("Post Deliver updated: " + exp.Message);
-            }
-
             return Ok(update);
         }
 
@@ -208,7 +179,7 @@ namespace hihapi.Controllers
             var cc = await _context.BlogPosts.FindAsync(key);
             if (cc == null)
             {
-                return NotFound();
+                throw new NotFoundException("HIHAPI: Record not found");
             }
 
             // User
@@ -220,7 +191,7 @@ namespace hihapi.Controllers
                 {
                     throw new UnauthorizedAccessException();
                 }
-                if (String.CompareOrdinal(cc.Owner, usrName) == 0)
+                if (String.CompareOrdinal(cc.Owner, usrName) != 0)
                 {
                     throw new UnauthorizedAccessException();
                 }
@@ -243,17 +214,121 @@ namespace hihapi.Controllers
             _context.BlogPosts.Remove(cc);
             await _context.SaveChangesAsync();
 
-            try
+            return StatusCode(204); // HttpStatusCode.NoContent
+        }
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult Deploy(int key)
+        {
+            var cc = _context.BlogPosts.Find(key);
+            if (cc == null)
             {
-                BlogDeliverUtility.RevokePostDeliver(setting.DeployFolder, cc.ID);
-            }
-            catch(Exception exp)
-            {
-                //_logger.LogError("Post Deliver deletion failed: " + exp.Message);
-                Log.Error("Post Deliver deletion failed: " + exp.Message);
+                throw new NotFoundException("HIHAPI: Record not found");
             }
 
-            return StatusCode(204); // HttpStatusCode.NoContent
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                if (String.CompareOrdinal(cc.Owner, usrName) != 0)
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check setting
+            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
+            if (setting == null)
+            {
+                throw new BadRequestException(" User has no setting ");
+            }
+
+            var errstr = "";
+            try
+            {
+                if (cc.Status == BlogPost.BlogPostStatus_PublishAsPublic)
+                {
+                    BlogDeployUtility.DeployPost(setting.DeployFolder, cc, _context.BlogCollections.Where(p => p.Owner == usrName).ToList());
+                }
+                else
+                {
+                    BlogDeployUtility.RevokePostDeliver(setting.DeployFolder, cc.ID);
+                }
+            }
+            catch (Exception exp)
+            {
+                errstr = exp.Message;
+            }
+
+            if (!string.IsNullOrEmpty(errstr))
+            {
+                throw new Exception(errstr);
+            }
+
+            return Ok("");
+
+            //if (string.IsNullOrEmpty(errstr))
+            //{
+            //    return Ok();
+            //}
+
+            //throw new Exception(errstr);
+        }
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult ClearDeploy(int key)
+        {
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check setting
+            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
+            if (setting == null)
+            {
+                throw new BadRequestException(" User has no setting ");
+            }
+
+            var errstr = "";
+            try
+            {
+                BlogDeployUtility.RevokePostDeliver(setting.DeployFolder, key);
+            }
+            catch (Exception exp)
+            {
+                errstr = exp.Message;
+            }
+
+            // Return
+            if (!string.IsNullOrEmpty(errstr))
+            {
+                throw new Exception(errstr);
+            }
+
+            return Ok("");
+            //throw new Exception(errstr);
         }
     }
 }

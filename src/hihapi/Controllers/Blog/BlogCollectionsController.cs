@@ -113,7 +113,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             // User
@@ -222,7 +222,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
             var entity = await _context.BlogCollections.FindAsync(id);

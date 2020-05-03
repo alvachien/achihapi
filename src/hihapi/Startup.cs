@@ -35,16 +35,23 @@ namespace hihapi
             Configuration = configuration;
             Environment = env;
 
-            UploadFolder = Path.Combine(env.ContentRootPath, @"uploads");
-            if (!Directory.Exists(UploadFolder))
+            try
             {
-                Directory.CreateDirectory(UploadFolder);
-            }
+                UploadFolder = Path.Combine(env.ContentRootPath, @"uploads");
+                if (!Directory.Exists(UploadFolder))
+                {
+                    Directory.CreateDirectory(UploadFolder);
+                }
 
-            BlogFolder = Path.Combine(env.ContentRootPath, @"blogs");
-            if (!Directory.Exists(BlogFolder))
+                BlogFolder = Path.Combine(env.ContentRootPath, @"blogs");
+                if (!Directory.Exists(BlogFolder))
+                {
+                    Directory.CreateDirectory(BlogFolder);
+                }
+            }
+            catch(Exception exp)
             {
-                Directory.CreateDirectory(BlogFolder);
+                // Do nothing
             }
         }
 
@@ -188,7 +195,10 @@ namespace hihapi
                 app.UseHsts();
             }
 
+#if DEBUG
+#else
             app.UseSerilogRequestLogging();
+#endif
 
             // app.UseHttpsRedirection();
             app.UseAuthentication();
@@ -305,6 +315,16 @@ namespace hihapi
             modelBuilder.EntitySet<BlogPost>("BlogPosts");
             modelBuilder.EntitySet<BlogPostCollection>("BlogPostCollections");
             modelBuilder.EntitySet<BlogPostTag>("BlogPostTags");
+            // Functions
+            var postentity = modelBuilder.EntityType<BlogPost>();
+            postentity.Function("Deploy")
+                    .Returns<string>()
+                    ;
+            postentity.Function("ClearDeploy")
+                    .Returns<string>();
+            var blogsetting = modelBuilder.EntityType<BlogUserSetting>();
+            blogsetting.Function("Deploy")
+                    .Returns<string>();
 
             var model = modelBuilder.GetEdmModel();
             app.UseODataBatching();
