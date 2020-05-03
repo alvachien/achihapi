@@ -22,6 +22,7 @@ namespace hihapi.test
         public static List<FinanceDocumentType> FinanceDocumentTypes { get; private set; }
         public static List<FinanceTransactionType> FinanceTransactionTypes { get; private set; }
         public static List<LearnCategory> LearnCategories { get; private set; }
+        public static List<BlogCollection> BlogCollections { get; private set; }        
 
         /// <summary>
         /// Testing data
@@ -473,6 +474,64 @@ namespace hihapi.test
                 UPDATEDAT   DATE           NULL DEFAULT CURRENT_DATE,
                 CONSTRAINT FK_t_learn_obj_HID FOREIGN KEY (HID) 
                     REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
+            #endregion
+
+            #region Blog
+            database.ExecuteSqlRaw(@"CREATE TABLE t_blog_format (
+               ID INTEGER PRIMARY KEY NOT NULL,
+               Name NVARCHAR(10) NOT NULL,
+               Comment NVARCHAR(50) NULL )");
+
+            database.ExecuteSqlRaw(@"CREATE TABLE t_blog_setting (
+               Owner NVARCHAR(40) PRIMARY KEY NOT NULL,
+               Name  NVARCHAR(50) NOT NULL,
+               Comment NVARCHAR(50) NULL,
+               AllowComment BIT NULL )");
+
+            database.ExecuteSqlRaw(@"CREATE TABLE t_blog_coll (
+              ID INTEGER PRIMARY KEY AUTOINCREMENT,
+              Owner NVARCHAR(40) NOT NULL,
+              Name  NVARCHAR(10) NOT NULL,
+              Comment NVARCHAR(50) NULL )");
+
+            database.ExecuteSqlRaw(@"CREATE TABLE t_blog_post (
+              ID INTEGER PRIMARY KEY AUTOINCREMENT,
+              Owner NVARCHAR(40) NOT NULL,
+              FORMAT INTEGER NOT NULL,
+              TITLE NVARCHAR(50) NOT NULL,
+              BRIEF NVARCHAR(100) NOT NULL,
+              CONTENT TEXT NOT NULL,
+              STATUS INTEGER DEFAULT 1,
+              CreatedAt DATE DEFAULT CURRENT_DATE,
+              UpdatedAt DATE DEFAULT CURRENT_DATE )");
+
+            database.ExecuteSqlRaw(@"CREATE TABLE t_blog_post_coll (
+              PostID INTEGER NOT NULL,
+              CollID INTEGER NOT NULL,
+              CONSTRAINT PK_t_blog_post_coll PRIMARY KEY(PostID, CollID),
+              CONSTRAINT FK_t_blog_post_coll_coll FOREIGN KEY(CollID) REFERENCES t_blog_coll (ID) ON DELETE CASCADE ON UPDATE CASCADE,
+              CONSTRAINT FK_t_blog_post_coll_post FOREIGN KEY(PostID) REFERENCES t_blog_post (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
+
+            database.ExecuteSqlRaw(@"CREATE TABLE t_blog_post_tag (
+              PostID INTEGER NOT NULL,
+              Tag NVARCHAR(20) NOT NULL,
+              CONSTRAINT PK_t_blog_post_tag PRIMARY KEY(PostID, Tag),  
+              CONSTRAINT FK_t_blog_post_tag_post FOREIGN KEY(PostID) REFERENCES t_blog_post (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
+
+            database.ExecuteSqlRaw(@"CREATE TABLE t_blog_post_reply (
+              PostID INTEGER NOT NULL,
+              ReplyID INTEGER NOT NULL,
+              RepliedBy NVARCHAR(40) NOT NULL,
+              RepliedIP nvarchar(20) NOT NULL,
+              TITLE NVARCHAR(100) NOT NULL,
+              CONTENT NVARCHAR(200) NOT NULL,
+              RefReplyID INTEGER NULL,
+              CreatedAt DATE DEFAULT CURRENT_DATE,
+              CONSTRAINT PK_t_blog_post_reply PRIMARY KEY (PostID, ReplyID),
+              CONSTRAINT FK_t_blog_post_reply_post FOREIGN KEY(PostID) REFERENCES t_blog_post (ID) ON DELETE CASCADE ON UPDATE CASCADE
             )");
             #endregion
         }
@@ -944,6 +1003,7 @@ namespace hihapi.test
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (13,'2020.2.29');
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (14,'2020.3.15');
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (15,'2020.4.1');
+            // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (16,'2020.4.15');
             DBVersions.Add(new DBVersion()
             {
                 VersionID = 1,
@@ -1018,6 +1078,11 @@ namespace hihapi.test
             {
                 VersionID = 15,
                 ReleasedDate = new DateTime(2020, 4, 1)
+            });
+            DBVersions.Add(new DBVersion()
+            {
+                VersionID = 16,
+                ReleasedDate = new DateTime(2020, 4, 15)
             });
         }
 
@@ -2824,6 +2889,101 @@ namespace hihapi.test
 
             // Save it
             db.SaveChanges();
+        }
+        
+        public static void CreateTestingData_Blog(hihDataContext db)
+        {
+            // Collection
+            #region Collection
+            db.BlogCollections.Add(new BlogCollection
+            {
+                ID = 1,
+                Name = "Coll 1 of A",
+                Owner = UserA,
+                Comment = "Collection 1 of user A"
+            });
+            db.BlogCollections.Add(new BlogCollection
+            {
+                ID = 2,
+                Name = "Coll 2 of A",
+                Owner = UserA,
+                Comment = "Collection 2 of user A"
+            });
+            db.BlogCollections.Add(new BlogCollection
+            {
+                ID = 3,
+                Name = "Coll 1 of B",
+                Owner = UserB,
+                Comment = "Collection 1 of user B"
+            });
+            db.BlogCollections.Add(new BlogCollection
+            {
+                ID = 4,
+                Name = "Coll 2 of B",
+                Owner = UserB,
+                Comment = "Collection 2 of user B"
+            });
+            #endregion
+
+            // Post
+            #region Post
+            db.BlogPosts.Add(new BlogPost
+            {
+                ID = 1,
+                Title = "Post 1 of A",
+                Content = "Post 1 of A",
+                Owner = UserA,
+            });
+            db.BlogPosts.Add(new BlogPost
+            {
+                ID = 2,
+                Title = "Post 2 of A",
+                Content = "Post 2 of A",
+                Owner = UserA,
+            });
+            db.BlogPosts.Add(new BlogPost
+            {
+                ID = 3,
+                Title = "Post 1 of B",
+                Content = "Post 1 of B",
+                Owner = UserB,
+            });
+            db.BlogPosts.Add(new BlogPost
+            {
+                ID = 4,
+                Title = "Post 2 of B",
+                Content = "Post 2 of B",
+                Owner = UserB,
+            });
+            #endregion
+
+            #region Post Collection
+            db.BlogPostCollections.Add(new BlogPostCollection
+            {
+                PostID = 1,
+                CollectionID = 2
+            });
+            db.BlogPostCollections.Add(new BlogPostCollection
+            {
+                PostID = 2,
+                CollectionID = 1
+            });
+            db.BlogPostCollections.Add(new BlogPostCollection
+            {
+                PostID = 2,
+                CollectionID = 2
+            });
+            db.BlogPostCollections.Add(new BlogPostCollection
+            {
+                PostID = 3,
+                CollectionID = 3
+            });
+            db.BlogPostCollections.Add(new BlogPostCollection
+            {
+                PostID = 3,
+                CollectionID = 4
+            });
+            #endregion
         }
         #endregion
     }

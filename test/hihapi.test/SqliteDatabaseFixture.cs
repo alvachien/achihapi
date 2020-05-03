@@ -112,6 +112,14 @@ namespace hihapi.test
                 this.IsHome5DataInitialized = true;
             }
         }
+        public void InitBlogTestData(hihDataContext context)
+        {
+            if (!this.IsBlogDataInitialized)
+            {
+                DataSetupUtility.CreateTestingData_Blog(context);
+                this.IsBlogDataInitialized = true;
+            }
+        }
 
         public void DeleteFinanceAccount(hihDataContext context, int acntid)
         {
@@ -154,6 +162,7 @@ namespace hihapi.test
         public bool IsHome3DataInitialized { get; private set; }
         public bool IsHome4DataInitialized { get; private set; }
         public bool IsHome5DataInitialized { get; private set; }
+        public bool IsBlogDataInitialized { get; private set; }
         //public hihDataContext CurrentDataContext { get; private set; }
     }
 }
