@@ -675,6 +675,7 @@ CREATE TABLE [dbo].[t_blog_coll] (
     [Owner] NVARCHAR(40) NOT NULL,
     [Name]  NVARCHAR(10) NOT NULL,
     [Comment] NVARCHAR(50) NULL,
+    [DeployFolder] NVARCHAR(100) NULL,
     CONSTRAINT [PK_t_blog_coll] PRIMARY KEY ([ID] ASC)
 );
 

@@ -156,6 +156,15 @@ namespace hihapi.test
             context.Database.ExecuteSqlRaw("DELETE FROM t_learn_obj WHERE ID = " + ctgyid.ToString());
         }
 
+        public void DeleteBlogCollection(hihDataContext context, int collid) 
+        {
+            context.Database.ExecuteSqlRaw("DELETE FROM t_blog_coll WHERE ID = " + collid.ToString());
+        }
+        public void DeleteBlogPost(hihDataContext context, int postid)
+        {
+            context.Database.ExecuteSqlRaw("DELETE FROM t_blog_post WHERE ID = " + postid.ToString());
+        }
+
         protected SqliteConnection DBConnection { get; private set; }
         public bool IsHome1DataInitialized { get; private set; }
         public bool IsHome2DataInitialized { get; private set; }

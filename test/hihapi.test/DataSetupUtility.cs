@@ -22,7 +22,6 @@ namespace hihapi.test
         public static List<FinanceDocumentType> FinanceDocumentTypes { get; private set; }
         public static List<FinanceTransactionType> FinanceTransactionTypes { get; private set; }
         public static List<LearnCategory> LearnCategories { get; private set; }
-        public static List<BlogCollection> BlogCollections { get; private set; }        
 
         /// <summary>
         /// Testing data
@@ -487,7 +486,8 @@ namespace hihapi.test
                Owner NVARCHAR(40) PRIMARY KEY NOT NULL,
                Name  NVARCHAR(50) NOT NULL,
                Comment NVARCHAR(50) NULL,
-               AllowComment BIT NULL )");
+               AllowComment BIT NULL,
+               DeployFolder NVARCHAR(100) NULL )");
 
             database.ExecuteSqlRaw(@"CREATE TABLE t_blog_coll (
               ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -2893,6 +2893,24 @@ namespace hihapi.test
         
         public static void CreateTestingData_Blog(hihDataContext db)
         {
+            // User setting
+            #region User Setting
+            db.BlogUserSettings.Add(new BlogUserSetting
+            {
+                Owner = UserA,
+                Name = UserA,
+                Comment = UserA,
+                DeployFolder = "test"
+            });
+            db.BlogUserSettings.Add(new BlogUserSetting
+            {
+                Owner = UserB,
+                Name = UserB,
+                Comment = UserB,
+                DeployFolder = "test"
+            });
+            #endregion
+
             // Collection
             #region Collection
             db.BlogCollections.Add(new BlogCollection
@@ -2931,6 +2949,7 @@ namespace hihapi.test
             {
                 ID = 1,
                 Title = "Post 1 of A",
+                Brief = "Post 1 of A",
                 Content = "Post 1 of A",
                 Owner = UserA,
             });
@@ -2938,6 +2957,7 @@ namespace hihapi.test
             {
                 ID = 2,
                 Title = "Post 2 of A",
+                Brief = "Post 2 of A",
                 Content = "Post 2 of A",
                 Owner = UserA,
             });
@@ -2945,6 +2965,7 @@ namespace hihapi.test
             {
                 ID = 3,
                 Title = "Post 1 of B",
+                Brief = "Post 1 of B",
                 Content = "Post 1 of B",
                 Owner = UserB,
             });
@@ -2952,11 +2973,13 @@ namespace hihapi.test
             {
                 ID = 4,
                 Title = "Post 2 of B",
+                Brief = "Post 2 of B",
                 Content = "Post 2 of B",
                 Owner = UserB,
             });
             #endregion
 
+            // Post collection
             #region Post Collection
             db.BlogPostCollections.Add(new BlogPostCollection
             {
@@ -2984,6 +3007,9 @@ namespace hihapi.test
                 CollectionID = 4
             });
             #endregion
+
+            // Save it
+            db.SaveChanges();
         }
         #endregion
     }

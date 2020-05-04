@@ -29,7 +29,21 @@ namespace hihapi.Controllers
         [EnableQuery]
         public IQueryable<BlogUserSetting> Get()
         {
-            return _context.BlogUserSettings;
+            string usrName = "";
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            return _context.BlogUserSettings.Where(p => p.Owner == usrName);
         }
 
         [Authorize]
@@ -57,41 +71,43 @@ namespace hihapi.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] BlogUserSetting newsetting)
         {
-            if (!ModelState.IsValid)
-            {
-                HIHAPIUtility.HandleModalStateError(ModelState);
-            }
+            // Not Yet possible
+            return Forbid();
+            //if (!ModelState.IsValid)
+            //{
+            //    HIHAPIUtility.HandleModalStateError(ModelState);
+            //}
 
-            // User
-            string usrName;
-            try
-            {
-                usrName = HIHAPIUtility.GetUserID(this);
-                if (String.IsNullOrEmpty(usrName))
-                {
-                    throw new UnauthorizedAccessException();
-                }
-                if (String.CompareOrdinal(newsetting.Owner, usrName) != 0)
-                {
-                    throw new UnauthorizedAccessException();
-                }
-            }
-            catch
-            {
-                throw new UnauthorizedAccessException();
-            }
+            //// User
+            //string usrName;
+            //try
+            //{
+            //    usrName = HIHAPIUtility.GetUserID(this);
+            //    if (String.IsNullOrEmpty(usrName))
+            //    {
+            //        throw new UnauthorizedAccessException();
+            //    }
+            //    if (String.CompareOrdinal(newsetting.Owner, usrName) != 0)
+            //    {
+            //        throw new UnauthorizedAccessException();
+            //    }
+            //}
+            //catch
+            //{
+            //    throw new UnauthorizedAccessException();
+            //}
 
-            // Check setting
-            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
-            if (setting == null)
-            {
-                throw new BadRequestException(" Setting already Exists ");
-            }
+            //// Check setting
+            //var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
+            //if (setting == null)
+            //{
+            //    throw new BadRequestException(" Setting already Exists ");
+            //}
 
-            _context.BlogUserSettings.Add(newsetting);
-            await _context.SaveChangesAsync();
+            //_context.BlogUserSettings.Add(newsetting);
+            //await _context.SaveChangesAsync();
 
-            return Created(newsetting);
+            //return Created(newsetting);
         }
 
         [Authorize]
@@ -145,7 +161,7 @@ namespace hihapi.Controllers
                 }
             }
 
-            return Ok(update);
+            return Updated(update);
         }
 
         [Authorize]

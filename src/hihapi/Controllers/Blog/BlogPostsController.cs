@@ -170,7 +170,7 @@ namespace hihapi.Controllers
                 }
             }
 
-            return Ok(update);
+            return Updated(update);
         }
 
         [Authorize]

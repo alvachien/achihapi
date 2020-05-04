@@ -11,6 +11,7 @@ CREATE TABLE [dbo].[t_blog_setting] (
     [Name]  NVARCHAR(50) NOT NULL,
     [Comment] NVARCHAR(50) NULL,
     [AllowComment] BIT NULL,
+    [DeployFolder] NVARCHAR(100) NULL,
     CONSTRAINT [PK_t_blog_setting] PRIMARY KEY ([OWNER] ASC)
 );
 

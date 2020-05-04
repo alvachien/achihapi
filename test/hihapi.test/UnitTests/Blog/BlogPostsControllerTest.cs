@@ -14,19 +14,19 @@ using System.Collections.Generic;
 namespace hihapi.test.UnitTests
 {
     [Collection("HIHAPI_UnitTests#1")]
-    public class BlogCollectionsControllerTest : IDisposable
+    public class BlogPostsControllerTest : IDisposable
     {
         SqliteDatabaseFixture fixture = null;
         private ServiceProvider provider = null;
         private IEdmModel model = null;
         private List<Int32> objectsCreated = new List<Int32>();
 
-        public BlogCollectionsControllerTest(SqliteDatabaseFixture fixture)
+        public BlogPostsControllerTest(SqliteDatabaseFixture fixture)
         {
             this.fixture = fixture;
             this.provider = UnitTestUtility.GetServiceProvider();
 
-            this.model = UnitTestUtility.GetEdmModel<BlogCollection>(provider, "BlogCollections");
+            this.model = UnitTestUtility.GetEdmModel<BlogPost>(provider, "BlogPosts");
         }
         public void Dispose()
         {
@@ -47,7 +47,7 @@ namespace hihapi.test.UnitTests
             var context = this.fixture.GetCurrentDataContext();
             fixture.InitBlogTestData(context);
 
-            var control = new BlogCollectionsController(context);
+            var control = new BlogPostsController(context);
             var userclaim = DataSetupUtility.GetClaimForUser(user);
             var httpctx = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
             control.ControllerContext = new ControllerContext()
@@ -55,7 +55,7 @@ namespace hihapi.test.UnitTests
                 HttpContext = httpctx
             };
 
-            var existedamt = (from coll in context.BlogCollections where coll.Owner == user select coll).ToList().Count();
+            var existedamt = (from coll in context.BlogPosts where coll.Owner == user select coll).ToList().Count();
 
             // Step 1. Read all
             var rsts = control.Get();
@@ -63,19 +63,21 @@ namespace hihapi.test.UnitTests
             Assert.Equal(existedamt, rstscnt);
 
             // Step 2. Create one new collection
-            var newcoll = new BlogCollection()
+            var newcoll = new BlogPost()
             {
                 Owner = user,
-                Name = "TestCase1_Add_" + user,
-                Comment = "TestCase1_Add_" + user,
+                Title = "TestCase1_Add_" + user,
+                Brief = "TestCase1_Add_" + user,
+                Content = "TestCase1_Add_" + user,
             };
             var rst = await control.Post(newcoll);
             Assert.NotNull(rst);
-            var rst2 = Assert.IsType<CreatedODataResult<BlogCollection>>(rst);
+            var rst2 = Assert.IsType<CreatedODataResult<BlogPost>>(rst);
             objectsCreated.Add(rst2.Entity.ID);
             newcoll.ID = rst2.Entity.ID;
-            Assert.Equal(rst2.Entity.Name, newcoll.Name);
-            Assert.Equal(rst2.Entity.Comment, newcoll.Comment);
+            Assert.Equal(rst2.Entity.Title, newcoll.Title);
+            Assert.Equal(rst2.Entity.Brief, newcoll.Brief);
+            Assert.Equal(rst2.Entity.Content, newcoll.Content);
             Assert.Equal(rst2.Entity.Owner, user);
 
             // Step 3. Read all 
@@ -84,11 +86,11 @@ namespace hihapi.test.UnitTests
             Assert.Equal(existedamt + 1, rstscnt);
 
             // Step 4. Change it
-            newcoll.Name = "Tobe Delteed";
+            newcoll.Title = "Tobe Delteed";
             var rst3 = await control.Put(newcoll.ID, newcoll);
             Assert.NotNull(rst3);
-            var rst3a = Assert.IsType<UpdatedODataResult<BlogCollection>>(rst3);
-            Assert.Equal(newcoll.Name, rst3a.Entity.Name);
+            var rst3a = Assert.IsType<UpdatedODataResult<BlogPost>>(rst3);
+            Assert.Equal(newcoll.Title, rst3a.Entity.Title);
 
             // Step 5. Delete it
             var rst5 = await control.Delete(newcoll.ID);
@@ -111,7 +113,7 @@ namespace hihapi.test.UnitTests
             {
                 var context = this.fixture.GetCurrentDataContext();
                 foreach (var acntcrt in objectsCreated)
-                    fixture.DeleteBlogCollection(context, acntcrt);
+                    fixture.DeleteBlogPost(context, acntcrt);
 
                 objectsCreated.Clear();
                 context.SaveChanges();
