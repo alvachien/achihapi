@@ -13,6 +13,9 @@ namespace hihapi.Utilities
     {
         public string title { get; set; }
         public string footer { get; set; }
+        public string author { get; set; }
+        public string authordesp { get; set; }
+        public string authorimg { get; set; }
     }
     public class BlogPostDefJson
     {
