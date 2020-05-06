@@ -85,10 +85,17 @@ namespace hihapi.test.UnitTests
                 Assert.NotNull(existsett2);
                 var existsett2rst = existsett2.Queryable.FirstOrDefault();
                 existsett2rst.Comment = "Tobe Delteed";
+                existsett2rst.Author = "Author";
+                existsett2rst.AuthorDesp = "Author Desp";
+                existsett2rst.AuthorImage = "Author Image";
                 var rst3 = await control.Put(existsett2rst.Owner, existsett2rst);
                 Assert.NotNull(rst3);
-                var rst3a = Assert.IsType<UpdatedODataResult<BlogUserSetting>>(rst3);
-                Assert.Equal(existsett2rst.Comment, rst3a.Entity.Comment);
+                var rst3a = Assert.IsType<OkObjectResult>(rst3);
+                var rst3b = rst3a.Value as BlogUserSetting;
+                Assert.Equal(existsett2rst.Comment, rst3b.Comment);
+                Assert.Equal(existsett2rst.Author, rst3b.Author);
+                Assert.Equal(existsett2rst.AuthorDesp, rst3b.AuthorDesp);
+                Assert.Equal(existsett2rst.AuthorImage, rst3b.AuthorImage);
             }
 
             await context.DisposeAsync();

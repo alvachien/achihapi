@@ -211,6 +211,7 @@ namespace hihapi
             modelBuilder.EntitySet<Currency>("Currencies");
             modelBuilder.EntitySet<Language>("Languages");
             modelBuilder.EntitySet<DBVersion>("DBVersions");
+            modelBuilder.EntitySet<CheckVersionResult>("CheckVersionResult");
             modelBuilder.EnumType<HomeMemberRelationType>();
             modelBuilder.EntitySet<HomeDefine>("HomeDefines");
             modelBuilder.EntitySet<HomeMember>("HomeMembers");

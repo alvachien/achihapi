@@ -99,11 +99,11 @@ namespace hihapi.Utilities
             };
             if (post.CreatedAt.HasValue)
             {
-                newpost.createdat = post.CreatedAt.Value.ToString();
+                newpost.createdat = post.CreatedAt.Value.ToString("s");
             }
             else
             {
-                newpost.createdat = DateTime.Now.ToString();
+                newpost.createdat = DateTime.Now.ToString("s");
             }
 
             if (blogCollections != null && blogCollections.Count > 0)

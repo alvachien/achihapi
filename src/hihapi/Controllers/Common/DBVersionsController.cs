@@ -116,10 +116,10 @@ namespace hihapi.Controllers
                     await _context.SaveChangesAsync();
                 }
             }
-            var dbv = new DBVersion
+            var dbv = new CheckVersionResult
             {
-                VersionID = CurrentVersion,
-                AppliedDate = DateTime.Today
+                StorageVersion = CurrentVersion.ToString(),
+                APIVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString()
             };
 
             return Created(dbv);

@@ -22,4 +22,11 @@ namespace hihapi.Models
         [DataType(DataType.Date)]
         public DateTime AppliedDate { get; set; }
     }
+
+    public sealed class CheckVersionResult
+    {
+        [Key]
+        public string StorageVersion { get; set; }
+        public string APIVersion { get; set; }
+    }
 }

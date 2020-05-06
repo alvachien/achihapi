@@ -666,6 +666,10 @@ CREATE TABLE [dbo].[t_blog_setting] (
     [Name]  NVARCHAR(50) NOT NULL,
     [Comment] NVARCHAR(50) NULL,
     [AllowComment] BIT NULL,
+    [DeployFolder] NVARCHAR(100) NULL,
+    [Author] NVARCHAR(50) NULL,
+    [AuthorDesp] NVARCHAR(100) NULL,
+    [AuthorImage] NVARCHAR(100) NULL,
     CONSTRAINT [PK_t_blog_setting] PRIMARY KEY ([OWNER] ASC)
 );
 
@@ -684,7 +688,7 @@ CREATE TABLE [dbo].[t_blog_post] (
     [Owner] NVARCHAR(40) NOT NULL,
     [FORMAT] INT           NOT NULL,
     [TITLE]  NVARCHAR (50) NOT NULL,
-    [BRIEF] NVARCHAR(100) NOT NULL,
+    [BRIEF] NVARCHAR(200) NOT NULL,
     [CONTENT] NVARCHAR (MAX) NOT NULL,
     [STATUS] INT CONSTRAINT [DF_t_blog_post_status] DEFAULT ((1)) NULL,
     [CreatedAt] DATE CONSTRAINT [DF_t_blog_post_CreatedAt] DEFAULT (getdate()) NOT NULL, 

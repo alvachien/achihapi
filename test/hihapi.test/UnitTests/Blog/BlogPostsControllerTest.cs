@@ -89,8 +89,9 @@ namespace hihapi.test.UnitTests
             newcoll.Title = "Tobe Delteed";
             var rst3 = await control.Put(newcoll.ID, newcoll);
             Assert.NotNull(rst3);
-            var rst3a = Assert.IsType<UpdatedODataResult<BlogPost>>(rst3);
-            Assert.Equal(newcoll.Title, rst3a.Entity.Title);
+            var rst3a = Assert.IsType<OkObjectResult>(rst3);
+            var rst3b = rst3a.Value as BlogPost;
+            Assert.Equal(newcoll.Title, rst3b.Title);
 
             // Step 5. Delete it
             var rst5 = await control.Delete(newcoll.ID);

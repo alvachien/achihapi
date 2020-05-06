@@ -27,5 +27,14 @@ namespace hihapi.Models
 
         [Column("DeployFolder", TypeName = "NVARCHAR(100)")]
         public string DeployFolder { get; set; }
+
+        [Column("Author", TypeName = "NVARCHAR(50)")]
+        public string Author { get; set; }
+
+        [Column("AuthorDesp", TypeName = "NVARCHAR(100)")]
+        public string AuthorDesp { get; set; }
+
+        [Column("AuthorImage", TypeName = "NVARCHAR(100)")]
+        public string AuthorImage { get; set; }
     }
 }

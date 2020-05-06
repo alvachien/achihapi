@@ -487,7 +487,10 @@ namespace hihapi.test
                Name  NVARCHAR(50) NOT NULL,
                Comment NVARCHAR(50) NULL,
                AllowComment BIT NULL,
-               DeployFolder NVARCHAR(100) NULL )");
+               DeployFolder NVARCHAR(100) NULL,
+               Author NVARCHAR(50) NULL,
+               AuthorDesp NVARCHAR(100) NULL,
+               AuthorImage NVARCHAR(100) NULL )");
 
             database.ExecuteSqlRaw(@"CREATE TABLE t_blog_coll (
               ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -500,7 +503,7 @@ namespace hihapi.test
               Owner NVARCHAR(40) NOT NULL,
               FORMAT INTEGER NOT NULL,
               TITLE NVARCHAR(50) NOT NULL,
-              BRIEF NVARCHAR(100) NOT NULL,
+              BRIEF NVARCHAR(200) NOT NULL,
               CONTENT TEXT NOT NULL,
               STATUS INTEGER DEFAULT 1,
               CreatedAt DATE DEFAULT CURRENT_DATE,
