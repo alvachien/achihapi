@@ -32,6 +32,7 @@ namespace hihapi.Controllers
         /// 
         /// <remarks>
         [EnableQuery]
+        [ResponseCache(Duration = 86400)]
         public IQueryable<Language> Get()
         {
             return _context.Languages;

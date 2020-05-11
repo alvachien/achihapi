@@ -32,6 +32,7 @@ namespace hihapi.Controllers
         /// 
         /// <remarks>
         [EnableQuery]
+        [ResponseCache(Duration = 3600)]
         public IQueryable<Currency> Get()
         {
             return _context.Currencies;
