@@ -253,6 +253,11 @@ namespace hihapi.Controllers
                 throw new BadRequestException(" User has no setting ");
             }
 
+            // Collections
+            cc.BlogPostCollections = _context.BlogPostCollections.Where(p => p.PostID == cc.ID).ToList();
+            // Tags
+            cc.BlogPostTags = _context.BlogPostTags.Where(p => p.PostID == cc.ID).ToList();
+
             var errstr = "";
             try
             {
