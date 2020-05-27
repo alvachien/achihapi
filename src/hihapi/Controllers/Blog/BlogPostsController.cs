@@ -154,6 +154,45 @@ namespace hihapi.Controllers
 
             update.UpdatedAt = DateTime.Now;
             _context.Entry(update).State = EntityState.Modified;
+
+            // Tags
+            var tagInDBs = _context.BlogPostTags.Where(p => p.PostID == update.ID).ToList();
+            foreach (var tag in update.BlogPostTags)
+            {
+                var tagindb = tagInDBs.Find(p => p.PostID == update.ID && p.Tag == tag.Tag);
+                if (tagindb == null)
+                {
+                    _context.BlogPostTags.Add(tag);
+                }
+            }
+            foreach (var tag in tagInDBs)
+            {
+                var ntag = update.BlogPostTags.FirstOrDefault(p => p.PostID == update.ID && p.Tag == tag.Tag);
+                if (ntag == null)
+                {
+                    _context.BlogPostTags.Remove(tag);
+                }
+            }
+
+            // Collection
+            var collInDBs = _context.BlogPostCollections.Where(p => p.PostID == update.ID).ToList();
+            foreach (var coll in update.BlogPostCollections)
+            {
+                var collindb = collInDBs.Find(p => p.PostID == update.ID && p.CollectionID == coll.CollectionID);
+                if (collindb == null)
+                {
+                    _context.BlogPostCollections.Add(coll);
+                }
+            }
+            foreach (var coll in collInDBs)
+            {
+                var ncoll = update.BlogPostCollections.FirstOrDefault(p => p.PostID == update.ID && p.CollectionID == coll.CollectionID);
+                if (ncoll == null)
+                {
+                    _context.BlogPostCollections.Remove(coll);
+                }
+            }
+
             try
             {
                 await _context.SaveChangesAsync();
