@@ -39,9 +39,20 @@ namespace hihapi.test.UnitTests
             return provider;
         }
 
+        public static ODataConventionModelBuilder GetModelBuilder(ServiceProvider provider)
+        {
+            return new ODataConventionModelBuilder(provider);
+        }
+
         public static IEdmModel GetEdmModel<T>(ServiceProvider provider, String entitySetName) where T : class
         {
             var modelBuilder = new ODataConventionModelBuilder(provider);
+            modelBuilder.EntitySet<T>(entitySetName);
+            return modelBuilder.GetEdmModel();
+        }
+
+        public static IEdmModel GetEdmModel<T>(ODataConventionModelBuilder modelBuilder, String entitySetName) where T : class
+        {            
             modelBuilder.EntitySet<T>(entitySetName);
             return modelBuilder.GetEdmModel();
         }

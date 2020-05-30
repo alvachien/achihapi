@@ -26,7 +26,10 @@ namespace hihapi.test.UnitTests
             this.fixture = fixture;
 
             this.provider = UnitTestUtility.GetServiceProvider();
-            this.model = UnitTestUtility.GetEdmModel<FinanceOrder>(provider, "FinanceOrders");
+            var modelBuilder = UnitTestUtility.GetModelBuilder(this.provider);
+            modelBuilder.EntitySet<FinanceOrder>("FinanceOrders");
+            modelBuilder.EntitySet<FinanceOrderSRule>("FinanceOrderSRules");
+            this.model = modelBuilder.GetEdmModel();
         }
 
         public void Dispose()
@@ -127,13 +130,32 @@ namespace hihapi.test.UnitTests
             Assert.NotNull(rst3);
             Assert.Equal(existamt_curhome + 1, rst3.Cast<FinanceOrder>().Count());
 
-            // 4. Change one order
+            // 4a. Change one order - Add new rule
             var norder = rst2.Entity;
             norder.Name = "New Order";
+            norder.SRule.ElementAt(0).Precent = 80;
+            norder.SRule.Add(new FinanceOrderSRule
+            {
+                Order = norder,
+                RuleID = 2,
+                ControlCenterID = listCCs.Count > 1 ? listCCs[1].ID : listCCs[0].ID,
+                Precent = 20
+            });
             rst = await control.Put(norder.ID, norder);
             Assert.NotNull(rst);
             var rst4 = Assert.IsType<UpdatedODataResult<FinanceOrder>>(rst);
             Assert.Equal(norder.Name, rst4.Entity.Name);
+            // Re-read the order
+            //queryUrl = "http://localhost/api/FinanceOrders?$filter=HomeID eq " + hid.ToString() + " and ID eq " + norder.ID.ToString() + "&$expand=SRule";
+            //req = UnitTestUtility.GetHttpRequest(httpctx, "GET", queryUrl);
+            //options = UnitTestUtility.GetODataQueryOptions<FinanceOrder>(odatacontext, req);
+            //rst3 = control.Get(options);
+            //var rst3a = rst3.Cast<FinanceOrder>();
+            //Assert.True(rst3a.Count() == 1);
+            //var rst3a_elem = rst3a.ElementAt(0);
+            //Assert.True(rst3a_elem.SRule.Count == 2);
+            ////var rst3a = Assert.IsType<FinanceOrder>(rst3);
+            ////Assert.True(rst3a.SRule.Count == 2);
 
             // 5. Delete an order
             var rst5 = await control.Delete(oid);
@@ -144,6 +166,9 @@ namespace hihapi.test.UnitTests
             ordersCreated.Clear();
 
             // 6. Read the order again
+            queryUrl = "http://localhost/api/FinanceOrders?$filter=HomeID eq " + hid.ToString();
+            req = UnitTestUtility.GetHttpRequest(httpctx, "GET", queryUrl);
+            options = UnitTestUtility.GetODataQueryOptions<FinanceOrder>(odatacontext, req);
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
             Assert.Equal(existamt_curhome, rst3.Cast<FinanceOrder>().Count());

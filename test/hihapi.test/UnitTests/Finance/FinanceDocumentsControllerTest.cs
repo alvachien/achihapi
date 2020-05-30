@@ -182,12 +182,34 @@ namespace hihapi.test.UnitTests
             var seconddocid = rst2.Entity.ID;
             Assert.True(seconddocid > 0);
 
-            // 4. Change one document
+            // 4a. Change one document - add new document item
             doc.Desp = "Change Test";
+            doc.Items.Add(new FinanceDocumentItem
+            {
+                DocumentHeader = doc,
+                ItemID = 2,
+                Desp = "Item 2.2",
+                TranType = 2, // Wage
+                TranAmount = 20,
+                AccountID = account.ID,
+                ControlCenterID = cc.ID
+            });
             rst = await control.Put(seconddocid, doc);
             Assert.NotNull(rst);
             var rst4 = Assert.IsType<UpdatedODataResult<FinanceDocument>>(rst);
-            Assert.Equal(rst4.Entity.Desp, doc.Desp);
+            Assert.Equal(doc.Desp, rst4.Entity.Desp);
+            Assert.Equal(2, rst4.Entity.Items.Count);
+            Assert.Equal("Item 2.1", rst4.Entity.Items.First(p => p.ItemID == 1).Desp);
+            Assert.Equal("Item 2.2", rst4.Entity.Items.First(p => p.ItemID == 2).Desp);
+
+            // 4b. Change one document - remove document item
+            var itemidx = doc.Items.First(p => p.ItemID == 2);
+            doc.Items.Remove(item);
+            rst = await control.Put(seconddocid, doc);
+            Assert.NotNull(rst);
+            rst4 = Assert.IsType<UpdatedODataResult<FinanceDocument>>(rst);
+            Assert.Equal(1, rst4.Entity.Items.Count);
+            // Assert.Equal("Item 2.1", rst4.Entity.Items.First(p => p.ItemID == 1).Desp);
 
             // 5. Delete the second document
             var rst5 = await control.Delete(seconddocid);

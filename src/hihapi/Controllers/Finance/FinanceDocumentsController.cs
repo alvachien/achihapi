@@ -178,6 +178,31 @@ namespace hihapi.Controllers
             update.UpdatedAt = DateTime.Now;
             update.Updatedby = usrName;
             _context.Entry(update).State = EntityState.Modified;
+
+            // Items
+            var itemsInDB = _context.FinanceDocumentItem.Where(p => p.DocID == update.ID).ToList();
+            foreach (var ditem in update.Items)
+            {
+                var itemindb = itemsInDB.Find(p => p.DocID == update.ID && p.ItemID == ditem.ItemID);
+                if (itemindb == null)
+                {
+                    _context.FinanceDocumentItem.Add(ditem);
+                }
+                else
+                {
+                    // Update
+                    _context.Entry(itemindb).State = EntityState.Modified;
+                }
+            }
+            foreach (var ditem in itemsInDB)
+            {
+                var nitem = update.Items.FirstOrDefault(p => p.DocID == update.ID && p.ItemID == ditem.ItemID);
+                if (nitem == null)
+                {
+                    _context.FinanceDocumentItem.Remove(ditem);
+                }
+            }
+
             try
             {
                 await _context.SaveChangesAsync();

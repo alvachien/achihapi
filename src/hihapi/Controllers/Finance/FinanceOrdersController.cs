@@ -165,6 +165,31 @@ namespace hihapi.Controllers
             update.Updatedby = usrName;
             update.UpdatedAt = DateTime.Now;
             _context.Entry(update).State = EntityState.Modified;
+
+            // SRules.
+            var rulesInDB = _context.FinanceOrderSRule.Where(p => p.OrderID == update.ID).ToList();
+            foreach (var rule in update.SRule)
+            {
+                var itemindb = rulesInDB.Find(p => p.OrderID == update.ID && p.RuleID == rule.RuleID);
+                if (itemindb == null)
+                {
+                    _context.FinanceOrderSRule.Add(rule);
+                }
+                else
+                {
+                    // Update
+                    _context.Entry(itemindb).State = EntityState.Modified;
+                }
+            }
+            foreach (var rule in rulesInDB)
+            {
+                var nitem = update.SRule.FirstOrDefault(p => p.OrderID == update.ID && p.RuleID == rule.RuleID);
+                if (nitem == null)
+                {
+                    _context.FinanceOrderSRule.Remove(rule);
+                }
+            }
+
             try
             {
                 await _context.SaveChangesAsync();
