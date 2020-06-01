@@ -210,6 +210,57 @@ namespace hihapi.Controllers
         }
 
         [Authorize]
+        public async Task<IActionResult> Patch([FromODataUri] int id, [FromBody] Delta<FinanceOrder> doc)
+        {
+            if (!ModelState.IsValid)
+            {
+                HIHAPIUtility.HandleModalStateError(ModelState);
+            }
+
+            var entity = await _context.FinanceOrder.FindAsync(id);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            // User
+            string usrName;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Patch it
+            doc.Patch(entity);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.FinanceOrder.Any(p => p.ID == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return Updated(entity);
+        }
+
+        [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.FinanceOrder.FindAsync(key);

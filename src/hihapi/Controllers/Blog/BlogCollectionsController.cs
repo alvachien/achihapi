@@ -222,7 +222,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModalStateError(ModelState); 
             }
 
             var entity = await _context.BlogCollections.FindAsync(id);

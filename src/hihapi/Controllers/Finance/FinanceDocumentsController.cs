@@ -262,6 +262,57 @@ namespace hihapi.Controllers
             return StatusCode(204); // HttpStatusCode.NoContent
         }
 
+        [Authorize]
+        public async Task<IActionResult> Patch([FromODataUri] int id, [FromBody] Delta<FinanceDocument> doc)
+        {
+            if (!ModelState.IsValid)
+            {
+                HIHAPIUtility.HandleModalStateError(ModelState);
+            }
+
+            var entity = await _context.FinanceDocument.FindAsync(id);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            // User
+            string usrName;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Patch it
+            doc.Patch(entity);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.FinanceDocument.Any(p => p.ID == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return Updated(entity);
+        }
+
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> PostDPDocument([FromBody]FinanceADPDocumentCreateContext createContext)
