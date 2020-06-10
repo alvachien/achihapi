@@ -186,14 +186,14 @@ namespace hihapi.Controllers
         }
 
         [Authorize]
-        public async Task<IActionResult> Patch([FromODataUri] int id, [FromBody] Delta<FinanceAccount> coll)
+        public async Task<IActionResult> Patch([FromODataUri] int key, [FromBody] Delta<FinanceAccount> coll)
         {
             if (!ModelState.IsValid)
             {
                 HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
-            var entity = await _context.FinanceAccount.FindAsync(id);
+            var entity = await _context.FinanceAccount.FindAsync(key);
             if (entity == null)
             {
                 return NotFound();
@@ -227,7 +227,7 @@ namespace hihapi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.FinanceAccount.Any(p => p.ID == id))
+                if (!_context.FinanceAccount.Any(p => p.ID == key))
                 {
                     return NotFound();
                 }
