@@ -185,7 +185,62 @@ namespace hihapi.Controllers
 
             return Updated(update);
         }
- 
+
+        [Authorize]
+        public async Task<IActionResult> Patch([FromODataUri] int key, [FromBody] Delta<FinanceControlCenter> coll)
+        {
+            if (!ModelState.IsValid)
+            {
+                HIHAPIUtility.HandleModalStateError(ModelState);
+            }
+
+            var entity = await _context.FinanceControlCenter.FindAsync(key);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            // User
+            string usrName;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                if (String.CompareOrdinal(entity.Owner, usrName) != 0)
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Patch it
+            coll.Patch(entity);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.FinanceControlCenter.Any(p => p.ID == key))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return Updated(entity);
+        }
+
         [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
