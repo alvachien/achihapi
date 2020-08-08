@@ -50,7 +50,7 @@ namespace hihapi.Models
         public String Owner { get; set; }
 
         [Column("STATUS", TypeName="TINYINT")]
-        public FinanceAccountStatus? Status { get; set; }
+        public Byte? Status { get; set; }
 
         public FinanceAccount(): base()
         {

@@ -108,7 +108,7 @@ namespace hihapi.Controllers
             {
                 throw new BadRequestException("Cannot find Account");
             }
-            else if (!(dpAccount.Status == null || dpAccount.Status == FinanceAccountStatus.Normal))
+            else if (!(dpAccount.Status == null || dpAccount.Status == (Byte)FinanceAccountStatus.Normal))
             {
                 throw new BadRequestException("Account status is not Normal");
             }
@@ -166,7 +166,7 @@ namespace hihapi.Controllers
                     // 3. Close DP account
                     if (leftItemsCnt == 0)
                     {
-                        dpAccount.Status = FinanceAccountStatus.Closed;
+                        dpAccount.Status = (Byte)FinanceAccountStatus.Closed;
                         dpAccount.Updatedby = usrName;
                         dpAccount.UpdatedAt = DateTime.Now;
                         _context.FinanceAccount.Update(dpAccount);

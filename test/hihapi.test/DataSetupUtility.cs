@@ -1373,7 +1373,7 @@ namespace hihapi.test
                 Name = "Cash Account 1",
                 Owner = UserA,
                 CategoryID = FinanceAccountCategory.AccountCategory_Cash,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1382,7 +1382,7 @@ namespace hihapi.test
                 Name = "Cash Account 2",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Cash,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1391,7 +1391,7 @@ namespace hihapi.test
                 Name = "Cash Account 3",
                 Owner = UserC,
                 CategoryID = FinanceAccountCategory.AccountCategory_Cash,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1400,7 +1400,7 @@ namespace hihapi.test
                 Name = "Cash Account 4",
                 Owner = UserD,
                 CategoryID = FinanceAccountCategory.AccountCategory_Cash,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1409,7 +1409,7 @@ namespace hihapi.test
                 Name = "Deposit Account 5",
                 Owner = UserA,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1418,7 +1418,7 @@ namespace hihapi.test
                 Name = "Deposit Account 6",
                 Owner = UserA,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Closed,
+                Status = (Byte)FinanceAccountStatus.Closed,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1427,7 +1427,7 @@ namespace hihapi.test
                 Name = "Deposit Account 7",
                 Owner = UserA,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1436,7 +1436,7 @@ namespace hihapi.test
                 Name = "Deposit Account 8",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1445,7 +1445,7 @@ namespace hihapi.test
                 Name = "Depoist Account 9",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1454,7 +1454,7 @@ namespace hihapi.test
                 Name = "Depoist Account 10",
                 Owner = UserC,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1463,7 +1463,7 @@ namespace hihapi.test
                 Name = "Depoist Account 11",
                 Owner = UserD,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1472,7 +1472,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 12",
                 Owner = UserA,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1481,7 +1481,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 13",
                 Owner = UserA,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1490,7 +1490,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 14",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1499,7 +1499,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 15",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Closed,
+                Status = (Byte)FinanceAccountStatus.Closed,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1508,7 +1508,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 16",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1517,7 +1517,7 @@ namespace hihapi.test
                 Name = "Virutal Account 17",
                 Owner = UserA,
                 CategoryID = FinanceAccountCategory.AccountCategory_VirtualAccount,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1526,7 +1526,7 @@ namespace hihapi.test
                 Name = "Virutal Account 18",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_VirtualAccount,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             });
             #endregion
             // Control centers
@@ -2042,7 +2042,7 @@ namespace hihapi.test
                 Name = "Cash Account 101",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Cash,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2051,7 +2051,7 @@ namespace hihapi.test
                 Name = "Deposit Account 102",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2060,7 +2060,7 @@ namespace hihapi.test
                 Name = "Deposit Account 103",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Closed
+                Status = (Byte)FinanceAccountStatus.Closed
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2069,7 +2069,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 104",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2078,7 +2078,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 105",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Closed
+                Status = (Byte)FinanceAccountStatus.Closed
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2087,7 +2087,7 @@ namespace hihapi.test
                 Name = "Virtual Account 106",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_VirtualAccount,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             #endregion
             // Control centers
@@ -2346,7 +2346,7 @@ namespace hihapi.test
                 Name = "Cash Account 201",
                 Owner = UserA,
                 CategoryID = FinanceAccountCategory.AccountCategory_Cash,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2355,7 +2355,7 @@ namespace hihapi.test
                 Name = "Deposit Account 202",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Cash,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2364,7 +2364,7 @@ namespace hihapi.test
                 Name = "Deposit Account 203",
                 Owner = UserA,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2373,7 +2373,7 @@ namespace hihapi.test
                 Name = "Deposit Account 204",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Closed
+                Status = (Byte)FinanceAccountStatus.Closed
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2382,7 +2382,7 @@ namespace hihapi.test
                 Name = "Deposit Account 205",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2391,7 +2391,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 206",
                 Owner = UserA,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2400,7 +2400,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 207",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2409,7 +2409,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 208",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Closed
+                Status = (Byte)FinanceAccountStatus.Closed
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2418,7 +2418,7 @@ namespace hihapi.test
                 Name = "Virtual Account 209",
                 Owner = UserA,
                 CategoryID = FinanceAccountCategory.AccountCategory_VirtualAccount,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2427,7 +2427,7 @@ namespace hihapi.test
                 Name = "Virtual Account 210",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_VirtualAccount,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             #endregion
             // Control centers
@@ -2602,7 +2602,7 @@ namespace hihapi.test
                 Name = "Cash Account 301",
                 Owner = UserC,
                 CategoryID = FinanceAccountCategory.AccountCategory_Cash,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2611,7 +2611,7 @@ namespace hihapi.test
                 Name = "Deposit Account 302",
                 Owner = UserC,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2620,7 +2620,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 303",
                 Owner = UserC,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2629,7 +2629,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 304",
                 Owner = UserC,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Closed
+                Status = (Byte)FinanceAccountStatus.Closed
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2638,7 +2638,7 @@ namespace hihapi.test
                 Name = "Virtual Account 305",
                 Owner = UserC,
                 CategoryID = FinanceAccountCategory.AccountCategory_VirtualAccount,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             #endregion
             // Control centers
@@ -2763,7 +2763,7 @@ namespace hihapi.test
                 Name = "Cash Account 401",
                 Owner = UserD,
                 CategoryID = FinanceAccountCategory.AccountCategory_Cash,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2772,7 +2772,7 @@ namespace hihapi.test
                 Name = "Deposit Account 402",
                 Owner = UserD,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2781,7 +2781,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 403",
                 Owner = UserD,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2790,7 +2790,7 @@ namespace hihapi.test
                 Name = "Creditcard Account 404",
                 Owner = UserD,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = FinanceAccountStatus.Closed
+                Status = (Byte)FinanceAccountStatus.Closed
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2799,7 +2799,7 @@ namespace hihapi.test
                 Name = "Virtual Account 405",
                 Owner = UserD,
                 CategoryID = FinanceAccountCategory.AccountCategory_VirtualAccount,
-                Status = FinanceAccountStatus.Normal
+                Status = (Byte)FinanceAccountStatus.Normal
             });
             #endregion
             // Control centers

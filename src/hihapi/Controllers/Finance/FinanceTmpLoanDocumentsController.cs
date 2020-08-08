@@ -100,7 +100,7 @@ namespace hihapi.Controllers
             // Check 3: Account
             var loanAccountHeader = _context.FinanceAccount.Where(p => p.ID == docLoanTmp.AccountID).FirstOrDefault();
             if (loanAccountHeader == null
-                || loanAccountHeader.Status != FinanceAccountStatus.Normal
+                || loanAccountHeader.Status != (Byte)FinanceAccountStatus.Normal
                 || !(loanAccountHeader.CategoryID == FinanceAccountCategory.AccountCategory_BorrowFrom
                     || loanAccountHeader.CategoryID == FinanceAccountCategory.AccountCategory_LendTo)
                     )
@@ -212,7 +212,7 @@ namespace hihapi.Controllers
                     // 3. In case balance is zero, update the account status
                     if (Decimal.Compare(acntBalance, 0) == 0)
                     {
-                        loanAccountHeader.Status = FinanceAccountStatus.Closed;
+                        loanAccountHeader.Status = (Byte)FinanceAccountStatus.Closed;
                         loanAccountHeader.Updatedby = usrName;
                         loanAccountHeader.UpdatedAt = DateTime.Now;
                         _context.FinanceAccount.Update(loanAccountHeader);

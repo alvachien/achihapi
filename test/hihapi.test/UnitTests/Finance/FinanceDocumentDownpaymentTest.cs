@@ -70,7 +70,7 @@ namespace hihapi.test.UnitTests
             {
                 fixture.InitHome5TestData(context);
             }
-            var account = context.FinanceAccount.Where(p => p.HomeID == hid && p.Status != FinanceAccountStatus.Closed).FirstOrDefault();
+            var account = context.FinanceAccount.Where(p => p.HomeID == hid && p.Status != (Byte)FinanceAccountStatus.Closed).FirstOrDefault();
             var cc = context.FinanceControlCenter.Where(p => p.HomeID == hid).FirstOrDefault();
 
             // 1. Create first DP docs.
@@ -112,7 +112,7 @@ namespace hihapi.test.UnitTests
                         ? FinanceAccountCategory.AccountCategory_AdvancePayment
                         : FinanceAccountCategory.AccountCategory_AdvanceReceive,
                 Owner = user,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             };
             var startdate = DateTime.Today;
             var enddate = DateTime.Today.AddMonths(6);

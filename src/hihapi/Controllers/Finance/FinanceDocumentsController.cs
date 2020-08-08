@@ -326,7 +326,7 @@ namespace hihapi.Controllers
                 || createContext.DocumentInfo == null
                 || createContext.AccountInfo == null 
                 || createContext.AccountInfo.HomeID <= 0
-                || createContext.AccountInfo.Status != FinanceAccountStatus.Normal
+                || createContext.AccountInfo.Status != (Byte)FinanceAccountStatus.Normal
                 || createContext.DocumentInfo.HomeID <= 0
                 || createContext.DocumentInfo.HomeID != createContext.AccountInfo.HomeID
                 || createContext.AccountInfo.ExtraDP == null
@@ -479,7 +479,7 @@ namespace hihapi.Controllers
 
             if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null
                 || createContext.AccountInfo.HomeID <= 0
-                || createContext.AccountInfo.Status != FinanceAccountStatus.Normal
+                || createContext.AccountInfo.Status != (Byte)FinanceAccountStatus.Normal
                 || createContext.DocumentInfo.HomeID <= 0
                 || createContext.DocumentInfo.HomeID != createContext.AccountInfo.HomeID
                 || createContext.AccountInfo.ExtraLoan == null
@@ -671,7 +671,7 @@ namespace hihapi.Controllers
             var vmAccount = new FinanceAccount();
             vmAccount.HomeID = createContext.HID;
             vmAccount.Name = createContext.ExtraAsset.Name;
-            vmAccount.Status = FinanceAccountStatus.Normal;
+            vmAccount.Status = (Byte)FinanceAccountStatus.Normal;
             vmAccount.CategoryID = FinanceAccountCategory.AccountCategory_Asset;
             vmAccount.ExtraAsset = new FinanceAccountExtraAS();
             vmAccount.Owner = createContext.AccountOwner;
@@ -870,7 +870,7 @@ namespace hihapi.Controllers
                          join assetaccount in this._context.FinanceAccountExtraAS on account.ID equals assetaccount.AccountID
                          where account.ID == createContext.AssetAccountID
                          select new { Status = account.Status, RefSellDoc = assetaccount.RefenceSoldDocumentID }).FirstOrDefault();
-            if (query.Status != FinanceAccountStatus.Normal)
+            if (query.Status != (Byte)FinanceAccountStatus.Normal)
             {
                 throw new BadRequestException("Account status is not normal");
             }
@@ -1018,7 +1018,7 @@ namespace hihapi.Controllers
                         join assetaccount in this._context.FinanceAccountExtraAS on account.ID equals assetaccount.AccountID
                         where account.ID == createContext.AssetAccountID
                         select new { Status = account.Status, RefSellDoc = assetaccount.RefenceSoldDocumentID }).FirstOrDefault();
-            if (query.Status != FinanceAccountStatus.Normal)
+            if (query.Status != (Byte)FinanceAccountStatus.Normal)
             {
                 throw new BadRequestException("Account status is not normal");
             }

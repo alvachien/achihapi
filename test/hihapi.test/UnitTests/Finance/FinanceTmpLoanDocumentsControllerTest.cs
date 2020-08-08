@@ -69,7 +69,7 @@ namespace hihapi.test.UnitTests
             {
                 fixture.InitHome5TestData(context);
             }
-            var account = context.FinanceAccount.Where(p => p.HomeID == hid && p.Status != FinanceAccountStatus.Closed).FirstOrDefault();
+            var account = context.FinanceAccount.Where(p => p.HomeID == hid && p.Status != (Byte)FinanceAccountStatus.Closed).FirstOrDefault();
             var cc = context.FinanceControlCenter.Where(p => p.HomeID == hid).FirstOrDefault();
 
             // 1. Create first Loan docs.
@@ -111,7 +111,7 @@ namespace hihapi.test.UnitTests
                     ? FinanceAccountCategory.AccountCategory_BorrowFrom
                     : FinanceAccountCategory.AccountCategory_LendTo,
                 Owner = user,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             };
             var startdate = new DateTime(2020, 1, 10);
             var enddate = new DateTime(2021, 1, 10);
@@ -223,7 +223,7 @@ namespace hihapi.test.UnitTests
 
             // 4. Now the account shall be closed automatically
             var account2 = context.FinanceAccount.Where(p => p.HomeID == hid && p.ID == loanacntid).FirstOrDefault();
-            Assert.True(account2.Status == FinanceAccountStatus.Closed);
+            Assert.True(account2.Status == (Byte)FinanceAccountStatus.Closed);
 
             // Last, clear all created objects
             CleanupCreatedEntries();
@@ -259,7 +259,7 @@ namespace hihapi.test.UnitTests
             {
                 fixture.InitHome5TestData(context);
             }
-            var account = context.FinanceAccount.Where(p => p.HomeID == hid && p.Status != FinanceAccountStatus.Closed).FirstOrDefault();
+            var account = context.FinanceAccount.Where(p => p.HomeID == hid && p.Status != (Byte)FinanceAccountStatus.Closed).FirstOrDefault();
             var cc = context.FinanceControlCenter.Where(p => p.HomeID == hid).FirstOrDefault();
 
             // 1. Create first Loan docs.
@@ -301,7 +301,7 @@ namespace hihapi.test.UnitTests
                     ? FinanceAccountCategory.AccountCategory_BorrowFrom
                     : FinanceAccountCategory.AccountCategory_LendTo,
                 Owner = user,
-                Status = FinanceAccountStatus.Normal,
+                Status = (Byte)FinanceAccountStatus.Normal,
             };
             var startdate = new DateTime(2020, 1, 10);
             var enddate = new DateTime(2021, 1, 10);
@@ -415,7 +415,7 @@ namespace hihapi.test.UnitTests
 
             // 4. Now the account shall be closed automatically
             var account2 = context.FinanceAccount.Where(p => p.HomeID == hid && p.ID == loanacntid).FirstOrDefault();
-            Assert.True(account2.Status == FinanceAccountStatus.Closed);
+            Assert.True(account2.Status == (Byte)FinanceAccountStatus.Closed);
 
             // Last, clear all created objects
             CleanupCreatedEntries();

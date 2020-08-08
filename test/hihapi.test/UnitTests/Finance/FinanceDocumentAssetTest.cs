@@ -68,7 +68,7 @@ namespace hihapi.test.UnitTests
             {
                 fixture.InitHome5TestData(context);
             }
-            var account = context.FinanceAccount.Where(p => p.HomeID == hid && p.Status != FinanceAccountStatus.Closed).FirstOrDefault();
+            var account = context.FinanceAccount.Where(p => p.HomeID == hid && p.Status != (Byte)FinanceAccountStatus.Closed).FirstOrDefault();
             var cc = context.FinanceControlCenter.Where(p => p.HomeID == hid).FirstOrDefault();
             // var orders = context.FinanceOrder.Where(p => p.HomeID == hid).ToList();
 
