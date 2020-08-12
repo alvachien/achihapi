@@ -21,7 +21,8 @@ namespace hihapi.Models
         public const Int16 DocType_Repay = 11;
         public const Int16 DocType_AdvanceReceive = 12;
         public const Int16 DocType_AssetValChg = 13;
-        public const Int16 DocType_Insurece = 14;
+        public const Int16 DocType_Insurance = 14;
+        public const Int16 DocType_LoanPrepayment = 15;
 
         [Key]
         [Column("ID", TypeName="INT")]

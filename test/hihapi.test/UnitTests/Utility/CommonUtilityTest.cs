@@ -532,6 +532,42 @@ namespace hihapi.test.UnitTests
         }
 
         [Fact]
+        public void RepeatedDatesWithAmountTest_Month2()
+        {
+            List<RepeatedDatesWithAmount> results = null;
+            var startdate = DateTime.Today;
+
+            RepeatDatesWithAmountCalculationInput vm = new RepeatDatesWithAmountCalculationInput
+            {
+                StartDate = new Date(2020, 1, 1),
+                EndDate = new Date(2021, 1, 1),
+                RepeatType = RepeatFrequency.Month,
+                TotalAmount = 2219.00M,
+                Desp = "Test_Month"
+            };
+
+            results = CommonUtility.WorkoutRepeatedDatesWithAmount(vm);
+
+            // Total count
+            Assert.True(results.Count == 12);
+            Int32 i = 0;
+            foreach (var rst in results)
+            {
+                // Date
+                Assert.Equal(vm.StartDate.AddMonths(i++), rst.TranDate);
+
+                // Amount
+                if (i == 1)
+                    Assert.Equal(0, Decimal.Compare(184.88M, rst.TranAmount));
+                else
+                    Assert.Equal(0, Decimal.Compare(184.92M, rst.TranAmount));
+
+                // Desp
+                Assert.NotEqual(String.Empty, rst.Desp);
+            }
+        }
+
+        [Fact]
         public void RepeatedDatesWithAmountTest_Quarter()
         {
             List<RepeatedDatesWithAmount> results = null;

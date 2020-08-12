@@ -178,6 +178,12 @@ namespace hihapi.Models
         public int HomeID { get; set; }
         public FinanceDocument DocumentInfo { get; set; }
     }
+    public sealed class FinanceLoanPrepayDocumentCreateContext
+    {
+        public int HomeID { get; set; }
+        public int LoanAccountID { get; set; }
+        public FinanceDocument DocumentInfo { get; set; }
+    }
     #endregion
 
     #region Asset related

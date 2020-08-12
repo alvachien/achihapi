@@ -517,6 +517,20 @@ namespace hihapi.Utilities
                     break;
             }
 
+            // Before return, ensure the tranamount is correct
+            decimal realamt = 0;
+            if (listResults.Count > 0)
+            {
+                listResults.ForEach(rst =>
+                {
+                    realamt += rst.TranAmount;
+                });
+                if (realamt != datInput.TotalAmount)
+                {
+                    listResults[0].TranAmount -= (realamt - datInput.TotalAmount);
+                }
+            }
+
             return listResults;
         }
     
@@ -696,6 +710,20 @@ namespace hihapi.Utilities
                         break;
 
                     default: throw new Exception("Unsupported repayment method");
+                }
+            }
+
+            // Before return, ensure the tranamount is correct
+            decimal realamt = 0;
+            if (listResults.Count > 0)
+            {
+                listResults.ForEach(rst =>
+                {
+                    realamt += rst.TranAmount;
+                });
+                if (realamt != datInput.TotalAmount)
+                {
+                    listResults[0].TranAmount -= (realamt - datInput.TotalAmount);
                 }
             }
 
