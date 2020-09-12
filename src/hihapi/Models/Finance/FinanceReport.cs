@@ -213,4 +213,18 @@ namespace hihapi.Models
     {
     }
     #endregion
+
+    #region Transaction type report
+    public class FinanceReportTranTypeAndExpenseView
+    {
+
+    }
+    #endregion
+
+    #region Date report
+    public class FinanceReportDateView
+    {
+
+    }
+    #endregion
 }
