@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UserSecretsId>cf80adf9-ce70-4ce9-bb4e-a73887a492a6</UserSecretsId>
-    <Version>1.1.105</Version>
+    <Version>1.1.108</Version>
     <Authors>Alva Chien</Authors>
     <Product>H.I.H.</Product>
     <Copyright>(C) Alva Chien, 2020</Copyright>
@@ -26,6 +26,7 @@
     <None Remove="Sqls\Delta\v14.sql" />
     <None Remove="Sqls\Delta\v15.sql" />
     <None Remove="Sqls\Delta\v16.sql" />
+    <None Remove="Sqls\Delta\v17.sql" />
     <None Remove="Sqls\Delta\v2.sql" />
     <None Remove="Sqls\Delta\v3.sql" />
     <None Remove="Sqls\Delta\v4.sql" />
@@ -38,10 +39,10 @@
   <ItemGroup>
     <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="3.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.OData" Version="7.4.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.4" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.8" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.4" />
-    <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="3.4.0" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Sqls\Delta\v1.sql" />
@@ -52,6 +53,7 @@
     <EmbeddedResource Include="Sqls\Delta\v14.sql" />
     <EmbeddedResource Include="Sqls\Delta\v15.sql" />
     <EmbeddedResource Include="Sqls\Delta\v16.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v17.sql" />
     <EmbeddedResource Include="Sqls\Delta\v2.sql" />
     <EmbeddedResource Include="Sqls\Delta\v3.sql" />
     <EmbeddedResource Include="Sqls\Delta\v4.sql" />

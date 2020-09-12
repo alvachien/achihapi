@@ -32,7 +32,10 @@ namespace hihapi.Models
 
         [Required]
         [Column("RELT", TypeName = "SMALLINT")]
-        public HomeMemberRelationType Relation { get; set; } 
+        public HomeMemberRelationType Relation { get; set; }
+
+        [Column("ISCHILD", TypeName = "BIT")]
+        public bool? IsChild { get; set; }
 
         public HomeDefine HomeDefinition { get; set; }
     }

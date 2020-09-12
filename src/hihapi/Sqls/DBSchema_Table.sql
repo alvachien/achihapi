@@ -42,6 +42,7 @@ CREATE TABLE [dbo].[t_homemem] (
     [USER]      NVARCHAR (50) NOT NULL,
     [DISPLAYAS] NVARCHAR (50) NULL,
     [RELT]      SMALLINT      NOT NULL,
+    [ISCHILD]   BIT           NULL,
     [CREATEDBY] NVARCHAR (50) NOT NULL,
     [CREATEDAT] DATE          NULL,
     [UPDATEDBY] NVARCHAR (50) NULL,

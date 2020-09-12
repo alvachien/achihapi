@@ -117,6 +117,7 @@ namespace hihapi.test
 	            USER nvarchar(50) NOT NULL,
 	            DISPLAYAS nvarchar(50) NULL,
 	            RELT smallint NOT NULL,
+                ISCHILD bit NULL,
 	            CREATEDBY nvarchar(50) NOT NULL,
 	            CREATEDAT date NULL DEFAULT CURRENT_DATE,
 	            UPDATEDBY nvarchar(50) NULL,

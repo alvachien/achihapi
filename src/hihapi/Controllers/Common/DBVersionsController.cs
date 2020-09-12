@@ -32,7 +32,8 @@ namespace hihapi.Controllers
         // Version 14 - 2020.03.12 
         // Version 15 - 2020.04.01
         // Version 16 - 2020.04.15
-        public static Int32 CurrentVersion = 16;
+        // Version 17 - 2020.09.12
+        public static Int32 CurrentVersion = 17;
 
         private readonly hihDataContext _context;
 
