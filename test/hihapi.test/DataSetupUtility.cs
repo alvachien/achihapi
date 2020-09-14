@@ -1088,6 +1088,11 @@ namespace hihapi.test
                 VersionID = 16,
                 ReleasedDate = new DateTime(2020, 4, 15)
             });
+            DBVersions.Add(new DBVersion()
+            {
+                VersionID = 17,
+                ReleasedDate = new DateTime(2020, 9, 12)
+            });
         }
 
         private static void SetupTable_Currency()
