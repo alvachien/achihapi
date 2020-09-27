@@ -186,6 +186,8 @@ namespace hihapi.Controllers
             {
                 update.Updatedby = usrName;
                 update.UpdatedAt = DateTime.Now;
+                update.CreatedAt = existinghd.CreatedAt;
+                update.Createdby = existinghd.Createdby;
                 _context.Entry(existinghd).CurrentValues.SetValues(update);
 
                 var dbmems = _context.HomeMembers.Where(p => p.HomeID == key).ToList();
@@ -194,10 +196,14 @@ namespace hihapi.Controllers
                     var memindb = dbmems.Find(p => p.HomeID == key && p.User == mem.User);
                     if (memindb == null)
                     {
+                        mem.Createdby = usrName;
+                        mem.CreatedAt = DateTime.Now;
                         _context.HomeMembers.Add(mem);
                     }
                     else
                     {
+                        mem.CreatedAt = memindb.CreatedAt;
+                        mem.Createdby = memindb.Createdby;
                         _context.Entry(memindb).CurrentValues.SetValues(mem);
                     }
                 }
