@@ -44,10 +44,21 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            //var query = from hmem in _context.HomeMembers
+            //            where hmem.User == usrName
+            //            select new { HomeID = hmem.HomeID } into hids
+            //            join ccs in _context.FinanceControlCenter on hids.HomeID equals ccs.HomeID
+            //            select ccs;
+
+            // Check whether User assigned with specified Home ID
             var query = from hmem in _context.HomeMembers
                         where hmem.User == usrName
-                        select new { HomeID = hmem.HomeID } into hids
-                        join ccs in _context.FinanceControlCenter on hids.HomeID equals ccs.HomeID
+                        select new { HomeID = hmem.HomeID, User = hmem.User, IsChild = hmem.IsChild } into hmems
+                        join ccs in _context.FinanceControlCenter
+                          on hmems.HomeID equals ccs.HomeID
+                        where (hmems.IsChild == true && hmems.User == ccs.Owner)
+                            || !hmems.IsChild.HasValue
+                            || hmems.IsChild == false
                         select ccs;
 
             return option.ApplyTo(query);

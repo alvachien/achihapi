@@ -860,8 +860,8 @@ namespace hihapi.test
             // Home 1
             // Member A (host)
             // Member B
-            // Member C
-            // Member D
+            // Member C (child)
+            // Member D (child)
             HomeDefines.Add(new HomeDefine()
             {
                 ID = Home1ID,
@@ -892,7 +892,8 @@ namespace hihapi.test
                 DisplayAs = "User C",
                 Relation = HomeMemberRelationType.Child,
                 User = UserC,
-                Createdby = UserA
+                Createdby = UserA,
+                IsChild = true
             });
             HomeMembers.Add(new HomeMember()
             {
@@ -900,7 +901,8 @@ namespace hihapi.test
                 DisplayAs = "User D",
                 Relation = HomeMemberRelationType.Child,
                 User = UserD,
-                Createdby = UserA
+                Createdby = UserA,
+                IsChild = true
             });
 
             // Home 2
@@ -1008,6 +1010,7 @@ namespace hihapi.test
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (14,'2020.3.15');
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (15,'2020.4.1');
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (16,'2020.4.15');
+            // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (17,'2020.9.12');
             DBVersions.Add(new DBVersion()
             {
                 VersionID = 1,

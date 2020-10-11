@@ -43,11 +43,35 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var query = from hmem in _context.HomeMembers
-                        where hmem.User == usrName
-                        select new { HomeID = hmem.HomeID } into hids
-                        join acnts in _context.FinanceAccount on hids.HomeID equals acnts.HomeID
+            var query = from hmem in _context.HomeMembers where hmem.User == usrName
+                        select new { HomeID = hmem.HomeID, User = hmem.User, IsChild = hmem.IsChild } into hmems
+                        join acnts in _context.FinanceAccount
+                          on hmems.HomeID equals acnts.HomeID
+                        where ( hmems.IsChild == true && hmems.User == acnts.Owner )
+                            || !hmems.IsChild.HasValue
+                            || hmems.IsChild == false
                         select acnts;
+
+#if DEBUG
+            // For testing purpose
+            //var query1 = from hmem in _context.HomeMembers
+            //             where hmem.User == usrName
+            //             select hmem;
+            //var query1rst = query1.ToList<HomeMember>();
+
+            //var query2 = from hmem in query1                         
+            //             join acnts in _context.FinanceAccount
+            //               on hmem.HomeID equals acnts.HomeID
+            //             where (hmem.IsChild == true && hmem.User == acnts.Owner) 
+            //                   || !hmem.IsChild.HasValue
+            //                   || hmem.IsChild == false
+            //             select acnts;
+
+            //var queryrst = query2.ToList<FinanceAccount>();
+            //if (queryrst.Count <= 0)
+            //{
+            //}
+#endif
 
             return option.ApplyTo(query);
         }
