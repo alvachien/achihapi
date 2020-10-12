@@ -86,9 +86,19 @@ namespace hihapi.test.UnitTests
                 HttpContext = httpctx
             };
             var rsts = controller.Get();
+            var curhmemquery = (from homemem in context.HomeMembers where homemem.HomeID == hid && homemem.User == user select homemem).FirstOrDefault();
+            var curhmem = Assert.IsType<HomeMember>(curhmemquery);
             var expamt = context.FinanceAccount.Where(p => p.HomeID == hid).Count();
             var actamt = rsts.ToList().Where(p => p.HomeID == hid).Count();
-            Assert.Equal(expamt, actamt);
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                expamt = context.FinanceAccount.Where(p => p.HomeID == hid && p.Owner == user).Count();
+                Assert.Equal(expamt, actamt);
+            }
+            else
+            {
+                Assert.Equal(expamt, actamt);
+            }
         }
     }
 }
