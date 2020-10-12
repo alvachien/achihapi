@@ -43,7 +43,7 @@ namespace hihapi.Controllers
                         where hmem.User == usrName
                         select new { hmem.HomeID, hmem.IsChild } into hids
                         join ords in _context.FinanceOrder on hids.HomeID equals ords.HomeID
-                        where ( hids.IsChild == null || hids.IsChild == false)
+                        // where ( hids.IsChild == null || hids.IsChild == false)
                         select ords;
 
             return option.ApplyTo(query);

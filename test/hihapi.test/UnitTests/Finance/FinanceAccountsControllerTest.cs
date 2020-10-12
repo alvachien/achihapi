@@ -110,12 +110,12 @@ namespace hihapi.test.UnitTests
             {
                 HttpContext = httpctx
             };
-            var curhmemquery = (from homemem in context.HomeMembers where homemem.HomeID == hid && homemem.User == user).FirstOrDefault();
+            var curhmemquery = (from homemem in context.HomeMembers where homemem.HomeID == hid && homemem.User == user select homemem).FirstOrDefault();
             var curhmem = Assert.IsType<HomeMember>(curhmemquery);
             var acntamt = (from homemem in context.HomeMembers
-                              join finacnt in context.FinanceAccount
-                              on new { homemem.HomeID, homemem.User } equals new { finacnt.HomeID, User = user }
-                              select finacnt.ID).ToList().Count();
+                           join finacnt in context.FinanceAccount
+                           on new { homemem.HomeID, homemem.User } equals new { finacnt.HomeID, User = user }
+                           select finacnt.ID).ToList().Count();
 
             // 1. Create first account
             var acnt = new FinanceAccount()
@@ -144,7 +144,15 @@ namespace hihapi.test.UnitTests
             var rst3 = control.Get(options);
 
             Assert.NotNull(rst3);
-            Assert.Equal(acntamt + 1, rst3.Cast<FinanceAccount>().Count());
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                acntamt = context.FinanceAccount.Where(p => p.Owner == curhmem.User).Count();
+                Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
+            }
+            else
+            {
+                Assert.Equal(acntamt + 1, rst3.Cast<FinanceAccount>().Count());
+            }
 
             // 2a. Read the whole accounts (with home ID applied)
             queryUrl = "http://localhost/api/FinanceAccounts?$filter=HomeID eq " + hid.ToString();
@@ -152,9 +160,17 @@ namespace hihapi.test.UnitTests
             //var odatacontext = UnitTestUtility.GetODataQueryContext<FinanceAccount>(this.model);
             options = UnitTestUtility.GetODataQueryOptions<FinanceAccount>(odatacontext, req);
             rst3 = control.Get(options);
-            acntamt = context.FinanceAccount.Where(p => p.HomeID == hid).Count();
             Assert.NotNull(rst3);
-            Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                acntamt = context.FinanceAccount.Where(p => p.HomeID == hid && p.Owner == curhmem.User).Count();
+                Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
+            }
+            else
+            {
+                acntamt = context.FinanceAccount.Where(p => p.HomeID == hid).Count();
+                Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
+            }
 
             // 3. Now create another one!
             acnt = new FinanceAccount()
@@ -194,8 +210,16 @@ namespace hihapi.test.UnitTests
             // 6. Now read the whole accounts
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            acntamt = context.FinanceAccount.Where(p => p.HomeID == hid).Count();
-            Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                acntamt = context.FinanceAccount.Where(p => p.HomeID == hid && p.Owner == user).Count();
+                Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
+            }
+            else
+            {
+                acntamt = context.FinanceAccount.Where(p => p.HomeID == hid).Count();
+                Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
+            }
 
             // 7. Delete the first account
             rst5 = await control.Delete(firstacntid);
@@ -206,8 +230,16 @@ namespace hihapi.test.UnitTests
             // 8. Now read the whole accounts
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            acntamt = context.FinanceAccount.Where(p => p.HomeID == hid).Count();
-            Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                acntamt = context.FinanceAccount.Where(p => p.HomeID == hid && p.Owner == user).Count();
+                Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
+            }
+            else
+            {
+                acntamt = context.FinanceAccount.Where(p => p.HomeID == hid).Count();
+                Assert.Equal(acntamt, rst3.Cast<FinanceAccount>().Count());
+            }
 
             accountsCreated.Clear();
 

@@ -94,6 +94,8 @@ namespace hihapi.test.UnitTests
             }
             var account = context.FinanceAccount.Where(p => p.HomeID == hid && p.Status != (Byte)FinanceAccountStatus.Closed).FirstOrDefault();
             var cc = context.FinanceControlCenter.Where(p => p.HomeID == hid).FirstOrDefault();
+            var curhmemquery = (from homemem in context.HomeMembers where homemem.HomeID == hid && homemem.User == user select homemem).FirstOrDefault();
+            var curhmem = Assert.IsType<HomeMember>(curhmemquery);
             var existamt = (from homemem in context.HomeMembers
                             join findoc in context.FinanceDocument
                             on new { homemem.HomeID, homemem.User } equals new { findoc.HomeID, User = user }
@@ -143,7 +145,15 @@ namespace hihapi.test.UnitTests
             var options = UnitTestUtility.GetODataQueryOptions<FinanceDocument>(odatacontext, req);
             var rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(existamt + 1, rst3.Cast<FinanceDocument>().Count());
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                existamt = context.FinanceDocument.Where(p => p.Createdby == user).Count();
+                Assert.Equal(existamt, rst3.Cast<FinanceDocument>().Count());
+            }
+            else
+            {
+                Assert.Equal(existamt + 1, rst3.Cast<FinanceDocument>().Count());
+            }
 
             // 2b. Now read the whole orders (with home id)
             queryUrl = "http://localhost/api/FinanceDocuments?$filter=HomeID eq " + hid.ToString();
@@ -152,7 +162,15 @@ namespace hihapi.test.UnitTests
             options = UnitTestUtility.GetODataQueryOptions<FinanceDocument>(odatacontext, req);
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(existamt_curhome + 1, rst3.Cast<FinanceDocument>().Count());
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                existamt_curhome = context.FinanceDocument.Where(p => p.HomeID == hid && p.Createdby == user).Count();
+                Assert.Equal(existamt_curhome, rst3.Cast<FinanceDocument>().Count());
+            }
+            else
+            {
+                Assert.Equal(existamt_curhome + 1, rst3.Cast<FinanceDocument>().Count());
+            }
 
             // 3. Now create another one!
             doc = new FinanceDocument()
@@ -221,7 +239,15 @@ namespace hihapi.test.UnitTests
             // 6. Now read the whole documents
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(existamt_curhome + 1, rst3.Cast<FinanceDocument>().Count());
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                existamt_curhome = context.FinanceDocument.Where(p => p.HomeID == hid && p.Createdby == user).Count();
+                Assert.Equal(existamt_curhome, rst3.Cast<FinanceDocument>().Count());
+            }
+            else
+            {
+                Assert.Equal(existamt_curhome + 1, rst3.Cast<FinanceDocument>().Count());
+            }
 
             // Last, clear all created objects
             CleanupCreatedEntries();

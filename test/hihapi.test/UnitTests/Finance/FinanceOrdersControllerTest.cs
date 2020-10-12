@@ -78,6 +78,8 @@ namespace hihapi.test.UnitTests
             var httpctx = UnitTestUtility.GetDefaultHttpContext(provider, userclaim);
             var listCCs = context.FinanceControlCenter.Where(p => p.HomeID == hid).ToList<FinanceControlCenter>();
 
+            var curhmemquery = (from homemem in context.HomeMembers where homemem.HomeID == hid && homemem.User == user select homemem).FirstOrDefault();
+            var curhmem = Assert.IsType<HomeMember>(curhmemquery);
             var existamt = (from homemem in context.HomeMembers
                               join finord in context.FinanceOrder
                               on new { homemem.HomeID, homemem.User } equals new { finord.HomeID, User = user }
@@ -119,7 +121,15 @@ namespace hihapi.test.UnitTests
             var options = UnitTestUtility.GetODataQueryOptions<FinanceOrder>(odatacontext, req);
             var rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(existamt + 1, rst3.Cast<FinanceOrder>().Count());
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                existamt = context.FinanceOrder.Where(p => p.HomeID == hid).Count();
+                Assert.Equal(existamt + 1, rst3.Cast<FinanceOrder>().Count());
+            }
+            else
+            {
+                Assert.Equal(existamt + 1, rst3.Cast<FinanceOrder>().Count());
+            }
 
             // 3a. Read the order out (with Home ID)
             queryUrl = "http://localhost/api/FinanceOrders?$filter=HomeID eq " + hid.ToString();

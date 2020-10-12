@@ -73,10 +73,12 @@ namespace hihapi.test.UnitTests
                 fixture.InitHome5TestData(context);
             }
 
+            var curhmemquery = (from homemem in context.HomeMembers where homemem.HomeID == hid && homemem.User == user select homemem).FirstOrDefault();
+            var curhmem = Assert.IsType<HomeMember>(curhmemquery);
             var existccamt = (from homemem in context.HomeMembers
-                           join fincc in context.FinanceControlCenter
-                           on new { homemem.HomeID, homemem.User } equals new { fincc.HomeID, User = user }
-                           select fincc.ID).ToList().Count();
+                              join fincc in context.FinanceControlCenter
+                              on new { homemem.HomeID, homemem.User } equals new { fincc.HomeID, User = user }
+                              select fincc.ID).ToList().Count();
             var existccamt_curhome = context.FinanceControlCenter.Where(p => p.HomeID == hid).Count();
 
             // 1. Create first control center
@@ -111,7 +113,15 @@ namespace hihapi.test.UnitTests
             var options = UnitTestUtility.GetODataQueryOptions<FinanceControlCenter>(odatacontext, req);
             var rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(1 + existccamt, rst3.Cast<FinanceControlCenter>().Count());
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                existccamt = context.FinanceControlCenter.Where(p => p.Owner == user).Count();
+                Assert.Equal(existccamt, rst3.Cast<FinanceControlCenter>().Count());
+            }
+            else
+            {
+                Assert.Equal(1 + existccamt, rst3.Cast<FinanceControlCenter>().Count());
+            }
 
             // 2a. Now read the whole control centers (with Home ID)            
             queryUrl = @"http://localhost/api/FinanceControlCenters?$filter=HomeID eq " + hid.ToString();
@@ -120,7 +130,15 @@ namespace hihapi.test.UnitTests
             options = UnitTestUtility.GetODataQueryOptions<FinanceControlCenter>(odatacontext, req);
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(1 + existccamt_curhome, rst3.Cast<FinanceControlCenter>().Count());
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                existccamt_curhome = context.FinanceControlCenter.Where(p => p.HomeID == hid && p.Owner == user).Count();
+                Assert.Equal(existccamt_curhome, rst3.Cast<FinanceControlCenter>().Count());
+            }
+            else
+            {
+                Assert.Equal(1 + existccamt_curhome, rst3.Cast<FinanceControlCenter>().Count());
+            }
 
             // 3. Now create another one!
             cc = new FinanceControlCenter()
@@ -159,7 +177,15 @@ namespace hihapi.test.UnitTests
             // 6. Now read the whole control centers
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(1 + existccamt_curhome, rst3.Cast<FinanceControlCenter>().Count());
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                existccamt_curhome = context.FinanceControlCenter.Where(p => p.HomeID == hid && p.Owner == user).Count();
+                Assert.Equal(existccamt_curhome, rst3.Cast<FinanceControlCenter>().Count());
+            }
+            else
+            {
+                Assert.Equal(1 + existccamt_curhome, rst3.Cast<FinanceControlCenter>().Count());
+            }
 
             // 7. Delete the first control center
             rst5 = await control.Delete(firstccid);
@@ -170,7 +196,15 @@ namespace hihapi.test.UnitTests
             // 8. Now read the whole control centers
             rst3 = control.Get(options);
             Assert.NotNull(rst3);
-            Assert.Equal(existccamt_curhome, rst3.Cast<FinanceControlCenter>().Count());
+            if (curhmem.IsChild.HasValue && curhmem.IsChild == true)
+            {
+                existccamt_curhome = context.FinanceControlCenter.Where(p => p.HomeID == hid && p.Owner == user).Count();
+                Assert.Equal(existccamt_curhome, rst3.Cast<FinanceControlCenter>().Count());
+            }
+            else
+            {
+                Assert.Equal(existccamt_curhome, rst3.Cast<FinanceControlCenter>().Count());
+            }
 
             ccsCreated.Clear();
 

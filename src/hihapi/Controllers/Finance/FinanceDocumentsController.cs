@@ -54,7 +54,7 @@ namespace hihapi.Controllers
                         join docs in _context.FinanceDocument
                           on hmems.HomeID equals docs.HomeID
                         where (hmems.IsChild == true && hmems.User == docs.Createdby)
-                            || !hmems.IsChild.HasValue
+                            || hmems.IsChild == null
                             || hmems.IsChild == false
                         select docs;
 
