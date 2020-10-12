@@ -48,8 +48,12 @@ namespace hihapi.Controllers
                    select bal).ToList();
             List<FinanceControlCenter> listCC = (from hmem in _context.HomeMembers
                                                  where hmem.User == usrName
-                                                 select new { HomeID = hmem.HomeID } into hids
-                                                 join cc in _context.FinanceControlCenter on hids.HomeID equals cc.HomeID
+                                                 select new { hmem.HomeID, hmem.IsChild, hmem.User } into hmems
+                                                 join cc in _context.FinanceControlCenter 
+                                                    on hmems.HomeID equals cc.HomeID
+                                                 where (hmems.IsChild == true && hmems.User == cc.Owner)
+                                                     || !hmems.IsChild.HasValue
+                                                     || hmems.IsChild == false
                                                  select cc).ToList();
 
             List<FinanceReportByControlCenter> listRsts = new List<FinanceReportByControlCenter>();

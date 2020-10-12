@@ -47,9 +47,13 @@ namespace hihapi.Controllers
 
             List<FinanceAccount> accounts = (from hmem in _context.HomeMembers
                                                where hmem.User == usrName
-                                               select new { HomeID = hmem.HomeID } into hids
-                                               join acnt in _context.FinanceAccount on hids.HomeID equals acnt.HomeID
-                                               select acnt).ToList();
+                                               select new { hmem.HomeID, hmem.IsChild, hmem.User } into hmems
+                                             join acnt in _context.FinanceAccount 
+                                                on hmems.HomeID equals acnt.HomeID
+                                               where (hmems.IsChild == true && hmems.User == acnt.Owner)
+                                                   || !hmems.IsChild.HasValue
+                                                   || hmems.IsChild == false
+                                             select acnt).ToList();
 
             List<FinanceReportByAccount> listRsts = new List<FinanceReportByAccount>();
             foreach(var acnt in accounts)

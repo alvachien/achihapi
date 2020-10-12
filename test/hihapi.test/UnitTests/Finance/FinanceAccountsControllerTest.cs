@@ -110,6 +110,8 @@ namespace hihapi.test.UnitTests
             {
                 HttpContext = httpctx
             };
+            var curhmemquery = (from homemem in context.HomeMembers where homemem.HomeID == hid && homemem.User == user).FirstOrDefault();
+            var curhmem = Assert.IsType<HomeMember>(curhmemquery);
             var acntamt = (from homemem in context.HomeMembers
                               join finacnt in context.FinanceAccount
                               on new { homemem.HomeID, homemem.User } equals new { finacnt.HomeID, User = user }

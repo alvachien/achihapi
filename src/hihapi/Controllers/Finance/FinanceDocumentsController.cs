@@ -43,10 +43,19 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
+            //var query = from hmem in _context.HomeMembers
+            //            where hmem.User == usrName
+            //            select new { HomeID = hmem.HomeID } into hids
+            //            join docs in _context.FinanceDocument on hids.HomeID equals docs.HomeID
+            //            select docs;
             var query = from hmem in _context.HomeMembers
                         where hmem.User == usrName
-                        select new { HomeID = hmem.HomeID } into hids
-                        join docs in _context.FinanceDocument on hids.HomeID equals docs.HomeID
+                        select new { HomeID = hmem.HomeID, User = hmem.User, IsChild = hmem.IsChild } into hmems
+                        join docs in _context.FinanceDocument
+                          on hmems.HomeID equals docs.HomeID
+                        where (hmems.IsChild == true && hmems.User == docs.Createdby)
+                            || !hmems.IsChild.HasValue
+                            || hmems.IsChild == false
                         select docs;
 
             return option.ApplyTo(query);

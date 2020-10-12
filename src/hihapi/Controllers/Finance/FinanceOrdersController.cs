@@ -41,7 +41,7 @@ namespace hihapi.Controllers
             // Check whether User assigned with specified Home ID
             var query = from hmem in _context.HomeMembers
                         where hmem.User == usrName
-                        select new { HomeID = hmem.HomeID, IsChild = hmem.IsChild } into hids
+                        select new { hmem.HomeID, hmem.IsChild } into hids
                         join ords in _context.FinanceOrder on hids.HomeID equals ords.HomeID
                         where ( hids.IsChild == null || hids.IsChild == false)
                         select ords;
