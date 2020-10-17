@@ -18,11 +18,11 @@ using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Batch;
 using hihapi.Models;
 using Microsoft.AspNetCore.Routing;
-using IdentityServer4.AccessTokenValidation;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Serilog;
+using Microsoft.IdentityModel.Tokens;
 
 namespace hihapi
 {
@@ -86,53 +86,88 @@ namespace hihapi
 
             if (Environment.EnvironmentName == "IntegrationTest")
             {
-                services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
-                    .AddIdentityServerAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme,
-                        jwtOptions =>
-                        {
-                            // jwt bearer options
-                            jwtOptions.Authority = "http://localhost:5005";
-                            jwtOptions.Audience = "api.hih";
-                            jwtOptions.RequireHttpsMetadata = false;
-                            jwtOptions.SaveToken = true;
-                        },
-                        referenceOptions =>
-                        {
-                            // oauth2 introspection options
-                        });
+                //services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                //    .AddIdentityServerAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme,
+                //        jwtOptions =>
+                //        {
+                //            // jwt bearer options
+                //            jwtOptions.Authority = "http://localhost:5005";
+                //            jwtOptions.Audience = "api.hih";
+                //            jwtOptions.RequireHttpsMetadata = false;
+                //            jwtOptions.SaveToken = true;
+                //        },
+                //        referenceOptions =>
+                //        {
+                //            // oauth2 introspection options
+                //        });
+                services.AddAuthentication("Bearer")
+                    .AddJwtBearer("Bearer", options =>
+                    {
+                        options.Authority = "http://localhost:5005";
+                        options.RequireHttpsMetadata = false;
+
+                        options.Audience = "api.hih";
+                    });
             }
             else if (Environment.EnvironmentName == "Development")
-            {                
-                // services.AddAuthentication("Bearer")
-                //     .AddJwtBearer("Bearer", options =>
-                //     {
-                //         options.Authority = "http://localhost:41016";
-                //         options.RequireHttpsMetadata = false;                        
+            {
+                // accepts any access token issued by identity server
+                services.AddAuthentication("Bearer")
+                    .AddJwtBearer("Bearer", options =>
+                    {
+                        // options.Authority = "https://localhost:41016";
+                        options.Authority = "https://localhost:44353";
+                        options.RequireHttpsMetadata = false;
 
-                //         options.Audience = "api.hih";
-                //     });
-                services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
-                    .AddIdentityServerAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme,
-                        jwtOptions =>
+                        options.TokenValidationParameters = new TokenValidationParameters
                         {
-                            // jwt bearer options
-                            jwtOptions.Authority = "http://localhost:41016";
-                            jwtOptions.Audience = "api.hih";
-                            jwtOptions.RequireHttpsMetadata = false;
-                            jwtOptions.SaveToken = true;
-                        },
-                        referenceOptions =>
-                        {
-                            // oauth2 introspection options
-                        });
+                            ValidateAudience = false
+                        };
+                    });
+
+                //// adds an authorization policy to make sure the token is for scope 'api1'
+                //services.AddAuthorization(options =>
+                //{
+                //    options.AddPolicy("ApiScope", policy =>
+                //    {
+                //        policy.RequireAuthenticatedUser();
+                //        policy.RequireClaim("scope", "api1");
+                //    });
+                //});
+
+                //services.AddAuthentication("Bearer")
+                //    .AddJwtBearer("Bearer", options =>
+                //    {
+                //        options.Authority = "http://localhost:41016";
+                //        options.RequireHttpsMetadata = false;
+
+                //        options.Audience = "api.hih";
+                //    });
+
+                //services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                //    .AddIdentityServerAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme,
+                //        jwtOptions =>
+                //        {
+                //            // jwt bearer options
+                //            jwtOptions.Authority = "http://localhost:41016";
+                //            jwtOptions.Audience = "api.hih";
+                //            jwtOptions.RequireHttpsMetadata = false;
+                //            jwtOptions.SaveToken = true;
+                //        },
+                //        referenceOptions =>
+                //        {
+                //            // oauth2 introspection options
+                //        });
 
                 services.AddCors(options =>
                 {
                     options.AddPolicy(MyAllowSpecificOrigins, builder =>
                     {
                         builder.WithOrigins(
-                            "http://localhost:29521", // AC HIH
-                            "http://localhost:29525" // acblog
+                            "http://localhost:29521",   // AC HIH
+                            "http://localhost:29525",   // acblog
+                            "https://localhost:29521",  // AC HIH
+                            "https://localhost:29525"   // acblog
                         )
                         .AllowAnyHeader()
                         .AllowAnyMethod()
