@@ -15,7 +15,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;USE_ALIYUN</DefineConstants>
+    <DefineConstants>USE_ALIYUN</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Sqls\Delta\v1.sql" />

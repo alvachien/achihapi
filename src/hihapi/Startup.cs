@@ -186,6 +186,12 @@ namespace hihapi
                         options.Authority = "http://localhost:41016";
 #endif
                         options.RequireHttpsMetadata = false;
+                        options.SaveToken = true;
+                        options.IncludeErrorDetails = true;
+                        options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateAudience = false
+                        };
 
                         options.Audience = "api.hih";
                     });
