@@ -28,7 +28,7 @@ namespace hihapi.Controllers
         /// GET: /FinanceAssertCategories
         [EnableQuery]
         [Authorize]
-        public IQueryable<FinanceAssetCategory> Get(Int32? hid = null)
+        public IQueryable<FinanceAssetCategory> Get()
         {
             String usrName = String.Empty;
             try

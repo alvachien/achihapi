@@ -28,7 +28,7 @@ namespace hihapi.Controllers
         /// GET: /FinanceDocumentTypes
         [EnableQuery]
         [Authorize]
-        public IQueryable<FinanceDocumentType> Get(Int32? hid = null)
+        public IQueryable<FinanceDocumentType> Get()
         {
             String usrName = String.Empty;
             try

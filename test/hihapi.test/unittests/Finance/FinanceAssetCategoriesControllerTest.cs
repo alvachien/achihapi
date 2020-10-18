@@ -60,7 +60,7 @@ namespace hihapi.test.UnitTests
             Assert.Equal(ctgy.Desp, rst2.Entity.Desp);
 
             // 3. Read all categories, again
-            items = control.Get(hid);
+            items = control.Get();
             itemcnt = items.Count();
             Assert.Equal(ctgyCount + 1, itemcnt);
 
@@ -77,7 +77,7 @@ namespace hihapi.test.UnitTests
             Assert.Equal(204, rst6.StatusCode);
 
             // 6. Read all categories again
-            items = control.Get(hid);
+            items = control.Get();
             itemcnt = items.Count();
             Assert.Equal(ctgyCount, itemcnt);
 
