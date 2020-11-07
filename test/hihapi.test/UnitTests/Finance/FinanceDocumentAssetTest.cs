@@ -92,6 +92,7 @@ namespace hihapi.test.UnitTests
             assetbuycontext.TranAmount = 2000;
             assetbuycontext.TranCurr = currency;
             assetbuycontext.TranDate = new DateTime(2020, 1, 1);
+            assetbuycontext.Items = new List<FinanceDocumentItem>();
 
             if (!islegacy)
             {
@@ -171,6 +172,7 @@ namespace hihapi.test.UnitTests
             assetsellcontext.TranCurr = currency;
             assetsellcontext.TranDate = new DateTime(2021, 1, 1);
             // Account which received the money
+            assetsellcontext.Items = new List<FinanceDocumentItem>();
             var item = new FinanceDocumentItem()
             {
                 ItemID = 1,

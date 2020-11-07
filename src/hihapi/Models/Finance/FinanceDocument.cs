@@ -203,7 +203,7 @@ namespace hihapi.Models
         public Int32? OrderID { get; set; }
 
         // Items
-        public List<FinanceDocumentItem> Items = new List<FinanceDocumentItem>();
+        public List<FinanceDocumentItem> Items { get; set; }
     }
 
     // Asset: Buyin
