@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.OData.Query;
-using Microsoft.AspNet.OData.Query.Validators;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
+using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.OData.UriParser;
+using Microsoft.AspNetCore.OData.Query.Validator;
 
 namespace hihapi.Utilities
 {

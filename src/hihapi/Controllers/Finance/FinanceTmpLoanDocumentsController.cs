@@ -1,12 +1,15 @@
 ﻿using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
-using Microsoft.AspNet.OData;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
+using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {

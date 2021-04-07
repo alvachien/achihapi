@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
-using Microsoft.AspNet.OData;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -12,8 +11,11 @@ using Newtonsoft.Json.Linq;
 using System.Reflection;
 using System.Text;
 using hihapi.Models;
-using Microsoft.AspNet.OData.Routing;
 using hihapi.Utilities;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
+using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
@@ -127,7 +129,7 @@ namespace hihapi.Controllers
         }
 
         [HttpGet]
-        [ODataRoute("GetRepeatedDates2(StartDate={StartDate}, EndDate={EndDate}, RepeatType={RepeatType})")]
+        //[ODataRoute("GetRepeatedDates2(StartDate={StartDate}, EndDate={EndDate}, RepeatType={RepeatType})")]
         public IActionResult GetRepeatedDates2([FromODataUri] string StartDate, string EndDate, int RepeatType)
         {
             //            if (!ModelState.IsValid)
@@ -154,7 +156,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        [ODataRoute("GetRepeatedDates()")]
+        //[ODataRoute("GetRepeatedDates()")]
         public IActionResult GetRepeatedDates([FromBody] RepeatDatesCalculationInput input)
         {
             if (!ModelState.IsValid)
@@ -166,7 +168,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        [ODataRoute("GetRepeatedDatesWithAmount()")]
+        //[ODataRoute("GetRepeatedDatesWithAmount()")]
         public IActionResult GetRepeatedDatesWithAmount([FromBody] RepeatDatesWithAmountCalculationInput input)
         {
             if (!ModelState.IsValid)
@@ -178,7 +180,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        [ODataRoute("GetRepeatedDatesWithAmountAndInterest()")]
+        //[ODataRoute("GetRepeatedDatesWithAmountAndInterest()")]
         public IActionResult GetRepeatedDatesWithAmountAndInterest([FromBody] RepeatDatesWithAmountAndInterestCalInput input)
         {
             if (!ModelState.IsValid)

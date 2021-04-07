@@ -2,7 +2,10 @@
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
-using Microsoft.AspNet.OData;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
+using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -13,7 +16,6 @@ using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
 using hihapi.Exceptions;
-using Microsoft.AspNet.OData.Query;
 
 namespace hihapi.Controllers
 {
