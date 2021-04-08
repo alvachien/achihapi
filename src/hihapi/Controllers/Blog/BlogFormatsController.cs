@@ -32,9 +32,9 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        public SingleResult<BlogFormat> Get([FromODataUri] int id)
+        public SingleResult<BlogFormat> Get([FromODataUri] int key)
         {
-            return SingleResult.Create(_context.BlogFormats.Where(p => p.ID == id));
+            return SingleResult.Create(_context.BlogFormats.Where(p => p.ID == key));
         }
     }
 }

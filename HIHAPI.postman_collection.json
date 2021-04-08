@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "f8709f57-d184-4a42-8626-f6cd0659767a",
+		"_postman_id": "0673fd68-4967-47f5-9c1a-9735b714b3dd",
 		"name": "HIHAPI",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -14,7 +14,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://localhost:44360/DBVersions",
+							"raw": "https://localhost:44360/DBVersions?$count=true",
 							"protocol": "https",
 							"host": [
 								"localhost"
@@ -22,6 +22,12 @@
 							"port": "44360",
 							"path": [
 								"DBVersions"
+							],
+							"query": [
+								{
+									"key": "$count",
+									"value": "true"
+								}
 							]
 						}
 					},
@@ -31,11 +37,134 @@
 		},
 		{
 			"name": "Currencies",
-			"item": []
+			"item": [
+				{
+					"name": "Get Collection",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:44360/Currencies?$count=true",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"Currencies"
+							],
+							"query": [
+								{
+									"key": "$count",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "READ",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:44360/Currencies('CNY')",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"Currencies('CNY')"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		},
 		{
 			"name": "Finance Account",
 			"item": []
+		},
+		{
+			"name": "Languages",
+			"item": [
+				{
+					"name": "Get Collection",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:44360/Languages?$count=true",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"Languages"
+							],
+							"query": [
+								{
+									"key": "$count",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "READ",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:44360/Languages(4)",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"Languages(4)"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Blog",
+			"item": [
+				{
+					"name": "Blog Format",
+					"item": [
+						{
+							"name": "GET Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/BlogFormats",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"BlogFormats"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
 		},
 		{
 			"name": "Metadata",

@@ -40,5 +40,12 @@ namespace hihapi.Controllers
         {
             return _context.Languages;
         }
+
+        [EnableQuery]
+        public SingleResult<Language> Get([FromODataUri] int key)
+        {
+            return SingleResult.Create(_context.Languages.Where(p => p.Lcid == key));
+        }
+
     }
 }

@@ -41,19 +41,17 @@ namespace hihapi.Controllers
         }
 
         /// GET: /DBVersions
-        [HttpGet]
         [EnableQuery]
-        public IQueryable<DBVersion> Get()
+        public IActionResult Get()
         {
-            return _context.DBVersions;
+            return Ok(_context.DBVersions);
         }
 
         /// GET: /DBVersions(:vid)
-        [HttpGet]
         [EnableQuery]
-        public SingleResult<DBVersion> Get([FromODataUri] int vid)
+        public IActionResult Get(int key)
         {
-            return SingleResult.Create(_context.DBVersions.Where(p => p.VersionID == vid));
+            return Ok(_context.DBVersions.FirstOrDefault(p => p.VersionID == key));
         }
 
         // POST: /DBVersions
