@@ -183,28 +183,21 @@ namespace hihapi
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseCors(MyAllowSpecificOrigins);
-
-            app.UseHttpsRedirection();
-
-            app.UseODataBatching();
-
-
-            // app.UseHttpsRedirection();
-            app.UseAuthentication();
             if (Environment.EnvironmentName != "IntegrationTest")
             {
                 app.UseCors(MyAllowSpecificOrigins);
             }
+
+            app.UseHttpsRedirection();
+
+            app.UseODataBatching();
 
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-
             app.UseMiddleware(typeof(ErrorHandlingMiddleware));
-
 
             app.UseEndpoints(endpoints =>
             {

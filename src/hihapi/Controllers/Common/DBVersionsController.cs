@@ -1,13 +1,9 @@
 using System;
 using System.Linq;
 using System.IO;
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Reflection;
 using System.Text;
 using hihapi.Models;
@@ -45,6 +41,7 @@ namespace hihapi.Controllers
         }
 
         /// GET: /DBVersions
+        [HttpGet]
         [EnableQuery]
         public IQueryable<DBVersion> Get()
         {
@@ -52,6 +49,7 @@ namespace hihapi.Controllers
         }
 
         /// GET: /DBVersions(:vid)
+        [HttpGet]
         [EnableQuery]
         public SingleResult<DBVersion> Get([FromODataUri] int vid)
         {
@@ -62,6 +60,7 @@ namespace hihapi.Controllers
         /// <summary>
         /// Checking DB version
         /// </summary>
+        [HttpPost]
         public async Task<IActionResult> Post()
         {
             var lastestVersion = await _context.DBVersions.MaxAsync(p => p.VersionID);
