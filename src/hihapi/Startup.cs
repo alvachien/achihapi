@@ -13,6 +13,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OData.Edm;
 using Microsoft.AspNetCore.OData;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace hihapi
 {
@@ -75,11 +77,25 @@ namespace hihapi
 
             services.AddHttpContextAccessor();
 
-            services.AddControllers();
+            services.AddControllers(opts =>
+            {
+                // Learned from stackoverflow but not working
+                //if (Environment.IsDevelopment())
+                //{
+                //    opts.Filters.Add<AllowAnonymousFilter>();
+                //}
+                //else
+                //{
+                //    var authenticatedUserPolicy = new AuthorizationPolicyBuilder()
+                //              .RequireAuthenticatedUser()
+                //              .Build();
+                //    opts.Filters.Add(new AuthorizeFilter(authenticatedUserPolicy));
+                //}
+            });
 
             IEdmModel model = EdmModelBuilder.GetEdmModel();
 
-            services.AddOData(opt => opt.Count().Filter().Expand().Select().OrderBy().SetMaxTop(50)
+            services.AddControllers().AddOData(opt => opt.Count().Filter().Expand().Select().OrderBy().SetMaxTop(50)
                 .AddModel(model)
                 .AddModel("v1", model)
                 // .AddModel("v2{data}", model2, builder => builder.AddService<ODataBatchHandler, DefaultODataBatchHandler>(Microsoft.OData.ServiceLifetime.Singleton))
@@ -201,12 +217,11 @@ namespace hihapi
 
             app.UseEndpoints(endpoints =>
             {
-                if (env.IsDevelopment())
-                {
-                    // A odata debuger route is only for debugger view of the all OData endpoint routing.
-                    // endpoints.MapGet("/$odata", ODataRouteHandler.HandleOData);
-                }
-
+                // Following code make anonymous access possible in Development environment, but it is not working for fetching data
+                //if (env.IsDevelopment())
+                //    endpoints.MapControllers().WithMetadata(new AllowAnonymousAttribute());
+                //else
+                //    endpoints.MapControllers();
                 endpoints.MapControllers();
             });
 
