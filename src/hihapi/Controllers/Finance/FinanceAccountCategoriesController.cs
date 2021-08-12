@@ -60,30 +60,30 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceAccountCategories(:id)
-        [EnableQuery]
-        [Authorize]
-        public SingleResult<FinanceAccountCategory> Get([FromODataUri] int id)
-        {
-            String usrName = String.Empty;
-            try
-            {
-                usrName = HIHAPIUtility.GetUserID(this);
-            }
-            catch
-            {
-                // Do nothing
-                usrName = String.Empty;
-            }
+        //[EnableQuery]
+        //[Authorize]
+        //public SingleResult<FinanceAccountCategory> Get([FromODataUri] int id)
+        //{
+        //    String usrName = String.Empty;
+        //    try
+        //    {
+        //        usrName = HIHAPIUtility.GetUserID(this);
+        //    }
+        //    catch
+        //    {
+        //        // Do nothing
+        //        usrName = String.Empty;
+        //    }
 
-            if (String.IsNullOrEmpty(usrName))
-                return SingleResult.Create(_context.FinAccountCategories.Where(p => p.ID == id && p.HomeID == null));
+        //    if (String.IsNullOrEmpty(usrName))
+        //        return SingleResult.Create(_context.FinAccountCategories.Where(p => p.ID == id && p.HomeID == null));
 
-            var rst = from hmem in _context.HomeMembers.Where(p => p.User == usrName)
-                      from acntctgy in _context.FinAccountCategories.Where(p => p.ID == id && (p.HomeID == null || p.HomeID == hmem.HomeID))
-                      select acntctgy;
+        //    var rst = from hmem in _context.HomeMembers.Where(p => p.User == usrName)
+        //              from acntctgy in _context.FinAccountCategories.Where(p => p.ID == id && (p.HomeID == null || p.HomeID == hmem.HomeID))
+        //              select acntctgy;
 
-            return SingleResult.Create(rst);
-        }
+        //    return SingleResult.Create(rst);
+        //}
 
         [Authorize]
         public async Task<IActionResult> Post([FromBody] FinanceAccountCategory ctgy)

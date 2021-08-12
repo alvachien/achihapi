@@ -65,40 +65,40 @@ namespace hihapi.Controllers
                        select hd;
         }
 
-        /// GET: /HomeDefines(:id)
-        /// <summary>
-        /// Adds support for getting a home define by key, for example:
-        /// 
-        /// GET /HomeDefines(1)
-        /// </summary>
-        /// <param name="id">The key of the home define required</param>
-        /// <returns>The home define</returns>
-        [EnableQuery]
-        [Authorize]
-        public SingleResult<HomeDefine> Get([FromODataUri] int id)
-        {
-            String usrName = "";
-            try
-            {
-                usrName = HIHAPIUtility.GetUserID(this);
+        ///// GET: /HomeDefines(:id)
+        ///// <summary>
+        ///// Adds support for getting a home define by key, for example:
+        ///// 
+        ///// GET /HomeDefines(1)
+        ///// </summary>
+        ///// <param name="id">The key of the home define required</param>
+        ///// <returns>The home define</returns>
+        //[EnableQuery]
+        //[Authorize]
+        //public SingleResult<HomeDefine> Get([FromODataUri] int id)
+        //{
+        //    String usrName = "";
+        //    try
+        //    {
+        //        usrName = HIHAPIUtility.GetUserID(this);
 
-                if (string.IsNullOrEmpty(usrName))
-                {
-                    throw new UnauthorizedAccessException();
-                }
-            }
-            catch
-            {
-                throw new UnauthorizedAccessException();
-            }
+        //        if (string.IsNullOrEmpty(usrName))
+        //        {
+        //            throw new UnauthorizedAccessException();
+        //        }
+        //    }
+        //    catch
+        //    {
+        //        throw new UnauthorizedAccessException();
+        //    }
 
-            var hidquery = from hmem in _context.HomeMembers
-                           join hdef in _context.HomeDefines on hmem.HomeID equals hdef.ID
-                           where hmem.User == usrName && hmem.HomeID == id
-                           select hdef;
+        //    var hidquery = from hmem in _context.HomeMembers
+        //                   join hdef in _context.HomeDefines on hmem.HomeID equals hdef.ID
+        //                   where hmem.User == usrName && hmem.HomeID == id
+        //                   select hdef;
 
-            return SingleResult.Create(hidquery);
-        }
+        //    return SingleResult.Create(hidquery);
+        //}
 
         [Authorize]
         public async Task<IActionResult> Post([FromBody]HomeDefine homedef)

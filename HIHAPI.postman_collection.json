@@ -32,6 +32,64 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Read version 1",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:44360/DBVersions(1)",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"DBVersions(1)"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read version 1 - second format",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:44360/DBVersions/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"DBVersions",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Latest Version",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:44360/DBVersions",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"DBVersions"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -41,6 +99,9 @@
 				{
 					"name": "Get Collection",
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -85,8 +146,347 @@
 			]
 		},
 		{
-			"name": "Finance Account",
-			"item": []
+			"name": "Finance",
+			"item": [
+				{
+					"name": "Account",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/FinanceAccounts?$count=true&$filter=HomeID eq 2",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"FinanceAccounts"
+									],
+									"query": [
+										{
+											"key": "$count",
+											"value": "true"
+										},
+										{
+											"key": "$filter",
+											"value": "HomeID eq 2"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create an Account",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"HomeID\": {{TestHomeID}},\r\n    \"CategoryID\": 1,\r\n    \"Name\": \"My Cash 1\",\r\n    \"Comment\": \"My Cash 1\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44360/FinanceAccounts",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"FinanceAccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Read Account",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/FinanceAccounts?$count=true&$filter=HomeID eq 2 and ID eq {{TestCashAccountID}}",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"FinanceAccounts"
+									],
+									"query": [
+										{
+											"key": "$count",
+											"value": "true"
+										},
+										{
+											"key": "$filter",
+											"value": "HomeID eq 2 and ID eq {{TestCashAccountID}}"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Configuration",
+					"item": [
+						{
+							"name": "Account Categories",
+							"item": [
+								{
+									"name": "Get Collection",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "https://localhost:44360/FinanceAccountCategories?$count=true&$filter=HomeID eq {{TestHomeID}}",
+											"protocol": "https",
+											"host": [
+												"localhost"
+											],
+											"port": "44360",
+											"path": [
+												"FinanceAccountCategories"
+											],
+											"query": [
+												{
+													"key": "$count",
+													"value": "true"
+												},
+												{
+													"key": "$filter",
+													"value": "HomeID eq {{TestHomeID}}"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Asset Categories",
+							"item": [
+								{
+									"name": "Get Collection",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "https://localhost:44360/FinanceAssetCategories",
+											"protocol": "https",
+											"host": [
+												"localhost"
+											],
+											"port": "44360",
+											"path": [
+												"FinanceAssetCategories"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Transaction Types",
+							"item": [
+								{
+									"name": "Get Collection",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "https://localhost:44360/FinanceTransactionTypes",
+											"protocol": "https",
+											"host": [
+												"localhost"
+											],
+											"port": "44360",
+											"path": [
+												"FinanceTransactionTypes"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Document Types",
+							"item": [
+								{
+									"name": "Get Collection",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "https://localhost:44360/FinanceDocumentTypes",
+											"protocol": "https",
+											"host": [
+												"localhost"
+											],
+											"port": "44360",
+											"path": [
+												"FinanceDocumentTypes"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Document",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/FinanceDocuments?$count=true&$filter=HomeID eq {{TestHomeID}}",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"FinanceDocuments"
+									],
+									"query": [
+										{
+											"key": "$count",
+											"value": "true"
+										},
+										{
+											"key": "$filter",
+											"value": "HomeID eq {{TestHomeID}}"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Control Centers",
+					"item": [
+						{
+							"name": "Get Collections",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/FinanceControlCenters",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"FinanceControlCenters"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Order",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/FinanceOrders",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"FinanceOrders"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Plans",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/FinancePlans",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"FinancePlans"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{IdServerToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
 		},
 		{
 			"name": "Languages",
@@ -117,7 +517,7 @@
 					"response": []
 				},
 				{
-					"name": "READ",
+					"name": "Read Language 4",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -130,6 +530,26 @@
 							"port": "44360",
 							"path": [
 								"Languages(4)"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read Language 4 - second format",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:44360/Languages/4",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"Languages",
+								"4"
 							]
 						}
 					},
@@ -163,6 +583,197 @@
 							"response": []
 						}
 					]
+				}
+			]
+		},
+		{
+			"name": "Home Defines",
+			"item": [
+				{
+					"name": "Home Members",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{IdServerToken}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{IdServerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/HomeMembers",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"HomeMembers"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Get Collection",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{IdServerToken}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{IdServerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:44360/HomeDefines",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"HomeDefines"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Home Define",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{IdServerToken}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{IdServerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Name\": \"Postman testing\",\r\n    \"Details\": \"Posting testing details\",\r\n    \"Host\": \"59ae97fd-79c5-4468-976f-273639b5f976\",\r\n    \"BaseCurrency\": \"CNY\",\r\n    \"HomeMembers\": [\r\n        {\r\n            \"User\": \"59ae97fd-79c5-4468-976f-273639b5f976\",\r\n            \"DisplayAs\": \"Tester\",\r\n            \"Relation\": \"Self\"\r\n        }\r\n    ]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:44360/HomeDefines",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"HomeDefines"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Learn",
+			"item": [
+				{
+					"name": "Learn Objects",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LearnObjects",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LearnObjects"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{IdServerToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
 				}
 			]
 		},
@@ -203,6 +814,119 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Get Token",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "password",
+							"value": "Postman-2021",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "tester@postman.org",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "password_credentials",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "Postman",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "Postman",
+							"type": "string"
+						},
+						{
+							"key": "scope",
+							"value": "api.hih",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "https://localhost:44353/connect/token",
+							"type": "string"
+						},
+						{
+							"key": "useBrowser",
+							"value": true,
+							"type": "boolean"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "https://www.getpostman.com/oauth2/callback",
+							"type": "string"
+						},
+						{
+							"key": "tokenName",
+							"value": "HIHAPI - Authorization",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://localhost:44360/HomeDefines",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "44360",
+					"path": [
+						"HomeDefines"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "IdServerToken",
+			"value": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjBGQUIzQjg3RUM0QjhCMTU0N0I2RTdDNjQ1RjVFMUU3IiwidHlwIjoiYXQrand0In0.eyJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo0NDM1MyIsIm5iZiI6MTYyODc1NjkxMywiaWF0IjoxNjI4NzU2OTEzLCJleHAiOjE2Mjg3NjA1MTMsImF1ZCI6Imh0dHBzOi8vbG9jYWxob3N0OjQ0MzUzL3Jlc291cmNlcyIsInNjb3BlIjpbImFwaS5oaWgiXSwiYW1yIjpbInB3ZCJdLCJjbGllbnRfaWQiOiJQb3N0bWFuIiwic3ViIjoiNTlhZTk3ZmQtNzljNS00NDY4LTk3NmYtMjczNjM5YjVmOTc2IiwiYXV0aF90aW1lIjoxNjI4NzU2OTEzLCJpZHAiOiJsb2NhbCIsImp0aSI6IkJFMjFCRTYwRkRFRTM0QUY5OTRBM0NGOTBCOEJBODQ3In0.NBeCoUGa7Jqt_g_Nt_ivxFLjVlD1mna-NS5dXHRqj32UB3KFjHPvAxXF5WaQtj4opUMpyJTFUKyhstm9GjfktyEQUMVQy1L97_FE2-rTj4ANZY5XHVQKt2ul913WW3fQwzuWQq5OqWtbTQ3-EhlOufwTmfwhehy8dKbX70kpwAjgXxs6_qB9APfC6PlIFSGr1-qNp6U378GlE2oDLA6hUTKDvFuGb_cWkD0SdKevcs_ww4oOFZJrBGrJnQWk9JPIpwxzFh7jtXFORL05ZB1JXhw-8umqUqiV8X8DetA7gFi3A7LagGDpj65NZYoJYfSzm0VtGWynIkqF-hH8AMrckQ"
+		},
+		{
+			"key": "TestHomeID",
+			"value": "2"
+		},
+		{
+			"key": "TestCashAccountID",
+			"value": "1095"
 		}
 	]
 }
