@@ -81,6 +81,13 @@ namespace hihapi.Models
 
 
             // Function on root
+            //// using attribute routing
+            //var unboundFunction = builder.Function("CalculateSalary").Returns<string>();
+            //unboundFunction.Parameter<int>("minSalary");
+            //unboundFunction.Parameter<int>("maxSalary").Optional();
+            //unboundFunction.Parameter<string>("wholeName").HasDefaultValue("abc");
+            //return builder.GetEdmModel();
+
             modelBuilder.Function("GetRepeatedDates")
                 .ReturnsCollection<RepeatedDates>();
             var funcbuilder = modelBuilder.Function("GetRepeatedDates2")
@@ -92,38 +99,40 @@ namespace hihapi.Models
                 .ReturnsCollection<RepeatedDatesWithAmount>();
             modelBuilder.Function("GetRepeatedDatesWithAmountAndInterest")
                 .ReturnsCollection<RepeatedDatesWithAmountAndInterest>();
+
             // Actions on Documents
-            var docEntity = modelBuilder.EntityType<FinanceDocument>();
-            docEntity.Property(c => c.TranDate).AsDate();
-            docEntity.Collection
-                .Action("PostDPDocument")
-                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            docEntity.Collection
-                .Action("PostLoanDocument")
-                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            docEntity.Collection
-                .Action("PostAssetBuyDocument")
-                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            docEntity.Collection
-                .Action("PostAssetSellDocument")
-                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            docEntity.Collection
-                .Action("PostAssetValueChangeDocument")
-                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            modelBuilder.Namespace = typeof(Currency).Namespace;
-            // Function on DP template documents
-            var tmpTpDocEntity = modelBuilder.EntityType<FinanceTmpDPDocument>();
-            var tmpTpDocPostFunc =
-                tmpTpDocEntity.Collection.Action("PostDocument")
-                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            // Action on Loan template documents: Repay document
-            var tmpLoanDocEntity = modelBuilder.EntityType<FinanceTmpLoanDocument>();
-            tmpLoanDocEntity.Collection
-                .Action("PostRepayDocument")
-                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            tmpLoanDocEntity.Collection
-                .Action("PostPrepaymentDocument")
-                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            //var docEntity = modelBuilder.EntityType<FinanceDocument>();
+            //docEntity.Property(c => c.TranDate).AsDate();
+            //docEntity.Collection
+            //    .Action("PostDPDocument")
+            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            //docEntity.Collection
+            //    .Action("PostLoanDocument")
+            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            //docEntity.Collection
+            //    .Action("PostAssetBuyDocument")
+            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            //docEntity.Collection
+            //    .Action("PostAssetSellDocument")
+            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            //docEntity.Collection
+            //    .Action("PostAssetValueChangeDocument")
+            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            //modelBuilder.Namespace = typeof(Currency).Namespace;
+            //// Function on DP template documents
+            //var tmpTpDocEntity = modelBuilder.EntityType<FinanceTmpDPDocument>();
+            //var tmpTpDocPostFunc =
+            //    tmpTpDocEntity.Collection.Action("PostDocument")
+            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            //// Action on Loan template documents: Repay document
+            //var tmpLoanDocEntity = modelBuilder.EntityType<FinanceTmpLoanDocument>();
+            //tmpLoanDocEntity.Collection
+            //    .Action("PostRepayDocument")
+            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            //tmpLoanDocEntity.Collection
+            //    .Action("PostPrepaymentDocument")
+            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+
             modelBuilder.EntitySet<BlogFormat>("BlogFormats");
             modelBuilder.EntitySet<BlogUserSetting>("BlogUserSettings");
             modelBuilder.EntitySet<BlogCollection>("BlogCollections");
