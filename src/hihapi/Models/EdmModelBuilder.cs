@@ -60,34 +60,7 @@ namespace hihapi.Models
             modelBuilder.ComplexType<RepeatedDatesWithAmount>();
             modelBuilder.ComplexType<RepeatDatesWithAmountCalculationInput>();
 
-            // Function on Album - Get Photos
-            //var functionWithOptional = builder.EntityType<Album>().Collection.Function("GetPhotos").ReturnsCollectionFromEntitySet<Photo>("Photos");
-            //functionWithOptional.Parameter<int>("AlbumID");
-            //functionWithOptional.Parameter<string>("AccessCode").Optional();
-
-            //// Function on Album - GetAlbumPhotos
-            //var funcOnEntity = builder.EntityType<Album>().Function("GetRelatedPhotos").ReturnsCollectionFromEntitySet<Photo>("Photos");
-            //funcOnEntity.Parameter<string>("AccessCode");
-
-            //// Action on Album - Change Access Code
-            //var action = builder.EntityType<Album>().Action("ChangeAccessCode");
-            //action.Parameter<string>("AccessCode"); // .Optional();
-            //action.Returns<Boolean>();
-
-            //// Function on Phto view
-            //var functionWithOpt = builder.EntityType<PhotoView>().Collection.Function("SearchPhotoInAlbum").ReturnsCollectionFromEntitySet<PhotoView>("PhotoViews");
-            //functionWithOpt.Parameter<int>("AlbumID");
-            //functionWithOpt.Parameter<string>("AccessCode").Optional();
-
-
-            // Function on root
-            //// using attribute routing
-            //var unboundFunction = builder.Function("CalculateSalary").Returns<string>();
-            //unboundFunction.Parameter<int>("minSalary");
-            //unboundFunction.Parameter<int>("maxSalary").Optional();
-            //unboundFunction.Parameter<string>("wholeName").HasDefaultValue("abc");
-            //return builder.GetEdmModel();
-
+            // Utilties Functions
             modelBuilder.Function("GetRepeatedDates")
                 .ReturnsCollection<RepeatedDates>();
             var funcbuilder = modelBuilder.Function("GetRepeatedDates2")
@@ -101,37 +74,37 @@ namespace hihapi.Models
                 .ReturnsCollection<RepeatedDatesWithAmountAndInterest>();
 
             // Actions on Documents
-            //var docEntity = modelBuilder.EntityType<FinanceDocument>();
-            //docEntity.Property(c => c.TranDate).AsDate();
-            //docEntity.Collection
-            //    .Action("PostDPDocument")
-            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            //docEntity.Collection
-            //    .Action("PostLoanDocument")
-            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            //docEntity.Collection
-            //    .Action("PostAssetBuyDocument")
-            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            //docEntity.Collection
-            //    .Action("PostAssetSellDocument")
-            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            //docEntity.Collection
-            //    .Action("PostAssetValueChangeDocument")
-            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            //modelBuilder.Namespace = typeof(Currency).Namespace;
-            //// Function on DP template documents
-            //var tmpTpDocEntity = modelBuilder.EntityType<FinanceTmpDPDocument>();
-            //var tmpTpDocPostFunc =
-            //    tmpTpDocEntity.Collection.Action("PostDocument")
-            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            //// Action on Loan template documents: Repay document
-            //var tmpLoanDocEntity = modelBuilder.EntityType<FinanceTmpLoanDocument>();
-            //tmpLoanDocEntity.Collection
-            //    .Action("PostRepayDocument")
-            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            //tmpLoanDocEntity.Collection
-            //    .Action("PostPrepaymentDocument")
-            //    .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            var docEntity = modelBuilder.EntityType<FinanceDocument>();
+            docEntity.Property(c => c.TranDate).AsDate();
+            docEntity.Collection
+                .Action("PostDPDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            docEntity.Collection
+                .Action("PostLoanDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            docEntity.Collection
+                .Action("PostAssetBuyDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            docEntity.Collection
+                .Action("PostAssetSellDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            docEntity.Collection
+                .Action("PostAssetValueChangeDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            modelBuilder.Namespace = typeof(Currency).Namespace;
+            // Function on DP template documents
+            var tmpTpDocEntity = modelBuilder.EntityType<FinanceTmpDPDocument>();
+            var tmpTpDocPostFunc =
+                tmpTpDocEntity.Collection.Action("PostDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            // Action on Loan template documents: Repay document
+            var tmpLoanDocEntity = modelBuilder.EntityType<FinanceTmpLoanDocument>();
+            tmpLoanDocEntity.Collection
+                .Action("PostRepayDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            tmpLoanDocEntity.Collection
+                .Action("PostPrepaymentDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
 
             modelBuilder.EntitySet<BlogFormat>("BlogFormats");
             modelBuilder.EntitySet<BlogUserSetting>("BlogUserSettings");
@@ -139,7 +112,7 @@ namespace hihapi.Models
             modelBuilder.EntitySet<BlogPost>("BlogPosts");
             modelBuilder.EntitySet<BlogPostCollection>("BlogPostCollections");
             modelBuilder.EntitySet<BlogPostTag>("BlogPostTags");
-            // Functions
+            // Functions in Blog part
             var postentity = modelBuilder.EntityType<BlogPost>();
             postentity.Function("Deploy")
                     .Returns<string>()
@@ -152,6 +125,5 @@ namespace hihapi.Models
 
             return modelBuilder.GetEdmModel();
         }
-
     }
 }

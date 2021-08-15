@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "0673fd68-4967-47f5-9c1a-9735b714b3dd",
+		"_postman_id": "ac85a4dc-b8ac-4d44-91fe-a31d3396a928",
 		"name": "HIHAPI",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -377,6 +377,35 @@
 											"key": "$filter",
 											"value": "HomeID eq {{TestHomeID}}"
 										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Downpayment Document",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"DocumentInfo\": {\r\n\r\n    },\r\n    \"AccountInfo\": {\r\n        \r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44360/FinanceDocuments/PostDPDocument",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"FinanceDocuments",
+										"PostDPDocument"
 									]
 								}
 							},
@@ -778,6 +807,114 @@
 			]
 		},
 		{
+			"name": "Utilities",
+			"item": [
+				{
+					"name": "Get Repeated Dates",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"StartDate\": \"2021-01-01\",\r\n    \"EndDate\": \"2021-12-31\",\r\n    \"RepeatType\": \"0\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:44360/GetRepeatedDates",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"GetRepeatedDates"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Repeated Dates 2",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:44360/GetRepeatedDates2(StartDate='2021-01-01', EndDate='2021-12-31', RepeatType=0)",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"GetRepeatedDates2(StartDate='2021-01-01', EndDate='2021-12-31', RepeatType=0)"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Repeated Dates and Amount",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"StartDate\": \"2021-01-01\",\r\n    \"EndDate\": \"2021-12-31\",\r\n    \"RepeatType\": \"0\",\r\n    \"TotalAmount\": 120000,\r\n    \"Desp\": \"Test\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:44360/GetRepeatedDatesWithAmount",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"GetRepeatedDatesWithAmount"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Repeated Dates and Interest Amount",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"TotalAmount\": 120000,\r\n    \"TotalMonths\": 12,\r\n    \"StartDate\": \"2021-01-01\",\r\n    \"InterestFreeLoan\": false,\r\n    \"RepaymentMethod\": 0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:44360/GetRepeatedDatesWithAmountAndInterest",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"GetRepeatedDatesWithAmountAndInterest"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Metadata",
 			"request": {
 				"method": "GET",
@@ -917,16 +1054,16 @@
 	],
 	"variable": [
 		{
-			"key": "IdServerToken",
-			"value": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjBGQUIzQjg3RUM0QjhCMTU0N0I2RTdDNjQ1RjVFMUU3IiwidHlwIjoiYXQrand0In0.eyJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo0NDM1MyIsIm5iZiI6MTYyODc1NjkxMywiaWF0IjoxNjI4NzU2OTEzLCJleHAiOjE2Mjg3NjA1MTMsImF1ZCI6Imh0dHBzOi8vbG9jYWxob3N0OjQ0MzUzL3Jlc291cmNlcyIsInNjb3BlIjpbImFwaS5oaWgiXSwiYW1yIjpbInB3ZCJdLCJjbGllbnRfaWQiOiJQb3N0bWFuIiwic3ViIjoiNTlhZTk3ZmQtNzljNS00NDY4LTk3NmYtMjczNjM5YjVmOTc2IiwiYXV0aF90aW1lIjoxNjI4NzU2OTEzLCJpZHAiOiJsb2NhbCIsImp0aSI6IkJFMjFCRTYwRkRFRTM0QUY5OTRBM0NGOTBCOEJBODQ3In0.NBeCoUGa7Jqt_g_Nt_ivxFLjVlD1mna-NS5dXHRqj32UB3KFjHPvAxXF5WaQtj4opUMpyJTFUKyhstm9GjfktyEQUMVQy1L97_FE2-rTj4ANZY5XHVQKt2ul913WW3fQwzuWQq5OqWtbTQ3-EhlOufwTmfwhehy8dKbX70kpwAjgXxs6_qB9APfC6PlIFSGr1-qNp6U378GlE2oDLA6hUTKDvFuGb_cWkD0SdKevcs_ww4oOFZJrBGrJnQWk9JPIpwxzFh7jtXFORL05ZB1JXhw-8umqUqiV8X8DetA7gFi3A7LagGDpj65NZYoJYfSzm0VtGWynIkqF-hH8AMrckQ"
-		},
-		{
 			"key": "TestHomeID",
 			"value": "2"
 		},
 		{
 			"key": "TestCashAccountID",
 			"value": "1095"
+		},
+		{
+			"key": "IdServerToken",
+			"value": ""
 		}
 	]
 }
