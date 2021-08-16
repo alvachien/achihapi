@@ -37,9 +37,9 @@ namespace hihapi.Controllers
         /// <remarks>
         [EnableQuery]
         [Authorize]
-        public IQueryable<HomeDefine> Get()
+        public IQueryable<HomeMember> Get()
         {
-            return _context.HomeDefines;
+            return _context.HomeMembers;
         }
     }
 }
