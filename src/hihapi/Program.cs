@@ -18,71 +18,53 @@ namespace hihapi
     {
         public static int Main(string[] args)
         {
-#if DEBUG
-            //Log.Logger = new LoggerConfiguration()
-            //    .MinimumLevel.Debug()
-            //    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-            //    .MinimumLevel.Override("System", LogEventLevel.Warning)
-            //    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Information)
-            //    //.MinimumLevel.Override("Microsoft.AspNetCore.Authentication", LogEventLevel.Information)
-            //    .Enrich.FromLogContext()
-            //    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}", theme: AnsiConsoleTheme.Literate)
-            //    .CreateLogger();
-#else
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                .MinimumLevel.Override("System", LogEventLevel.Warning)
-                .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Information)
-                //.MinimumLevel.Override("Microsoft.AspNetCore.Authentication", LogEventLevel.Information)
-                .Enrich.FromLogContext()
-                // uncomment to write to Azure diagnostics stream
-                .WriteTo.File(
+#if DEBUG
+            .MinimumLevel.Information()            
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Information)
+#else
+            .MinimumLevel.Warning()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+#endif
+            .Enrich.FromLogContext()
+#if DEBUG
+            .WriteTo.Console(theme: SystemConsoleTheme.Colored)
+#else
+            .WriteTo.File(
                     @"C:\WebApps\Logs\HIHAPI\log.txt",
                     fileSizeLimitBytes: 1_000_000,
                     rollOnFileSizeLimit: true,
                     shared: true,
-                    flushToDiskInterval: TimeSpan.FromSeconds(1))
-                //.WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}", theme: AnsiConsoleTheme.Literate)
-                .CreateLogger();
+                    flushToDiskInterval: TimeSpan.FromSeconds(30))
 #endif
+            .CreateLogger();
 
             try
             {
-                var host = CreateWebHostBuilder(args).Build();
-#if DEBUG
-#else
+                var host = CreateHostBuilder(args).Build();
                 Log.Information("Starting host...");
-#endif
                 host.Run();
                 return 0;
             }
             catch (Exception ex)
             {
-#if DEBUG
-#else
                 Log.Fatal(ex, "Host terminated unexpectedly.");
-#endif
                 return 1;
             }
             finally
             {
-#if DEBUG
-#else
-                Log.CloseAndFlush();
-#endif
+               Log.CloseAndFlush();
             }
         }
 
-        public static IHostBuilder CreateWebHostBuilder(string[] args) =>
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-#if DEBUG
-#else
-                    webBuilder.UseSerilog();
-#endif
                 });
     }
 }

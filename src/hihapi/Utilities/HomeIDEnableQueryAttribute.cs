@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.OData.ModelBuilder.Config;
 
 namespace hihapi.Utilities
 {
@@ -39,7 +40,7 @@ namespace hihapi.Utilities
                     MaxTop = 100,                    
                 };
 
-                queryOptions.Filter.Validator = new HomeIDQueryValidator(settings);
+                queryOptions.Filter.Validator = new HomeIDQueryValidator();
             }
 
             base.ValidateQuery(request, queryOptions);

@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.OData;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using Serilog;
 
 namespace hihapi
 {
@@ -69,40 +70,14 @@ namespace hihapi
 #endif
 #endif
 
-            if (Environment.EnvironmentName != "IntegrationTest")
-            {
-                services.AddDbContext<hihDataContext>(options =>
-                    options.UseSqlServer(this.ConnectionString));
-            }
-
             services.AddHttpContextAccessor();
-
-            services.AddControllers(opts =>
-            {
-                // Learned from stackoverflow but not working
-                //if (Environment.IsDevelopment())
-                //{
-                //    opts.Filters.Add<AllowAnonymousFilter>();
-                //}
-                //else
-                //{
-                //    var authenticatedUserPolicy = new AuthorizationPolicyBuilder()
-                //              .RequireAuthenticatedUser()
-                //              .Build();
-                //    opts.Filters.Add(new AuthorizeFilter(authenticatedUserPolicy));
-                //}
-            });
 
             IEdmModel model = EdmModelBuilder.GetEdmModel();
 
-            services.AddControllers().AddOData(opt => opt.Count().Filter().Expand().Select().OrderBy().SetMaxTop(50)
-                .AddModel(model)
-                .AddModel("v1", model)
-                // .AddModel("v2{data}", model2, builder => builder.AddService<ODataBatchHandler, DefaultODataBatchHandler>(Microsoft.OData.ServiceLifetime.Singleton))
-                // .ConfigureRoute(route => route.EnableQualifiedOperationCall = false) // use this to configure the built route template
+            services.AddControllers().AddOData(opt => opt.Count().Filter().Expand().Select().OrderBy().SetMaxTop(100)
+                .AddRouteComponents(model)
+                .AddRouteComponents("v1", model)
                 );
-
-            //services.AddSwaggerGen();
 
             if (Environment.EnvironmentName == "IntegrationTest")
             {
@@ -198,13 +173,17 @@ namespace hihapi
             {
                 app.UseDeveloperExceptionPage();
             }
-
-            if (Environment.EnvironmentName != "IntegrationTest")
+            else
             {
-                app.UseCors(MyAllowSpecificOrigins);
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
             }
 
+            app.UseCors(MyAllowSpecificOrigins);
+
             app.UseHttpsRedirection();
+
+            app.UseSerilogRequestLogging(); // <-- Add this line
 
             app.UseODataBatching();
 
@@ -217,17 +196,12 @@ namespace hihapi
 
             app.UseEndpoints(endpoints =>
             {
-                // Following code make anonymous access possible in Development environment, but it is not working for fetching data
-                //if (env.IsDevelopment())
-                //    endpoints.MapControllers().WithMetadata(new AllowAnonymousAttribute());
-                //else
-                //    endpoints.MapControllers();
                 endpoints.MapControllers();
             });
 
             app.UseResponseCaching();
 
-            var cachePeriod = env.EnvironmentName == "Development" ? "10" : "30";
+            var cachePeriod = env.IsDevelopment() ? "10" : "30";
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(BlogFolder),
