@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.OData.Deltas;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public sealed class FinanceOrdersController : ODataController
     {
         private readonly hihDataContext _context;
@@ -26,7 +27,6 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceOrders
-        [Authorize]
         public IQueryable Get(ODataQueryOptions<FinanceOrder> option)
         {
             String usrName = String.Empty;
@@ -84,7 +84,6 @@ namespace hihapi.Controllers
         //    return SingleResult.Create(rstquery);
         //}
 
-        [Authorize]
         public async Task<IActionResult> Post([FromBody] FinanceOrder order)
         {
             if (!ModelState.IsValid)
@@ -128,7 +127,6 @@ namespace hihapi.Controllers
             return Created(order);
         }
 
-        [Authorize]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceOrder update)
         {
             if (!ModelState.IsValid)
@@ -213,7 +211,6 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
-        [Authorize]
         public async Task<IActionResult> Patch([FromODataUri] int id, [FromBody] Delta<FinanceOrder> doc)
         {
             if (!ModelState.IsValid)
@@ -264,7 +261,6 @@ namespace hihapi.Controllers
             return Updated(entity);
         }
 
-        [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.FinanceOrder.FindAsync(key);

@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public class BlogUserSettingsController : ODataController
     {
         private readonly hihDataContext _context;
@@ -28,7 +29,6 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        [Authorize]
         [EnableQuery]
         public IQueryable<BlogUserSetting> Get()
         {
@@ -49,7 +49,6 @@ namespace hihapi.Controllers
             return _context.BlogUserSettings.Where(p => p.Owner == usrName);
         }
 
-        [Authorize]
         [EnableQuery]
         public SingleResult<BlogUserSetting> Get([FromODataUri] string owner)
         {
@@ -70,50 +69,13 @@ namespace hihapi.Controllers
             return SingleResult.Create(_context.BlogUserSettings.Where(p => p.Owner == owner));
         }
 
-        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] BlogUserSetting newsetting)
         {
             // Not Yet possible
             return Forbid();
-            //if (!ModelState.IsValid)
-            //{
-            //    HIHAPIUtility.HandleModalStateError(ModelState);
-            //}
-
-            //// User
-            //string usrName;
-            //try
-            //{
-            //    usrName = HIHAPIUtility.GetUserID(this);
-            //    if (String.IsNullOrEmpty(usrName))
-            //    {
-            //        throw new UnauthorizedAccessException();
-            //    }
-            //    if (String.CompareOrdinal(newsetting.Owner, usrName) != 0)
-            //    {
-            //        throw new UnauthorizedAccessException();
-            //    }
-            //}
-            //catch
-            //{
-            //    throw new UnauthorizedAccessException();
-            //}
-
-            //// Check setting
-            //var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
-            //if (setting == null)
-            //{
-            //    throw new BadRequestException(" Setting already Exists ");
-            //}
-
-            //_context.BlogUserSettings.Add(newsetting);
-            //await _context.SaveChangesAsync();
-
-            //return Created(newsetting);
         }
 
-        [Authorize]
         public async Task<IActionResult> Put([FromODataUri]string owner, [FromBody] BlogUserSetting update)
         {
             if (!ModelState.IsValid)
@@ -167,7 +129,6 @@ namespace hihapi.Controllers
             return Ok(update);
         }
 
-        [Authorize]
         [HttpGet]
         public IActionResult Deploy([FromODataUri]string owner)
         {
@@ -217,13 +178,6 @@ namespace hihapi.Controllers
             }
 
             return Ok("");
-            //if (string.IsNullOrEmpty(errstr))
-            //{
-
-            //    return Ok();
-            //}
-
-            //throw new Exception(errstr);
         }
     }
 }

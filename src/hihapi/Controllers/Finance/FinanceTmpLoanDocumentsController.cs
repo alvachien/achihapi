@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public sealed class FinanceTmpLoanDocumentsController : ODataController
     {
         private readonly hihDataContext _context;
@@ -23,7 +24,6 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        [Authorize]
         public IQueryable<FinanceTmpLoanDocument> Get()
         {
             String usrName = String.Empty;
@@ -42,7 +42,6 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> PostRepayDocument([FromBody]FinanceLoanRepayDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
@@ -243,7 +242,6 @@ namespace hihapi.Controllers
         }
         
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> PostPrepaymentDocument([FromBody]FinanceLoanPrepayDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)

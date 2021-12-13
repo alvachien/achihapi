@@ -19,6 +19,7 @@ using hihapi.Exceptions;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public sealed class LearnCategoriesController : ODataController
     {
         private readonly hihDataContext _context;
@@ -29,7 +30,6 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        [Authorize]
         public IQueryable<LearnCategory> Get()
         {
             String usrName = String.Empty;
@@ -59,7 +59,6 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        [Authorize]
         public SingleResult<LearnCategory> Get([FromODataUri] int id)
         {
             String usrName = String.Empty;
@@ -83,7 +82,6 @@ namespace hihapi.Controllers
             return SingleResult.Create(rst);
         }
 
-        [Authorize]
         public async Task<IActionResult> Post([FromBody] LearnCategory ctgy)
         {
             if (!ModelState.IsValid)
@@ -127,7 +125,6 @@ namespace hihapi.Controllers
             return Created(ctgy);
         }
 
-        [Authorize]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] LearnCategory update)
         {
             if (!ModelState.IsValid)
@@ -186,7 +183,6 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
-        [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.LearnCategories.FindAsync(key);

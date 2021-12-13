@@ -21,6 +21,7 @@ using hihapi.Exceptions;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public class HomeDefinesController : ODataController
     {
         private readonly hihDataContext _context;
@@ -40,7 +41,6 @@ namespace hihapi.Controllers
         /// 
         /// <remarks>
         [EnableQuery]
-        [Authorize]
         public IQueryable<HomeDefine> Get()
         {
             String usrName = "";
@@ -100,7 +100,6 @@ namespace hihapi.Controllers
         //    return SingleResult.Create(hidquery);
         //}
 
-        [Authorize]
         public async Task<IActionResult> Post([FromBody]HomeDefine homedef)
         {
             if (!ModelState.IsValid)
@@ -140,7 +139,6 @@ namespace hihapi.Controllers
             return Created(homedef);
         }
 
-        [Authorize]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] HomeDefine update)
         {
             if (!ModelState.IsValid)
@@ -239,7 +237,6 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
-        [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             // User

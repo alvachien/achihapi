@@ -19,6 +19,7 @@ using hihapi.Exceptions;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public sealed class LearnObjectsController : ODataController
     {
         private readonly hihDataContext _context;
@@ -28,7 +29,6 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        [Authorize]
         public IQueryable Get(ODataQueryOptions<LearnObject> option)
         {
             String usrName = String.Empty;
@@ -53,7 +53,6 @@ namespace hihapi.Controllers
             return option.ApplyTo(query);
         }
 
-        [Authorize]
         public async Task<IActionResult> Post([FromBody] LearnObject obj)
         {
             if (!ModelState.IsValid)
@@ -97,7 +96,6 @@ namespace hihapi.Controllers
             return Created(obj);
         }
 
-        [Authorize]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] LearnObject update)
         {
             if (!ModelState.IsValid)
@@ -156,7 +154,6 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
-        [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.LearnObjects.FindAsync(key);

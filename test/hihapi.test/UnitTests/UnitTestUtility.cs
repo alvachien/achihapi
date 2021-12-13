@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNet.OData;
-using Microsoft.AspNet.OData.Query;
-using Microsoft.AspNet.OData.Extensions;
+//using Microsoft.AspNet.OData;
+//using Microsoft.AspNet.OData.Query;
+//using Microsoft.AspNet.OData.Extensions;
 using Microsoft.OData.UriParser;
-using Microsoft.AspNet.OData.Query.Validators;
+//using Microsoft.AspNet.OData.Query.Validators;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.OData.Edm;
 using Moq;
-using Microsoft.AspNet.OData.Builder;
+//using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 

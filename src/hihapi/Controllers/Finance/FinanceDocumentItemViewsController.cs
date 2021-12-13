@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public class FinanceDocumentItemViewsController : ODataController
     {
         private readonly hihDataContext _context;
@@ -23,7 +24,6 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        [Authorize]
         public IQueryable Get(ODataQueryOptions<FinanceDocumentItemView> option)
         {
             String usrName = String.Empty;

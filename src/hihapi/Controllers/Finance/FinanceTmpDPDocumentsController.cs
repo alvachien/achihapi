@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public sealed class FinanceTmpDPDocumentsController : ODataController
     {
         private readonly hihDataContext _context;
@@ -29,7 +30,6 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        [Authorize]
         public IQueryable<FinanceTmpDPDocument> Get()
         {
             String usrName = String.Empty;
@@ -51,7 +51,6 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> PostDocument([FromBody]FinanceTmpDPDocumentPostContext context)
         {
             // User

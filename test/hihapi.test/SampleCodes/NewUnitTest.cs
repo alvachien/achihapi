@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.AspNet.OData;
-using Microsoft.AspNet.OData.Builder;
-using Microsoft.AspNet.OData.Extensions;
-using Microsoft.AspNet.OData.Query;
-using Microsoft.AspNet.OData.Query.Validators;
+//using Microsoft.AspNet.OData;
+//using Microsoft.AspNet.OData.Builder;
+//using Microsoft.AspNet.OData.Extensions;
+//using Microsoft.AspNet.OData.Query;
+//using Microsoft.AspNet.OData.Query.Validators;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

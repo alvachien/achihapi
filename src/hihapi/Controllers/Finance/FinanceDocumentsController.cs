@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.OData.Deltas;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public class FinanceDocumentsController : ODataController
     {
         private readonly hihDataContext _context;
@@ -30,7 +31,6 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceDocuments
-        [Authorize]
         public IQueryable Get(ODataQueryOptions<FinanceDocument> option)
         {
             String usrName = String.Empty;
@@ -96,7 +96,6 @@ namespace hihapi.Controllers
         //    return SingleResult.Create(rstquery);
         //}
 
-        [Authorize]
         public async Task<IActionResult> Post([FromBody]FinanceDocument document)
         {
             if (!ModelState.IsValid)
@@ -149,7 +148,6 @@ namespace hihapi.Controllers
             return Created(document);
         }
 
-        [Authorize]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody]FinanceDocument update)
         {
             if (!ModelState.IsValid)
@@ -234,7 +232,6 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
-        [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.FinanceDocument.FindAsync(key);
@@ -274,7 +271,6 @@ namespace hihapi.Controllers
             return StatusCode(204); // HttpStatusCode.NoContent
         }
 
-        [Authorize]
         public async Task<IActionResult> Patch([FromODataUri] int id, [FromBody] Delta<FinanceDocument> doc)
         {
             if (!ModelState.IsValid)
@@ -326,7 +322,6 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> PostDPDocument([FromBody]FinanceADPDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
@@ -481,7 +476,6 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> PostLoanDocument([FromBody]FinanceLoanDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
@@ -625,7 +619,6 @@ namespace hihapi.Controllers
         }
     
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> PostAssetBuyDocument([FromBody]FinanceAssetBuyDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
@@ -792,7 +785,6 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> PostAssetValueChangeDocument([FromBody]FinanceAssetRevaluationDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
@@ -962,7 +954,6 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> PostAssetSellDocument([FromBody]FinanceAssetSellDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)

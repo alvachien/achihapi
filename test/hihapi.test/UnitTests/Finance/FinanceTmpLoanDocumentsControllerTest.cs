@@ -1,8 +1,8 @@
 ﻿using hihapi.Controllers;
 using hihapi.Models;
 using hihapi.Utilities;
-using Microsoft.AspNet.OData.Extensions;
-using Microsoft.AspNet.OData.Results;
+//using Microsoft.AspNet.OData.Extensions;
+//using Microsoft.AspNet.OData.Results;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OData.Edm;

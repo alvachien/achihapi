@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public sealed class FinancePlansController : ODataController
     {
         private readonly hihDataContext _context;
@@ -24,7 +25,6 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        [Authorize]
         public IQueryable Get(ODataQueryOptions<FinancePlan> option)
         {
             String usrName = String.Empty;
@@ -49,7 +49,6 @@ namespace hihapi.Controllers
             return option.ApplyTo(query);
         }
 
-        [Authorize]
         public async Task<IActionResult> Post([FromBody] FinancePlan plan)
         {
             if (!ModelState.IsValid)
@@ -93,7 +92,6 @@ namespace hihapi.Controllers
             return Created(plan);
         }
 
-        [Authorize]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinancePlan update)
         {
             if (!ModelState.IsValid)
@@ -153,7 +151,6 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
-        [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.FinancePlan.FindAsync(key);

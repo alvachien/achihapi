@@ -19,6 +19,7 @@ using hihapi.Exceptions;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public sealed class FinanceOrderSRulesController: ODataController
     {
         private readonly hihDataContext _context;
@@ -29,7 +30,6 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceOrderSRules
-        [Authorize]
         public IQueryable Get(ODataQueryOptions<FinanceDocumentItem> option)
         {
             String usrName = String.Empty;

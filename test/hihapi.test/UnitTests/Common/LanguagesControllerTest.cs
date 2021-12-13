@@ -8,13 +8,13 @@ using hihapi.Models;
 using hihapi.Controllers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNet.OData.Results;
+//using Microsoft.AspNet.OData.Results;
 using Moq;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNet.OData.Query;
+//using Microsoft.AspNet.OData.Query;
 
 namespace hihapi.test.UnitTests
 {

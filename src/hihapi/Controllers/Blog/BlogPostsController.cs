@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public class BlogPostsController : ODataController
     {
         private readonly hihDataContext _context;
@@ -30,7 +31,6 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        [Authorize]
         [EnableQuery]
         public IQueryable<BlogPost> Get()
         {
@@ -51,7 +51,6 @@ namespace hihapi.Controllers
             return _context.BlogPosts.Where(p => p.Owner == usrName);
         }
 
-        [Authorize]
         [EnableQuery]
         public SingleResult<BlogPost> Get([FromODataUri] int id)
         {
@@ -72,7 +71,6 @@ namespace hihapi.Controllers
             return SingleResult.Create(_context.BlogPosts.Where(p => p.ID == id && p.Owner == usrName));
         }
 
-        [Authorize]
         public async Task<IActionResult> Post([FromBody]BlogPost post)
         {
             if (!ModelState.IsValid)
@@ -115,7 +113,6 @@ namespace hihapi.Controllers
             return Created(post);
         }
 
-        [Authorize]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody]BlogPost update)
         {
             if (!ModelState.IsValid)
@@ -214,7 +211,6 @@ namespace hihapi.Controllers
             return Ok(update);
         }
 
-        [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.BlogPosts.FindAsync(key);
@@ -258,7 +254,6 @@ namespace hihapi.Controllers
             return StatusCode(204); // HttpStatusCode.NoContent
         }
 
-        [Authorize]
         [HttpGet]
         public IActionResult Deploy(int key)
         {
@@ -331,7 +326,6 @@ namespace hihapi.Controllers
             //throw new Exception(errstr);
         }
 
-        [Authorize]
         [HttpGet]
         public IActionResult ClearDeploy(int key)
         {
@@ -374,7 +368,6 @@ namespace hihapi.Controllers
             }
 
             return Ok("");
-            //throw new Exception(errstr);
         }
     }
 }

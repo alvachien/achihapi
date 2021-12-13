@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public class HomeMembersController : ODataController
     {
         private readonly hihDataContext _context;
@@ -36,7 +37,6 @@ namespace hihapi.Controllers
         /// 
         /// <remarks>
         [EnableQuery]
-        [Authorize]
         public IQueryable<HomeMember> Get()
         {
             return _context.HomeMembers;

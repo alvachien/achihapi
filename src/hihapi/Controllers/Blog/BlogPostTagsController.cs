@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public class BlogPostTagsController : ODataController
     {
         private readonly hihDataContext _context;
@@ -27,7 +28,6 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        [Authorize]
         [EnableQuery]
         public IQueryable<BlogPostTag> Get()
         {
@@ -55,11 +55,5 @@ namespace hihapi.Controllers
 
             return tags;
         }
-
-        //[EnableQuery]
-        //public SingleResult<BlogPostTag> Get([FromODataUri] int id)
-        //{
-        //    return SingleResult.Create(_context.BlogPostTags.Where(p => p.ID == id));
-        //}
     }
 }

@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public sealed class FinanceReportByOrdersController: ODataController
     {
         private readonly hihDataContext _context;
@@ -24,7 +25,6 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        [Authorize]
         [EnableQuery]
         public IQueryable<FinanceReportByOrder> Get()
         {

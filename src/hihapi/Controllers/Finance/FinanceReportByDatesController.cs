@@ -15,8 +15,7 @@ using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+    [Authorize]
     public class FinanceReportByDatesController : ODataController
     {
         private readonly hihDataContext _context;
@@ -26,7 +25,6 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        [Authorize]
         [EnableQuery]
         public IQueryable<FinanceReportByControlCenter> Get()
         {

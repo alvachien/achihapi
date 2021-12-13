@@ -8,12 +8,12 @@ using hihapi.Models;
 using hihapi.Controllers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNet.OData.Results;
+//using Microsoft.AspNet.OData.Results;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNet.OData.Extensions;
+//using Microsoft.AspNet.OData.Extensions;
 using Microsoft.OData.Edm;
 
 namespace hihapi.test.UnitTests

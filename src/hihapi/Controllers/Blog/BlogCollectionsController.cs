@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.OData.Deltas;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public class BlogCollectionsController : ODataController
     {
         private readonly hihDataContext _context;
@@ -28,7 +29,6 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        [Authorize]
         [EnableQuery]
         public IQueryable<BlogCollection> Get()
         {
@@ -60,7 +60,6 @@ namespace hihapi.Controllers
         /// <summary>
         /// Support for creating BlogCollections
         /// </summary>
-        [Authorize]
         public async Task<IActionResult> Post([FromBody] BlogCollection coll)
         {
             if (!ModelState.IsValid)
@@ -111,7 +110,6 @@ namespace hihapi.Controllers
         /// <summary>
         /// Support for updating BlogCollections
         /// </summary>
-        [Authorize]
         public async Task<IActionResult> Put([FromODataUri] int id, [FromBody] BlogCollection update)
         {
             if (!ModelState.IsValid)
@@ -175,7 +173,6 @@ namespace hihapi.Controllers
         /// <summary>
         /// Support for deleting BlogCollections by key.
         /// </summary>
-        [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var record = await _context.BlogCollections.FindAsync(key);
@@ -220,7 +217,6 @@ namespace hihapi.Controllers
         /// <summary>
         /// Support for partial updates of BlogCollections
         /// </summary>
-        [Authorize]
         public async Task<IActionResult> Patch([FromODataUri] int id, [FromBody] Delta<BlogCollection> coll)
         {
             if (!ModelState.IsValid)

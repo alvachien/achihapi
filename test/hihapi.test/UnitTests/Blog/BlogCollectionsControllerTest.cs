@@ -6,7 +6,7 @@ using hihapi.Models;
 using hihapi.Controllers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNet.OData.Results;
+//using Microsoft.AspNet.OData.Results;
 using Microsoft.OData.Edm;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;

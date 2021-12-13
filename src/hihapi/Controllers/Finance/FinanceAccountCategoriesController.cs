@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public class FinanceAccountCategoriesController : ODataController
     {
         private readonly hihDataContext _context;
@@ -30,7 +31,6 @@ namespace hihapi.Controllers
 
         /// GET: /FinanceAccountCategories
         [EnableQuery]
-        [Authorize]
         public IQueryable<FinanceAccountCategory> Get()
         {
             String usrName = String.Empty;
@@ -85,7 +85,6 @@ namespace hihapi.Controllers
         //    return SingleResult.Create(rst);
         //}
 
-        [Authorize]
         public async Task<IActionResult> Post([FromBody] FinanceAccountCategory ctgy)
         {
             if (!ModelState.IsValid)
@@ -132,7 +131,6 @@ namespace hihapi.Controllers
             return Created(ctgy);
         }
     
-        [Authorize]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceAccountCategory update)
         {
             if (!ModelState.IsValid)
@@ -192,7 +190,6 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
-        [Authorize]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.FinAccountCategories.FindAsync(key);
