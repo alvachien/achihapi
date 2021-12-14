@@ -8,13 +8,12 @@ using hihapi.Models;
 using hihapi.Controllers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-//using Microsoft.AspNet.OData.Results;
 using Microsoft.AspNetCore.Http;
 using Moq;
 using System.Security.Claims;
 using System.Collections.Generic;
-//using Microsoft.AspNet.OData;
 using hihapi.Exceptions;
+using Microsoft.AspNetCore.OData.Results;
 
 namespace hihapi.test.UnitTests
 {

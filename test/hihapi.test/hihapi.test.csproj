@@ -2,21 +2,16 @@
 
   <PropertyGroup>
 	  <TargetFramework>net5.0</TargetFramework>
-
 	  <IsPackable>false</IsPackable>
-
     <Version>1.1.88</Version>
-
     <Authors>Alva Chien</Authors>
-
     <Product>H.I.H.</Product>
-
     <Description>Home Info. Hub</Description>
-
-    <Copyright>(C) Alva Chien, 2019</Copyright>
+    <Copyright>(C) Alva Chien, 2019 - Present </Copyright>
   </PropertyGroup>
 
   <ItemGroup>
+	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="5.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.11" />
     <PackageReference Include="Moq" Version="4.16.1" />
