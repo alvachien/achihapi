@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.OData.Routing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GalleryAPI.Extensions
+namespace hihapi.Extensions
 {
     /// <summary>
     /// A debug controller to show the OData endpoint.

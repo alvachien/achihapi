@@ -1,7 +1,8 @@
 using System;
 using Microsoft.EntityFrameworkCore;
+using hihapi.Models;
 
-namespace hihapi.Models
+namespace hihapi
 {
     public class hihDataContext : DbContext
     {

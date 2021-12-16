@@ -57,7 +57,7 @@ namespace hihapi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors();
+            //services.AddCors();
 
 #if DEBUG
             this.ConnectionString = Configuration["hihapi:ConnectionString"];
@@ -69,6 +69,7 @@ namespace hihapi
             this.ConnectionString = Configuration.GetConnectionString("AzureConnection");
 #endif
 #endif
+            services.AddDbContext<hihDataContext>(options => options.UseSqlServer(this.ConnectionString));
 
             services.AddHttpContextAccessor();
 
