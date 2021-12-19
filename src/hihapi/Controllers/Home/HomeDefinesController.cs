@@ -40,8 +40,9 @@ namespace hihapi.Controllers
         /// GET /HomeDefines?
         /// 
         /// <remarks>
+        [HttpGet]
         [EnableQuery]
-        public IQueryable<HomeDefine> Get()
+        public IActionResult Get()
         {
             String usrName = "";
             try
@@ -58,11 +59,11 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            return from hd in _context.HomeDefines
-                    join hm in _context.HomeMembers
-                        on hd.ID equals hm.HomeID
-                    where hm.User == usrName
-                       select hd;
+            return Ok(from hd in _context.HomeDefines
+                        join hm in _context.HomeMembers
+                            on hd.ID equals hm.HomeID
+                        where hm.User == usrName
+                           select hd);
         }
 
         /// GET: /HomeDefines(:id)
@@ -73,8 +74,9 @@ namespace hihapi.Controllers
         /// </summary>
         /// <param name="id">The key of the home define required</param>
         /// <returns>The home define</returns>
+        [HttpGet]
         [EnableQuery]
-        public SingleResult<HomeDefine> Get([FromODataUri] int id)
+        public HomeDefine Get(int key)
         {
             String usrName = "";
             try
@@ -91,12 +93,10 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var hidquery = from hmem in _context.HomeMembers
+            return (from hmem in _context.HomeMembers
                            join hdef in _context.HomeDefines on hmem.HomeID equals hdef.ID
-                           where hmem.User == usrName && hmem.HomeID == id
-                           select hdef;
-
-            return SingleResult.Create(hidquery);
+                           where hmem.User == usrName && hmem.HomeID == key
+                           select hdef).FirstOrDefault();
         }
 
         public async Task<IActionResult> Post([FromBody]HomeDefine homedef)

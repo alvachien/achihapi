@@ -61,6 +61,7 @@ namespace hihapi
 
 #if DEBUG
             this.ConnectionString = Configuration["hihapi:ConnectionString"];
+            this.ConnectionString += "Encrypt=False;";
             System.Diagnostics.Debug.WriteLine(this.ConnectionString);
 #else
 #if USE_ALIYUN
