@@ -1,17 +1,8 @@
-﻿using System;
-using System.Linq;
-using System.IO;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using hihapi.Models;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
@@ -26,15 +17,17 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        public IQueryable<BlogFormat> Get()
+        [HttpGet]
+        public IActionResult Get()
         {
-            return _context.BlogFormats;
+            return Ok(_context.BlogFormats);
         }
 
         [EnableQuery]
-        public SingleResult<BlogFormat> Get([FromODataUri] int key)
+        [HttpGet]
+        public BlogFormat Get([FromODataUri] int key)
         {
-            return SingleResult.Create(_context.BlogFormats.Where(p => p.ID == key));
+            return _context.BlogFormats.Where(p => p.ID == key).SingleOrDefault();
         }
     }
 }

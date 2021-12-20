@@ -1,20 +1,11 @@
 ﻿using System.Linq;
-using System.IO;
 using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using hihapi.Models;
 using hihapi.Utilities;
 using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
-using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
@@ -29,7 +20,8 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        public IQueryable<BlogPostTag> Get()
+        [HttpGet]
+        public IActionResult Get()
         {
             // User
             string usrName;
@@ -46,14 +38,12 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var tags = from post in _context.BlogPosts
+            return Ok(from post in _context.BlogPosts
                        where post.Owner == usrName
                        select new { PostID = post.ID } into postids
                        join posttags in _context.BlogPostTags
                         on postids.PostID equals posttags.PostID
-                       select posttags;
-
-            return tags;
+                       select posttags);
         }
     }
 }

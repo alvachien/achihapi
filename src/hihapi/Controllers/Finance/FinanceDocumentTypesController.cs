@@ -1,20 +1,15 @@
 using System;
 using System.Linq;
-using System.IO;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
 using hihapi.Exceptions;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
@@ -31,7 +26,8 @@ namespace hihapi.Controllers
         
         /// GET: /FinanceDocumentTypes
         [EnableQuery]
-        public IQueryable<FinanceDocumentType> Get()
+        [HttpGet]
+        public IActionResult Get()
         {
             String usrName = String.Empty;
             try
@@ -45,7 +41,7 @@ namespace hihapi.Controllers
             }
 
             if (String.IsNullOrEmpty(usrName))
-                return _context.FinDocumentTypes.Where(p => p.HomeID == null);
+                return Ok(_context.FinDocumentTypes.Where(p => p.HomeID == null));
 
             var rst0 = from acntctgy in _context.FinDocumentTypes
                        where acntctgy.HomeID == null
@@ -56,9 +52,10 @@ namespace hihapi.Controllers
                        join acntctgy in _context.FinDocumentTypes on hids.HomeID equals acntctgy.HomeID
                        select acntctgy;
 
-            return rst0.Union(rst1);
+            return Ok(rst0.Union(rst1));
         }
 
+        [HttpPost]
         public async Task<IActionResult> Post([FromBody] FinanceDocumentType ctgy)
         {
             if (!ModelState.IsValid)
@@ -102,6 +99,7 @@ namespace hihapi.Controllers
             return Created(ctgy);
         }
 
+        [HttpPut]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceDocumentType update)
         {
             if (!ModelState.IsValid)
@@ -161,6 +159,7 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
+        [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] short key)
         {
             var cc = await _context.FinDocumentTypes.FindAsync(key);

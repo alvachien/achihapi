@@ -1,13 +1,8 @@
 ﻿using System.Linq;
-using System.IO;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.Authorization;
@@ -30,7 +25,8 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        public IQueryable<BlogCollection> Get()
+        [HttpGet]
+        public IActionResult Get()
         {
             // User
             string usrName;
@@ -47,19 +43,21 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            return _context.BlogCollections.Where(p => p.Owner == usrName);
+            return Ok(_context.BlogCollections.Where(p => p.Owner == usrName));
         }
 
-        //[EnableQuery]
-        //public SingleResult<BlogCollection> Get([FromODataUri] int id)
-        //{
-        //    return SingleResult.Create(_context.BlogCollections.Where(p => p.ID == id));
-        //}
+        [EnableQuery]
+        [HttpGet]
+        public BlogCollection Get([FromODataUri] int id)
+        {
+            return _context.BlogCollections.Where(p => p.ID == id).SingleOrDefault();
+        }
 
         // POST: /BlogCollections
         /// <summary>
         /// Support for creating BlogCollections
         /// </summary>
+        [HttpPost]
         public async Task<IActionResult> Post([FromBody] BlogCollection coll)
         {
             if (!ModelState.IsValid)
@@ -110,6 +108,7 @@ namespace hihapi.Controllers
         /// <summary>
         /// Support for updating BlogCollections
         /// </summary>
+        [HttpPut]
         public async Task<IActionResult> Put([FromODataUri] int id, [FromBody] BlogCollection update)
         {
             if (!ModelState.IsValid)
@@ -173,6 +172,7 @@ namespace hihapi.Controllers
         /// <summary>
         /// Support for deleting BlogCollections by key.
         /// </summary>
+        [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var record = await _context.BlogCollections.FindAsync(key);

@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "0673fd68-4967-47f5-9c1a-9735b714b3dd",
+		"_postman_id": "7f7e5ff4-5291-49e0-b3ab-4af38c5ed504",
 		"name": "HIHAPI",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -65,6 +65,31 @@
 					"item": [
 						{
 							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/Languages?$count=true",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"Languages"
+									],
+									"query": [
+										{
+											"key": "$count",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Collection for App",
 							"request": {
 								"method": "GET",
 								"header": [],
@@ -250,6 +275,109 @@
 							"port": "44360",
 							"path": [
 								"$odata"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetRepeatedDates2",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:44360/GetRepeatedDates2(StartDate='2021-01-01', EndDate='2021-12-31', RepeatType=1)",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"GetRepeatedDates2(StartDate='2021-01-01', EndDate='2021-12-31', RepeatType=1)"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetRepeatedDatesWithAmount",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"StartDate\": \"2021-01-01\",\r\n    \"EndDate\": \"2021-12-31\",\r\n    \"RepeatType\": \"1\",\r\n    \"TotalAmount\": 120000,\r\n    \"Desp\": \"Test\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:44360/GetRepeatedDatesWithAmount",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"GetRepeatedDatesWithAmount"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetRepeatedDatesWithAmountAndInterest",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"StartDate\": \"2021-01-01\",\r\n    \"EndDate\": \"2021-12-31\",\r\n    \"RepeatType\": \"1\",\r\n    \"TotalAmount\": 120000,\r\n    \"TotalMonths\": 12,\r\n    \"InterestRate\": 10,\r\n    \"InterestFreeLoan\": false\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:44360/GetRepeatedDatesWithAmount",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"GetRepeatedDatesWithAmount"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetRepeatedDates",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"StartDate\": \"2021-01-01\",\r\n    \"EndDate\": \"2021-12-31\",\r\n    \"RepeatType\": \"1\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:44360/GetRepeatedDates",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44360",
+							"path": [
+								"GetRepeatedDates"
 							]
 						}
 					},

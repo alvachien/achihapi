@@ -1,18 +1,7 @@
-using System;
 using System.Linq;
-using System.IO;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using hihapi.Models;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
-using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
@@ -35,6 +24,7 @@ namespace hihapi.Controllers
         /// 
         /// <remarks>
         [EnableQuery]
+        [HttpGet]
         [ResponseCache(Duration = 3600)]
         public IActionResult Get()
         {
@@ -50,6 +40,7 @@ namespace hihapi.Controllers
         /// <param name="key">The key of the currency required</param>
         /// <returns>The currency</returns>
         [EnableQuery]
+        [HttpGet]
         public IActionResult Get(string key)
         {
             return Ok(_context.Currencies.FirstOrDefault(p => p.Curr == key));

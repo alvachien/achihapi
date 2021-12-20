@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
-using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
@@ -24,7 +20,9 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        public IQueryable Get(ODataQueryOptions<FinanceDocumentItemView> option)
+        [EnableQuery]
+        [HttpGet]
+        public IActionResult Get(ODataQueryOptions<FinanceDocumentItemView> option)
         {
             String usrName = String.Empty;
             try
@@ -45,7 +43,7 @@ namespace hihapi.Controllers
                 join items in _context.FinanceDocumentItemView on hids.HomeID equals items.HomeID
                 select items;
 
-            return option.ApplyTo(rst);
+            return Ok(option.ApplyTo(rst));
         }
     }
 }

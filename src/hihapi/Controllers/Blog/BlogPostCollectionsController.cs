@@ -1,18 +1,6 @@
-﻿using System.Linq;
-using System.IO;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using hihapi.Models;
-using hihapi.Utilities;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
-using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
@@ -26,9 +14,10 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        public IQueryable<BlogPostCollection> Get()
+        [HttpGet]
+        public IActionResult Get()
         {
-            return _context.BlogPostCollections;
+            return Ok(_context.BlogPostCollections);
         }
     }
 }

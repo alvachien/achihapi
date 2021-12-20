@@ -27,6 +27,8 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceOrders
+        [EnableQuery]
+        [HttpGet]
         public IQueryable Get(ODataQueryOptions<FinanceOrder> option)
         {
             String usrName = String.Empty;

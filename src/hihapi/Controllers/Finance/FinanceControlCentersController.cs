@@ -1,20 +1,15 @@
 using System;
 using System.Linq;
-using System.IO;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
 using hihapi.Exceptions;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Deltas;
 
@@ -31,8 +26,9 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceControlCenters
-        /// [EnableQuery]
-        public IQueryable Get(ODataQueryOptions<FinanceControlCenter> option)
+        [EnableQuery]
+        [HttpGet]
+        public IActionResult Get(ODataQueryOptions<FinanceControlCenter> option)
         {
             String usrName = String.Empty;
             try
@@ -63,41 +59,40 @@ namespace hihapi.Controllers
                             || hmems.IsChild == false
                         select ccs;
 
-            return option.ApplyTo(query);
+            return Ok(option.ApplyTo(query));
         }
 
         // The Route will never reach following codes...
         // 
-        //[EnableQuery]
-        //[Authorize]
-        //public SingleResult<FinanceControlCenter> Get(int ccid)
-        //{
-        //    String usrName = String.Empty;
-        //    try
-        //    {
-        //        usrName = HIHAPIUtility.GetUserID(this);
-        //        if (String.IsNullOrEmpty(usrName))
-        //            throw new UnauthorizedAccessException();
-        //    }
-        //    catch
-        //    {
-        //        throw new UnauthorizedAccessException();
-        //    }
+        [EnableQuery]
+        [HttpGet]
+        public FinanceControlCenter Get(int ccid)
+        {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
 
-        //    var hidquery = from hmem in _context.HomeMembers
-        //                   where hmem.User == usrName
-        //                   select new { HomeID = hmem.HomeID };
-        //    var ccquery = from cc in _context.FinanceControlCenter
-        //                  where cc.ID == ccid
-        //                  select cc;
-        //    var rstquery = from cc in ccquery
-        //                   join hid in hidquery
-        //                   on cc.HomeID equals hid.HomeID
-        //                   select cc;
+            var hidquery = from hmem in _context.HomeMembers
+                           where hmem.User == usrName
+                           select new { HomeID = hmem.HomeID };
+            var ccquery = from cc in _context.FinanceControlCenter
+                          where cc.ID == ccid
+                          select cc;
+            return (from cc in ccquery
+                    join hid in hidquery
+                    on cc.HomeID equals hid.HomeID
+                    select cc).SingleOrDefault();
+        }
 
-        //    return SingleResult.Create(rstquery);
-        //}
-
+        [HttpPost]
         public async Task<IActionResult> Post([FromBody]FinanceControlCenter controlCenter)
         {
             if (!ModelState.IsValid)
@@ -138,6 +133,7 @@ namespace hihapi.Controllers
             return Created(controlCenter);
         }
 
+        [HttpPut]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody]FinanceControlCenter update)
         {
             if (!ModelState.IsValid)
@@ -197,6 +193,7 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
+        [HttpPatch]
         public async Task<IActionResult> Patch([FromODataUri] int key, [FromBody] Delta<FinanceControlCenter> coll)
         {
             if (!ModelState.IsValid)
@@ -251,6 +248,7 @@ namespace hihapi.Controllers
             return Updated(entity);
         }
 
+        [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.FinanceControlCenter.FindAsync(key);

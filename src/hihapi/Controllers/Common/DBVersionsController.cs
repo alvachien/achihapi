@@ -10,7 +10,6 @@ using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
@@ -42,6 +41,7 @@ namespace hihapi.Controllers
 
         /// GET: /DBVersions
         [EnableQuery]
+        [HttpGet]
         [ResponseCache(Duration = 3600)]
         public IActionResult Get()
         {
@@ -50,6 +50,7 @@ namespace hihapi.Controllers
 
         /// GET: /DBVersions(:vid)
         [EnableQuery]
+        [HttpGet]
         [ResponseCache(Duration = 3600)]
         public IActionResult Get(int key)
         {

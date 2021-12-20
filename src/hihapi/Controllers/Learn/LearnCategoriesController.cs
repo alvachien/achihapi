@@ -30,7 +30,8 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        public IQueryable<LearnCategory> Get()
+        [HttpGet]
+        public IActionResult Get()
         {
             String usrName = String.Empty;
             try
@@ -44,7 +45,7 @@ namespace hihapi.Controllers
             }
 
             if (String.IsNullOrEmpty(usrName))
-                return _context.LearnCategories.Where(p => p.HomeID == null);
+                return Ok(_context.LearnCategories.Where(p => p.HomeID == null));
 
             var rst0 = from ctgy in _context.LearnCategories
                        where ctgy.HomeID == null
@@ -55,11 +56,12 @@ namespace hihapi.Controllers
                        join ctgy in _context.LearnCategories on hids.HomeID equals ctgy.HomeID
                        select ctgy;
 
-            return rst0.Union(rst1);
+            return Ok(rst0.Union(rst1));
         }
 
         [EnableQuery]
-        public SingleResult<LearnCategory> Get([FromODataUri] int id)
+        [HttpGet]
+        public LearnCategory Get([FromODataUri] int id)
         {
             String usrName = String.Empty;
             try
@@ -73,15 +75,14 @@ namespace hihapi.Controllers
             }
 
             if (String.IsNullOrEmpty(usrName))
-                return SingleResult.Create(_context.LearnCategories.Where(p => p.ID == id && p.HomeID == null));
+                return _context.LearnCategories.Where(p => p.ID == id && p.HomeID == null).SingleOrDefault();
 
-            var rst = from hmem in _context.HomeMembers.Where(p => p.User == usrName)
+            return (from hmem in _context.HomeMembers.Where(p => p.User == usrName)
                       from acntctgy in _context.LearnCategories.Where(p => p.ID == id && (p.HomeID == null || p.HomeID == hmem.HomeID))
-                      select acntctgy;
-
-            return SingleResult.Create(rst);
+                      select acntctgy).SingleOrDefault();
         }
 
+        [HttpPost]
         public async Task<IActionResult> Post([FromBody] LearnCategory ctgy)
         {
             if (!ModelState.IsValid)
@@ -125,6 +126,7 @@ namespace hihapi.Controllers
             return Created(ctgy);
         }
 
+        [HttpPut]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] LearnCategory update)
         {
             if (!ModelState.IsValid)
@@ -183,6 +185,7 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
+        [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.LearnCategories.FindAsync(key);

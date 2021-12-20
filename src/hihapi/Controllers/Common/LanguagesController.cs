@@ -1,17 +1,8 @@
-using System;
 using System.Linq;
-using System.IO;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using hihapi.Models;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
@@ -36,16 +27,16 @@ namespace hihapi.Controllers
         /// <remarks>
         [EnableQuery]
         [ResponseCache(Duration = 86400)]
-        public IQueryable<Language> Get()
+        public IActionResult Get(ODataQueryOptions<Language> option)
         {
-            return _context.Languages;
+            return Ok(option.ApplyTo(_context.Languages));
         }
 
         [EnableQuery]
-        public SingleResult<Language> Get([FromODataUri] int key)
+        [HttpGet]
+        public Language Get([FromODataUri] int key)
         {
-            return SingleResult.Create(_context.Languages.Where(p => p.Lcid == key));
+            return _context.Languages.Where(p => p.Lcid == key).SingleOrDefault();
         }
-
     }
 }

@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Linq;
-using System.IO;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
@@ -29,7 +24,9 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        public IQueryable Get(ODataQueryOptions<LearnObject> option)
+        [EnableQuery]
+        [HttpGet]
+        public IActionResult Get(ODataQueryOptions<LearnObject> option)
         {
             String usrName = String.Empty;
             try
@@ -50,9 +47,10 @@ namespace hihapi.Controllers
                         join objs in _context.LearnObjects on hids.HomeID equals objs.HomeID
                         select objs;
 
-            return option.ApplyTo(query);
+            return Ok(option.ApplyTo(query));
         }
 
+        [HttpPost]
         public async Task<IActionResult> Post([FromBody] LearnObject obj)
         {
             if (!ModelState.IsValid)
@@ -96,6 +94,7 @@ namespace hihapi.Controllers
             return Created(obj);
         }
 
+        [HttpPut]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] LearnObject update)
         {
             if (!ModelState.IsValid)
@@ -154,6 +153,7 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
+        [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.LearnObjects.FindAsync(key);

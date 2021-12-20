@@ -99,6 +99,7 @@ namespace hihapi.Controllers
                            select hdef).FirstOrDefault();
         }
 
+        [HttpPost]
         public async Task<IActionResult> Post([FromBody]HomeDefine homedef)
         {
             if (!ModelState.IsValid)
@@ -138,6 +139,7 @@ namespace hihapi.Controllers
             return Created(homedef);
         }
 
+        [HttpPut]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] HomeDefine update)
         {
             if (!ModelState.IsValid)
@@ -236,6 +238,7 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
+        [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             // User

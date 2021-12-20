@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Linq;
-using System.IO;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
 using hihapi.Exceptions;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Deltas;
 
@@ -31,7 +26,9 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceDocuments
-        public IQueryable Get(ODataQueryOptions<FinanceDocument> option)
+        [EnableQuery]
+        [HttpGet]
+        public IActionResult Get(ODataQueryOptions<FinanceDocument> option)
         {
             String usrName = String.Empty;
             try
@@ -61,41 +58,38 @@ namespace hihapi.Controllers
                             || hmems.IsChild == false
                         select docs;
 
-            return option.ApplyTo(query);
+            return Ok(option.ApplyTo(query));
         }
 
-        // The Route will never reach following codes...
-        // 
-        //[EnableQuery]
-        //[Authorize]
-        //public SingleResult<FinanceDocument> Get([FromODataUri]Int32 docid)
-        //{
-        //    String usrName = String.Empty;
-        //    try
-        //    {
-        //        usrName = HIHAPIUtility.GetUserID(this);
-        //        if (String.IsNullOrEmpty(usrName))
-        //            throw new UnauthorizedAccessException();
-        //    }
-        //    catch
-        //    {
-        //        throw new UnauthorizedAccessException();
-        //    }
+        [EnableQuery]
+        [HttpGet]
+        public FinanceDocument Get([FromODataUri] Int32 docid)
+        {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
 
-        //    var hidquery = from hmem in _context.HomeMembers
-        //                   where hmem.User == usrName
-        //                   select new { HomeID = hmem.HomeID };
-        //    var docquery = from doc in _context.FinanceDocument
-        //                  where doc.ID == docid
-        //                  select doc;
-        //    var rstquery = from doc in docquery
-        //                   join hid in hidquery
-        //                   on doc.HomeID equals hid.HomeID
-        //                   select doc;
+            var hidquery = from hmem in _context.HomeMembers
+                           where hmem.User == usrName
+                           select new { HomeID = hmem.HomeID };
+            var docquery = from doc in _context.FinanceDocument
+                           where doc.ID == docid
+                           select doc;
+            return (from doc in docquery
+                    join hid in hidquery
+                    on doc.HomeID equals hid.HomeID
+                    select doc).SingleOrDefault();
+        }
 
-        //    return SingleResult.Create(rstquery);
-        //}
-
+        [HttpPost]
         public async Task<IActionResult> Post([FromBody]FinanceDocument document)
         {
             if (!ModelState.IsValid)
@@ -148,6 +142,7 @@ namespace hihapi.Controllers
             return Created(document);
         }
 
+        [HttpPut]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody]FinanceDocument update)
         {
             if (!ModelState.IsValid)
@@ -232,6 +227,7 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
+        [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.FinanceDocument.FindAsync(key);
@@ -271,6 +267,7 @@ namespace hihapi.Controllers
             return StatusCode(204); // HttpStatusCode.NoContent
         }
 
+        [HttpPatch]
         public async Task<IActionResult> Patch([FromODataUri] int id, [FromBody] Delta<FinanceDocument> doc)
         {
             if (!ModelState.IsValid)
