@@ -1,21 +1,12 @@
 using System;
 using System.Linq;
-using System.IO;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
-using Microsoft.AspNetCore.OData.Formatter;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
-using hihapi.Exceptions;
 
 namespace hihapi.Controllers
 {
@@ -30,7 +21,9 @@ namespace hihapi.Controllers
         }
 
         /// GET: /FinanceOrderSRules
-        public IQueryable Get(ODataQueryOptions<FinanceDocumentItem> option)
+        [EnableQuery]
+        [HttpGet]
+        public IActionResult Get(ODataQueryOptions<FinanceDocumentItem> option)
         {
             String usrName = String.Empty;
             try
@@ -53,7 +46,7 @@ namespace hihapi.Controllers
                 join srules in _context.FinanceOrderSRule on orderids.ID equals srules.OrderID
                 select srules;
 
-            return option.ApplyTo(rst);
+            return Ok(option.ApplyTo(rst));
         }
     }
 }

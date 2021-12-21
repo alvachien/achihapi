@@ -1,15 +1,13 @@
-﻿using hihapi.Exceptions;
-using hihapi.Models;
-using hihapi.Utilities;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
-using Microsoft.AspNetCore.OData.Formatter;
+using hihapi.Exceptions;
+using hihapi.Models;
+using hihapi.Utilities;
 
 namespace hihapi.Controllers
 {
@@ -24,12 +22,12 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        public IQueryable<FinanceTmpLoanDocument> Get()
+        [HttpGet]
+        public IActionResult Get()
         {
-            String usrName = String.Empty;
             try
             {
-                usrName = HIHAPIUtility.GetUserID(this);
+                String usrName = HIHAPIUtility.GetUserID(this);
                 if (String.IsNullOrEmpty(usrName))
                     throw new UnauthorizedAccessException();
             }
@@ -38,7 +36,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            return _context.FinanceTmpLoanDocument;
+            return Ok(_context.FinanceTmpLoanDocument);
         }
 
         [HttpPost]

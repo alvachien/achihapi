@@ -13,8 +13,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OData.Edm;
 using Microsoft.AspNetCore.OData;
 using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Mvc.Authorization;
-using Microsoft.AspNetCore.Authorization;
 using Serilog;
 
 namespace hihapi
@@ -92,7 +90,7 @@ namespace hihapi
                         options.Audience = "api.hih";
                     });
             }
-            else if (Environment.EnvironmentName == "Development")
+            else if (Environment.IsDevelopment())
             {
                 // accepts any access token issued by identity server
                 services.AddAuthentication("Bearer")
@@ -121,7 +119,7 @@ namespace hihapi
                     });
                 });
             }
-            else if (Environment.EnvironmentName == "Production")
+            else if (Environment.IsProduction())
             {
                 services.AddAuthentication("Bearer")
                     .AddJwtBearer("Bearer", options =>

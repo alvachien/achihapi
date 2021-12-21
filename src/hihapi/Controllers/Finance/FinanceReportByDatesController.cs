@@ -1,17 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using hihapi.Exceptions;
-using hihapi.Models;
-using hihapi.Utilities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
-using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.Mvc;
+using hihapi.Models;
+using hihapi.Utilities;
 
 namespace hihapi.Controllers
 {
@@ -26,7 +21,8 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        public IQueryable<FinanceReportByControlCenter> Get()
+        [HomeIDEnableQuery]
+        public IActionResult Get()
         {
             String usrName = String.Empty;
             try
@@ -81,7 +77,7 @@ namespace hihapi.Controllers
                 listRsts.Add(rst2);
             }
 
-            return listRsts.AsQueryable<FinanceReportByControlCenter>();
+            return Ok(listRsts.ToList<FinanceReportByControlCenter>());
         }
     }
 }

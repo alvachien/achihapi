@@ -1,17 +1,12 @@
 using System;
 using System.Linq;
-using System.IO;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
@@ -31,7 +26,8 @@ namespace hihapi.Controllers
         
         /// GET: /FinanceAssertCategories
         [EnableQuery]
-        public IQueryable<FinanceTransactionType> Get()
+        [HttpGet]
+        public IActionResult Get()
         {
             String usrName = String.Empty;
             try
@@ -45,7 +41,7 @@ namespace hihapi.Controllers
             }
 
             if (String.IsNullOrEmpty(usrName))
-                return _context.FinTransactionType.Where(p => p.HomeID == null);
+                return Ok(_context.FinTransactionType.Where(p => p.HomeID == null));
 
             var rst0 = from acntctgy in _context.FinTransactionType
                        where acntctgy.HomeID == null
@@ -56,9 +52,10 @@ namespace hihapi.Controllers
                        join acntctgy in _context.FinTransactionType on hids.HomeID equals acntctgy.HomeID
                        select acntctgy;
 
-            return rst0.Union(rst1);
+            return Ok(rst0.Union(rst1));
         }
 
+        [HttpPost]
         public async Task<IActionResult> Post([FromBody] FinanceTransactionType ctgy)
         {
             if (!ModelState.IsValid)
@@ -105,6 +102,7 @@ namespace hihapi.Controllers
             return Created(ctgy);
         }
 
+        [HttpPut]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceTransactionType update)
         {
             if (!ModelState.IsValid)
@@ -164,6 +162,7 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
+        [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.FinTransactionType.FindAsync(key);

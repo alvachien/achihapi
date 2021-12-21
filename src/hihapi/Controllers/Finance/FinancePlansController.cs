@@ -1,6 +1,7 @@
-﻿using hihapi.Exceptions;
-using hihapi.Models;
-using hihapi.Utilities;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Results;
@@ -8,10 +9,9 @@ using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using hihapi.Exceptions;
+using hihapi.Models;
+using hihapi.Utilities;
 
 namespace hihapi.Controllers
 {
@@ -25,7 +25,9 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        public IQueryable Get(ODataQueryOptions<FinancePlan> option)
+        [EnableQuery]
+        [HttpGet]
+        public IActionResult Get(ODataQueryOptions<FinancePlan> option)
         {
             String usrName = String.Empty;
             try
@@ -46,9 +48,10 @@ namespace hihapi.Controllers
                         join ords in _context.FinancePlan on hids.HomeID equals ords.HomeID
                         select ords;
 
-            return option.ApplyTo(query);
+            return Ok(option.ApplyTo(query));
         }
 
+        [HttpPost]
         public async Task<IActionResult> Post([FromBody] FinancePlan plan)
         {
             if (!ModelState.IsValid)
@@ -92,6 +95,7 @@ namespace hihapi.Controllers
             return Created(plan);
         }
 
+        [HttpPut]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinancePlan update)
         {
             if (!ModelState.IsValid)
@@ -151,6 +155,7 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
+        [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.FinancePlan.FindAsync(key);

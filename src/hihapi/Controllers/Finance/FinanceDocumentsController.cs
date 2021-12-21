@@ -63,7 +63,7 @@ namespace hihapi.Controllers
 
         [EnableQuery]
         [HttpGet]
-        public FinanceDocument Get([FromODataUri] Int32 docid)
+        public FinanceDocument Get([FromODataUri] Int32 key)
         {
             String usrName = String.Empty;
             try
@@ -81,7 +81,7 @@ namespace hihapi.Controllers
                            where hmem.User == usrName
                            select new { HomeID = hmem.HomeID };
             var docquery = from doc in _context.FinanceDocument
-                           where doc.ID == docid
+                           where doc.ID == key
                            select doc;
             return (from doc in docquery
                     join hid in hidquery

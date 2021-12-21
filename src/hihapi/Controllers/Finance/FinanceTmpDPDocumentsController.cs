@@ -1,21 +1,14 @@
 ﻿using System;
 using System.Linq;
-using System.IO;
 using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
 using hihapi.Utilities;
 using hihapi.Exceptions;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
-using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
@@ -30,7 +23,8 @@ namespace hihapi.Controllers
         }
 
         [EnableQuery]
-        public IQueryable<FinanceTmpDPDocument> Get()
+        [HttpGet]
+        public IActionResult Get()
         {
             String usrName = String.Empty;
             try
@@ -44,10 +38,10 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            return from homemem in _context.HomeMembers
+            return Ok(from homemem in _context.HomeMembers
                     join fintdpd in _context.FinanceTmpDPDocument
                     on new { homemem.HomeID, homemem.User } equals new { fintdpd.HomeID, User = usrName }
-                    select fintdpd;
+                    select fintdpd);
         }
 
         [HttpPost]

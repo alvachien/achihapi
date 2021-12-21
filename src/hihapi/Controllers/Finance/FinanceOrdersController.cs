@@ -1,6 +1,7 @@
-using hihapi.Exceptions;
-using hihapi.Models;
-using hihapi.Utilities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Results;
@@ -8,11 +9,10 @@ using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.OData.Deltas;
+using hihapi.Exceptions;
+using hihapi.Models;
+using hihapi.Utilities;
 
 namespace hihapi.Controllers
 {
@@ -54,37 +54,35 @@ namespace hihapi.Controllers
             return option.ApplyTo(query);
         }
 
-        // The Route will never reach following codes...
-        // 
-        //[EnableQuery]
-        //[Authorize]
-        //public SingleResult<FinanceOrder> Get([FromODataUri]Int32 ordid)
-        //{
-        //    String usrName = String.Empty;
-        //    try
-        //    {
-        //        usrName = HIHAPIUtility.GetUserID(this);
-        //        if (String.IsNullOrEmpty(usrName))
-        //            throw new UnauthorizedAccessException();
-        //    }
-        //    catch
-        //    {
-        //        throw new UnauthorizedAccessException();
-        //    }
+        [EnableQuery]
+        [HttpGet]
+        public FinanceOrder Get([FromODataUri] Int32 key)
+        {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
 
-        //    var hidquery = from hmem in _context.HomeMembers
-        //                   where hmem.User == usrName
-        //                   select new { HomeID = hmem.HomeID };
-        //    var ordquery = from ord in _context.FinanceOrder
-        //                    where ord.ID == ordid
-        //                    select ord;
-        //    var rstquery = from ord in ordquery
-        //                   join hid in hidquery
-        //                   on ord.HomeID equals hid.HomeID
-        //                   select ord;
+            var hidquery = from hmem in _context.HomeMembers
+                           where hmem.User == usrName
+                           select new { HomeID = hmem.HomeID };
+            var ordquery = from ord in _context.FinanceOrder
+                           where ord.ID == ordid
+                           select ord;
+            var rstquery = from ord in ordquery
+                           join hid in hidquery
+                           on ord.HomeID equals hid.HomeID
+                           select ord;
 
-        //    return SingleResult.Create(rstquery);
-        //}
+            return SingleResult.Create(rstquery);
+        }
 
         public async Task<IActionResult> Post([FromBody] FinanceOrder order)
         {
