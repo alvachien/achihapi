@@ -46,7 +46,7 @@ namespace hihapi.Controllers
 
         [EnableQuery]
         [HttpGet]
-        public BlogPost Get([FromODataUri] int id)
+        public BlogPost Get([FromODataUri] int key)
         {
             string usrName;
             try
@@ -62,7 +62,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            return _context.BlogPosts.Where(p => p.ID == id && p.Owner == usrName).SingleOrDefault();
+            return _context.BlogPosts.Where(p => p.ID == key && p.Owner == usrName).SingleOrDefault();
         }
 
         [HttpPost]

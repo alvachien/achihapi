@@ -52,7 +52,7 @@ namespace hihapi.Controllers
 
         [EnableQuery]
         [HttpGet]
-        public BlogUserSetting Get([FromODataUri] string owner)
+        public BlogUserSetting Get([FromODataUri] string key)
         {
             string usrName;
             try
@@ -68,7 +68,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            return _context.BlogUserSettings.Where(p => p.Owner == owner).SingleOrDefault();
+            return _context.BlogUserSettings.Where(p => p.Owner == key).SingleOrDefault();
         }
 
         [HttpPost]
@@ -79,7 +79,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Put([FromODataUri]string owner, [FromBody] BlogUserSetting update)
+        public async Task<IActionResult> Put([FromODataUri]string key, [FromBody] BlogUserSetting update)
         {
             if (!ModelState.IsValid)
             {
@@ -87,7 +87,7 @@ namespace hihapi.Controllers
             }
 
             // User
-            string usrName;
+            string usrName = String.Empty;
             try
             {
                 usrName = HIHAPIUtility.GetUserID(this);

@@ -74,14 +74,14 @@ namespace hihapi.Controllers
                            where hmem.User == usrName
                            select new { HomeID = hmem.HomeID };
             var ordquery = from ord in _context.FinanceOrder
-                           where ord.ID == ordid
+                           where ord.ID == key
                            select ord;
             var rstquery = from ord in ordquery
                            join hid in hidquery
                            on ord.HomeID equals hid.HomeID
                            select ord;
 
-            return SingleResult.Create(rstquery);
+            return rstquery.SingleOrDefault();
         }
 
         public async Task<IActionResult> Post([FromBody] FinanceOrder order)

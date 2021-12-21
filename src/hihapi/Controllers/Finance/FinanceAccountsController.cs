@@ -78,7 +78,7 @@ namespace hihapi.Controllers
 
         [EnableQuery]
         [HttpGet]
-        public FinanceAccount Get([FromODataUri] Int32 acntid)
+        public FinanceAccount Get([FromODataUri] Int32 key)
         {
             String usrName = String.Empty;
             try
@@ -96,7 +96,7 @@ namespace hihapi.Controllers
                            where hmem.User == usrName
                            select new { HomeID = hmem.HomeID };
             var acntquery = from acnt in _context.FinanceAccount
-                            where acnt.ID == acntid
+                            where acnt.ID == key
                             select acnt;
             return (from acnt in acntquery
                     join hid in hidquery

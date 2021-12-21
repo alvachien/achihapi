@@ -48,9 +48,9 @@ namespace hihapi.Controllers
 
         [EnableQuery]
         [HttpGet]
-        public BlogCollection Get([FromODataUri] int id)
+        public BlogCollection Get([FromODataUri] int key)
         {
-            return _context.BlogCollections.Where(p => p.ID == id).SingleOrDefault();
+            return _context.BlogCollections.Where(p => p.ID == key).SingleOrDefault();
         }
 
         // POST: /BlogCollections
@@ -109,7 +109,7 @@ namespace hihapi.Controllers
         /// Support for updating BlogCollections
         /// </summary>
         [HttpPut]
-        public async Task<IActionResult> Put([FromODataUri] int id, [FromBody] BlogCollection update)
+        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] BlogCollection update)
         {
             if (!ModelState.IsValid)
             {
@@ -143,7 +143,7 @@ namespace hihapi.Controllers
             }
 
             // Check ID
-            if (id != update.ID)
+            if (key != update.ID)
             {
                 return BadRequest();
             }
@@ -155,7 +155,7 @@ namespace hihapi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.BlogCollections.Any(p => p.ID == id))
+                if (!_context.BlogCollections.Any(p => p.ID == key))
                 {
                     return NotFound();
                 }
