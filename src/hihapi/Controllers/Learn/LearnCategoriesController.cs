@@ -61,7 +61,7 @@ namespace hihapi.Controllers
 
         [EnableQuery]
         [HttpGet]
-        public LearnCategory Get([FromODataUri] int id)
+        public LearnCategory Get([FromODataUri] int key)
         {
             String usrName = String.Empty;
             try
@@ -75,10 +75,10 @@ namespace hihapi.Controllers
             }
 
             if (String.IsNullOrEmpty(usrName))
-                return _context.LearnCategories.Where(p => p.ID == id && p.HomeID == null).SingleOrDefault();
+                return _context.LearnCategories.Where(p => p.ID == key && p.HomeID == null).SingleOrDefault();
 
             return (from hmem in _context.HomeMembers.Where(p => p.User == usrName)
-                      from acntctgy in _context.LearnCategories.Where(p => p.ID == id && (p.HomeID == null || p.HomeID == hmem.HomeID))
+                      from acntctgy in _context.LearnCategories.Where(p => p.ID == key && (p.HomeID == null || p.HomeID == hmem.HomeID))
                       select acntctgy).SingleOrDefault();
         }
 

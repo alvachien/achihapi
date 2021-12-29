@@ -28,7 +28,8 @@ namespace hihapi.Controllers
         /// GET: /FinanceControlCenters
         [EnableQuery]
         [HttpGet]
-        public IActionResult Get(ODataQueryOptions<FinanceControlCenter> option)
+        //public IActionResult Get(ODataQueryOptions<FinanceControlCenter> option)
+        public IActionResult Get()
         {
             String usrName = String.Empty;
             try
@@ -49,7 +50,7 @@ namespace hihapi.Controllers
             //            select ccs;
 
             // Check whether User assigned with specified Home ID
-            var query = from hmem in _context.HomeMembers
+            return Ok(from hmem in _context.HomeMembers
                         where hmem.User == usrName
                         select new { hmem.HomeID, hmem.User, hmem.IsChild } into hmems
                         join ccs in _context.FinanceControlCenter
@@ -57,16 +58,13 @@ namespace hihapi.Controllers
                         where (hmems.IsChild == true && hmems.User == ccs.Owner)
                             || !hmems.IsChild.HasValue
                             || hmems.IsChild == false
-                        select ccs;
-
-            return Ok(option.ApplyTo(query));
+                        select ccs);
+            //return Ok(option.ApplyTo(query));
         }
 
-        // The Route will never reach following codes...
-        // 
         [EnableQuery]
         [HttpGet]
-        public FinanceControlCenter Get(int ccid)
+        public FinanceControlCenter Get(int key)
         {
             String usrName = String.Empty;
             try
@@ -84,7 +82,7 @@ namespace hihapi.Controllers
                            where hmem.User == usrName
                            select new { HomeID = hmem.HomeID };
             var ccquery = from cc in _context.FinanceControlCenter
-                          where cc.ID == ccid
+                          where cc.ID == key
                           select cc;
             return (from cc in ccquery
                     join hid in hidquery

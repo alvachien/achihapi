@@ -27,7 +27,8 @@ namespace hihapi.Controllers
 
         [EnableQuery]
         [HttpGet]
-        public IActionResult Get(ODataQueryOptions<FinancePlan> option)
+        //public IActionResult Get(ODataQueryOptions<FinancePlan> option)
+        public IActionResult Get()
         {
             String usrName = String.Empty;
             try
@@ -42,13 +43,13 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var query = from hmem in _context.HomeMembers
+            return Ok(from hmem in _context.HomeMembers
                         where hmem.User == usrName
                         select new { HomeID = hmem.HomeID } into hids
                         join ords in _context.FinancePlan on hids.HomeID equals ords.HomeID
-                        select ords;
+                        select ords);
 
-            return Ok(option.ApplyTo(query));
+            //return Ok(option.ApplyTo(query));
         }
 
         [HttpPost]

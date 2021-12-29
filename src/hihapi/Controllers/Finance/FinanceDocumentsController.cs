@@ -28,7 +28,8 @@ namespace hihapi.Controllers
         /// GET: /FinanceDocuments
         [EnableQuery]
         [HttpGet]
-        public IActionResult Get(ODataQueryOptions<FinanceDocument> option)
+        // public IActionResult Get(ODataQueryOptions<FinanceDocument> option)
+        public IActionResult Get()
         {
             String usrName = String.Empty;
             try
@@ -48,7 +49,7 @@ namespace hihapi.Controllers
             //            select new { HomeID = hmem.HomeID } into hids
             //            join docs in _context.FinanceDocument on hids.HomeID equals docs.HomeID
             //            select docs;
-            var query = from hmem in _context.HomeMembers
+            return Ok(from hmem in _context.HomeMembers
                         where hmem.User == usrName
                         select new { HomeID = hmem.HomeID, User = hmem.User, IsChild = hmem.IsChild } into hmems
                         join docs in _context.FinanceDocument
@@ -56,9 +57,8 @@ namespace hihapi.Controllers
                         where (hmems.IsChild == true && hmems.User == docs.Createdby)
                             || hmems.IsChild == null
                             || hmems.IsChild == false
-                        select docs;
-
-            return Ok(option.ApplyTo(query));
+                        select docs);
+            //return Ok(option.ApplyTo(query));
         }
 
         [EnableQuery]

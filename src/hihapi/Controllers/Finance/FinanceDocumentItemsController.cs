@@ -23,7 +23,8 @@ namespace hihapi.Controllers
         /// GET: /FinanceDocumentItems
         [EnableQuery]
         [HttpGet]
-        public IActionResult Get(ODataQueryOptions<FinanceDocumentItem> option)
+        //public IActionResult Get(ODataQueryOptions<FinanceDocumentItem> option)
+        public IActionResult Get()
         {
             String usrName = String.Empty;
             try
@@ -37,16 +38,15 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var rst =
-                from hmem in _context.HomeMembers
+            return Ok(from hmem in _context.HomeMembers
                 where hmem.User == usrName
                 select new { hmem.HomeID } into hids
                 join docs in _context.FinanceDocument on hids.HomeID equals docs.HomeID
                 select new { docs.HomeID, docs.ID } into docids
                 join items in _context.FinanceDocumentItem on docids.ID equals items.DocID
-                select items;
+                select items);
 
-            return Ok(option.ApplyTo(rst));
+            //return Ok(option.ApplyTo(rst));
         }
     }
 }

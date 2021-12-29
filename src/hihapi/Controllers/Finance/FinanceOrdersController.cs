@@ -29,7 +29,8 @@ namespace hihapi.Controllers
         /// GET: /FinanceOrders
         [EnableQuery]
         [HttpGet]
-        public IQueryable Get(ODataQueryOptions<FinanceOrder> option)
+        //public IQueryable Get(ODataQueryOptions<FinanceOrder> option)
+        public IActionResult Get()
         {
             String usrName = String.Empty;
             try
@@ -44,14 +45,13 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var query = from hmem in _context.HomeMembers
+            return Ok(from hmem in _context.HomeMembers
                         where hmem.User == usrName
                         select new { hmem.HomeID, hmem.IsChild } into hids
-                        join ords in _context.FinanceOrder on hids.HomeID equals ords.HomeID
-                        // where ( hids.IsChild == null || hids.IsChild == false)
-                        select ords;
+                      join ords in _context.FinanceOrder on hids.HomeID equals ords.HomeID
+                        select ords);
 
-            return option.ApplyTo(query);
+            //return option.ApplyTo(query);
         }
 
         [EnableQuery]

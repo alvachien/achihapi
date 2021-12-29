@@ -26,7 +26,8 @@ namespace hihapi.Controllers
 
         [EnableQuery]
         [HttpGet]
-        public IActionResult Get(ODataQueryOptions<LearnObject> option)
+        //public IActionResult Get(ODataQueryOptions<LearnObject> option)
+        public IActionResult Get()
         {
             String usrName = String.Empty;
             try
@@ -41,13 +42,13 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var query = from hmem in _context.HomeMembers
+            return Ok(from hmem in _context.HomeMembers
                         where hmem.User == usrName
                         select new { HomeID = hmem.HomeID } into hids
                         join objs in _context.LearnObjects on hids.HomeID equals objs.HomeID
-                        select objs;
+                        select objs);
 
-            return Ok(option.ApplyTo(query));
+            // return Ok(option.ApplyTo(query));
         }
 
         [HttpPost]
