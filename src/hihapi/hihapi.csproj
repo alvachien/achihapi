@@ -64,4 +64,7 @@
     <EmbeddedResource Include="Sqls\Delta\v8.sql" />
     <EmbeddedResource Include="Sqls\Delta\v9.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
 </Project>
