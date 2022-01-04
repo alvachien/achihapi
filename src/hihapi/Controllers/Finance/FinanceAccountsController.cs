@@ -44,14 +44,15 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            return Ok(from hmem in _context.HomeMembers where hmem.User == usrName
-                        select new { hmem.HomeID, hmem.User, hmem.IsChild } into hmems
-                        join acnts in _context.FinanceAccount
-                          on hmems.HomeID equals acnts.HomeID
-                        where ( hmems.IsChild == true && hmems.User == acnts.Owner )
-                            || !hmems.IsChild.HasValue
-                            || hmems.IsChild == false
-                        select acnts);
+            return Ok(from hmem in _context.HomeMembers
+                      where hmem.User == usrName
+                      select new { hmem.HomeID, hmem.User, hmem.IsChild } into hmems
+                      join acnts in _context.FinanceAccount
+                        on hmems.HomeID equals acnts.HomeID
+                      where (hmems.IsChild == true && hmems.User == acnts.Owner)
+                          || !hmems.IsChild.HasValue
+                          || hmems.IsChild == false
+                      select acnts);
 
 #if DEBUG
             // For testing purpose
@@ -106,7 +107,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody]FinanceAccount account)
+        public async Task<IActionResult> Post([FromBody] FinanceAccount account)
         {
             if (!ModelState.IsValid)
             {
@@ -147,7 +148,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody]FinanceAccount update)
+        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceAccount update)
         {
             if (!ModelState.IsValid)
             {
@@ -300,5 +301,176 @@ namespace hihapi.Controllers
 
             return StatusCode(204); // HttpStatusCode.NoContent
         }
+
+        [HttpPost]
+        public async Task<IActionResult> CloseAccount([FromBody] ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // 0. Get inputted parameter
+            Int32 hid = (Int32)parameters["HomeID"];
+            Int32 accountID = (Int32)parameters["AccountID"];
+
+            // 1. Check User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+            // 2. Check the Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            // 3. Check the account
+            var acntDB = await _context.FinanceAccount.FindAsync(accountID);
+            bool ret = false;
+            if (acntDB != null)
+            {
+                ret = acntDB.IsDeleteAllowed(this._context);
+
+                // Close the account
+                if (ret)
+                {
+                    acntDB.Status = (byte?)FinanceAccountStatus.Closed;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return Ok(ret);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SettleAccount([FromBody] ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // 0. Get inputted parameter
+            Int32 hid = (Int32)parameters["HomeID"];
+            Int32 accountID = (Int32)parameters["AccountID"];
+            Int32 ccID = (Int32)parameters["ControlCenterID"];
+            DateTime dateSettle = (DateTime)parameters["SettledDate"];
+            Decimal amt = (Decimal)parameters["InitialAmount"];
+            String curr = (String)parameters["Currency"];
+
+            // 1. Check User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+            // 2. Check the Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            // 3. Check the account
+            var acntDB = await _context.FinanceAccount.FindAsync(accountID);
+            bool ret = false;
+            if (acntDB != null)
+            {
+                // 4. Find documents which are earlier than the specified date
+                var docCounts = (from docitem in _context.FinanceDocumentItem
+                                join docheader in _context.FinanceDocument
+                                    on docitem.DocID equals docheader.ID
+                                where docitem.AccountID == accountID
+                                    && docheader.TranDate < dateSettle
+                                    && docheader.HomeID == hid
+                                select docheader.ID).Count();
+                if (docCounts > 0)
+                    ret = false;
+
+                // 5. Check there is already an item with same tran. type.
+                if (ret)
+                {
+                    docCounts = (from docitem in _context.FinanceDocumentItem
+                                 join docheader in _context.FinanceDocument
+                                     on docitem.DocID equals docheader.ID
+                                 where docitem.AccountID == accountID
+                                    && docheader.HomeID == hid
+                                    && ( docitem.TranType == FinanceTransactionType.TranType_OpeningAsset
+                                    || docitem.TranType == FinanceTransactionType.TranType_OpeningLiability )
+                                 select docheader.ID).Count();
+                    if (docCounts > 0)
+                        ret = false;
+                }
+                // 6. Create a document
+                if (ret)
+                {
+                    if (acntDB.CategoryID == FinanceAccountCategory.AccountCategory_Cash)
+                    {
+                        FinanceDocument doc = new FinanceDocument();
+                        doc.TranCurr = curr;
+                        doc.HomeID = hid;
+                        doc.CreatedAt = DateTime.Now;
+                        doc.Createdby = usrName;
+                        doc.Desp = "Settle count for account";
+                        doc.DocType = FinanceDocumentType.DocType_Normal;
+                        doc.TranDate = dateSettle;
+                        FinanceDocumentItem docitem = new FinanceDocumentItem();
+                        docitem.DocumentHeader = doc;
+                        docitem.AccountID = accountID;
+                        docitem.ControlCenterID = ccID;
+                        docitem.Desp = doc.Desp;
+                        docitem.ItemID = 1;
+                        docitem.TranAmount = amt;
+                        docitem.TranType = FinanceTransactionType.TranType_OpeningAsset;
+                        
+                        doc.Items.Add(docitem);
+                        await _context.FinanceDocument.AddAsync(doc);
+                    }
+                }
+
+                // Close the account
+                if (ret)
+                {
+                    acntDB.Status = (byte?)FinanceAccountStatus.Closed;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return Ok(ret);
+        }
     }
 }
+

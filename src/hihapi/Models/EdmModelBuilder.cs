@@ -59,6 +59,7 @@ namespace hihapi.Models
             modelBuilder.ComplexType<RepeatDatesCalculationInput>();
             modelBuilder.ComplexType<RepeatedDatesWithAmount>();
             modelBuilder.ComplexType<RepeatDatesWithAmountCalculationInput>();
+            modelBuilder.ComplexType<RepeatedDatesWithAmountAndInterest>();
 
             // Utilties Functions
             modelBuilder.Function("GetRepeatedDates")
@@ -72,6 +73,22 @@ namespace hihapi.Models
                 .ReturnsCollection<RepeatedDatesWithAmount>();
             modelBuilder.Function("GetRepeatedDatesWithAmountAndInterest")
                 .ReturnsCollection<RepeatedDatesWithAmountAndInterest>();
+
+            // Actions on Accounts
+            var acntEntity = modelBuilder.EntityType<FinanceAccount>();
+            // Action: Close account
+            var closeAccountAction = acntEntity.Collection.Action("CloseAccount");
+            closeAccountAction.Parameter<int>("HomeID");
+            closeAccountAction.Parameter<int>("AccountID");
+            closeAccountAction.Returns<bool>();
+            // Action: Settle Account
+            var settleAccountAction = acntEntity.Collection.Action("SettleAccount");
+            settleAccountAction.Parameter<int>("HomeID");
+            settleAccountAction.Parameter<int>("AccountID");
+            settleAccountAction.Parameter<DateTime>("SettledDate");
+            settleAccountAction.Parameter<Decimal>("InitialAmount");
+            settleAccountAction.Parameter<String>("Currency");
+            settleAccountAction.Returns<bool>();
 
             // Actions on Documents
             var docEntity = modelBuilder.EntityType<FinanceDocument>();

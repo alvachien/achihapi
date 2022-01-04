@@ -469,7 +469,7 @@ namespace hihapi.Controllers
                 throw new BadRequestException(errorString);
             }
 
-            return Created(createContext.DocumentInfo);
+            return Ok(createContext.DocumentInfo);
         }
 
         [HttpPost]
@@ -612,7 +612,7 @@ namespace hihapi.Controllers
                 throw new BadRequestException(errorString);
             }
 
-            return Created(createContext.DocumentInfo);
+            return Ok(createContext.DocumentInfo);
         }
     
         [HttpPost]
@@ -778,7 +778,7 @@ namespace hihapi.Controllers
                 throw new BadRequestException(errorString);
             }
 
-            return Created(vmFIDoc);
+            return Ok(vmFIDoc);
         }
 
         [HttpPost]
@@ -947,7 +947,7 @@ namespace hihapi.Controllers
                 throw new BadRequestException(errorString);
             }
 
-            return Created(vmFIDoc);
+            return Ok(vmFIDoc);
         }
 
         [HttpPost]
@@ -1121,7 +1121,7 @@ namespace hihapi.Controllers
                 throw new BadRequestException(errorString);
             }
 
-            return Created(vmFIDoc);
+            return Ok(vmFIDoc);
         }
     }
 }

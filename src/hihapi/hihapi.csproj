@@ -3,10 +3,10 @@
   <PropertyGroup>
 	  <TargetFramework>net5.0</TargetFramework>
 	  <UserSecretsId>cf80adf9-ce70-4ce9-bb4e-a73887a492a6</UserSecretsId>
-    <Version>1.5.158</Version>
+    <Version>1.5.160</Version>
     <Authors>Alva Chien</Authors>
     <Product>H.I.H.</Product>
-    <Copyright>(C) Alva Chien, 2021</Copyright>
+    <Copyright>(C) Alva Chien, 2022</Copyright>
     <PackageProjectUrl>https://github.com/alvachien/achihapi</PackageProjectUrl>
     <PackageLicenseUrl></PackageLicenseUrl>
     <Description>Web API for Home Info. Hub, built on OData and ASP.NET Core;</Description>

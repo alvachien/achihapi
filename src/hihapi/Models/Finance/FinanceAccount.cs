@@ -16,9 +16,9 @@ namespace hihapi.Models
 
     public enum LoanRepaymentMethod
     {
-        EqualPrincipalAndInterset   = 1,  // Equal principal & interest
-        EqualPrincipal              = 2,  // Equal principal
-        DueRepayment                = 3  // Due repayment
+        EqualPrincipalAndInterset   = 1,    // Equal principal & interest
+        EqualPrincipal              = 2,    // Equal principal
+        DueRepayment                = 3     // Due repayment
     }
 
     [Table("T_FIN_ACCOUNT")]

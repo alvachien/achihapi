@@ -185,7 +185,7 @@ namespace hihapi.Controllers
                 throw new DBOperationException(errorString);
             }
 
-            return Created(findoc);
+            return Ok(findoc);
         }
     }
 }
