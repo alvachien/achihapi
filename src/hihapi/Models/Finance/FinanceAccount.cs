@@ -75,6 +75,58 @@ namespace hihapi.Models
 
             return true;
         }
+        public bool IsCloseAllowed(hihDataContext context)
+        {
+            // Check category
+            switch (CategoryID)
+            {
+                //case FinanceAccountCategory.AccountCategory_Cash:
+                //case FinanceAccountCategory.AccountCategory_VirtualAccount:
+                //    {
+                //        // Check balance
+                //        return false;
+                //    }
+                //    break;
+
+                //case FinanceAccountCategory.AccountCategory_Deposit:
+                //    {
+                //        // Check balance
+                //        return false;
+                //    }
+                //    break;
+
+                //case FinanceAccountCategory.AccountCategory_Creditcard:
+                //    {
+                //        // Check balance
+                //        return false;
+                //    }
+                //    break;
+
+                case FinanceAccountCategory.AccountCategory_Asset:
+                    {
+                        // Can be closed directly
+                    }
+                    break;
+
+                //case FinanceAccountCategory.AccountCategory_AdvancePayment:
+                //    break;
+
+                //case FinanceAccountCategory.AccountCategory_AdvanceReceive:
+                //    break;
+
+                //case FinanceAccountCategory.AccountCategory_BorrowFrom:
+                //    break;
+
+                default:
+                    return false;
+            }
+
+            // Status
+            if (Status != null && (FinanceAccountStatus)Status.Value != FinanceAccountStatus.Normal) 
+                return false;
+
+            return true;
+        }
 
         public HomeDefine CurrentHome { get; set; }
         public FinanceAccountExtraDP ExtraDP { get; set; }

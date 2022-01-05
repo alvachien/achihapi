@@ -347,9 +347,8 @@ namespace hihapi.Controllers
             bool ret = false;
             if (acntDB != null)
             {
-                ret = acntDB.IsDeleteAllowed(this._context);
+                ret = acntDB.IsCloseAllowed(this._context);
 
-                // Close the account
                 if (ret)
                 {
                     acntDB.Status = (byte?)FinanceAccountStatus.Closed;
@@ -409,18 +408,28 @@ namespace hihapi.Controllers
             bool ret = false;
             if (acntDB != null)
             {
-                // 4. Find documents which are earlier than the specified date
-                var docCounts = (from docitem in _context.FinanceDocumentItem
-                                join docheader in _context.FinanceDocument
-                                    on docitem.DocID equals docheader.ID
-                                where docitem.AccountID == accountID
-                                    && docheader.TranDate < dateSettle
-                                    && docheader.HomeID == hid
-                                select docheader.ID).Count();
-                if (docCounts > 0)
+                // 4. Check account status
+                if (acntDB.Status == null || (FinanceAccountStatus)(acntDB.Status.Value) != FinanceAccountStatus.Normal)
+                {
                     ret = false;
+                }
 
-                // 5. Check there is already an item with same tran. type.
+                // 5. Find documents which are earlier than the specified date
+                int docCounts = 0;
+                if (ret)
+                {
+                    docCounts = (from docitem in _context.FinanceDocumentItem
+                                     join docheader in _context.FinanceDocument
+                                         on docitem.DocID equals docheader.ID
+                                     where docitem.AccountID == accountID
+                                         && docheader.TranDate < dateSettle
+                                         && docheader.HomeID == hid
+                                     select docheader.ID).Count();
+                    if (docCounts > 0)
+                        ret = false;
+                }
+
+                // 6. Check there is already an item with same tran. type.
                 if (ret)
                 {
                     docCounts = (from docitem in _context.FinanceDocumentItem
@@ -434,7 +443,8 @@ namespace hihapi.Controllers
                     if (docCounts > 0)
                         ret = false;
                 }
-                // 6. Create a document
+
+                // 7. Create a document
                 if (ret)
                 {
                     if (acntDB.CategoryID == FinanceAccountCategory.AccountCategory_Cash)
@@ -467,6 +477,10 @@ namespace hihapi.Controllers
                     acntDB.Status = (byte?)FinanceAccountStatus.Closed;
                     await _context.SaveChangesAsync();
                 }
+            }
+            else
+            {
+                return NotFound();
             }
 
             return Ok(ret);
