@@ -60,6 +60,8 @@ namespace hihapi.Models
             modelBuilder.ComplexType<RepeatedDatesWithAmount>();
             modelBuilder.ComplexType<RepeatDatesWithAmountCalculationInput>();
             modelBuilder.ComplexType<RepeatedDatesWithAmountAndInterest>();
+            modelBuilder.EntitySet<FinanceReport>("FinanceReports");
+            modelBuilder.EntityType<FinanceReportByTransactionType>();
 
             // Utilties Functions
             modelBuilder.Function("GetRepeatedDates")
@@ -122,6 +124,17 @@ namespace hihapi.Models
             tmpLoanDocEntity.Collection
                 .Action("PostPrepaymentDocument")
                 .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+
+            // Actions on reports
+            var reportEntity = modelBuilder.EntityType<FinanceReport>();
+            // Action: GetMonthlyReportByTranType
+            var actionReportCurrentMonthByTT = reportEntity.Collection.Action("GetMonthlyReportByTranType");
+                // .ReturnsCollection<FinanceReportByTransactionType>();
+            actionReportCurrentMonthByTT.Parameter<int>("HomeID");
+            actionReportCurrentMonthByTT.Parameter<int>("Year");
+            actionReportCurrentMonthByTT.Parameter<int>("Month");
+            actionReportCurrentMonthByTT.ReturnsFromEntitySet<FinanceReportByTransactionType>("FinanceReportByTransactionTypes"); 
+            // Action: Get Report By Transaction Type YTD
 
             modelBuilder.EntitySet<BlogFormat>("BlogFormats");
             modelBuilder.EntitySet<BlogUserSetting>("BlogUserSettings");

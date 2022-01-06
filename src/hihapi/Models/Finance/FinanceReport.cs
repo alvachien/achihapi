@@ -226,9 +226,11 @@ namespace hihapi.Models
     #endregion
 
     #region Transaction type report
-    public class FinanceReportTranTypeAndExpenseView
+    public class FinanceReportByTransactionType: FinanceReport
     {
+        public Int32 TransactionType { get; set; }
 
+        public string TransactionTypeName { get; set; }
     }
     #endregion
 
