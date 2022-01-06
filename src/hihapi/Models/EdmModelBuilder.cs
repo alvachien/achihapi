@@ -132,8 +132,7 @@ namespace hihapi.Models
             // Functions in Blog part
             var postentity = modelBuilder.EntityType<BlogPost>();
             postentity.Function("Deploy")
-                    .Returns<string>()
-                    ;
+                    .Returns<string>();
             postentity.Function("ClearDeploy")
                     .Returns<string>();
             var blogsetting = modelBuilder.EntityType<BlogUserSetting>();

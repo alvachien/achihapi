@@ -20,5 +20,12 @@ namespace hihapi.Controllers.Finance
         {
             _context = context;
         }
+
+        // Action
+        [HttpPost]
+        public async Task<IActionResult> GetMonthlyFigures()
+        {
+
+        }
     }
 }

@@ -214,6 +214,17 @@ namespace hihapi.Models
     }
     #endregion
 
+    #region Finance Report
+    public class FinanceReport
+    {
+        [Key]
+        public Int32 HomeID { get; set; }
+
+        public Decimal InAmount { get; set; }
+        public Decimal OutAmount { get; set; }
+    }
+    #endregion
+
     #region Transaction type report
     public class FinanceReportTranTypeAndExpenseView
     {
