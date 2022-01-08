@@ -87,7 +87,8 @@ namespace hihapi.Models
             var settleAccountAction = acntEntity.Collection.Action("SettleAccount");
             settleAccountAction.Parameter<int>("HomeID");
             settleAccountAction.Parameter<int>("AccountID");
-            settleAccountAction.Parameter<DateTime>("SettledDate");
+            settleAccountAction.Parameter<int>("ControlCenterID");
+            settleAccountAction.Parameter<string>("SettledDate");
             settleAccountAction.Parameter<Decimal>("InitialAmount");
             settleAccountAction.Parameter<String>("Currency");
             settleAccountAction.Returns<bool>();

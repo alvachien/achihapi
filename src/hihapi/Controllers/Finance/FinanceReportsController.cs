@@ -22,7 +22,7 @@ namespace hihapi.Controllers.Finance
             _context = context;
         }
 
-        // Action
+        // Actions
         [HttpPost]
         public IActionResult GetMonthlyReportByTranType([FromBody] ODataActionParameters parameters)
         {

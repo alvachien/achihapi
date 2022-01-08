@@ -379,7 +379,7 @@ namespace hihapi.Controllers
             Int32 hid = (Int32)parameters["HomeID"];
             Int32 accountID = (Int32)parameters["AccountID"];
             Int32 ccID = (Int32)parameters["ControlCenterID"];
-            DateTime dateSettle = (DateTime)parameters["SettledDate"];
+            DateTime dateSettle = DateTime.Parse((String)parameters["SettledDate"]);
             Decimal amt = (Decimal)parameters["InitialAmount"];
             String curr = (String)parameters["Currency"];
 
@@ -405,7 +405,7 @@ namespace hihapi.Controllers
             }
             // 3. Check the account
             var acntDB = await _context.FinanceAccount.FindAsync(accountID);
-            bool ret = false;
+            bool ret = true;
             if (acntDB != null)
             {
                 // 4. Check account status
@@ -447,35 +447,39 @@ namespace hihapi.Controllers
                 // 7. Create a document
                 if (ret)
                 {
-                    if (acntDB.CategoryID == FinanceAccountCategory.AccountCategory_Cash)
+                    try
                     {
-                        FinanceDocument doc = new FinanceDocument();
-                        doc.TranCurr = curr;
-                        doc.HomeID = hid;
-                        doc.CreatedAt = DateTime.Now;
-                        doc.Createdby = usrName;
-                        doc.Desp = "Settle count for account";
-                        doc.DocType = FinanceDocumentType.DocType_Normal;
-                        doc.TranDate = dateSettle;
-                        FinanceDocumentItem docitem = new FinanceDocumentItem();
-                        docitem.DocumentHeader = doc;
-                        docitem.AccountID = accountID;
-                        docitem.ControlCenterID = ccID;
-                        docitem.Desp = doc.Desp;
-                        docitem.ItemID = 1;
-                        docitem.TranAmount = amt;
-                        docitem.TranType = FinanceTransactionType.TranType_OpeningAsset;
-                        
-                        doc.Items.Add(docitem);
-                        await _context.FinanceDocument.AddAsync(doc);
-                    }
-                }
+                        if (acntDB.CategoryID == FinanceAccountCategory.AccountCategory_Cash
+                            || acntDB.CategoryID == FinanceAccountCategory.AccountCategory_VirtualAccount)
+                        {
+                            FinanceDocument doc = new FinanceDocument();
+                            doc.TranCurr = curr;
+                            doc.HomeID = hid;
+                            doc.CreatedAt = DateTime.Now;
+                            doc.Createdby = usrName;
+                            doc.Desp = "Settle count for account";
+                            doc.DocType = FinanceDocumentType.DocType_Normal;
+                            doc.TranDate = dateSettle;
+                            FinanceDocumentItem docitem = new FinanceDocumentItem();
+                            docitem.DocumentHeader = doc;
+                            docitem.AccountID = accountID;
+                            docitem.ControlCenterID = ccID;
+                            docitem.Desp = doc.Desp;
+                            docitem.ItemID = 1;
+                            docitem.TranAmount = amt;
+                            if (amt > 0)
+                                docitem.TranType = FinanceTransactionType.TranType_OpeningAsset;
+                            else
+                                docitem.TranType = FinanceTransactionType.TranType_OpeningLiability;
 
-                // Close the account
-                if (ret)
-                {
-                    acntDB.Status = (byte?)FinanceAccountStatus.Closed;
-                    await _context.SaveChangesAsync();
+                            doc.Items.Add(docitem);
+                            await _context.FinanceDocument.AddAsync(doc);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(ex.Message);
+                    }
                 }
             }
             else
