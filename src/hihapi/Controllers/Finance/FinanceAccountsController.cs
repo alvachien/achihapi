@@ -450,6 +450,7 @@ namespace hihapi.Controllers
                     try
                     {
                         if (acntDB.CategoryID == FinanceAccountCategory.AccountCategory_Cash
+                            || acntDB.CategoryID == FinanceAccountCategory.AccountCategory_Creditcard
                             || acntDB.CategoryID == FinanceAccountCategory.AccountCategory_VirtualAccount)
                         {
                             FinanceDocument doc = new FinanceDocument();
@@ -471,9 +472,13 @@ namespace hihapi.Controllers
                                 docitem.TranType = FinanceTransactionType.TranType_OpeningAsset;
                             else
                                 docitem.TranType = FinanceTransactionType.TranType_OpeningLiability;
-
+                            docitem.DocumentHeader = doc;
                             doc.Items.Add(docitem);
-                            await _context.FinanceDocument.AddAsync(doc);
+
+                            // Save it to DB
+                            _context.FinanceDocument.Add(doc);
+
+                            await _context.SaveChangesAsync();
                         }
                     }
                     catch (Exception ex)
