@@ -97,5 +97,54 @@ namespace hihapi.Controllers.Finance
 
             return Ok(listResult);
         }
+    
+        [HttpPost]
+        public IActionResult GetReportByAccountAndExpense([FromBody]ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // 0. Get inputted parameter
+            Int32 hid = (Int32)parameters["HomeID"];
+
+            // 1. Check User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // 2. Check the Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // 3. Calculate the amount
+            var results = (from acntgrpview in _context.FinanceReporAccountGroupAndExpenseView
+                           where acntgrpview.HomeID == hid
+                           select acntgrpview).ToList();
+
+            return Ok(results);
+        }
     }
 }

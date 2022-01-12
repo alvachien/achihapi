@@ -62,6 +62,11 @@ namespace hihapi.Models
             modelBuilder.ComplexType<RepeatedDatesWithAmountAndInterest>();
             modelBuilder.EntitySet<FinanceReport>("FinanceReports");
             modelBuilder.EntityType<FinanceReportByTransactionType>();
+            var rptAcntExpense = modelBuilder.EntityType<FinanceReporAccountGroupAndExpenseView>();
+            rptAcntExpense.HasKey(p => new {
+                p.HomeID,
+                p.AccountID,
+            });
 
             // Utilties Functions
             modelBuilder.Function("GetRepeatedDates")
@@ -134,8 +139,12 @@ namespace hihapi.Models
             actionReportCurrentMonthByTT.Parameter<int>("HomeID");
             actionReportCurrentMonthByTT.Parameter<int>("Year");
             actionReportCurrentMonthByTT.Parameter<int>("Month");
-            actionReportCurrentMonthByTT.ReturnsFromEntitySet<FinanceReportByTransactionType>("FinanceReportByTransactionTypes"); 
+            actionReportCurrentMonthByTT.ReturnsFromEntitySet<FinanceReportByTransactionType>("FinanceReportByTransactionTypes");
             // Action: Get Report By Transaction Type YTD
+            // Action: Get Report by Account and Expense
+            var actionReportAccountAndExpense = reportEntity.Collection.Action("GetReportByAccountAndExpense");
+            actionReportCurrentMonthByTT.Parameter<int>("HomeID");
+            actionReportCurrentMonthByTT.ReturnsFromEntitySet<FinanceReporAccountGroupAndExpenseView>("FinanceReporAccountGroupAndExpenseViews");
 
             modelBuilder.EntitySet<BlogFormat>("BlogFormats");
             modelBuilder.EntitySet<BlogUserSetting>("BlogUserSettings");
