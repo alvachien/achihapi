@@ -141,10 +141,10 @@ namespace hihapi.Models
             actionReportCurrentMonthByTT.Parameter<int>("Month");
             actionReportCurrentMonthByTT.ReturnsFromEntitySet<FinanceReportByTransactionType>("FinanceReportByTransactionTypes");
             // Action: Get Report By Transaction Type YTD
-            // Action: Get Report by Account and Expense
-            var actionReportAccountAndExpense = reportEntity.Collection.Action("GetReportByAccountAndExpense");
-            actionReportCurrentMonthByTT.Parameter<int>("HomeID");
-            actionReportCurrentMonthByTT.ReturnsFromEntitySet<FinanceReporAccountGroupAndExpenseView>("FinanceReporAccountGroupAndExpenseViews");
+            // Action: Get Report by Account
+            var actionReportAccount = reportEntity.Collection.Action("GetReportByAccount");
+            actionReportAccount.Parameter<int>("HomeID");
+            actionReportAccount.ReturnsFromEntitySet<FinanceReportByAccount>("FinanceReportByAccounts");
 
             modelBuilder.EntitySet<BlogFormat>("BlogFormats");
             modelBuilder.EntitySet<BlogUserSetting>("BlogUserSettings");

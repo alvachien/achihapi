@@ -45,20 +45,20 @@ namespace hihapi.Models
         public String Desp { get; set; }
         
         [Column("EXGRATE", TypeName= "DECIMAL(17, 4)")]
-        public Decimal ExgRate { get; set; }
+        public Decimal? ExgRate { get; set; }
         
         [Column("EXGRATE_PLAN", TypeName="BIT")]
-        public Boolean ExgRate_Plan { get; set; }
+        public Boolean? ExgRate_Plan { get; set; }
         
         [StringLength(5)]
         [Column("TRANCURR2", TypeName="NVARCHAR(5)")]
-        public String TranCurr2 { get; set; }
+        public String? TranCurr2 { get; set; }
         
         [Column("EXGRATE2", TypeName = "DECIMAL(17, 4)")]
-        public Decimal ExgRate2 { get; set; }
+        public Decimal? ExgRate2 { get; set; }
         
         [Column("EXGRATE_PLAN2", TypeName="BIT")]
-        public Boolean ExgRate_Plan2 { get; set; }
+        public Boolean? ExgRate_Plan2 { get; set; }
         
         [NotMapped]
         public Decimal? TranAmount { get; set; }
@@ -117,7 +117,7 @@ namespace hihapi.Models
         public Decimal TranAmount { get; set; }
         
         [Column("USECURR2", TypeName = "BIT")]
-        public Boolean UseCurr2 { get; set; }
+        public Boolean? UseCurr2 { get; set; }
 
         [Column("CONTROLCENTERID", TypeName="INT")]
         public Int32? ControlCenterID { get; set; }

@@ -72,7 +72,7 @@ namespace hihapi.Controllers.Finance
             var results = (from item in _context.FinanceDocumentItemView
                           where item.HomeID == hid
                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
-                          group item by new { item.TransactionType, item.TransactionTypeName, item.IsExpense } into newresult                          
+                          group item by new { item.TransactionType, item.TransactionTypeName, item.IsExpense } into newresult
                           select new
                           {
                               HomeID = hid,
@@ -99,7 +99,7 @@ namespace hihapi.Controllers.Finance
         }
     
         [HttpPost]
-        public IActionResult GetReportByAccountAndExpense([FromBody]ODataActionParameters parameters)
+        public IActionResult GetReportByAccount([FromBody]ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -140,11 +140,86 @@ namespace hihapi.Controllers.Finance
             }
 
             // 3. Calculate the amount
-            var results = (from acntgrpview in _context.FinanceReporAccountGroupAndExpenseView
-                           where acntgrpview.HomeID == hid
-                           select acntgrpview).ToList();
+            var results = (
+                from docitem in _context.FinanceDocumentItem
+                    join account in _context.FinanceAccount
+                        on new { docitem.AccountID, IsNormal = true } equals new { AccountID = account.ID, IsNormal = account.Status == null || account.Status == (byte)FinanceAccountStatus.Normal }
+                    join trantype in _context.FinTransactionType
+                        on docitem.TranType equals trantype.ID
+                    join docheader in _context.FinanceDocument
+                        on docitem.DocID equals docheader.ID
+                select new
+                {
+                    AccountID = docitem.AccountID,
+                    IsExpense = trantype.Expense,
+                    TranCurr = docheader.TranCurr,
+                    TranCurr2 = docheader.TranCurr2,
+                    UseCurr2 = docitem.UseCurr2,
+                    TranAmount = docitem.TranAmount,
+                    docheader.ExgRate,
+                    docheader.ExgRate2,
+                }
+                into docitem2
+                group docitem2 by new { docitem2.AccountID, docitem2.IsExpense, docitem2.TranCurr, docitem2.TranCurr2, docitem2.UseCurr2, docitem2.ExgRate, docitem2.ExgRate2 } into docitem3
+                select new
+                {
+                    AccountID = docitem3.Key.AccountID,
+                    IsExpense = docitem3.Key.IsExpense,
+                    TranCurr = docitem3.Key.TranCurr,
+                    TranCurr2 = docitem3.Key.TranCurr2,
+                    UseCurr2 = docitem3.Key.UseCurr2,
+                    ExgRate = docitem3.Key.ExgRate,
+                    ExgRate2 = docitem3.Key.ExgRate2,
+                    TranAmount = docitem3.Sum(p => p.TranAmount)
+                }).ToList();
 
-            return Ok(results);
+            List<FinanceReportByAccount> listResults = new List<FinanceReportByAccount>();
+            foreach(var rst in results)
+            {
+                var amountLC = rst.TranAmount;
+                // Calculte the amount
+                if (rst.IsExpense)
+                    amountLC = -1 * rst.TranAmount;
+                if (rst.UseCurr2 != null) 
+                {
+                    if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
+                    {
+                        amountLC *= rst.ExgRate2.GetValueOrDefault();
+                    }
+                }
+                else
+                {
+                    if (rst.ExgRate != null && rst.ExgRate.GetValueOrDefault() > 0)
+                    {
+                        amountLC *= rst.ExgRate.GetValueOrDefault();
+                    }
+                }
+
+                // Does Account exist?
+                var acntidx = listResults.FindIndex(p => p.AccountID == rst.AccountID);
+                if (acntidx == -1)
+                {
+                    var nrst = new FinanceReportByAccount();
+                    nrst.HomeID = hid;
+                    nrst.AccountID = rst.AccountID;
+                    if (rst.IsExpense)
+                        nrst.CreditBalance += amountLC;
+                    else
+                        nrst.DebitBalance += amountLC;
+                    nrst.Balance = nrst.DebitBalance + nrst.CreditBalance;
+                    listResults.Add(nrst);
+                }
+                else
+                {
+                    if (rst.IsExpense)
+                        listResults[acntidx].CreditBalance += amountLC;
+                    else
+                        listResults[acntidx].DebitBalance += amountLC;
+                    listResults[acntidx].Balance = listResults[acntidx].DebitBalance + listResults[acntidx].CreditBalance;
+                }
+            }
+
+            return Ok(listResults);
         }
     }
 }
