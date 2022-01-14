@@ -145,6 +145,10 @@ namespace hihapi.Models
             var actionReportAccount = reportEntity.Collection.Action("GetReportByAccount");
             actionReportAccount.Parameter<int>("HomeID");
             actionReportAccount.ReturnsFromEntitySet<FinanceReportByAccount>("FinanceReportByAccounts");
+            // Action: Get Report by ControlCenter
+            var actionReportCC = reportEntity.Collection.Action("GetReportByControlCenter");
+            actionReportCC.Parameter<int>("HomeID");
+            actionReportCC.ReturnsFromEntitySet<FinanceReportByControlCenter>("FinanceReportByControlCenters");
 
             modelBuilder.EntitySet<BlogFormat>("BlogFormats");
             modelBuilder.EntitySet<BlogUserSetting>("BlogUserSettings");
