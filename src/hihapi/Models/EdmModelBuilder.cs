@@ -134,11 +134,11 @@ namespace hihapi.Models
             // Actions on reports
             var reportEntity = modelBuilder.EntityType<FinanceReport>();
             // Action: GetMonthlyReportByTranType
-            var actionReportCurrentMonthByTT = reportEntity.Collection.Action("GetMonthlyReportByTranType");
+            var actionReportCurrentMonthByTT = reportEntity.Collection.Action("GetReportByTranType");
                 // .ReturnsCollection<FinanceReportByTransactionType>();
             actionReportCurrentMonthByTT.Parameter<int>("HomeID");
             actionReportCurrentMonthByTT.Parameter<int>("Year");
-            actionReportCurrentMonthByTT.Parameter<int>("Month");
+            actionReportCurrentMonthByTT.Parameter<int?>("Month");
             actionReportCurrentMonthByTT.ReturnsFromEntitySet<FinanceReportByTransactionType>("FinanceReportByTransactionTypes");
             // Action: Get Report By Transaction Type YTD
             // Action: Get Report by Account
@@ -149,6 +149,11 @@ namespace hihapi.Models
             var actionReportCC = reportEntity.Collection.Action("GetReportByControlCenter");
             actionReportCC.Parameter<int>("HomeID");
             actionReportCC.ReturnsFromEntitySet<FinanceReportByControlCenter>("FinanceReportByControlCenters");
+            // Action: Get Report by Order
+            var actionReportOrder = reportEntity.Collection.Action("GetReportByOrder");
+            actionReportOrder.Parameter<int>("HomeID");
+            actionReportOrder.Parameter<int?>("OrderID");
+            actionReportOrder.ReturnsFromEntitySet<FinanceReportByOrder>("FinanceReportByOrders");
 
             modelBuilder.EntitySet<BlogFormat>("BlogFormats");
             modelBuilder.EntitySet<BlogUserSetting>("BlogUserSettings");

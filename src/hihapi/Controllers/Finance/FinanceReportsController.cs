@@ -24,7 +24,7 @@ namespace hihapi.Controllers.Finance
 
         // Actions
         [HttpPost]
-        public IActionResult GetMonthlyReportByTranType([FromBody] ODataActionParameters parameters)
+        public IActionResult GetReportByTranType([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -42,7 +42,7 @@ namespace hihapi.Controllers.Finance
             // 0. Get inputted parameter
             Int32 hid = (Int32)parameters["HomeID"];
             Int32 year = (Int32)parameters["Year"];
-            Int32 month = (Int32)parameters["Month"];
+            Int32? month = (Int32?)parameters["Month"];
 
             // 1. Check User
             String usrName = String.Empty;
@@ -66,9 +66,9 @@ namespace hihapi.Controllers.Finance
                 throw new UnauthorizedAccessException();
             }
 
-            // 3. Calculate the amount
-            DateTime dtlow = new DateTime(year, month, 1);
-            DateTime dthigh = dtlow.AddMonths(1);
+            // 3. Calculate the amount            
+            DateTime dtlow = new DateTime(year, month == null ? 1 : month.Value, 1);
+            DateTime dthigh = month == null ? dtlow.AddMonths(1) : dtlow.AddYears(1);
             var results = (from item in _context.FinanceDocumentItemView
                           where item.HomeID == hid
                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
@@ -81,6 +81,7 @@ namespace hihapi.Controllers.Finance
                               IsExpense = newresult.Key.IsExpense,
                               Amount = newresult.Sum(c => c.Amount)
                           }).ToList();
+
             List<FinanceReportByTransactionType> listResult = new List<FinanceReportByTransactionType>();
             foreach(var result in results)
             {
@@ -271,7 +272,7 @@ namespace hihapi.Controllers.Finance
                     on docitem.DocID equals docheader.ID
                 join trantype in _context.FinTransactionType
                     on docitem.TranType equals trantype.ID
-                where docheader.HomeID == hid
+                where docheader.HomeID == hid && docitem.ControlCenterID != null
                 select new
                 {
                     ControlCenterID = docitem.ControlCenterID,
@@ -340,6 +341,212 @@ namespace hihapi.Controllers.Finance
                     else
                         listResults[ccidx].DebitBalance += amountLC;
                     listResults[ccidx].Balance = listResults[ccidx].DebitBalance + listResults[ccidx].CreditBalance;
+                }
+            }
+
+            return Ok(listResults);
+        }
+
+        [HttpPost]
+        public IActionResult GetReportByOrder([FromBody] ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // 0. Get inputted parameter
+            Int32 hid = (Int32)parameters["HomeID"];
+            Int32? orderid = null;
+            if (parameters.ContainsKey("OrderID"))
+                orderid = (Int32?)parameters["OrderID"];
+
+            // 1. Check User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // 2. Check the Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // 3. Calculate the amount
+            List<FinanceReportByOrder> listResults = new List<FinanceReportByOrder>();
+
+            if (orderid != null)
+            {
+                var results = (
+                    from docitem in _context.FinanceDocumentItem
+                    join docheader in _context.FinanceDocument
+                        on docitem.DocID equals docheader.ID
+                    join trantype in _context.FinTransactionType
+                        on docitem.TranType equals trantype.ID
+                    where docheader.HomeID == hid && docitem.OrderID == orderid.Value
+                    select new
+                    {
+                        IsExpense = trantype.Expense,
+                        TranCurr = docheader.TranCurr,
+                        TranCurr2 = docheader.TranCurr2,
+                        UseCurr2 = docitem.UseCurr2,
+                        TranAmount = docitem.TranAmount,
+                        docheader.ExgRate,
+                        docheader.ExgRate2,
+                    }
+                    into docitem2
+                    group docitem2 by new { docitem2.IsExpense, docitem2.TranCurr, docitem2.TranCurr2, docitem2.UseCurr2, docitem2.ExgRate, docitem2.ExgRate2 } into docitem3
+                    select new
+                    {
+                        IsExpense = docitem3.Key.IsExpense,
+                        TranCurr = docitem3.Key.TranCurr,
+                        TranCurr2 = docitem3.Key.TranCurr2,
+                        UseCurr2 = docitem3.Key.UseCurr2,
+                        ExgRate = docitem3.Key.ExgRate,
+                        ExgRate2 = docitem3.Key.ExgRate2,
+                        TranAmount = docitem3.Sum(p => p.TranAmount)
+                    }).ToList();
+
+                foreach (var rst in results)
+                {
+                    var amountLC = rst.TranAmount;
+                    // Calculte the amount
+                    if (rst.IsExpense)
+                        amountLC = -1 * rst.TranAmount;
+                    if (rst.UseCurr2 != null)
+                    {
+                        if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
+                        {
+                            amountLC *= rst.ExgRate2.GetValueOrDefault();
+                        }
+                    }
+                    else
+                    {
+                        if (rst.ExgRate != null && rst.ExgRate.GetValueOrDefault() > 0)
+                        {
+                            amountLC *= rst.ExgRate.GetValueOrDefault();
+                        }
+                    }
+
+                    // Does Account exist?
+                    if (listResults.Count == 0)
+                    {
+                        var nrst = new FinanceReportByOrder();
+                        nrst.HomeID = hid;
+                        nrst.OrderID = orderid.Value;
+                        if (rst.IsExpense)
+                            nrst.CreditBalance += amountLC;
+                        else
+                            nrst.DebitBalance += amountLC;
+                        nrst.Balance = nrst.DebitBalance + nrst.CreditBalance;
+                        listResults.Add(nrst);
+                    }
+                    else
+                    {
+                        if (rst.IsExpense)
+                            listResults[0].CreditBalance += amountLC;
+                        else
+                            listResults[0].DebitBalance += amountLC;
+                        listResults[0].Balance = listResults[0].DebitBalance + listResults[0].CreditBalance;
+                    }
+                }
+            }
+            else
+            {
+                var results = (
+                    from docitem in _context.FinanceDocumentItem
+                    join docheader in _context.FinanceDocument
+                        on docitem.DocID equals docheader.ID
+                    join trantype in _context.FinTransactionType
+                        on docitem.TranType equals trantype.ID
+                    where docheader.HomeID == hid && docitem.OrderID != null
+                    select new
+                    {
+                        OrderID = docitem.OrderID,
+                        IsExpense = trantype.Expense,
+                        TranCurr = docheader.TranCurr,
+                        TranCurr2 = docheader.TranCurr2,
+                        UseCurr2 = docitem.UseCurr2,
+                        TranAmount = docitem.TranAmount,
+                        docheader.ExgRate,
+                        docheader.ExgRate2,
+                    }
+                    into docitem2
+                    group docitem2 by new { docitem2.OrderID, docitem2.IsExpense, docitem2.TranCurr, docitem2.TranCurr2, docitem2.UseCurr2, docitem2.ExgRate, docitem2.ExgRate2 } into docitem3
+                    select new
+                    {
+                        OrderID = docitem3.Key.OrderID,
+                        IsExpense = docitem3.Key.IsExpense,
+                        TranCurr = docitem3.Key.TranCurr,
+                        TranCurr2 = docitem3.Key.TranCurr2,
+                        UseCurr2 = docitem3.Key.UseCurr2,
+                        ExgRate = docitem3.Key.ExgRate,
+                        ExgRate2 = docitem3.Key.ExgRate2,
+                        TranAmount = docitem3.Sum(p => p.TranAmount)
+                    }).ToList();
+
+                foreach (var rst in results)
+                {
+                    var amountLC = rst.TranAmount;
+                    // Calculte the amount
+                    if (rst.IsExpense)
+                        amountLC = -1 * rst.TranAmount;
+                    if (rst.UseCurr2 != null)
+                    {
+                        if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
+                        {
+                            amountLC *= rst.ExgRate2.GetValueOrDefault();
+                        }
+                    }
+                    else
+                    {
+                        if (rst.ExgRate != null && rst.ExgRate.GetValueOrDefault() > 0)
+                        {
+                            amountLC *= rst.ExgRate.GetValueOrDefault();
+                        }
+                    }
+
+                    // Does Account exist?
+                    var ordidx = listResults.FindIndex(p => p.OrderID == rst.OrderID);
+                    if (ordidx == -1)
+                    {
+                        var nrst = new FinanceReportByOrder();
+                        nrst.HomeID = hid;
+                        nrst.OrderID = rst.OrderID.GetValueOrDefault();
+                        if (rst.IsExpense)
+                            nrst.CreditBalance += amountLC;
+                        else
+                            nrst.DebitBalance += amountLC;
+                        nrst.Balance = nrst.DebitBalance + nrst.CreditBalance;
+                        listResults.Add(nrst);
+                    }
+                    else
+                    {
+                        if (rst.IsExpense)
+                            listResults[ordidx].CreditBalance += amountLC;
+                        else
+                            listResults[ordidx].DebitBalance += amountLC;
+                        listResults[ordidx].Balance = listResults[ordidx].DebitBalance + listResults[ordidx].CreditBalance;
+                    }
                 }
             }
 
