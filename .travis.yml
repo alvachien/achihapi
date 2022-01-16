@@ -1,7 +1,7 @@
 language: csharp
 mono: none
 sudo: required
-dotnet: 5.0.13
+dotnet: 5.0.401
 branches:
   only:
     - master
