@@ -54,7 +54,12 @@ namespace hihapi.test.UnitTests
             };
 
             var result = control.Get();
-            var returnValue = Assert.IsAssignableFrom<IQueryable<HomeDefine>>(result);
+            Assert.NotNull(result);
+            // Assert.IsType<ActionResult<IEnumerable<HomeDefine>>>(result);
+            Assert.IsType<OkObjectResult>(result);
+            // Assert.IsAssignableFrom<IEnumerable<HomeDefine>>((result as OkObjectResult).Value as IEnumerable<HomeDefine>);
+
+            var returnValue = Assert.IsAssignableFrom<IEnumerable<HomeDefine>>((result as OkObjectResult).Value as IEnumerable<HomeDefine>);
             var cnt = returnValue.Count();
             Assert.Equal(context.HomeMembers.Where(p => p.User == user).Count(), cnt);
 
@@ -96,7 +101,7 @@ namespace hihapi.test.UnitTests
             };
             hd1.HomeMembers.Add(hm1);
             var rst = await control.Post(hd1);
-            var nhdobj = Assert.IsType<CreatedODataResult<HomeDefine>>(rst);
+            var nhdobj = Assert.IsType<CreatedODataResult<HomeDefine>>(rst);            
             Assert.True(nhdobj.Entity.ID > 0);
             hid = nhdobj.Entity.ID;
             Assert.True(nhdobj.Entity.HomeMembers.Count == 1);
@@ -106,10 +111,13 @@ namespace hihapi.test.UnitTests
 
             // Read the single object
             var rst2 = control.Get(nhdobj.Entity.ID);
-            var nreadobjectrst = Assert.IsType<SingleResult<HomeDefine>>(rst2);
+            // var nreadobjectrst = Assert.IsType<SingleResult<HomeDefine>>(rst2);
+            Assert.IsType<HomeDefine>(rst2);
+            // var nreadobjectrst = Assert.IsAssignableFrom<HomeDefine>(rst2 as HomeDefine);
+            // var returnValue = Assert.IsAssignableFrom<HomeDefine>((rst2 as OkObjectResult).Value as HomeDefine);
             // Assert.Equal(nhdobj.Entity.Name, nreadobject.Queryable.)
-            Assert.Equal(1, nreadobjectrst.Queryable.Count<HomeDefine>());
-            var nreadobj = nreadobjectrst.Queryable.First<HomeDefine>();
+            //Assert.Equal(1, nreadobjectrst.Queryable.Count<HomeDefine>());
+            var nreadobj = rst2 as HomeDefine;
             Assert.Equal(nhdobj.Entity.Name, nreadobj.Name);
             Assert.Equal(nhdobj.Entity.Host, nreadobj.Host);
             Assert.True(nreadobj.HomeMembers.Count == 1);
