@@ -56,10 +56,10 @@ namespace hihapi.test.UnitTests
             var result = control.Get();
             Assert.NotNull(result);
             // Assert.IsType<ActionResult<IEnumerable<HomeDefine>>>(result);
-            Assert.IsType<OkObjectResult>(result);
+            var okresult = Assert.IsType<OkObjectResult>(result);
             // Assert.IsAssignableFrom<IEnumerable<HomeDefine>>((result as OkObjectResult).Value as IEnumerable<HomeDefine>);
 
-            var returnValue = Assert.IsAssignableFrom<IEnumerable<HomeDefine>>((result as OkObjectResult).Value as IEnumerable<HomeDefine>);
+            var returnValue = Assert.IsAssignableFrom<IEnumerable<HomeDefine>>(okresult.Value as IEnumerable<HomeDefine>);
             var cnt = returnValue.Count();
             Assert.Equal(context.HomeMembers.Where(p => p.User == user).Count(), cnt);
 

@@ -46,7 +46,9 @@ namespace hihapi.Utilities
 
         internal static String GetUserID(Microsoft.AspNetCore.Mvc.ControllerBase ctrl)
         {
-            return ctrl.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (ctrl.User != null)
+                return ctrl.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return String.Empty;
         }
 
 /*
