@@ -42,7 +42,9 @@ namespace hihapi.Controllers.Finance
             // 0. Get inputted parameter
             Int32 hid = (Int32)parameters["HomeID"];
             Int32 year = (Int32)parameters["Year"];
-            Int32? month = (Int32?)parameters["Month"];
+            Int32? month = null;
+            if (parameters.ContainsKey("Month"))
+                month = (Int32?)parameters["Month"];
 
             // 1. Check User
             String usrName = String.Empty;
@@ -72,7 +74,11 @@ namespace hihapi.Controllers.Finance
             var results = (from item in _context.FinanceDocumentItemView
                           where item.HomeID == hid
                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
-                          group item by new { item.TransactionType, item.TransactionTypeName, item.IsExpense } into newresult
+                            && item.TransactionType != FinanceTransactionType.TranType_TransferIn
+                            && item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                            && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                            && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                           group item by new { item.TransactionType, item.TransactionTypeName, item.IsExpense } into newresult
                           select new
                           {
                               HomeID = hid,
