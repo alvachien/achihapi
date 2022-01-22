@@ -70,7 +70,7 @@ namespace hihapi.Controllers.Finance
 
             // 3. Calculate the amount            
             DateTime dtlow = new DateTime(year, month == null ? 1 : month.Value, 1);
-            DateTime dthigh = month == null ? dtlow.AddMonths(1) : dtlow.AddYears(1);
+            DateTime dthigh = month == null ? dtlow.AddYears(1) : dtlow.AddMonths(1);
             var results = (from item in _context.FinanceDocumentItemView
                           where item.HomeID == hid
                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
