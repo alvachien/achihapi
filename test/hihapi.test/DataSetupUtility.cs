@@ -46,10 +46,42 @@ namespace hihapi.test
         public const string UserD = "USERD";
         public const int Home1ID = 1;
         public const string Home1BaseCurrency = "CNY";
+        public const int Home1CashAccount1ID = 1;
+        public const int Home1CashAccount2ID = 2;
+        public const int Home1CashAccount3ID = 3;
+        public const int Home1CashAccount4ID = 4;
+        public const int Home1DepositAccount5ID = 5;
+        public const int Home1DepositAccount6ID = 6;
+        public const int Home1DepositAccount7ID = 7;
+        public const int Home1DepositAccount8ID = 8;
+        public const int Home1DepositAccount9ID = 9;
+        public const int Home1DepositAccount10ID = 10;
+        public const int Home1DepositAccount11ID = 11;
+        public const int Home1VirtualAccount17ID = 17;
+        public const int Home1VirtualAccount18ID = 18;
+        public const int Home1ControlCenter1ID = 1;
+        public const int Home1ControlCenter2ID = 2;
+        public const int Home1ControlCenter3ID = 3;
+        public const int Home1ControlCenter4ID = 4;
+        public const int Home1ControlCenter5ID = 5;
+        public const int Home1ControlCenter6ID = 6;
+        public const int Home1ControlCenter7ID = 7;
+        public const int Home1ControlCenter8ID = 8;
         public const int Home2ID = 2;
         public const string Home2BaseCurrency = "CNY";
+        public const int Home2CashAccount1ID = 101;
+        public const int Home2DepositAccount2ID = 102;
+        public const int Home2DepositAccount3ID = 103;
+        public const int Home2ControlCenter1ID = 101;
+        public const int Home2VirtualAccount1ID = 106;
         public const int Home3ID = 3;
         public const string Home3BaseCurrency = "CNY";
+        public const int Home3CashAccount1ID = 201;
+        public const int Home3CashAccount2ID = 202;
+        public const int Home3VirtualAccount1ID = 209;
+        public const int Home3ControlCenter1ID = 201;
+        public const int Home3ControlCenter2ID = 202;
+        public const int Home3ControlCenter3ID = 203;
         public const int Home4ID = 4;
         public const string Home4BaseCurrency = "USD";
         public const int Home5ID = 5;
@@ -58,6 +90,12 @@ namespace hihapi.test
         public const string IntegrationTestIdentityServerUrl = "http://localhost:5005";
         public const string IntegrationTestAPIScope = "api.hih";
         public const string IntegrationTestPassword = "password";
+        public const int TranType_Income1 = 2;
+        public const int TranType_Income2 = 3;
+        public const int TranType_Income3 = 4;
+        public const int TranType_Expense1 = 49;
+        public const int TranType_Expense2 = 50;
+        public const int TranType_Expense3 = 51;
 
         static DataSetupUtility()
         {

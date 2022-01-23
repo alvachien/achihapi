@@ -44,11 +44,6 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            //var query = from hmem in _context.HomeMembers
-            //            where hmem.User == usrName
-            //            select new { HomeID = hmem.HomeID } into hids
-            //            join docs in _context.FinanceDocument on hids.HomeID equals docs.HomeID
-            //            select docs;
             return Ok(from hmem in _context.HomeMembers
                         where hmem.User == usrName
                         select new { HomeID = hmem.HomeID, User = hmem.User, IsChild = hmem.IsChild } into hmems
@@ -58,7 +53,6 @@ namespace hihapi.Controllers
                             || hmems.IsChild == null
                             || hmems.IsChild == false
                         select docs);
-            //return Ok(option.ApplyTo(query));
         }
 
         [EnableQuery]
@@ -224,7 +218,7 @@ namespace hihapi.Controllers
                 }
             }
 
-            return Updated(update);
+            return Ok(update);
         }
 
         [HttpDelete]

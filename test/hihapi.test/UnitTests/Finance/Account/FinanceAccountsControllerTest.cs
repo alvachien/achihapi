@@ -32,11 +32,11 @@ namespace hihapi.test.UnitTests.Finance.Account
         {
             if (this.listCreatedID.Count > 0)
             {
-                this.listCreatedID.ForEach(x => this.fixture.DeleteFinanceAccount(this.fixture.GetCurrentDataContext(), x));
-                this.fixture.GetCurrentDataContext().SaveChanges();
+                this.listCreatedID.ForEach(x => this.fixture.DeleteFinanceAccount(this.fixture.GetCurrentDataContext(), x));                
 
                 this.listCreatedID.Clear();
             }
+            this.fixture.GetCurrentDataContext().SaveChanges();
         }
 
         [Theory]
@@ -49,6 +49,10 @@ namespace hihapi.test.UnitTests.Finance.Account
         public async Task TestCase_Account(string user, int hid, int ctgyid)
         {
             var context = this.fixture.GetCurrentDataContext();
+            // Pre. setup
+            this.fixture.InitHomeTestData(hid, context);
+            //var accountCount = context.FinanceAccount.Where(p => p.HomeID == hid).Count();
+
             FinanceAccountsController control = new FinanceAccountsController(context);
 
             // 1. No authorization
@@ -60,20 +64,19 @@ namespace hihapi.test.UnitTests.Finance.Account
             {
                 Assert.IsType<UnauthorizedAccessException>(exp);
             }
-
-            // 2. Empty result
             var userclaim = DataSetupUtility.GetClaimForUser(user);
             control.ControllerContext = new ControllerContext()
             {
                 HttpContext = new DefaultHttpContext() { User = userclaim }
             };
+
+            // 2. Initial account list
             var result = control.Get();
             Assert.NotNull(result);
             var okresult = Assert.IsType<OkObjectResult>(result);
             var accounts = Assert.IsAssignableFrom<IEnumerable<FinanceAccount>>(okresult.Value as IEnumerable<FinanceAccount>);
-            var cnt = accounts.Count();
-            Assert.Equal(0, cnt);
-            // Assert.Empty(accounts);
+            //var cnt = accounts.Count();
+            //Assert.Equal(accountCount, cnt);
 
             // 3. Create account
             FinanceAccount acnt = new FinanceAccount();
@@ -101,7 +104,14 @@ namespace hihapi.test.UnitTests.Finance.Account
             Assert.Equal(FinanceAccountStatus.Normal, (FinanceAccountStatus)dbacnts[0].Status);
             Assert.Equal(acnt.Comment, dbacnts[0].Comment);
 
-            // 4. TBD.
+            // 4. Get account
+            var getresult = control.Get(nacntid);
+            Assert.NotNull(getresult);
+            Assert.Equal(acnt.Name, getresult.Name);
+            Assert.Equal(acnt.Owner, getresult.Owner);
+            Assert.Equal(acnt.CategoryID, getresult.CategoryID);
+            Assert.Equal(FinanceAccountStatus.Normal, (FinanceAccountStatus)getresult.Status);
+            Assert.Equal(acnt.Comment, getresult.Comment);
 
             await context.DisposeAsync();
         }

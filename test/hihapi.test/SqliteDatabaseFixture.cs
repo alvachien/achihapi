@@ -72,6 +72,31 @@ namespace hihapi.test
             return context;
         }
 
+        public void InitHomeTestData(int hid, hihDataContext context)
+        {
+            switch (hid)
+            {
+                case DataSetupUtility.Home1ID:
+                    this.InitHome1TestData(context);
+                    break;
+                case DataSetupUtility.Home2ID:
+                    this.InitHome2TestData(context);
+                    break;
+                case DataSetupUtility.Home3ID:
+                    this.InitHome3TestData(context);
+                    break;
+                case DataSetupUtility.Home4ID:
+                    this.InitHome4TestData(context);
+                    break;
+                case DataSetupUtility.Home5ID:
+                    this.InitHome5TestData(context);
+                    break;
+                default:
+                    System.Diagnostics.Debug.Assert(false);
+                    break;
+            }
+        }
+
         public void InitHome1TestData(hihDataContext context)
         {
             if (!this.IsHome1DataInitialized)
