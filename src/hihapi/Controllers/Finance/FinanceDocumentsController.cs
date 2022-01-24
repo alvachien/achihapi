@@ -170,9 +170,11 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
+            if (!(update.DocType == FinanceDocumentType.DocType_Normal))
+                return BadRequest("Not supported document type");
 
             if (!update.IsValid(this._context))
-                return BadRequest();
+                return BadRequest("Document verify failed");
 
             update.UpdatedAt = DateTime.Now;
             update.Updatedby = usrName;

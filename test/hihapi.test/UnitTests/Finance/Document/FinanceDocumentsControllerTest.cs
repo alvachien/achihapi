@@ -45,6 +45,22 @@ namespace hihapi.test.UnitTests.Finance.Document
                             TranType = DataSetupUtility.TranType_Income1
                         }
                     }),
+                // Home 1, Cash account 1, multiple lines
+                new FinanceDocumentsControllerTestData_NormalDoc(
+                    DataSetupUtility.UserA, DataSetupUtility.Home1ID,
+                    DataSetupUtility.Home1BaseCurrency, null, null, null, null, null, "H1_NORMAL_DOC_1b",
+                    new List<FinanceDocumentsControllerTestData_DocItem> {
+                        new FinanceDocumentsControllerTestData_DocItem { ItemID = 1,
+                            AccountID = DataSetupUtility.Home1CashAccount1ID,
+                            ControlCenterID = DataSetupUtility.Home1ControlCenter3ID, Amount = 100, OrderID = null,
+                            TranType = DataSetupUtility.TranType_Income1
+                        },
+                        new FinanceDocumentsControllerTestData_DocItem { ItemID = 2,
+                            AccountID = DataSetupUtility.Home1CashAccount1ID,
+                            ControlCenterID = DataSetupUtility.Home1ControlCenter4ID, Amount = 200, OrderID = null,
+                            TranType = DataSetupUtility.TranType_Expense1
+                        }
+                    }),
                 // Home 1, Cash account 2
                 new FinanceDocumentsControllerTestData_NormalDoc(
                     DataSetupUtility.UserA, DataSetupUtility.Home1ID,
@@ -54,6 +70,32 @@ namespace hihapi.test.UnitTests.Finance.Document
                             AccountID = DataSetupUtility.Home1CashAccount2ID,
                             ControlCenterID = DataSetupUtility.Home1ControlCenter3ID, Amount = 200, OrderID = null,
                             TranType = DataSetupUtility.TranType_Income1
+                        }
+                    }),
+                // Home 1, Cash account 2a
+                new FinanceDocumentsControllerTestData_NormalDoc(
+                    DataSetupUtility.UserA, DataSetupUtility.Home1ID,
+                    DataSetupUtility.Home1BaseCurrency, null, null, null, null, null, "H1_NORMAL_DOC_2a",
+                    new List<FinanceDocumentsControllerTestData_DocItem> {
+                        new FinanceDocumentsControllerTestData_DocItem { ItemID = 1,
+                            AccountID = DataSetupUtility.Home1CashAccount1ID,
+                            ControlCenterID = DataSetupUtility.Home1ControlCenter3ID, Amount = 100, OrderID = null,
+                            TranType = DataSetupUtility.TranType_Income1
+                        },
+                        new FinanceDocumentsControllerTestData_DocItem { ItemID = 2,
+                            AccountID = DataSetupUtility.Home1CashAccount1ID,
+                            ControlCenterID = DataSetupUtility.Home1ControlCenter4ID, Amount = 200, OrderID = null,
+                            TranType = DataSetupUtility.TranType_Expense1
+                        },
+                        new FinanceDocumentsControllerTestData_DocItem { ItemID = 3,
+                            AccountID = DataSetupUtility.Home1CashAccount2ID,
+                            ControlCenterID = DataSetupUtility.Home1ControlCenter3ID, Amount = 300, OrderID = null,
+                            TranType = DataSetupUtility.TranType_Income2
+                        },
+                        new FinanceDocumentsControllerTestData_DocItem { ItemID = 4,
+                            AccountID = DataSetupUtility.Home1CashAccount2ID,
+                            ControlCenterID = DataSetupUtility.Home1ControlCenter2ID, Amount = 400, OrderID = null,
+                            TranType = DataSetupUtility.TranType_Expense2
                         }
                     }),
                 // Home 1, Despoit account 5
@@ -125,7 +167,9 @@ namespace hihapi.test.UnitTests.Finance.Document
         {
             var context = this.fixture.GetCurrentDataContext();
             int ndocid = -1;
-            int itemcnt = 0;
+            //int itemcnt = normalDoc.DocItems.Count;
+            //int itemmaxid = normalDoc.DocItems.Max(p => p.ItemID);
+            //int itemminid = normalDoc.DocItems.Min(p => p.ItemID);
             // Pre. setup
             this.fixture.InitHomeTestData(normalDoc.HomeID, context);
 
@@ -155,7 +199,6 @@ namespace hihapi.test.UnitTests.Finance.Document
             doc.ExgRate = normalDoc.ExchangeRate;
             doc.ExgRate2 = normalDoc.SecondExchangeRate;
             FinanceDocumentItem item = null;
-
             normalDoc.DocItems.ForEach(di =>
             {
                 item = new FinanceDocumentItem();
@@ -169,7 +212,6 @@ namespace hihapi.test.UnitTests.Finance.Document
                 item.UseCurr2 = di.UseCurr2;
                 doc.Items.Add(item);
             });
-            itemcnt = normalDoc.DocItems.Count;
             var postresult = await control.Post(doc);
             Assert.NotNull(postresult);
             var createDocResult = Assert.IsType<CreatedODataResult<FinanceDocument>>(postresult);
@@ -182,19 +224,25 @@ namespace hihapi.test.UnitTests.Finance.Document
             Assert.Equal(normalDoc.ExchangeRateIsPlanned, createDocResult.Entity.ExgRate_Plan);
             Assert.Equal(normalDoc.SecondExchangeRate, createDocResult.Entity.ExgRate2);
             Assert.Equal(normalDoc.SecondExchangeRateIsPlanned, createDocResult.Entity.ExgRate_Plan2);
-            Assert.Single(createDocResult.Entity.Items);
-
-            var createdDocResultItem = createDocResult.Entity.Items.FirstOrDefault();
-            Assert.Equal(normalDoc.DocItems[0].AccountID, createdDocResultItem.AccountID);
-            Assert.Equal(normalDoc.DocItems[0].ControlCenterID, createdDocResultItem.ControlCenterID);
-            Assert.Equal(normalDoc.DocItems[0].OrderID, createdDocResultItem.OrderID);
-            Assert.Equal(normalDoc.DocItems[0].Amount, createdDocResultItem.TranAmount);
-            Assert.Equal(normalDoc.DocItems[0].Desp, createdDocResultItem.Desp);
-            Assert.Equal(normalDoc.DocItems[0].TranType, createdDocResultItem.TranType);
-
+            Assert.True(createDocResult.Entity.Items.Count == normalDoc.DocItems.Count);
+            // Verify the attributes of all items
+            var itemEnum = createDocResult.Entity.Items.GetEnumerator();
+            while(itemEnum.MoveNext())
+            {
+                var docitem = itemEnum.Current;
+                var orgidx = normalDoc.DocItems.FindIndex(p => p.ItemID == docitem.ItemID);
+                Assert.NotEqual(-1, orgidx);
+                Assert.Equal(normalDoc.DocItems[orgidx].AccountID, docitem.AccountID);
+                Assert.Equal(normalDoc.DocItems[orgidx].ControlCenterID, docitem.ControlCenterID);
+                Assert.Equal(normalDoc.DocItems[orgidx].OrderID, docitem.OrderID);
+                Assert.Equal(normalDoc.DocItems[orgidx].Amount, docitem.TranAmount);
+                Assert.Equal(normalDoc.DocItems[orgidx].Desp, docitem.Desp);
+                Assert.Equal(normalDoc.DocItems[orgidx].TranType, docitem.TranType);
+            }
             // Store the Doc ID for deletion
             ndocid = createDocResult.Entity.ID;
             listCreatedDocs.Add(ndocid);
+            doc.ID = ndocid;
 
             // 3. Read it out.
             var getresult = control.Get(ndocid);
@@ -211,11 +259,11 @@ namespace hihapi.test.UnitTests.Finance.Document
 
             // 4. Do the changes to normal docs.
             // 4.1 Change the desp
-            getresult.Desp += "Changed";
-            var changeResult = await control.Put(ndocid, getresult);
+            doc.Desp += "Changed";
+            var changeResult = await control.Put(ndocid, doc);
             var changeokresult = Assert.IsType<OkObjectResult>(changeResult);
             var changedDoc = Assert.IsAssignableFrom<FinanceDocument>(changeokresult.Value as FinanceDocument);
-            Assert.Equal(getresult.Desp, changedDoc.Desp);
+            Assert.Equal(doc.Desp, changedDoc.Desp);
             Assert.Equal(FinanceDocumentType.DocType_Normal, changedDoc.DocType);
             Assert.Equal(normalDoc.HomeID, changedDoc.HomeID);
             Assert.Equal(normalDoc.Currency, changedDoc.TranCurr);
@@ -223,84 +271,47 @@ namespace hihapi.test.UnitTests.Finance.Document
             Assert.Equal(normalDoc.ExchangeRateIsPlanned, changedDoc.ExgRate_Plan);
             Assert.Equal(normalDoc.SecondExchangeRate, changedDoc.ExgRate2);
             Assert.Equal(normalDoc.SecondExchangeRateIsPlanned, changedDoc.ExgRate_Plan2);
-            Assert.Single(changedDoc.Items);
-
-            var changeDocItem = changedDoc.Items.FirstOrDefault();
-            Assert.Equal(normalDoc.DocItems[0].AccountID, changeDocItem.AccountID);
-            Assert.Equal(normalDoc.DocItems[0].ControlCenterID, changeDocItem.ControlCenterID);
-            Assert.Equal(normalDoc.DocItems[0].OrderID, changeDocItem.OrderID);
-            Assert.Equal(normalDoc.DocItems[0].Amount, changeDocItem.TranAmount);
-            Assert.Equal(normalDoc.DocItems[0].Desp, changeDocItem.Desp);
-            Assert.Equal(normalDoc.DocItems[0].TranType, changeDocItem.TranType);
-
-            // 4.2 Add the item
-            item = new FinanceDocumentItem();
-            item.ItemID = 2;
-            item.AccountID = normalDoc.DocItems[0].AccountID;
-            item.TranAmount = normalDoc.DocItems[0].Amount;
-            item.TranType = normalDoc.DocItems[0].TranType;
-            item.Desp = normalDoc.DocItems[0].Desp;
-            item.ControlCenterID = normalDoc.DocItems[0].ControlCenterID;
-            item.OrderID = normalDoc.DocItems[0].OrderID;
-            item.UseCurr2 = normalDoc.DocItems[0].UseCurr2;
-            getresult.Items.Add(item);
-            itemcnt++;
-            Assert.True(getresult.Items.Count == itemcnt);
-
-            changeResult = await control.Put(ndocid, getresult);
-            changeokresult = Assert.IsType<OkObjectResult>(changeResult);
-            changedDoc = Assert.IsAssignableFrom<FinanceDocument>(changeokresult.Value as FinanceDocument);
-            Assert.Equal(getresult.Desp, changedDoc.Desp);
-            Assert.Equal(FinanceDocumentType.DocType_Normal, changedDoc.DocType);
-            Assert.Equal(normalDoc.HomeID, changedDoc.HomeID);
-            Assert.Equal(normalDoc.Currency, changedDoc.TranCurr);
-            Assert.Equal(normalDoc.ExchangeRate, changedDoc.ExgRate);
-            Assert.Equal(normalDoc.ExchangeRateIsPlanned, changedDoc.ExgRate_Plan);
-            Assert.Equal(normalDoc.SecondExchangeRate, changedDoc.ExgRate2);
-            Assert.Equal(normalDoc.SecondExchangeRateIsPlanned, changedDoc.ExgRate_Plan2);
-            Assert.True(changedDoc.Items.Count == itemcnt);
-
-            // 4.3 Update the second item
-            var itemEnum = changedDoc.Items.GetEnumerator();
-            while (itemEnum.MoveNext())
-            {
-                var docitem = itemEnum.Current;
-                if (docitem.ItemID == 2)
-                {
-                    docitem.TranAmount = 2 * normalDoc.DocItems[0].Amount;
-                }
-            }
-            changeResult = await control.Put(ndocid, getresult);
-            changeokresult = Assert.IsType<OkObjectResult>(changeResult);
-            changedDoc = Assert.IsAssignableFrom<FinanceDocument>(changeokresult.Value as FinanceDocument);
-            Assert.Equal(getresult.Desp, changedDoc.Desp);
-            Assert.Equal(FinanceDocumentType.DocType_Normal, changedDoc.DocType);
-            Assert.Equal(normalDoc.HomeID, changedDoc.HomeID);
-            Assert.Equal(normalDoc.Currency, changedDoc.TranCurr);
-            Assert.Equal(normalDoc.ExchangeRate, changedDoc.ExgRate);
-            Assert.Equal(normalDoc.ExchangeRateIsPlanned, changedDoc.ExgRate_Plan);
-            Assert.Equal(normalDoc.SecondExchangeRate, changedDoc.ExgRate2);
-            Assert.Equal(normalDoc.SecondExchangeRateIsPlanned, changedDoc.ExgRate_Plan2);
-            Assert.True(changedDoc.Items.Count == itemcnt);
+            Assert.True(changedDoc.Items.Count == normalDoc.DocItems.Count);
             itemEnum = changedDoc.Items.GetEnumerator();
             while (itemEnum.MoveNext())
             {
                 var docitem = itemEnum.Current;
-                if (docitem.ItemID == 2)
-                {
-                    Assert.Equal(2 * normalDoc.DocItems[0].Amount, docitem.TranAmount);
-                }
-                else if (docitem.ItemID == 1)
-                {
-                    Assert.Equal(normalDoc.DocItems[0].Amount, docitem.TranAmount);
-                }
+                var orgidx = normalDoc.DocItems.FindIndex(p => p.ItemID == docitem.ItemID);
+                Assert.NotEqual(-1, orgidx);
+                Assert.Equal(normalDoc.DocItems[orgidx].AccountID, docitem.AccountID);
+                Assert.Equal(normalDoc.DocItems[orgidx].ControlCenterID, docitem.ControlCenterID);
+                Assert.Equal(normalDoc.DocItems[orgidx].OrderID, docitem.OrderID);
+                Assert.Equal(normalDoc.DocItems[orgidx].Amount, docitem.TranAmount);
+                Assert.Equal(normalDoc.DocItems[orgidx].Desp, docitem.Desp);
+                Assert.Equal(normalDoc.DocItems[orgidx].TranType, docitem.TranType);
             }
 
-            // 4.4 Delete an item
-            getresult.Items.Clear(); // Delete all
-            getresult.Items.Add(item); // <== Keep the second item. means, delete the first item
+            // 4.2 Add the item
+            int itemmaxid = normalDoc.DocItems.Max(p => p.ItemID);
+            itemmaxid++;
+            var newitemdata = new FinanceDocumentsControllerTestData_DocItem();
+            newitemdata.ItemID = itemmaxid;
+            newitemdata.AccountID = normalDoc.DocItems[0].AccountID;
+            newitemdata.Amount = 2 * normalDoc.DocItems[0].Amount;
+            newitemdata.TranType = normalDoc.DocItems[0].TranType;
+            newitemdata.Desp = normalDoc.DocItems[0].Desp;
+            newitemdata.ControlCenterID = normalDoc.DocItems[0].ControlCenterID;
+            newitemdata.OrderID = normalDoc.DocItems[0].OrderID;
+            newitemdata.UseCurr2 = normalDoc.DocItems[0].UseCurr2;
+            normalDoc.DocItems.Add(newitemdata);
+            doc.Items.Add(new FinanceDocumentItem
+            {
+                ItemID = newitemdata.ItemID,
+                AccountID = newitemdata.AccountID,
+                TranAmount = newitemdata.Amount,
+                TranType = newitemdata.TranType,
+                Desp = newitemdata.Desp,
+                ControlCenterID = newitemdata.ControlCenterID,
+                OrderID = newitemdata.OrderID,
+                UseCurr2 = newitemdata.UseCurr2
+            });
 
-            changeResult = await control.Put(ndocid, getresult);
+            changeResult = await control.Put(ndocid, doc);
             changeokresult = Assert.IsType<OkObjectResult>(changeResult);
             changedDoc = Assert.IsAssignableFrom<FinanceDocument>(changeokresult.Value as FinanceDocument);
             Assert.Equal(getresult.Desp, changedDoc.Desp);
@@ -311,15 +322,106 @@ namespace hihapi.test.UnitTests.Finance.Document
             Assert.Equal(normalDoc.ExchangeRateIsPlanned, changedDoc.ExgRate_Plan);
             Assert.Equal(normalDoc.SecondExchangeRate, changedDoc.ExgRate2);
             Assert.Equal(normalDoc.SecondExchangeRateIsPlanned, changedDoc.ExgRate_Plan2);
-            Assert.Single(changedDoc.Items);
-            changeDocItem = changedDoc.Items.FirstOrDefault();
-            Assert.Equal(normalDoc.DocItems[0].AccountID, changeDocItem.AccountID);
-            Assert.Equal(normalDoc.DocItems[0].ControlCenterID, changeDocItem.ControlCenterID);
-            Assert.Equal(normalDoc.DocItems[0].OrderID, changeDocItem.OrderID);
-            //Assert.Equal(normalDoc.DocItems[0].Amount, changeDocItem.TranAmount); // Amount has been changed above
-            Assert.Equal(normalDoc.DocItems[0].Desp, changeDocItem.Desp);
-            Assert.Equal(normalDoc.DocItems[0].TranType, changeDocItem.TranType);
-            Assert.Equal(item.ItemID, changeDocItem.ItemID);
+            Assert.True(changedDoc.Items.Count == normalDoc.DocItems.Count);
+            itemEnum = changedDoc.Items.GetEnumerator();
+            while (itemEnum.MoveNext())
+            {
+                var docitem = itemEnum.Current;
+                var orgidx = normalDoc.DocItems.FindIndex(p => p.ItemID == docitem.ItemID);
+                Assert.NotEqual(-1, orgidx);
+                Assert.Equal(normalDoc.DocItems[orgidx].AccountID, docitem.AccountID);
+                Assert.Equal(normalDoc.DocItems[orgidx].ControlCenterID, docitem.ControlCenterID);
+                Assert.Equal(normalDoc.DocItems[orgidx].OrderID, docitem.OrderID);
+                Assert.Equal(normalDoc.DocItems[orgidx].Amount, docitem.TranAmount);
+                Assert.Equal(normalDoc.DocItems[orgidx].Desp, docitem.Desp);
+                Assert.Equal(normalDoc.DocItems[orgidx].TranType, docitem.TranType);
+            }
+
+            // 4.3 Update the item with min. id
+            int itemminid = normalDoc.DocItems.Min(p => p.ItemID);
+            normalDoc.DocItems.ForEach(nitem =>
+            {
+                if (nitem.ItemID == itemminid)
+                {
+                    nitem.Amount += 100;
+                }
+            });
+            itemEnum = doc.Items.GetEnumerator();
+            while (itemEnum.MoveNext())
+            {
+                var docitem = itemEnum.Current;
+                if (docitem.ItemID == itemminid)
+                {
+                    docitem.TranAmount = 100 + docitem.TranAmount;
+                }
+            }
+            changeResult = await control.Put(ndocid, doc);
+            changeokresult = Assert.IsType<OkObjectResult>(changeResult);
+            changedDoc = Assert.IsAssignableFrom<FinanceDocument>(changeokresult.Value as FinanceDocument);
+            Assert.Equal(getresult.Desp, changedDoc.Desp);
+            Assert.Equal(FinanceDocumentType.DocType_Normal, changedDoc.DocType);
+            Assert.Equal(normalDoc.HomeID, changedDoc.HomeID);
+            Assert.Equal(normalDoc.Currency, changedDoc.TranCurr);
+            Assert.Equal(normalDoc.ExchangeRate, changedDoc.ExgRate);
+            Assert.Equal(normalDoc.ExchangeRateIsPlanned, changedDoc.ExgRate_Plan);
+            Assert.Equal(normalDoc.SecondExchangeRate, changedDoc.ExgRate2);
+            Assert.Equal(normalDoc.SecondExchangeRateIsPlanned, changedDoc.ExgRate_Plan2);
+            Assert.True(changedDoc.Items.Count == normalDoc.DocItems.Count);
+            itemEnum = changedDoc.Items.GetEnumerator();
+            while (itemEnum.MoveNext())
+            {
+                var docitem = itemEnum.Current;
+                var orgidx = normalDoc.DocItems.FindIndex(p => p.ItemID == docitem.ItemID);
+                Assert.NotEqual(-1, orgidx);
+                Assert.Equal(normalDoc.DocItems[orgidx].AccountID, docitem.AccountID);
+                Assert.Equal(normalDoc.DocItems[orgidx].ControlCenterID, docitem.ControlCenterID);
+                Assert.Equal(normalDoc.DocItems[orgidx].OrderID, docitem.OrderID);
+                Assert.Equal(normalDoc.DocItems[orgidx].Amount, docitem.TranAmount);
+                Assert.Equal(normalDoc.DocItems[orgidx].Desp, docitem.Desp);
+                Assert.Equal(normalDoc.DocItems[orgidx].TranType, docitem.TranType);
+            }
+
+            // 4.4 Delete an item
+            // Delete the item with min. DI
+            FinanceDocumentItem itemtbd = null;
+            itemEnum = doc.Items.GetEnumerator();
+            while (itemEnum.MoveNext())
+            {
+                var docitem = itemEnum.Current;
+                if (docitem.ItemID == itemminid)
+                {
+                    itemtbd = docitem;
+                    break;
+                }
+            }
+            Assert.NotNull(itemtbd);
+            doc.Items.Remove(itemtbd); // <== delete the item with min. ID, keep the max. id
+            normalDoc.DocItems.RemoveAt(normalDoc.DocItems.FindIndex(p => p.ItemID == itemminid));
+
+            changeResult = await control.Put(ndocid, doc);
+            changeokresult = Assert.IsType<OkObjectResult>(changeResult);
+            changedDoc = Assert.IsAssignableFrom<FinanceDocument>(changeokresult.Value as FinanceDocument);
+            Assert.Equal(getresult.Desp, changedDoc.Desp);
+            Assert.Equal(FinanceDocumentType.DocType_Normal, changedDoc.DocType);
+            Assert.Equal(normalDoc.HomeID, changedDoc.HomeID);
+            Assert.Equal(normalDoc.Currency, changedDoc.TranCurr);
+            Assert.Equal(normalDoc.ExchangeRate, changedDoc.ExgRate);
+            Assert.Equal(normalDoc.ExchangeRateIsPlanned, changedDoc.ExgRate_Plan);
+            Assert.Equal(normalDoc.SecondExchangeRate, changedDoc.ExgRate2);
+            Assert.Equal(normalDoc.SecondExchangeRateIsPlanned, changedDoc.ExgRate_Plan2);
+            Assert.True(changedDoc.Items.Count == normalDoc.DocItems.Count);
+            while (itemEnum.MoveNext())
+            {
+                var docitem = itemEnum.Current;
+                var orgidx = normalDoc.DocItems.FindIndex(p => p.ItemID == docitem.ItemID);
+                Assert.NotEqual(-1, orgidx);
+                Assert.Equal(normalDoc.DocItems[orgidx].AccountID, docitem.AccountID);
+                Assert.Equal(normalDoc.DocItems[orgidx].ControlCenterID, docitem.ControlCenterID);
+                Assert.Equal(normalDoc.DocItems[orgidx].OrderID, docitem.OrderID);
+                Assert.Equal(normalDoc.DocItems[orgidx].Amount, docitem.TranAmount);
+                Assert.Equal(normalDoc.DocItems[orgidx].Desp, docitem.Desp);
+                Assert.Equal(normalDoc.DocItems[orgidx].TranType, docitem.TranType);
+            }
 
             // 5. Delete doc.
             var deleteResult = await control.Delete(ndocid);

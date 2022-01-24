@@ -158,9 +158,18 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
+            
+            var account = _context.FinanceAccount.FindAsync(key);
+            if (account == null)
+                return NotFound();
+
 
             if (!update.IsValid(this._context))
                 return BadRequest();
+
+            // Checks.
+            // 1. Not changes to account category
+            
 
             update.Updatedby = usrName;
             update.UpdatedAt = DateTime.Now;

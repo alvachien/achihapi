@@ -41,6 +41,9 @@ namespace hihapi.test.UnitTests.Finance.Account
 
         [Theory]
         [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID, FinanceAccountCategory.AccountCategory_Cash)]
+        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID, FinanceAccountCategory.AccountCategory_Deposit)]
+        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID, FinanceAccountCategory.AccountCategory_Creditcard)]
+        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID, FinanceAccountCategory.AccountCategory_VirtualAccount)]
         [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home1ID, FinanceAccountCategory.AccountCategory_Cash)]
         [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home2ID, FinanceAccountCategory.AccountCategory_Cash)]
         [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home3ID, FinanceAccountCategory.AccountCategory_Cash)]
@@ -112,6 +115,10 @@ namespace hihapi.test.UnitTests.Finance.Account
             Assert.Equal(acnt.CategoryID, getresult.CategoryID);
             Assert.Equal(FinanceAccountStatus.Normal, (FinanceAccountStatus)getresult.Status);
             Assert.Equal(acnt.Comment, getresult.Comment);
+
+            // 5. Update account
+
+            // 6. Delete account
 
             await context.DisposeAsync();
         }
