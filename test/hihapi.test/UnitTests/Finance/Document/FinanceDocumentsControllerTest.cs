@@ -125,6 +125,7 @@ namespace hihapi.test.UnitTests.Finance.Document
         {
             var context = this.fixture.GetCurrentDataContext();
             int ndocid = -1;
+            int itemcnt = 0;
             // Pre. setup
             this.fixture.InitHomeTestData(normalDoc.HomeID, context);
 
@@ -168,6 +169,7 @@ namespace hihapi.test.UnitTests.Finance.Document
                 item.UseCurr2 = di.UseCurr2;
                 doc.Items.Add(item);
             });
+            itemcnt = normalDoc.DocItems.Count;
             var postresult = await control.Post(doc);
             Assert.NotNull(postresult);
             var createDocResult = Assert.IsType<CreatedODataResult<FinanceDocument>>(postresult);
@@ -242,7 +244,8 @@ namespace hihapi.test.UnitTests.Finance.Document
             item.OrderID = normalDoc.DocItems[0].OrderID;
             item.UseCurr2 = normalDoc.DocItems[0].UseCurr2;
             getresult.Items.Add(item);
-            Assert.True(getresult.Items.Count == 2);
+            itemcnt++;
+            Assert.True(getresult.Items.Count == itemcnt);
 
             changeResult = await control.Put(ndocid, getresult);
             changeokresult = Assert.IsType<OkObjectResult>(changeResult);
@@ -255,7 +258,7 @@ namespace hihapi.test.UnitTests.Finance.Document
             Assert.Equal(normalDoc.ExchangeRateIsPlanned, changedDoc.ExgRate_Plan);
             Assert.Equal(normalDoc.SecondExchangeRate, changedDoc.ExgRate2);
             Assert.Equal(normalDoc.SecondExchangeRateIsPlanned, changedDoc.ExgRate_Plan2);
-            Assert.True(changedDoc.Items.Count == 2);
+            Assert.True(changedDoc.Items.Count == itemcnt);
 
             // 4.3 Update the second item
             var itemEnum = changedDoc.Items.GetEnumerator();
@@ -278,7 +281,7 @@ namespace hihapi.test.UnitTests.Finance.Document
             Assert.Equal(normalDoc.ExchangeRateIsPlanned, changedDoc.ExgRate_Plan);
             Assert.Equal(normalDoc.SecondExchangeRate, changedDoc.ExgRate2);
             Assert.Equal(normalDoc.SecondExchangeRateIsPlanned, changedDoc.ExgRate_Plan2);
-            Assert.True(changedDoc.Items.Count == 2);
+            Assert.True(changedDoc.Items.Count == itemcnt);
             itemEnum = changedDoc.Items.GetEnumerator();
             while (itemEnum.MoveNext())
             {
