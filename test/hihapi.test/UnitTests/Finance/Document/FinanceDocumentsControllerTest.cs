@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.OData.Results;
+using Microsoft.AspNetCore.OData.Deltas;
 
 namespace hihapi.test.UnitTests.Finance
 {
@@ -432,6 +433,92 @@ namespace hihapi.test.UnitTests.Finance
             this.listCreatedDocs.Remove(ndocid);
 
             await context.DisposeAsync();
+        }
+
+        [Theory]
+        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID, FinanceDocumentType.DocType_Normal, 
+            DataSetupUtility.Home1CashAccount1ID, DataSetupUtility.TranType_Expense1,
+            DataSetupUtility.Home1ControlCenter1ID)]
+        [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home1ID, FinanceDocumentType.DocType_Normal,
+            DataSetupUtility.Home1CashAccount2ID, DataSetupUtility.TranType_Expense1,
+            DataSetupUtility.Home1ControlCenter1ID)]
+        [InlineData(DataSetupUtility.UserC, DataSetupUtility.Home1ID, FinanceDocumentType.DocType_Normal,
+            DataSetupUtility.Home1CashAccount2ID, DataSetupUtility.TranType_Expense1,
+            DataSetupUtility.Home1ControlCenter3ID)]
+        [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home2ID, FinanceDocumentType.DocType_Normal,
+            DataSetupUtility.Home2CashAccount1ID, DataSetupUtility.TranType_Expense2,
+            DataSetupUtility.Home2ControlCenter1ID)]
+        public async Task TestCase_PatchDocument(string user, int hid, Int16 doctype, int accountid, int trantypeid, int ccid)
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            int ndocid = -1;
+            this.fixture.InitHomeTestData(hid, context);
+
+            FinanceDocumentsController control = new FinanceDocumentsController(context);
+
+            // 1. No authorization
+            try
+            {
+                control.Get();
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
+            var userclaim = DataSetupUtility.GetClaimForUser(user);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            // 2. Create normal docs
+            FinanceDocument doc = new FinanceDocument();
+            doc.HomeID = hid;
+            doc.DocType = doctype;
+            doc.Desp = $"{ hid }_{accountid}_{ccid}";
+            doc.TranCurr = "CNY";
+            FinanceDocumentItem item = null;
+            item = new FinanceDocumentItem();
+            item.ItemID = 1;
+            item.AccountID = accountid;
+            item.TranAmount = 100;
+            item.TranType = trantypeid;
+            item.Desp = doc.Desp;
+            item.ControlCenterID = ccid;
+            doc.Items.Add(item);
+            var postresult = await control.Post(doc);
+            Assert.NotNull(postresult);
+            var createDocResult = Assert.IsType<CreatedODataResult<FinanceDocument>>(postresult);
+            ndocid = createDocResult.Entity.ID;
+            doc.ID = ndocid;
+            this.listCreatedDocs.Add(ndocid);
+
+            if (doctype == FinanceDocumentType.DocType_Normal)
+            {
+                // 3. Now patch it - normal case
+                Delta<FinanceDocument> delta = new Delta<FinanceDocument>();
+                delta.UpdatableProperties.Clear();
+                delta.UpdatableProperties.Add("Desp");
+                delta.TrySetPropertyValue("Desp", "New Desp");
+                var patchresult = await control.Patch(ndocid, delta);
+                Assert.NotNull(patchresult);
+                var patcheddoc = Assert.IsType<UpdatedODataResult<FinanceDocument>>(patchresult);
+                Assert.NotNull(patcheddoc);
+                Assert.Equal("New Desp", patcheddoc.Entity.Desp);
+
+                // 4. Now patch it - exception case
+                delta = new Delta<FinanceDocument>();
+                delta.UpdatableProperties.Clear();
+                delta.UpdatableProperties.Add("HomeID");
+                delta.TrySetPropertyValue("HomeID", 9999);
+                patchresult = await control.Patch(ndocid, delta);
+                Assert.NotNull(patchresult);
+                Assert.IsType<BadRequestObjectResult>(patchresult);
+            }
+            else
+            {
+                // 5. Exception case.
+            }
         }
     }
 }

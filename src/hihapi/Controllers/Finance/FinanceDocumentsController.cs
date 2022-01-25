@@ -19,10 +19,15 @@ namespace hihapi.Controllers
     public class FinanceDocumentsController : ODataController
     {
         private readonly hihDataContext _context;
+        private Dictionary<String, Object> changableProperites = new Dictionary<string, object>();
 
         public FinanceDocumentsController(hihDataContext context)
         {
             _context = context;
+
+            // Changable properites
+            changableProperites.Add("Desp", null);
+            changableProperites.Add("TranDate", null);
         }
 
         /// GET: /FinanceDocuments
@@ -170,6 +175,8 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
+
+            // Only allow change normal document: TranDate, Desp
             if (!(update.DocType == FinanceDocumentType.DocType_Normal))
                 return BadRequest("Not supported document type");
 
@@ -290,6 +297,16 @@ namespace hihapi.Controllers
             catch
             {
                 throw new UnauthorizedAccessException();
+            }
+
+            // Do the validation.
+            if (!(entity.DocType == FinanceDocumentType.DocType_Normal))
+                return BadRequest("Not supported document type");
+            
+            foreach (var prop in doc.GetChangedPropertyNames())
+            {
+                if (!changableProperites.ContainsKey(prop))
+                    return BadRequest("Property change not allow");
             }
 
             // Patch it

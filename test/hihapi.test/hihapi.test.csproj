@@ -30,8 +30,4 @@
     <ProjectReference Include="..\..\src\hihapi\hihapi.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="UnitTests\Library\" />
-  </ItemGroup>
-
 </Project>

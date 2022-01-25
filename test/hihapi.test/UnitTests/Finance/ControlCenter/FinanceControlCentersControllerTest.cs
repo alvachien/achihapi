@@ -41,7 +41,7 @@ namespace hihapi.test.UnitTests.Finance
 
         [Theory]
         [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID)]
-        public async Task TestCase_StandardOperation(string user, int hid)
+        public void TestCase_StandardOperation(string user, int hid)
         {
             var context = this.fixture.GetCurrentDataContext();
             // Pre. setup
