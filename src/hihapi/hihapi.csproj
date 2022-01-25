@@ -6,7 +6,7 @@
     <Version>1.5.190</Version>
     <Authors>Alva Chien</Authors>
     <Product>H.I.H.</Product>
-    <Copyright>(C) Alva Chien, 2022</Copyright>
+    <Copyright>© Alva Chien, 2019 - Present</Copyright>
     <PackageProjectUrl>https://github.com/alvachien/achihapi</PackageProjectUrl>
     <PackageLicenseUrl></PackageLicenseUrl>
     <Description>Web API for Home Info. Hub, built on OData and ASP.NET Core;</Description>
@@ -65,6 +65,7 @@
     <EmbeddedResource Include="Sqls\Delta\v9.sql" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Controllers\Library\" />
     <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
 </Project>

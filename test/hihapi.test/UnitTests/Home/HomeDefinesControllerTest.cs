@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using hihapi.Exceptions;
 using Microsoft.AspNetCore.OData.Results;
 
-namespace hihapi.test.UnitTests
+namespace hihapi.test.UnitTests.Home
 {
     [Collection("HIHAPI_UnitTests#1")]
     public class HomeDefinesControllerTest

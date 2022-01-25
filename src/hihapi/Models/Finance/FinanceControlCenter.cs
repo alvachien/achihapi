@@ -42,6 +42,10 @@ namespace hihapi.Models
         public override bool IsValid(hihDataContext context)
         {
             if (!base.IsValid(context)) return false;
+            if (String.IsNullOrEmpty(Name))
+                return false;
+            if (HomeID == 0)
+                return false;
 
             return true;
         }

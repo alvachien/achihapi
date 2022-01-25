@@ -3,11 +3,11 @@
   <PropertyGroup>
 	  <TargetFramework>net5.0</TargetFramework>
 	  <IsPackable>false</IsPackable>
-    <Version>1.1.88</Version>
+    <Version>1.5.190</Version>
     <Authors>Alva Chien</Authors>
     <Product>H.I.H.</Product>
     <Description>Home Info. Hub</Description>
-    <Copyright>(C) Alva Chien, 2019 - Present </Copyright>
+    <Copyright>© Alva Chien, 2019 - Present </Copyright>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +28,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\hihapi\hihapi.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="UnitTests\Library\" />
   </ItemGroup>
 
 </Project>

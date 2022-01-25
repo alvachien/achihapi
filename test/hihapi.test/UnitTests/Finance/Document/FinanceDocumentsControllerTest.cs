@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.OData.Results;
 
-namespace hihapi.test.UnitTests.Finance.Document
+namespace hihapi.test.UnitTests.Finance
 {
 
     [Collection("HIHAPI_UnitTests#1")]

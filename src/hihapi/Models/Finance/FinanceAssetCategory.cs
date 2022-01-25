@@ -35,7 +35,13 @@ namespace hihapi.Models
 
         public override bool IsValid(hihDataContext context)
         {
-            return base.IsValid(context);
+            if (!base.IsValid(context))
+                return false;
+
+            if (String.IsNullOrEmpty(Name))
+                return false;
+
+            return true;
         }
 
         public override bool IsDeleteAllowed(hihDataContext context)

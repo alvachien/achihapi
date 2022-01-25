@@ -61,6 +61,11 @@ namespace hihapi.Models
             if (!base.IsValid(context))
                 return false;
 
+            if (HomeID == 0 || CategoryID == 0)
+                return false;
+            if (String.IsNullOrEmpty(Name))
+                return false;
+
             return true;
         }
         public override bool IsDeleteAllowed(hihDataContext context)

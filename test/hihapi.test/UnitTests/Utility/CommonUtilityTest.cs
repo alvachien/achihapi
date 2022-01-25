@@ -6,7 +6,7 @@ using hihapi.Models;
 using Microsoft.OData.Edm;
 using hihapi.Utilities;
 
-namespace hihapi.test.UnitTests
+namespace hihapi.test.UnitTests.Utility
 {
     public class CommonUtilityTest
     {

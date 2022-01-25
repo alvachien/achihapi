@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.OData.Results;
 using hihapi.Controllers.Finance;
 using Microsoft.AspNetCore.OData.Formatter;
 
-namespace hihapi.test.UnitTests.Finance.Report
+namespace hihapi.test.UnitTests.Finance
 {
     [Collection("HIHAPI_UnitTests#1")]
     public class FinanceReportsControllerTest : IDisposable

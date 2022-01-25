@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Xunit.Abstractions;
 using System.Text.Json;
 
-namespace hihapi.test.UnitTests.Finance.Document
+namespace hihapi.test.UnitTests.Finance
 {
     public class FinanceDocumentsControllerTestData_DocItem
     {

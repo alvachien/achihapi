@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using hihapi.Exceptions;
 using Microsoft.AspNetCore.OData.Results;
 
-namespace hihapi.test.UnitTests.Finance.Account
+namespace hihapi.test.UnitTests.Finance
 {
     [Collection("HIHAPI_UnitTests#1")]
     public class FinanceAccountsControllerTest : IDisposable
@@ -49,7 +49,7 @@ namespace hihapi.test.UnitTests.Finance.Account
         [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home3ID, FinanceAccountCategory.AccountCategory_Cash)]
         [InlineData(DataSetupUtility.UserC, DataSetupUtility.Home4ID, FinanceAccountCategory.AccountCategory_Cash)]
         [InlineData(DataSetupUtility.UserD, DataSetupUtility.Home5ID, FinanceAccountCategory.AccountCategory_Cash)]
-        public async Task TestCase_Account(string user, int hid, int ctgyid)
+        public async Task TestCase_StandardOperation(string user, int hid, int ctgyid)
         {
             var context = this.fixture.GetCurrentDataContext();
             // Pre. setup
