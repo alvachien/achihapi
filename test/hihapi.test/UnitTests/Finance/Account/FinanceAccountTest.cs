@@ -27,14 +27,155 @@ namespace hihapi.test.UnitTests.Finance
             this.fixture = fixture;
         }
 
-        [Fact]
-        public void TestCase_CheckValid()
+        public static TheoryData<FinanceAccountTestData> AccountTestData =>
+            new TheoryData<FinanceAccountTestData>
+            {
+                new FinanceAccountTestData()
+                {
+                    ExpectedValidResult = false,
+                },
+                new FinanceAccountTestData()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    ExpectedValidResult = false,
+                },
+                new FinanceAccountTestData()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                    ExpectedValidResult= false,
+                },
+                new FinanceAccountTestData()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                    Name = "Test 1",
+                    ExpectedValidResult= true,
+                },
+                new FinanceAccountTestData()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                    Name = "Test 1",
+                    Comment = "Comment 1",
+                    ExpectedValidResult= true,
+                },
+                new FinanceAccountTestData()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CategoryID = FinanceAccountCategory.AccountCategory_AdvancePayment,
+                    Name = "Test 1",
+                    Comment = "Comment 1",
+                    ExpectedValidResult= false,
+                },
+                new FinanceAccountTestData()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CategoryID = FinanceAccountCategory.AccountCategory_Asset,
+                    Name = "Test 1",
+                    Comment = "Comment 1",
+                    ExpectedValidResult= false,
+                },
+                new FinanceAccountTestData()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CategoryID = FinanceAccountCategory.AccountCategory_Asset,
+                    Name = "Test 1",
+                    Comment = "Comment 1",
+                    ExpectedValidResult= false,
+                },
+            };
+
+        [Theory]
+        [MemberData(nameof(AccountTestData))]
+        public void TestCase_IsValid(FinanceAccountTestData testData)
         {
             FinanceAccount acnt = new FinanceAccount();
+            acnt.HomeID = testData.HomeID;
+            acnt.Name = testData.Name;
+            acnt.Owner = testData.Owner;
+            acnt.Comment = testData.Comment;
+            acnt.CategoryID = testData.CategoryID;
+            acnt.Status = testData.Status;
+
+            acnt.ExtraAsset = testData.ExtraAsset;
+            acnt.ExtraDP = testData.ExtraDP;
+            acnt.ExtraLoan = testData.ExtraLoan;
+
             var context = this.fixture.GetCurrentDataContext();
             var isValid = acnt.IsValid(context);
 
-            Assert.False(isValid);
+            Assert.Equal(testData.ExpectedValidResult, isValid);
+        }
+
+        public static TheoryData<FinanceAccountTestData> IsClosedAllowedTestData =>
+            new TheoryData<FinanceAccountTestData>
+            {
+                new FinanceAccountTestData()
+                {
+                    ExpectedIsCloseAllowedResult = false,
+                },
+                new FinanceAccountTestData()
+                {
+                    CategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                    ExpectedIsCloseAllowedResult = false,
+                },
+                new FinanceAccountTestData()
+                {
+                    CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
+                    ExpectedIsCloseAllowedResult = false,
+                },
+                new FinanceAccountTestData()
+                {
+                    CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
+                    ExpectedIsCloseAllowedResult = false,
+                },
+                new FinanceAccountTestData()
+                {
+                    CategoryID = FinanceAccountCategory.AccountCategory_VirtualAccount,
+                    ExpectedIsCloseAllowedResult = false,
+                },
+                new FinanceAccountTestData()
+                {
+                    CategoryID = FinanceAccountCategory.AccountCategory_Asset,
+                    Status = (byte)FinanceAccountStatus.Closed,
+                    ExpectedIsCloseAllowedResult = false,
+                },
+                new FinanceAccountTestData()
+                {
+                    CategoryID = FinanceAccountCategory.AccountCategory_Asset,
+                    Status = (byte)FinanceAccountStatus.Frozen,
+                    ExpectedIsCloseAllowedResult = false,
+                },
+                new FinanceAccountTestData()
+                {
+                    CategoryID = FinanceAccountCategory.AccountCategory_Asset,
+                    Status = (byte)FinanceAccountStatus.Normal,
+                    ExpectedIsCloseAllowedResult = true,
+                },
+            };
+
+        [Theory]
+        [MemberData(nameof(IsClosedAllowedTestData))]
+        public void TestCase_IsCloseAllowed(FinanceAccountTestData testData)
+        {
+            FinanceAccount acnt = new FinanceAccount();
+            acnt.HomeID = testData.HomeID;
+            acnt.Name = testData.Name;
+            acnt.Owner = testData.Owner;
+            acnt.Comment = testData.Comment;
+            acnt.CategoryID = testData.CategoryID;
+            acnt.Status = testData.Status;
+
+            acnt.ExtraAsset = testData.ExtraAsset;
+            acnt.ExtraDP = testData.ExtraDP;
+            acnt.ExtraLoan = testData.ExtraLoan;
+
+            var context = this.fixture.GetCurrentDataContext();
+            var isAllowed = acnt.IsCloseAllowed(context);
+
+            Assert.Equal(testData.ExpectedIsCloseAllowedResult, isAllowed);
+
         }
     }
 }

@@ -66,6 +66,29 @@ namespace hihapi.Models
             if (String.IsNullOrEmpty(Name))
                 return false;
 
+            switch(CategoryID)
+            {
+                case FinanceAccountCategory.AccountCategory_AdvancePayment:
+                    if (ExtraDP == null)
+                        return false;
+                    else
+                        return ExtraDP.IsValid();
+
+                case FinanceAccountCategory.AccountCategory_BorrowFrom:
+                    if (ExtraLoan == null)
+                        return false;
+                    else
+                        return ExtraLoan.IsValid();
+
+                case FinanceAccountCategory.AccountCategory_Asset:
+                    if (ExtraAsset == null)
+                        return false;
+                    else
+                        return ExtraAsset.IsValid();
+
+                default:
+                    break;
+            }
             return true;
         }
         public override bool IsDeleteAllowed(hihDataContext context)
