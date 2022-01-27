@@ -111,21 +111,13 @@ namespace hihapi.test.UnitTests.Home
 
             // Read the single object
             var rst2 = control.Get(nhdobj.Entity.ID);
-            // var nreadobjectrst = Assert.IsType<SingleResult<HomeDefine>>(rst2);
-            Assert.IsType<HomeDefine>(rst2);
-            // var nreadobjectrst = Assert.IsAssignableFrom<HomeDefine>(rst2 as HomeDefine);
-            // var returnValue = Assert.IsAssignableFrom<HomeDefine>((rst2 as OkObjectResult).Value as HomeDefine);
-            // Assert.Equal(nhdobj.Entity.Name, nreadobject.Queryable.)
-            //Assert.Equal(1, nreadobjectrst.Queryable.Count<HomeDefine>());
-            var nreadobj = rst2 as HomeDefine;
+            var nreadobj = Assert.IsType<HomeDefine>(rst2);
             Assert.Equal(nhdobj.Entity.Name, nreadobj.Name);
             Assert.Equal(nhdobj.Entity.Host, nreadobj.Host);
             Assert.True(nreadobj.HomeMembers.Count == 1);
             Assert.True(nreadobj.HomeMembers.ElementAt(0).HomeID == nreadobj.ID);
             Assert.True(nreadobj.HomeMembers.ElementAt(0).Relation == HomeMemberRelationType.Self);
             Assert.True(nreadobj.HomeMembers.ElementAt(0).User == nreadobj.Host);
-
-            // How to test the $expand? Test in integration test!
 
             // Change the home define - Add new user
             var hm2 = new HomeMember()
