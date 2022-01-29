@@ -35,8 +35,8 @@ namespace hihapi.test.UnitTests.Finance
                 this.listCreatedID.ForEach(x => this.fixture.DeleteFinanceAccount(this.fixture.GetCurrentDataContext(), x));                
 
                 this.listCreatedID.Clear();
+                this.fixture.GetCurrentDataContext().SaveChanges();
             }
-            this.fixture.GetCurrentDataContext().SaveChanges();
         }
 
         [Theory]

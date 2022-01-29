@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.OData.Edm;
 
 namespace hihapi.Models
 {
@@ -14,7 +13,7 @@ namespace hihapi.Models
         {
             TranDate = DateTime.Today;
 
-            Items = new HashSet<FinanceDocumentItem>();
+            Items = new List<FinanceDocumentItem>();
         }
 
         [Key]
@@ -71,6 +70,19 @@ namespace hihapi.Models
             if (!base.IsValid(context))
                 return false;
 
+            // HomeID
+            if (this.HomeID <= 0)
+                return false;
+            // Doc. type
+            if (this.DocType <= 0)
+                return false;
+            // Currency
+            if (String.IsNullOrEmpty(this.TranCurr))
+                return false;
+            // Desp
+            if (String.IsNullOrEmpty(this.Desp))
+                return false;
+
             if (Items.Count == 0)
                 return false;
 
@@ -86,6 +98,59 @@ namespace hihapi.Models
         public override bool IsDeleteAllowed(hihDataContext context)
         {
             return base.IsDeleteAllowed(context);
+        }
+
+        public bool IsChangeAllowed(hihDataContext context)
+        {
+            // Doc type: Only normal doc allows the change
+            if (this.DocType != FinanceDocumentType.DocType_Normal)
+                return false;
+
+            // Doc has been used in Template DP?
+            var usedInDP = (from dp in context.FinanceTmpDPDocument
+                            join doc in context.FinanceDocument
+                            on dp.ReferenceDocumentID equals doc.ID
+                            where doc.ID == this.ID && dp.HomeID == this.HomeID && doc.HomeID == this.HomeID
+                            select doc).Count();
+            if (usedInDP > 0) return false;
+
+            // Doc has been used in Template Loan
+            var usedInLoan = (from dp in context.FinanceTmpLoanDocument
+                              join doc in context.FinanceDocument
+                              on dp.ReferenceDocumentID equals doc.ID
+                              where doc.ID == this.ID && dp.HomeID == this.HomeID && doc.HomeID == this.HomeID
+                              select doc).Count();
+            if (usedInLoan > 0) return false;
+
+            // Doc has been used in Template Asset
+            var usedInAsset = (from dp in context.FinanceAccountExtraAS
+                               join acnt in context.FinanceAccount
+                                on dp.AccountID equals acnt.ID
+                               select new {
+                                   HomeID = acnt.HomeID,
+                                   RefDoc = dp.RefenceBuyDocumentID
+                               } into assetacounts
+                               join doc in context.FinanceDocument
+                               on assetacounts.RefDoc equals doc.ID
+                               where doc.ID == this.ID && assetacounts.HomeID == this.HomeID && doc.HomeID == this.HomeID
+                               select doc).Count();
+            if (usedInAsset > 0) return false;
+
+            usedInAsset = (from dp in context.FinanceAccountExtraAS
+                           join acnt in context.FinanceAccount
+                            on dp.AccountID equals acnt.ID
+                           select new
+                           {
+                               HomeID = acnt.HomeID,
+                               RefDoc = dp.RefenceSoldDocumentID
+                           } into assetacounts
+                           join doc in context.FinanceDocument
+                           on assetacounts.RefDoc equals doc.ID
+                           where doc.ID == this.ID && assetacounts.HomeID == this.HomeID && doc.HomeID == this.HomeID
+                           select doc).Count(); 
+            if (usedInAsset > 0) return false;
+
+            return true;
         }
     }
 
@@ -133,25 +198,20 @@ namespace hihapi.Models
 
         public bool IsValid(hihDataContext context)
         {
-            var isvalid = true;
             if (ItemID <= 0)
-                isvalid = false;
-            if (isvalid)
-            {
-                if (AccountID <= 0)
-                    isvalid = false;
-                else
-                    isvalid = context.FinanceAccount.Where(p => p.ID == AccountID).Count() == 1;
-            }
-            if (isvalid)
-            {
-                if (TranType <= 0)
-                    isvalid = false;
-                else
-                    isvalid = context.FinTransactionType.Where(p => p.ID == TranType).Count() == 1;
-            }
+                return false;
+            if (AccountID <= 0)
+                return false;
+            else if (context.FinanceAccount.Where(p => p.ID == AccountID).Count() != 1)
+                return false;
+            if (TranType <= 0)
+                return false;
+            else if (context.FinTransactionType.Where(p => p.ID == TranType).Count() != 1)
+                return false;
+            if (TranAmount == 0)
+                return false;
 
-            return isvalid;
+            return true;
         }
     }
 
@@ -236,5 +296,4 @@ namespace hihapi.Models
         public Int32 AssetAccountID { get; set; }
     }
     #endregion
-
 }

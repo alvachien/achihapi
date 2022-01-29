@@ -15,7 +15,7 @@ namespace hihapi.Models
             ValidFrom = DateTime.Today;
             ValidTo = DateTime.Today;
 
-            SRule = new HashSet<FinanceOrderSRule>();
+            SRule = new List<FinanceOrderSRule>();
         }
         
         [Key]

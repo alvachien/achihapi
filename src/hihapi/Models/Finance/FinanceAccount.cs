@@ -215,7 +215,7 @@ namespace hihapi.Models
         public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
         public FinanceAccountExtraDP(): base()
         {
-            this.DPTmpDocs = new HashSet<FinanceTmpDPDocument>();
+            this.DPTmpDocs = new List<FinanceTmpDPDocument>();
         }
         static FinanceAccountExtraDP()
         {
@@ -571,7 +571,7 @@ namespace hihapi.Models
         {
             // Default
             this.StartDate = DateTime.Today;
-            this.LoanTmpDocs = new HashSet<FinanceTmpLoanDocument>();
+            this.LoanTmpDocs = new List<FinanceTmpLoanDocument>();
         }
 
         public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();

@@ -88,7 +88,7 @@ namespace hihapi.test.UnitTests.Finance
 
         [Theory]
         [MemberData(nameof(AccountTestData))]
-        public void TestCase_IsValid(FinanceAccountTestData testData)
+        public async Task TestCase_IsValid(FinanceAccountTestData testData)
         {
             FinanceAccount acnt = new FinanceAccount();
             acnt.HomeID = testData.HomeID;
@@ -106,6 +106,8 @@ namespace hihapi.test.UnitTests.Finance
             var isValid = acnt.IsValid(context);
 
             Assert.Equal(testData.ExpectedValidResult, isValid);
+
+            await context.DisposeAsync();
         }
 
         public static TheoryData<FinanceAccountTestData> IsClosedAllowedTestData =>
@@ -157,7 +159,7 @@ namespace hihapi.test.UnitTests.Finance
 
         [Theory]
         [MemberData(nameof(IsClosedAllowedTestData))]
-        public void TestCase_IsCloseAllowed(FinanceAccountTestData testData)
+        public async Task TestCase_IsCloseAllowed(FinanceAccountTestData testData)
         {
             FinanceAccount acnt = new FinanceAccount();
             acnt.HomeID = testData.HomeID;
@@ -176,6 +178,7 @@ namespace hihapi.test.UnitTests.Finance
 
             Assert.Equal(testData.ExpectedIsCloseAllowedResult, isAllowed);
 
+            await context.DisposeAsync();
         }
     }
 }

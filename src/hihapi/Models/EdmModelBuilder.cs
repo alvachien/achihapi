@@ -98,9 +98,14 @@ namespace hihapi.Models
             settleAccountAction.Parameter<String>("Currency");
             settleAccountAction.Returns<bool>();
 
-            // Actions on Documents
+            // Functions/Actions on Documents
             var docEntity = modelBuilder.EntityType<FinanceDocument>();
             docEntity.Property(c => c.TranDate).AsDate();
+            // Functions
+            var functionIsDocChangable = docEntity.Function("IsChangable");
+            functionIsDocChangable.Returns<bool>();
+
+            // Actions
             docEntity.Collection
                 .Action("PostDPDocument")
                 .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");

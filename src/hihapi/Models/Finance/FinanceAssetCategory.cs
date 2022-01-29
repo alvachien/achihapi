@@ -30,7 +30,7 @@ namespace hihapi.Models
 
         public FinanceAssetCategory(): base()
         {
-            AccountExtraAsset = new HashSet<FinanceAccountExtraAS>();
+            AccountExtraAsset = new List<FinanceAccountExtraAS>();
         }
 
         public override bool IsValid(hihDataContext context)

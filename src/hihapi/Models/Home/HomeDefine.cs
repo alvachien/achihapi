@@ -11,18 +11,18 @@ namespace hihapi.Models
     {
         public HomeDefine(): base()
         {
-            HomeMembers = new HashSet<HomeMember>();
-            LearnCategories = new HashSet<LearnCategory>();
-            LearnObjects = new HashSet<LearnObject>();
-            FinanceAccountCategories = new HashSet<FinanceAccountCategory>();
-            FinanceAssetCategories = new HashSet<FinanceAssetCategory>();
-            FinanceDocumentTypes = new HashSet<FinanceDocumentType>();
-            FinanceTransactionTypes = new HashSet<FinanceTransactionType>();
-            FinanceAccounts = new HashSet<FinanceAccount>();
-            FinanceControlCenters = new HashSet<FinanceControlCenter>();
-            FinanceOrders = new HashSet<FinanceOrder>();
-            FinancePlans = new HashSet<FinancePlan>();
-            FinanceDocuments = new HashSet<FinanceDocument>();
+            HomeMembers = new List<HomeMember>();
+            LearnCategories = new List<LearnCategory>();
+            LearnObjects = new List<LearnObject>();
+            FinanceAccountCategories = new List<FinanceAccountCategory>();
+            FinanceAssetCategories = new List<FinanceAssetCategory>();
+            FinanceDocumentTypes = new List<FinanceDocumentType>();
+            FinanceTransactionTypes = new List<FinanceTransactionType>();
+            FinanceAccounts = new List<FinanceAccount>();
+            FinanceControlCenters = new List<FinanceControlCenter>();
+            FinanceOrders = new List<FinanceOrder>();
+            FinancePlans = new List<FinancePlan>();
+            FinanceDocuments = new List<FinanceDocument>();
         }
 
         [Key]

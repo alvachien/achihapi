@@ -15,8 +15,8 @@ namespace hihapi.Models
 
         public BlogPost()
         {
-            BlogPostCollections = new HashSet<BlogPostCollection>();
-            BlogPostTags = new HashSet<BlogPostTag>();
+            BlogPostCollections = new List<BlogPostCollection>();
+            BlogPostTags = new List<BlogPostTag>();
         }
 
         [Key]

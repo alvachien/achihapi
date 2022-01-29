@@ -411,6 +411,7 @@ namespace hihapi.test.UnitTests.Finance
             Assert.Equal(normalDoc.SecondExchangeRate, changedDoc.ExgRate2);
             Assert.Equal(normalDoc.SecondExchangeRateIsPlanned, changedDoc.ExgRate_Plan2);
             Assert.True(changedDoc.Items.Count == normalDoc.DocItems.Count);
+            itemEnum = changedDoc.Items.GetEnumerator();
             while (itemEnum.MoveNext())
             {
                 var docitem = itemEnum.Current;
@@ -519,6 +520,8 @@ namespace hihapi.test.UnitTests.Finance
             {
                 // 5. Exception case.
             }
+
+            await context.DisposeAsync();
         }
     }
 }

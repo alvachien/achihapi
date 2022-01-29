@@ -10,7 +10,7 @@ namespace hihapi.Models
     {
         public BlogCollection()
         {
-            BlogPostCollections = new HashSet<BlogPostCollection>();
+            BlogPostCollections = new List<BlogPostCollection>();
         }
 
         [Key]

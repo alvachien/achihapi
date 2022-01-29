@@ -177,8 +177,8 @@ namespace hihapi.Controllers
             }
 
             // Only allow change normal document: TranDate, Desp
-            if (!(update.DocType == FinanceDocumentType.DocType_Normal))
-                return BadRequest("Not supported document type");
+            if (!update.IsChangeAllowed(_context))
+                return BadRequest("Not support for changing");
 
             if (!update.IsValid(this._context))
                 return BadRequest("Document verify failed");
@@ -1135,6 +1135,23 @@ namespace hihapi.Controllers
             }
 
             return Ok(vmFIDoc);
+        }
+
+        [HttpGet]
+        public IActionResult IsChangable([FromODataUri] int key)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var doc = _context.FinanceDocument.Find(key);
+            if (doc == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(doc.IsChangeAllowed(_context));
         }
     }
 }
