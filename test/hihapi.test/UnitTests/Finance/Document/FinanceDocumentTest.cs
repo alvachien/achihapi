@@ -158,6 +158,103 @@ namespace hihapi.test.UnitTests.Finance
                     },
                     ExpectedIsValidResult = true,
                 },
+                new FinanceDocumentTestData
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    DocType = FinanceDocumentType.DocType_Transfer,
+                    Desp = "Test",
+                    TranCurr = "CNY",
+                    TranDate = DateTime.Today,
+                    Items = new List<FinanceDocumentItem>
+                    {
+                        new FinanceDocumentItem
+                        {
+                            ItemID = 1,
+                            AccountID = DataSetupUtility.Home1CashAccount1ID,
+                            TranType = DataSetupUtility.TranType_Income1,
+                            TranAmount = 100,
+                        },
+                    },
+                    ExpectedIsValidResult = false,
+                },
+                new FinanceDocumentTestData
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    DocType = FinanceDocumentType.DocType_Transfer,
+                    Desp = "Test",
+                    TranCurr = "CNY",
+                    TranDate = DateTime.Today,
+                    Items = new List<FinanceDocumentItem>
+                    {
+                        new FinanceDocumentItem
+                        {
+                            ItemID = 1,
+                            AccountID = DataSetupUtility.Home1CashAccount1ID,
+                            TranType = DataSetupUtility.TranType_Income1,
+                            TranAmount = 100,
+                        },
+                        new FinanceDocumentItem
+                        {
+                            ItemID = 2,
+                            AccountID = DataSetupUtility.Home1CashAccount2ID,
+                            TranType = DataSetupUtility.TranType_Expense1,
+                            TranAmount = 100,
+                        },
+                    },
+                    ExpectedIsValidResult = false,
+                },
+                new FinanceDocumentTestData
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    DocType = FinanceDocumentType.DocType_Transfer,
+                    Desp = "Test",
+                    TranCurr = "CNY",
+                    TranDate = DateTime.Today,
+                    Items = new List<FinanceDocumentItem>
+                    {
+                        new FinanceDocumentItem
+                        {
+                            ItemID = 1,
+                            AccountID = DataSetupUtility.Home1CashAccount1ID,
+                            TranType = FinanceTransactionType.TranType_TransferIn,
+                            TranAmount = 100,
+                        },
+                        new FinanceDocumentItem
+                        {
+                            ItemID = 2,
+                            AccountID = DataSetupUtility.Home1CashAccount2ID,
+                            TranType = FinanceTransactionType.TranType_TransferOut,
+                            TranAmount = 100,
+                        },
+                    },
+                    ExpectedIsValidResult = true,
+                },
+                new FinanceDocumentTestData
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    DocType = FinanceDocumentType.DocType_Transfer,
+                    Desp = "Test",
+                    TranCurr = "CNY",
+                    TranDate = DateTime.Today,
+                    Items = new List<FinanceDocumentItem>
+                    {
+                        new FinanceDocumentItem
+                        {
+                            ItemID = 1,
+                            AccountID = DataSetupUtility.Home1CashAccount1ID,
+                            TranType = FinanceTransactionType.TranType_TransferIn,
+                            TranAmount = 100,
+                        },
+                        new FinanceDocumentItem
+                        {
+                            ItemID = 2,
+                            AccountID = DataSetupUtility.Home1CashAccount2ID,
+                            TranType = FinanceTransactionType.TranType_TransferOut,
+                            TranAmount = 10,
+                        },
+                    },
+                    ExpectedIsValidResult = false,
+                },
             };
 
         [Theory]

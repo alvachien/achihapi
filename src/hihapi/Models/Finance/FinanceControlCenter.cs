@@ -46,6 +46,8 @@ namespace hihapi.Models
                 return false;
             if (HomeID == 0)
                 return false;
+            if (ParentID.HasValue)
+                return context.FinanceControlCenter.SingleOrDefault(p => p.ID == ParentID.Value && p.HomeID == HomeID) != null;
 
             return true;
         }

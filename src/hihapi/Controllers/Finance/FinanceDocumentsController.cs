@@ -245,9 +245,7 @@ namespace hihapi.Controllers
             {
                 usrName = HIHAPIUtility.GetUserID(this);
                 if (String.IsNullOrEmpty(usrName))
-                {
                     throw new UnauthorizedAccessException();
-                }
             }
             catch
             {
@@ -257,14 +255,26 @@ namespace hihapi.Controllers
             // Check whether User assigned with specified Home ID
             var hms = _context.HomeMembers.Where(p => p.HomeID == cc.HomeID && p.User == usrName).Count();
             if (hms <= 0)
-            {
                 throw new UnauthorizedAccessException();
-            }
 
             if (!cc.IsDeleteAllowed(this._context))
                 return BadRequest();
 
             _context.FinanceDocument.Remove(cc);
+
+            // Further steps
+            // 1. DP docs
+            var dpDoc = _context.FinanceTmpDPDocument.SingleOrDefault(p => p.ReferenceDocumentID == cc.ID && p.HomeID == cc.HomeID);
+            if (dpDoc != null)
+                dpDoc.ReferenceDocumentID = null;
+            else
+            {
+                // Loan doc
+                var loanDoc = _context.FinanceTmpLoanDocument.SingleOrDefault(p => p.ReferenceDocumentID == cc.ID && p.HomeID == cc.HomeID);
+                if (loanDoc != null)
+                    loanDoc.ReferenceDocumentID = null;
+            }
+
             await _context.SaveChangesAsync();
 
             return StatusCode(204); // HttpStatusCode.NoContent

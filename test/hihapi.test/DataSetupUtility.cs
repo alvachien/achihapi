@@ -3062,5 +3062,48 @@ namespace hihapi.test
             db.SaveChanges();
         }
         #endregion
+
+        #region Common used methods
+        public static int CreateNormalDoc(hihDataContext context, int hid, string tcur, int acntid, int trantype, int ccid)
+        {
+            FinanceDocument doc = new FinanceDocument();
+            doc.HomeID = hid;
+            doc.DocType = FinanceDocumentType.DocType_Normal;
+            doc.Desp = $"Noraml_DOC_{hid}";
+            doc.TranDate = DateTime.Today;
+            doc.TranCurr = tcur;
+            doc.Items.Add(new FinanceDocumentItem()
+            {
+                ItemID = 1,
+                AccountID = 1,
+                TranAmount = 100,
+                TranType = trantype,
+                ControlCenterID = ccid,
+            });
+            context.FinanceDocument.Add(doc);
+            context.SaveChanges();
+
+            return doc.ID;
+        }
+        public static int CreateOrder(hihDataContext context, int hid, int ccid)
+        {
+            FinanceOrder order = new FinanceOrder();
+            order.HomeID = hid;
+            order.ValidFrom = DateTime.MinValue;
+            order.ValidTo = DateTime.MaxValue;
+            order.Name = $"ORDER_{hid}";
+            order.SRule.Add(new FinanceOrderSRule()
+            {
+                RuleID = 1,
+                ControlCenterID = ccid,
+                Precent = 100
+            });
+
+            context.FinanceOrder.Add(order);
+            context.SaveChanges();
+
+            return order.ID;
+        }
+        #endregion
     }
 }

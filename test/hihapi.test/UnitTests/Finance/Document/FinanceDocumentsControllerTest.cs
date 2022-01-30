@@ -3,6 +3,7 @@ using Xunit;
 using System.Linq;
 using hihapi.Models;
 using hihapi.Controllers;
+using hihapi.Utilities;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
@@ -401,7 +402,145 @@ namespace hihapi.test.UnitTests.Finance
 
             await context.DisposeAsync();
         }
-    
+
+        public static TheoryData<FinanceDocumentsControllerTestData_DPDoc> AdvancePaymentDocs =>
+            new TheoryData<FinanceDocumentsControllerTestData_DPDoc>
+            {
+                new FinanceDocumentsControllerTestData_DPDoc()
+                {
+                    CurrentUser = DataSetupUtility.UserA,
+                    HomeID = DataSetupUtility.Home1ID,
+                    Currency = DataSetupUtility.Home1BaseCurrency,
+                    TranDate = new DateTime(2022, 1, 30),
+                    Amount = 1200,
+                    AccountID = DataSetupUtility.Home1CashAccount1ID,
+                    ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    StartDate = new DateTime(2022, 2, 1),
+                    EndDate = new DateTime(2023, 2, 1),
+                    Frequency = RepeatFrequency.Month,
+                    Comment = "Test Adv. payment 1",
+                    DPControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    DPTranType = DataSetupUtility.TranType_Expense1,
+                },
+                new FinanceDocumentsControllerTestData_DPDoc()
+                {
+                    CurrentUser = DataSetupUtility.UserB,
+                    HomeID = DataSetupUtility.Home2ID,
+                    Currency = DataSetupUtility.Home2BaseCurrency,
+                    TranDate = new DateTime(2021, 12, 30),
+                    Amount = 960,
+                    AccountID = DataSetupUtility.Home2CashAccount1ID,
+                    ControlCenterID = DataSetupUtility.Home2ControlCenter1ID,
+                    StartDate = new DateTime(2022, 1, 1),
+                    EndDate = new DateTime(2023, 1, 1),
+                    Frequency = RepeatFrequency.Month,
+                    Comment = "Test Adv. payment 2",
+                    DPControlCenterID = DataSetupUtility.Home2ControlCenter1ID,
+                    DPTranType = DataSetupUtility.TranType_Expense1,
+                },
+            };
+
+        [Theory]
+        [MemberData(nameof(AdvancePaymentDocs))]
+        public async Task TestCase_AdvancePayment(FinanceDocumentsControllerTestData_DPDoc testdata)
+        {
+            var context = fixture.GetCurrentDataContext();
+
+            this.fixture.InitHomeTestData(testdata.HomeID, context);
+
+            FinanceDocumentsController control = new FinanceDocumentsController(context);
+
+            // 1. No authorization
+            try
+            {
+                control.Get();
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
+            var userclaim = DataSetupUtility.GetClaimForUser(testdata.CurrentUser);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            FinanceADPDocumentCreateContext createContext = new FinanceADPDocumentCreateContext();
+            var acntDP = new FinanceAccountExtraDP()
+            {
+                StartDate = testdata.StartDate,
+                EndDate = testdata.EndDate,
+                RepeatType = testdata.Frequency,
+                Comment = testdata.Comment,
+            };
+            var dpdates = CommonUtility.WorkoutRepeatedDatesWithAmount(new RepeatDatesWithAmountCalculationInput()
+            {
+                StartDate = acntDP.StartDate,
+                EndDate = acntDP.EndDate,
+                RepeatType = acntDP.RepeatType,
+                TotalAmount = testdata.Amount,
+                Desp = testdata.Comment,
+            });
+            int tdocid = 1;
+            dpdates.ForEach(d =>
+            {
+                acntDP.DPTmpDocs.Add(new FinanceTmpDPDocument()
+                {
+                    DocumentID = tdocid++,
+                    HomeID = testdata.HomeID,
+                    TranAmount = d.TranAmount,
+                    TransactionDate = d.TranDate,
+                    ControlCenterID = testdata.DPControlCenterID,
+                    Description = d.Desp,
+                });
+            });
+            createContext.AccountInfo = new FinanceAccount()
+            {
+                HomeID = testdata.HomeID,
+                Name = testdata.Comment,
+                CategoryID = FinanceAccountCategory.AccountCategory_AdvancePayment,
+                Status = (byte)FinanceAccountStatus.Normal,
+                Owner = testdata.CurrentUser,
+                ExtraDP = acntDP,
+            };
+            createContext.DocumentInfo = new FinanceDocument()
+            {
+                HomeID = testdata.HomeID,
+                TranCurr = testdata.Currency,
+                TranDate = testdata.TranDate,
+                Desp = testdata.Comment,
+                DocType = FinanceDocumentType.DocType_AdvancePayment,
+                Items = new List<FinanceDocumentItem> { 
+                    new FinanceDocumentItem()
+                    {
+                        ItemID = 1,
+                        AccountID = testdata.AccountID,
+                        ControlCenterID = testdata.DPControlCenterID,
+                        TranType = FinanceTransactionType.TranType_AdvancePaymentOut,
+                        TranAmount = testdata.Amount,
+                        Desp = testdata.Comment,
+                    }
+                },
+            };
+            var postresult = await control.PostDPDocument(createContext);
+            var postokresult = Assert.IsType<OkObjectResult>(postresult);
+            var createdoc = Assert.IsAssignableFrom<FinanceDocument>(postokresult.Value as FinanceDocument);
+
+            listCreatedDocs.Add(createdoc.ID);
+            var createdAcntID = -1;
+            foreach(var item in createdoc.Items)
+            {
+                if (item.AccountID != testdata.AccountID)
+                {
+                    createdAcntID = item.AccountID;
+                    listCreatedAccount.Add(createdAcntID);
+                }
+            }
+            Assert.True(createdAcntID != -1);
+
+            await context.DisposeAsync();
+        }
+
         private void ValidateDocumentInDB(FinanceDocument expdoc, hihDataContext context)
         {
             var docinDB = context.FinanceDocument

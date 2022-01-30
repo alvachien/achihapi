@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Xunit.Abstractions;
 using System.Text.Json;
+using hihapi.Models;
 
 namespace hihapi.test.UnitTests.Finance
 {
@@ -76,6 +77,54 @@ namespace hihapi.test.UnitTests.Finance
             Desp = other.Desp;
             if (other.DocItems.Count > 0)
                 DocItems.AddRange(other.DocItems);
+        }
+
+        public void Serialize(IXunitSerializationInfo info)
+        {
+            String val = JsonSerializer.Serialize(this);
+            info.AddValue("Value", val, typeof(String));
+        }
+    }
+
+    public class FinanceDocumentsControllerTestData_DPDoc : IXunitSerializable
+    {
+        public int HomeID { get; set; }
+        public string CurrentUser { get; set; }
+        public string Currency { get; set; }
+        public DateTime TranDate { get; set; }
+        public Decimal Amount { get; set; }
+        public Int32 AccountID { get; set; }
+        public Int32? ControlCenterID { get; set; }
+        public Int32? OrderID { get; set; }
+
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public RepeatFrequency Frequency { get; set; }
+        public String Comment { get; set; }
+        public Int32? DPControlCenterID { get; set; }
+        public Int32? DPOrderID { get; set; }
+        public Int32 DPTranType { get; set; }
+
+        public void Deserialize(IXunitSerializationInfo info)
+        {
+            String val = info.GetValue<String>("Value");
+            FinanceDocumentsControllerTestData_DPDoc other = JsonSerializer.Deserialize<FinanceDocumentsControllerTestData_DPDoc>(val);
+
+            CurrentUser = other.CurrentUser;
+            HomeID = other.HomeID;
+            Currency = other.Currency;
+            TranDate = other.TranDate;
+            Amount = other.Amount;
+            AccountID = other.AccountID;
+            ControlCenterID = other.ControlCenterID;
+            OrderID = other.OrderID;
+            StartDate = other.StartDate;
+            EndDate = other.EndDate;
+            Comment = other.Comment;
+            Frequency = other.Frequency;
+            DPControlCenterID = other.DPControlCenterID;
+            DPOrderID = other.DPOrderID;
+            DPTranType = other.DPTranType;
         }
 
         public void Serialize(IXunitSerializationInfo info)

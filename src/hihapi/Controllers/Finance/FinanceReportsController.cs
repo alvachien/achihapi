@@ -74,8 +74,8 @@ namespace hihapi.Controllers.Finance
             var results = (from item in _context.FinanceDocumentItemView
                           where item.HomeID == hid
                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
-                            && item.TransactionType != FinanceTransactionType.TranType_TransferIn
-                            && item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                            //&& item.TransactionType != FinanceTransactionType.TranType_TransferIn
+                            //&& item.TransactionType != FinanceTransactionType.TranType_TransferOut
                             && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
                             && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
                            group item by new { item.TransactionType, item.TransactionTypeName, item.IsExpense } into newresult

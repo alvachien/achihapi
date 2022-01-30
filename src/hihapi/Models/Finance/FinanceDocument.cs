@@ -92,12 +92,40 @@ namespace hihapi.Models
                     return false;
             }
 
+            // Additional checks based on doc. type.
+            if (this.DocType == FinanceDocumentType.DocType_Transfer)
+            {
+                Decimal inamt = 0;
+                Decimal outamt = 0;
+                // On Item level
+                foreach(var item in Items)
+                {
+                    if (item.TranType == FinanceTransactionType.TranType_TransferIn)
+                        inamt += item.TranAmount;
+                    else if (item.TranType == FinanceTransactionType.TranType_TransferOut)
+                        outamt += item.TranAmount;
+                    else
+                        return false;
+                }
+
+                // Total amount
+                if (inamt != outamt)
+                    return false;
+            }
+
             return true;
         }
 
         public override bool IsDeleteAllowed(hihDataContext context)
         {
-            return base.IsDeleteAllowed(context);
+            if (!base.IsDeleteAllowed(context))
+                return false;
+
+            // Doc has been used in Template Asset
+            if (UsedInAsset(context))
+                return false;
+
+            return true;
         }
 
         public bool IsChangeAllowed(hihDataContext context)
@@ -123,10 +151,19 @@ namespace hihapi.Models
             if (usedInLoan > 0) return false;
 
             // Doc has been used in Template Asset
+            if (UsedInAsset(context))
+                return false;
+
+            return true;
+        }
+
+        private bool UsedInAsset(hihDataContext context)
+        {
             var usedInAsset = (from dp in context.FinanceAccountExtraAS
                                join acnt in context.FinanceAccount
                                 on dp.AccountID equals acnt.ID
-                               select new {
+                               select new
+                               {
                                    HomeID = acnt.HomeID,
                                    RefDoc = dp.RefenceBuyDocumentID
                                } into assetacounts
@@ -134,7 +171,7 @@ namespace hihapi.Models
                                on assetacounts.RefDoc equals doc.ID
                                where doc.ID == this.ID && assetacounts.HomeID == this.HomeID && doc.HomeID == this.HomeID
                                select doc).Count();
-            if (usedInAsset > 0) return false;
+            if (usedInAsset > 0) return true;
 
             usedInAsset = (from dp in context.FinanceAccountExtraAS
                            join acnt in context.FinanceAccount
@@ -147,10 +184,10 @@ namespace hihapi.Models
                            join doc in context.FinanceDocument
                            on assetacounts.RefDoc equals doc.ID
                            where doc.ID == this.ID && assetacounts.HomeID == this.HomeID && doc.HomeID == this.HomeID
-                           select doc).Count(); 
-            if (usedInAsset > 0) return false;
+                           select doc).Count();
+            if (usedInAsset > 0) return true;
 
-            return true;
+            return false;
         }
     }
 
