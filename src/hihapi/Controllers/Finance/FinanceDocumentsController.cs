@@ -188,7 +188,7 @@ namespace hihapi.Controllers
             _context.Entry(update).State = EntityState.Modified;
 
             // Items
-            var itemsInDB = _context.FinanceDocumentItem.Where(p => p.DocID == update.ID).ToList();
+            var itemsInDB = _context.FinanceDocumentItem.Where(p => p.DocID == update.ID).AsNoTracking().ToList();
             foreach (var ditem in update.Items)
             {
                 var itemindb = itemsInDB.Find(p => p.DocID == update.ID && p.ItemID == ditem.ItemID);
@@ -199,7 +199,7 @@ namespace hihapi.Controllers
                 else
                 {
                     // Update
-                    _context.Entry(itemindb).State = EntityState.Modified;
+                    _context.Entry(ditem).State = EntityState.Modified;
                 }
             }
             foreach (var ditem in itemsInDB)
