@@ -159,6 +159,17 @@ namespace hihapi.Models
             actionReportOrder.Parameter<int>("HomeID");
             actionReportOrder.Parameter<int?>("OrderID");
             actionReportOrder.ReturnsFromEntitySet<FinanceReportByOrder>("FinanceReportByOrders");
+            // Overview key figures
+            var entityFinOverviewKeyfigure = modelBuilder.EntityType<FinanceOverviewKeyFigure>();
+            entityFinOverviewKeyfigure.HasKey(p => new {
+                p.HomeID,
+            });
+            var actionFinanceOverviewKeyfigure = reportEntity.Collection.Action("GetFinanceOverviewKeyFigure");
+            actionFinanceOverviewKeyfigure.Parameter<int>("HomeID");
+            actionFinanceOverviewKeyfigure.Parameter<int>("Year");
+            actionFinanceOverviewKeyfigure.Parameter<int>("Month");
+            actionFinanceOverviewKeyfigure.Parameter<bool>("ExcludeTransfer");
+            actionFinanceOverviewKeyfigure.ReturnsFromEntitySet<FinanceOverviewKeyFigure>("FinanceOverviewKeyFigure");
 
             modelBuilder.EntitySet<BlogFormat>("BlogFormats");
             modelBuilder.EntitySet<BlogUserSetting>("BlogUserSettings");

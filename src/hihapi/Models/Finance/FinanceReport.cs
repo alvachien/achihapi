@@ -234,6 +234,23 @@ namespace hihapi.Models
     }
     #endregion
 
+    #region Finance Overview KPI
+    public class FinanceOverviewKeyFigure
+    {
+        public Int32 HomeID { get; set; }
+        public String Currency { get; set; }
+        public Decimal CurrentMonthIncome { get; set; }
+        public Decimal CurrentMonthOutgo { get; set; }
+        public Decimal LastMonthIncome { get; set; }
+        public Decimal LastMonthOutgo { get; set; }
+        public Decimal IncomeYTD { get; set; }
+        public Decimal OutgoYTD { get; set; }
+
+        public Decimal CurrentMonthIncomePrecentage { get; set; }
+        public Decimal CurrentMonthOutgoPrecentage { get; set; }
+    }
+    #endregion
+
     #region Date report
     public class FinanceReportDateView
     {

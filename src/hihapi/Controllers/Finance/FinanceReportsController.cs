@@ -76,8 +76,8 @@ namespace hihapi.Controllers.Finance
                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                             //&& item.TransactionType != FinanceTransactionType.TranType_TransferIn
                             //&& item.TransactionType != FinanceTransactionType.TranType_TransferOut
-                            && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
-                            && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                            //&& item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                            //&& item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
                            group item by new { item.TransactionType, item.TransactionTypeName, item.IsExpense } into newresult
                           select new
                           {
@@ -557,6 +557,208 @@ namespace hihapi.Controllers.Finance
             }
 
             return Ok(listResults);
+        }
+
+        [HttpPost]
+        public IActionResult GetFinanceOverviewKeyFigure([FromBody] ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // 0. Get inputted parameter
+            Int32 hid = (Int32)parameters["HomeID"];
+            Int32 year = (Int32)parameters["Year"];
+            Int32 month = (Int32)parameters["Month"];
+            bool excludeTransfer = (bool)parameters["ExcludeTransfer"];
+
+            // 1. Check User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // 2. Check the Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // 3. Calculate the key figure of current month.
+            FinanceOverviewKeyFigure keyfigure = new FinanceOverviewKeyFigure();
+            keyfigure.HomeID = hid;
+
+            DateTime dtlow = new DateTime(year, month, 1);
+            DateTime dthigh = dtlow.AddMonths(1);
+            if (excludeTransfer)
+            {
+                var results = (from item in _context.FinanceDocumentItemView
+                               where item.HomeID == hid
+                                 && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                                 && item.TransactionType != FinanceTransactionType.TranType_TransferIn
+                                 && item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                               group item by new { item.IsExpense } into newresult
+                               select new
+                               {
+                                   HomeID = hid,
+                                   IsExpense = newresult.Key.IsExpense,
+                                   Amount = newresult.Sum(c => c.Amount)
+                               }).ToList();
+                results.ForEach(rst =>
+                {
+                    if (rst.IsExpense)
+                        keyfigure.CurrentMonthOutgo = rst.Amount;
+                    else
+                        keyfigure.CurrentMonthIncome = rst.Amount;
+                });
+            }
+            else
+            {
+                var results = (from item in _context.FinanceDocumentItemView
+                           where item.HomeID == hid
+                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                           group item by new { item.IsExpense } into newresult
+                           select new
+                           {
+                               HomeID = hid,
+                               IsExpense = newresult.Key.IsExpense,
+                               Amount = newresult.Sum(c => c.Amount)
+                           }).ToList();
+                results.ForEach(rst =>
+                {
+                    if (rst.IsExpense)
+                        keyfigure.CurrentMonthOutgo = rst.Amount;
+                    else
+                        keyfigure.CurrentMonthIncome = rst.Amount;
+                });
+            }
+
+            // 4. Calculate the key figure of current year
+            dtlow = new DateTime(year, 1, 1);
+            dthigh = dtlow.AddYears(1);
+            if (excludeTransfer)
+            {
+                var results = (from item in _context.FinanceDocumentItemView
+                               where item.HomeID == hid
+                                 && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                                 && item.TransactionType != FinanceTransactionType.TranType_TransferIn
+                                 && item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                               group item by new { item.IsExpense } into newresult
+                               select new
+                               {
+                                   HomeID = hid,
+                                   IsExpense = newresult.Key.IsExpense,
+                                   Amount = newresult.Sum(c => c.Amount)
+                               }).ToList();
+                results.ForEach(rst =>
+                {
+                    if (rst.IsExpense)
+                        keyfigure.OutgoYTD = rst.Amount;
+                    else
+                        keyfigure.IncomeYTD = rst.Amount;
+                });
+            }
+            else
+            {
+                var results = (from item in _context.FinanceDocumentItemView
+                           where item.HomeID == hid
+                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                           group item by new { item.IsExpense } into newresult
+                           select new
+                           {
+                               HomeID = hid,
+                               IsExpense = newresult.Key.IsExpense,
+                               Amount = newresult.Sum(c => c.Amount)
+                           }).ToList();
+                results.ForEach(rst =>
+                {
+                    if (rst.IsExpense)
+                        keyfigure.OutgoYTD = rst.Amount;
+                    else
+                        keyfigure.IncomeYTD = rst.Amount;
+                });
+            }
+
+            // 5. Calculate the key figure of last month
+            dtlow = new DateTime(year, month, 1).AddMonths(-1);
+            dthigh = new DateTime(year, month, 1);
+            if (excludeTransfer)
+            {
+                var results = (from item in _context.FinanceDocumentItemView
+                           where item.HomeID == hid
+                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                             && item.TransactionType != FinanceTransactionType.TranType_TransferIn
+                             && item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                           group item by new { item.IsExpense } into newresult
+                           select new
+                           {
+                               HomeID = hid,
+                               IsExpense = newresult.Key.IsExpense,
+                               Amount = newresult.Sum(c => c.Amount)
+                           }).ToList();
+                results.ForEach(rst =>
+                {
+                    if (rst.IsExpense)
+                        keyfigure.LastMonthOutgo = rst.Amount;
+                    else
+                        keyfigure.LastMonthIncome = rst.Amount;
+                });
+            }
+            else
+            {
+                var results = (from item in _context.FinanceDocumentItemView
+                           where item.HomeID == hid
+                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                           group item by new { item.IsExpense } into newresult
+                           select new
+                           {
+                               HomeID = hid,
+                               IsExpense = newresult.Key.IsExpense,
+                               Amount = newresult.Sum(c => c.Amount)
+                           }).ToList();
+                results.ForEach(rst =>
+                {
+                    if (rst.IsExpense)
+                        keyfigure.LastMonthOutgo = rst.Amount;
+                    else
+                        keyfigure.LastMonthIncome = rst.Amount;
+                });
+            }
+
+            // 6. Currency
+            keyfigure.Currency = (from hd in _context.HomeDefines
+                                  where hd.ID == hid
+                                  select hd.BaseCurrency).SingleOrDefault();
+
+            // 7. Calculate the precentage
+            if (keyfigure.LastMonthIncome != 0)
+                keyfigure.CurrentMonthIncomePrecentage = 100 * (keyfigure.CurrentMonthIncome - keyfigure.LastMonthIncome) / keyfigure.LastMonthIncome;
+            if (keyfigure.LastMonthOutgo != 0)
+                keyfigure.CurrentMonthOutgoPrecentage = 100 * (keyfigure.CurrentMonthOutgo - keyfigure.LastMonthOutgo) / keyfigure.LastMonthOutgo;
+
+            List < FinanceOverviewKeyFigure > listResult = new List<FinanceOverviewKeyFigure>();
+            listResult.Add(keyfigure);
+
+            return Ok(listResult);
         }
     }
 }
