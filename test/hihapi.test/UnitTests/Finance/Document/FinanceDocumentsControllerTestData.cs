@@ -133,4 +133,29 @@ namespace hihapi.test.UnitTests.Finance
             info.AddValue("Value", val, typeof(String));
         }
     }
+
+    public class FinanceDocumentsControllerTestData_LoanDoc : IXunitSerializable
+    {
+        public int HomeID { get; set; }
+        public string CurrentUser { get; set; }
+        public string Currency { get; set; }
+        public DateTime TranDate { get; set; }
+
+        public void Deserialize(IXunitSerializationInfo info)
+        {
+            String val = info.GetValue<String>("Value");
+            FinanceDocumentsControllerTestData_LoanDoc other = JsonSerializer.Deserialize<FinanceDocumentsControllerTestData_LoanDoc>(val);
+            CurrentUser = other.CurrentUser;
+            HomeID = other.HomeID;
+            Currency = other.Currency;
+            TranDate = other.TranDate;
+
+        }
+
+        public void Serialize(IXunitSerializationInfo info)
+        {
+            String val = JsonSerializer.Serialize(this);
+            info.AddValue("Value", val, typeof(String));
+        }
+    }
 }

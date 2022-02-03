@@ -538,6 +538,68 @@ namespace hihapi.test.UnitTests.Finance
             }
             Assert.True(createdAcntID != -1);
 
+            // Verify the template docs.
+            FinanceTmpDPDocumentsController tmpcontroller = new FinanceTmpDPDocumentsController(context);
+            tmpcontroller.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            // Perform the get template docs.
+            var getresult = tmpcontroller.Get();
+            Assert.NotNull(getresult);
+            var gettmpokresult = Assert.IsType<OkObjectResult>(getresult);
+            var tmpdocs = Assert.IsAssignableFrom<IQueryable<FinanceTmpDPDocument>>(gettmpokresult.Value);
+            Assert.Equal(dpdates.Count, tmpdocs.Count());
+            
+
+            await context.DisposeAsync();
+        }
+
+        public static TheoryData<FinanceDocumentsControllerTestData_LoanDoc> LoanDocs =>
+            new TheoryData<FinanceDocumentsControllerTestData_LoanDoc>
+            {
+                new FinanceDocumentsControllerTestData_LoanDoc()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CurrentUser = DataSetupUtility.UserA,
+                },
+            };
+        [Theory]
+        [MemberData(nameof(LoanDocs))]
+        public async Task TestCase_Loan(FinanceDocumentsControllerTestData_LoanDoc testdata)
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(testdata.HomeID, context);
+
+            FinanceDocumentsController control = new FinanceDocumentsController(context);
+
+            // 1. No authorization
+            try
+            {
+                control.Get();
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
+            var userclaim = DataSetupUtility.GetClaimForUser(testdata.CurrentUser);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            var loanContext = new FinanceLoanDocumentCreateContext();
+            loanContext.DocumentInfo = new FinanceDocument
+            {
+                HomeID = testdata.HomeID,
+            };
+            loanContext.AccountInfo = new FinanceAccount
+            {
+                HomeID = testdata.HomeID,
+            };
+            var postloanrst = control.PostLoanDocument(loanContext);
+
             await context.DisposeAsync();
         }
 
