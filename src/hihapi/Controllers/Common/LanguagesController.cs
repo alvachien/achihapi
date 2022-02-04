@@ -26,10 +26,12 @@ namespace hihapi.Controllers
         /// 
         /// <remarks>
         [EnableQuery]
+        [HttpGet]
         [ResponseCache(Duration = 86400)]
-        public IActionResult Get(ODataQueryOptions<Language> option)
+        public IActionResult Get()
         {
-            return Ok(option.ApplyTo(_context.Languages));
+            //return Ok(option.ApplyTo(_context.Languages));
+            return Ok(_context.Languages);
         }
 
         [EnableQuery]

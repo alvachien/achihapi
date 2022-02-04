@@ -341,7 +341,7 @@ namespace hihapi.Models
 
             return listHeaderSqls.Count == 0 ?
                 String.Empty :
-                (@"UPDATE [dbo].[t_fin_account_ext_dp] SET " + string.Join(",", listHeaderSqls) + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
+                (@"UPDATE [t_fin_account_ext_dp] SET " + string.Join(",", listHeaderSqls) + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
         }
     }
 
@@ -520,7 +520,7 @@ namespace hihapi.Models
 
             return listHeaderSqls.Count == 0 ?
                 String.Empty :
-                (@"UPDATE [dbo].[t_fin_account_ext_as] SET " + string.Join(",", listHeaderSqls) + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
+                (@"UPDATE [t_fin_account_ext_as] SET " + string.Join(",", listHeaderSqls) + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
         }
     }
 
@@ -773,7 +773,7 @@ namespace hihapi.Models
 
             return listHeaderSqls.Count == 0 ?
                 String.Empty :
-                (@"UPDATE [dbo].[t_fin_account_ext_loan] SET " + string.Join(",", listHeaderSqls)
+                (@"UPDATE [t_fin_account_ext_loan] SET " + string.Join(",", listHeaderSqls)
                     + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
         }
     }

@@ -55,6 +55,32 @@ namespace hihapi.Controllers
             return Ok(rst0.Union(rst1));
         }
 
+        [EnableQuery]
+        [HttpGet]
+        public FinanceAssetCategory Get([FromODataUri] int key)
+        {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+            }
+            catch
+            {
+                // Do nothing
+                usrName = String.Empty;
+            }
+
+            if (String.IsNullOrEmpty(usrName))
+                return _context.FinAssetCategories.Where(p => p.ID == key && p.HomeID == null).SingleOrDefault();
+
+            return (from ctgy in _context.FinAssetCategories
+                    join hmem in _context.HomeMembers
+                      on ctgy.HomeID equals hmem.HomeID into hmem2
+                    from nhmem in hmem2.DefaultIfEmpty()
+                    where ctgy.ID == key && (nhmem == null || nhmem.User == usrName)
+                    select ctgy).SingleOrDefault();
+        }
+
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] FinanceAssetCategory ctgy)
         {

@@ -74,9 +74,29 @@ namespace hihapi.Controllers
             if (String.IsNullOrEmpty(usrName))
                 return _context.FinAccountCategories.Where(p => p.ID == key && p.HomeID == null).SingleOrDefault();
 
-            return (from hmem in _context.HomeMembers.Where(p => p.User == usrName)
-                      from acntctgy in _context.FinAccountCategories.Where(p => p.ID == key && (p.HomeID == null || p.HomeID == hmem.HomeID))
-                      select acntctgy).SingleOrDefault();
+            return (from ctgy in _context.FinAccountCategories
+                    join hmem in _context.HomeMembers
+                      on ctgy.HomeID equals hmem.HomeID into hmem2
+                    from nhmem in hmem2.DefaultIfEmpty()
+                    where ctgy.ID == key && (nhmem == null || nhmem.User == usrName)
+                    select ctgy).SingleOrDefault();
+
+            //var hids = (from hmem in _context.HomeMembers
+            //            where hmem.User == usrName
+            //            select hmem.HomeID).Distinct();
+            //var result = (from ctgy in _context.FinAccountCategories
+            //             where ctgy.ID == key && ctgy.HomeID == null
+            //             select ctgy).SingleOrDefault();
+            //if (result == null)
+            //{
+
+            //}
+            //else
+            //    return result;
+            //           //.Where(p => p.User == usrName)
+            //return (from hmem in _context.HomeMembers.Where(p => p.User == usrName)
+            //          from acntctgy in _context.FinAccountCategories.Where(p => p.ID == key && (p.HomeID == null || p.HomeID == hmem.HomeID))
+            //          select acntctgy).SingleOrDefault();
         }
 
         [HttpPost]

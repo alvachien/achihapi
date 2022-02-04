@@ -232,6 +232,9 @@ namespace hihapi.test.UnitTests.Finance
             ValidateDocument(doc, getresult, false, true);
 
             // 4. Do the changes to normal docs.
+            var changableResult = control.IsChangable(ndocid);
+            Assert.NotNull(changableResult);
+
             // 4.1 Change the desp
             doc.Desp += "Changed";
             var changeResult = await control.Put(ndocid, doc);
@@ -465,6 +468,7 @@ namespace hihapi.test.UnitTests.Finance
                 HttpContext = new DefaultHttpContext() { User = userclaim }
             };
 
+            // 2. Normal case
             FinanceADPDocumentCreateContext createContext = new FinanceADPDocumentCreateContext();
             var acntDP = new FinanceAccountExtraDP()
             {
@@ -491,6 +495,7 @@ namespace hihapi.test.UnitTests.Finance
                     TranAmount = d.TranAmount,
                     TransactionDate = d.TranDate,
                     ControlCenterID = testdata.DPControlCenterID,
+                    OrderID = testdata.DPOrderID,
                     Description = d.Desp,
                 });
             });
@@ -510,12 +515,14 @@ namespace hihapi.test.UnitTests.Finance
                 TranDate = testdata.TranDate,
                 Desp = testdata.Comment,
                 DocType = FinanceDocumentType.DocType_AdvancePayment,
-                Items = new List<FinanceDocumentItem> { 
+                Items = new List<FinanceDocumentItem> 
+                { 
                     new FinanceDocumentItem()
                     {
                         ItemID = 1,
                         AccountID = testdata.AccountID,
-                        ControlCenterID = testdata.DPControlCenterID,
+                        ControlCenterID = testdata.ControlCenterID,
+                        OrderID = testdata.OrderID,
                         TranType = FinanceTransactionType.TranType_AdvancePaymentOut,
                         TranAmount = testdata.Amount,
                         Desp = testdata.Comment,
@@ -527,6 +534,7 @@ namespace hihapi.test.UnitTests.Finance
             var createdoc = Assert.IsAssignableFrom<FinanceDocument>(postokresult.Value as FinanceDocument);
 
             listCreatedDocs.Add(createdoc.ID);
+            ValidateDocument(createContext.DocumentInfo, createdoc, true, true);
             var createdAcntID = -1;
             foreach(var item in createdoc.Items)
             {
@@ -551,23 +559,78 @@ namespace hihapi.test.UnitTests.Finance
             var gettmpokresult = Assert.IsType<OkObjectResult>(getresult);
             var tmpdocs = Assert.IsAssignableFrom<IQueryable<FinanceTmpDPDocument>>(gettmpokresult.Value);
             Assert.Equal(dpdates.Count, tmpdocs.Count());
-            
+
+            //acntDP.DPTmpDocs.OrderBy(p => p.TransactionDate);
+
+            // Perform the post
+            foreach (var tmpdoc in tmpdocs)
+            {
+                var tmppostcontex = new FinanceTmpDPDocumentPostContext();
+                tmppostcontex.HomeID = testdata.HomeID;
+                tmppostcontex.AccountID = createdAcntID;
+                tmppostcontex.DocumentID = tmpdoc.DocumentID;
+                var tmppostresult = await tmpcontroller.PostDocument(tmppostcontex);
+                Assert.NotNull(tmppostresult);
+                var tmppostokrst = Assert.IsType<OkObjectResult>(tmppostresult);
+                var tmppostdoc = Assert.IsType<FinanceDocument>(tmppostokrst.Value);
+                listCreatedDocs.Add(tmppostdoc.ID);
+            }
 
             await context.DisposeAsync();
         }
 
-        public static TheoryData<FinanceDocumentsControllerTestData_LoanDoc> LoanDocs =>
+        public static TheoryData<FinanceDocumentsControllerTestData_LoanDoc> BorrowFromDocs =>
             new TheoryData<FinanceDocumentsControllerTestData_LoanDoc>
             {
                 new FinanceDocumentsControllerTestData_LoanDoc()
                 {
                     HomeID = DataSetupUtility.Home1ID,
                     CurrentUser = DataSetupUtility.UserA,
+                    Currency = DataSetupUtility.Home1BaseCurrency,
+                    TranDate = new DateTime(2022, 1, 30),
+                    Amount = 100000,
+                    AccountID = DataSetupUtility.Home1CashAccount1ID,
+                    ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+
+                    AccountName = "Test Loan 1",
+                    StartDate = new DateTime(2022, 2, 1),
+                    EndDate = new DateTime(2023, 2, 1),
+                    InterestFree = true,
+                    RepaymentMethod = LoanRepaymentMethod.DueRepayment,
+
+
+                    Frequency = RepeatFrequency.Month,
+                    Comment = "Test Loan 1",
+                    TmpDocControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    TmpDocTranType = DataSetupUtility.TranType_Expense1,
+                },
+                new FinanceDocumentsControllerTestData_LoanDoc()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CurrentUser = DataSetupUtility.UserA,
+                    Currency = DataSetupUtility.Home1BaseCurrency,
+                    TranDate = new DateTime(2022, 1, 30),
+                    Amount = 100000,
+                    AccountID = DataSetupUtility.Home1CashAccount1ID,
+                    ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+
+                    AccountName = "Test Loan 2",
+                    StartDate = new DateTime(2022, 2, 1),
+                    EndDate = new DateTime(2023, 2, 1),
+                    InterestFree = false,
+                    AnnualRate = 10,
+                    RepaymentMethod = LoanRepaymentMethod.DueRepayment,
+
+                    Frequency = RepeatFrequency.Month,
+                    Comment = "Test Loan 2",
+                    TmpDocControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    TmpDocTranType = DataSetupUtility.TranType_Expense1,
                 },
             };
+
         [Theory]
-        [MemberData(nameof(LoanDocs))]
-        public async Task TestCase_Loan(FinanceDocumentsControllerTestData_LoanDoc testdata)
+        [MemberData(nameof(BorrowFromDocs))]
+        public async Task TestCase_BorrowFrom(FinanceDocumentsControllerTestData_LoanDoc testdata)
         {
             var context = this.fixture.GetCurrentDataContext();
             this.fixture.InitHomeTestData(testdata.HomeID, context);
@@ -590,15 +653,116 @@ namespace hihapi.test.UnitTests.Finance
             };
 
             var loanContext = new FinanceLoanDocumentCreateContext();
+            var acntLoan = new FinanceAccountExtraLoan()
+            {
+                StartDate = testdata.StartDate,
+                EndDate = testdata.EndDate,
+                InterestFree = testdata.InterestFree,
+                AnnualRate = testdata.AnnualRate,
+                RepaymentMethod = testdata.RepaymentMethod,
+                TotalMonths = testdata.TotalMonths,
+                Others = testdata.Others,
+                PayingAccount = testdata.PayingAccount,
+                Partner = testdata.Partner,
+            };
+            var dpdates = CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(new RepeatDatesWithAmountAndInterestCalInput()
+            {
+                StartDate = acntLoan.StartDate,
+                EndDate = acntLoan.EndDate,
+                RepaymentMethod = acntLoan.RepaymentMethod.GetValueOrDefault(),
+                TotalAmount = testdata.Amount,
+                InterestFreeLoan = acntLoan.InterestFree.GetValueOrDefault(),
+                InterestRate = acntLoan.AnnualRate.GetValueOrDefault(),
+            });
+            int tdocid = 1;
+            dpdates.ForEach(d =>
+            {
+                acntLoan.LoanTmpDocs.Add(new FinanceTmpLoanDocument()
+                {
+                    DocumentID = tdocid++,
+                    HomeID = testdata.HomeID,
+                    TransactionAmount = d.TranAmount,
+                    InterestAmount = d.InterestAmount,
+                    TransactionDate = d.TranDate,
+                    ControlCenterID = testdata.TmpDocControlCenterID,
+                    OrderID = testdata.TmpDocOrderID,
+                    Description = testdata.Comment,
+                });
+            });
+
             loanContext.DocumentInfo = new FinanceDocument
             {
                 HomeID = testdata.HomeID,
+                TranCurr = testdata.Currency,
+                TranDate = testdata.TranDate,
+                Desp = testdata.Comment,
+                DocType = FinanceDocumentType.DocType_BorrowFrom,
+                Items = new List<FinanceDocumentItem> 
+                {
+                    new FinanceDocumentItem()
+                    {
+                        ItemID = 1,
+                        AccountID = testdata.AccountID,
+                        ControlCenterID = testdata.ControlCenterID,
+                        OrderID = testdata.OrderID,
+                        TranType = FinanceTransactionType.TranType_BorrowFrom,
+                        TranAmount = testdata.Amount,
+                        Desp = testdata.Comment,
+                    }
+                },
             };
             loanContext.AccountInfo = new FinanceAccount
             {
                 HomeID = testdata.HomeID,
+                CategoryID = FinanceAccountCategory.AccountCategory_BorrowFrom,
+                Name = testdata.AccountName,
+                Status = (byte)FinanceAccountStatus.Normal,
+                ExtraLoan = acntLoan,
             };
-            var postloanrst = control.PostLoanDocument(loanContext);
+            var postloanrst = await control.PostLoanDocument(loanContext);
+            Assert.NotNull(postloanrst);
+            var postokrst = Assert.IsType<OkObjectResult>(postloanrst);
+            var createdoc = Assert.IsType<FinanceDocument>(postokrst.Value);
+            listCreatedDocs.Add(createdoc.ID);
+            ValidateDocument(loanContext.DocumentInfo, createdoc, true, true);
+            var createdAcntID = -1;
+            foreach (var item in createdoc.Items)
+            {
+                if (item.AccountID != testdata.AccountID)
+                {
+                    createdAcntID = item.AccountID;
+                    listCreatedAccount.Add(createdAcntID);
+                }
+            }
+            Assert.True(createdAcntID != -1);
+            listCreatedAccount.Add(createdAcntID);
+
+            // Verify the template docs.
+            FinanceTmpLoanDocumentsController tmpcontroller = new FinanceTmpLoanDocumentsController(context);
+            tmpcontroller.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            // Perform the get template docs.
+            var getresult = tmpcontroller.Get();
+            Assert.NotNull(getresult);
+            var gettmpokresult = Assert.IsType<OkObjectResult>(getresult);
+            var tmpdocs = Assert.IsAssignableFrom<IQueryable<FinanceTmpLoanDocument>>(gettmpokresult.Value);
+            Assert.Equal(dpdates.Count, tmpdocs.Count());
+
+            // Post the loan document.
+            foreach(var tmpdoc in tmpdocs)
+            {
+                var loanrepayctx = new FinanceLoanRepayDocumentCreateContext();
+                loanrepayctx.HomeID = testdata.HomeID;
+                loanrepayctx.LoanTemplateDocumentID = tmpdoc.DocumentID;
+                loanrepayctx.DocumentInfo = new FinanceDocument()
+                {
+                    DocType = FinanceDocumentType.DocType_Repay,
+                };
+                //tmpcontroller.PostRepayDocument();
+            }
 
             await context.DisposeAsync();
         }

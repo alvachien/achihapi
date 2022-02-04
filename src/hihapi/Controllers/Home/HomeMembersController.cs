@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System;
+using hihapi.Utilities;
 
 namespace hihapi.Controllers
 {
@@ -28,6 +30,21 @@ namespace hihapi.Controllers
         [HttpGet]
         public IActionResult Get()
         {
+            String usrName = "";
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             return Ok(_context.HomeMembers);
         }
     }

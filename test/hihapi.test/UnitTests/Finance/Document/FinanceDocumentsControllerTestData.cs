@@ -140,6 +140,26 @@ namespace hihapi.test.UnitTests.Finance
         public string CurrentUser { get; set; }
         public string Currency { get; set; }
         public DateTime TranDate { get; set; }
+        public Decimal Amount { get; set; }
+        public Int32 AccountID { get; set; }
+        public Int32? ControlCenterID { get; set; }
+        public Int32? OrderID { get; set; }
+        public String AccountName { get; set; }
+        public Decimal? AnnualRate { get; set; }
+        public Boolean? InterestFree { get; set; }
+        public LoanRepaymentMethod? RepaymentMethod { get; set; }
+        public Int16? TotalMonths { get; set; }
+        public String Others { get; set; }
+        public Int32? PayingAccount { get; set; }
+        public String Partner { get; set; }
+
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public RepeatFrequency Frequency { get; set; }
+        public String Comment { get; set; }
+        public Int32? TmpDocControlCenterID { get; set; }
+        public Int32? TmpDocOrderID { get; set; }
+        public Int32 TmpDocTranType { get; set; }
 
         public void Deserialize(IXunitSerializationInfo info)
         {
@@ -149,7 +169,28 @@ namespace hihapi.test.UnitTests.Finance
             HomeID = other.HomeID;
             Currency = other.Currency;
             TranDate = other.TranDate;
+            TranDate = other.TranDate;
+            Amount = other.Amount;
+            AccountID = other.AccountID;
+            ControlCenterID = other.ControlCenterID;
+            OrderID = other.OrderID;
 
+            AccountName = other.AccountName;
+            AnnualRate = other.AnnualRate;
+            InterestFree = other.InterestFree;
+            RepaymentMethod = other.RepaymentMethod;
+            TotalMonths = other.TotalMonths;
+            Others = other.Others;
+            PayingAccount = other.PayingAccount;
+            Partner = other.Partner;
+
+            StartDate = other.StartDate;
+            EndDate = other.EndDate;
+            Frequency = other.Frequency;
+            Comment = other.Comment;
+            TmpDocControlCenterID = other.TmpDocControlCenterID;
+            TmpDocOrderID = other.TmpDocOrderID;
+            TmpDocTranType = other.TmpDocTranType;
         }
 
         public void Serialize(IXunitSerializationInfo info)
