@@ -881,12 +881,44 @@ namespace hihapi.test.UnitTests.Finance
                     Amount = 100000,
                     AccountID = DataSetupUtility.Home1CashAccount1ID,
                     ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    Desp = "Test 1",
+
                     AccountExtra = new FinanceAccountExtraAS()
                     {
                         CategoryID = DataSetupUtility.Home1AssetCategory1ID,
                         Name = "Test1"
+                    },
+                    Items = new List<FinanceDocumentItem>
+                    {
+                        new FinanceDocumentItem
+                        {
+                            ItemID = 1,
+                            AccountID = DataSetupUtility.Home1CashAccount1ID,
+                            TranType = DataSetupUtility.TranType_Expense3,
+                            TranAmount = 100000,
+                            ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                            Desp = "Test 1",
+                        }
                     }
-                }
+                },
+                new FinanceDocumentsControllerTestData_AssetBuyDoc()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CurrentUser = DataSetupUtility.UserA,
+                    Currency = DataSetupUtility.Home1BaseCurrency,
+                    TranDate = new DateTime(2022, 1, 30),
+                    Amount = 100000,
+                    AccountID = DataSetupUtility.Home1CashAccount1ID,
+                    ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    Desp = "Test 1",
+
+                    AccountExtra = new FinanceAccountExtraAS()
+                    {
+                        CategoryID = DataSetupUtility.Home1AssetCategory1ID,
+                        Name = "Test1"
+                    },
+                    IsLegacy = true,
+                },
             };
 
         [Theory]
@@ -922,9 +954,129 @@ namespace hihapi.test.UnitTests.Finance
             assetbuycontext.TranDate = testdata.TranDate;
             assetbuycontext.IsLegacy = testdata.IsLegacy;
             assetbuycontext.ExtraAsset = testdata.AccountExtra;
+            assetbuycontext.TranCurr = testdata.Currency;
+            assetbuycontext.Items = testdata.Items;
 
-            //var buydocrst = await control.PostAssetBuyDocument(assetbuycontext);
-            //Assert.NotNull(buydocrst);
+            var buydocrst = await control.PostAssetBuyDocument(assetbuycontext);
+            Assert.NotNull(buydocrst);
+            var buydocokrst = Assert.IsType<OkObjectResult>(buydocrst);
+            var buydoc = Assert.IsType<FinanceDocument>(buydocokrst.Value);
+            listCreatedDocs.Add(buydoc.ID);
+
+            var nacntid = -1;
+            foreach (var item in buydoc.Items)
+            {
+                if (item.TranType == FinanceTransactionType.TranType_OpeningAsset)
+                    nacntid = item.AccountID;
+            }
+            Assert.True(nacntid != -1);
+            listCreatedAccount.Add(nacntid);
+
+            await context.DisposeAsync();
+        }
+
+        public static TheoryData<FinanceDocumentsControllerTestData_AssetBuyDoc> AssetChangeDocs =>
+            new TheoryData<FinanceDocumentsControllerTestData_AssetBuyDoc>
+            {
+                new FinanceDocumentsControllerTestData_AssetBuyDoc()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CurrentUser = DataSetupUtility.UserA,
+                    Currency = DataSetupUtility.Home1BaseCurrency,
+                    TranDate = new DateTime(2022, 1, 30),
+                    Amount = 100000,
+                    AccountID = DataSetupUtility.Home1CashAccount1ID,
+                    ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    Desp = "Test 1",
+
+                    AccountExtra = new FinanceAccountExtraAS()
+                    {
+                        CategoryID = DataSetupUtility.Home1AssetCategory1ID,
+                        Name = "Test1"
+                    },
+                    Items = new List<FinanceDocumentItem>
+                    {
+                        new FinanceDocumentItem
+                        {
+                            ItemID = 1,
+                            AccountID = DataSetupUtility.Home1CashAccount1ID,
+                            TranType = DataSetupUtility.TranType_Expense3,
+                            TranAmount = 100000,
+                            ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                            Desp = "Test 1",
+                        }
+                    }
+                },
+                new FinanceDocumentsControllerTestData_AssetBuyDoc()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CurrentUser = DataSetupUtility.UserA,
+                    Currency = DataSetupUtility.Home1BaseCurrency,
+                    TranDate = new DateTime(2022, 1, 30),
+                    Amount = 100000,
+                    AccountID = DataSetupUtility.Home1CashAccount1ID,
+                    ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    Desp = "Test 1",
+
+                    AccountExtra = new FinanceAccountExtraAS()
+                    {
+                        CategoryID = DataSetupUtility.Home1AssetCategory1ID,
+                        Name = "Test1"
+                    },
+                    IsLegacy = true,
+                },
+            };
+
+        [Theory]
+        [MemberData(nameof(AssetChangeDocs))]
+        public async Task TestCase_AssetChange(FinanceDocumentsControllerTestData_AssetBuyDoc testdata)
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(testdata.HomeID, context);
+
+            FinanceDocumentsController control = new FinanceDocumentsController(context);
+
+            // 1. No authorization
+            try
+            {
+                control.Get();
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
+            var userclaim = DataSetupUtility.GetClaimForUser(testdata.CurrentUser);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            var assetbuycontext = new FinanceAssetBuyDocumentCreateContext();
+            assetbuycontext.HID = testdata.HomeID;
+            assetbuycontext.AccountOwner = testdata.CurrentUser;
+            assetbuycontext.ControlCenterID = testdata.ControlCenterID;
+            assetbuycontext.Desp = testdata.Desp;
+            assetbuycontext.TranAmount = testdata.Amount;
+            assetbuycontext.TranDate = testdata.TranDate;
+            assetbuycontext.IsLegacy = testdata.IsLegacy;
+            assetbuycontext.ExtraAsset = testdata.AccountExtra;
+            assetbuycontext.TranCurr = testdata.Currency;
+            assetbuycontext.Items = testdata.Items;
+
+            var buydocrst = await control.PostAssetBuyDocument(assetbuycontext);
+            Assert.NotNull(buydocrst);
+            var buydocokrst = Assert.IsType<OkObjectResult>(buydocrst);
+            var buydoc = Assert.IsType<FinanceDocument>(buydocokrst.Value);
+            listCreatedDocs.Add(buydoc.ID);
+
+            var nacntid = -1;
+            foreach (var item in buydoc.Items)
+            {
+                if (item.TranType == FinanceTransactionType.TranType_OpeningAsset)
+                    nacntid = item.AccountID;
+            }
+            Assert.True(nacntid != -1);
+            listCreatedAccount.Add(nacntid);
 
             await context.DisposeAsync();
         }

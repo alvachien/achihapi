@@ -218,6 +218,12 @@ namespace hihapi.test.UnitTests.Finance
         public bool IsLegacy { get; set; }
         public String Desp { get; set; }
         public FinanceAccountExtraAS AccountExtra { get; set; }
+        public List<FinanceDocumentItem> Items { get; set; }
+
+        public FinanceDocumentsControllerTestData_AssetBuyDoc()
+        {
+            this.Items = new List<FinanceDocumentItem>();
+        }
 
         public void Deserialize(IXunitSerializationInfo info)
         {
@@ -234,7 +240,10 @@ namespace hihapi.test.UnitTests.Finance
             OrderID = other.OrderID;
             Desp = other.Desp;
             IsLegacy = other.IsLegacy;
+
             AccountExtra = other.AccountExtra;
+            this.Items.Clear();
+            this.Items.AddRange(other.Items);
         }
 
         public void Serialize(IXunitSerializationInfo info)
