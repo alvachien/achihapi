@@ -73,7 +73,7 @@ namespace hihapi.test.UnitTests.Finance
             ExchangeRate = other.ExchangeRate;
             ExchangeRateIsPlanned = other.ExchangeRateIsPlanned;
             SecondExchangeRate = other.SecondExchangeRate;
-            SecondExchangeRateIsPlanned= other.SecondExchangeRateIsPlanned;
+            SecondExchangeRateIsPlanned = other.SecondExchangeRateIsPlanned;
             Desp = other.Desp;
             if (other.DocItems.Count > 0)
                 DocItems.AddRange(other.DocItems);
@@ -161,6 +161,9 @@ namespace hihapi.test.UnitTests.Finance
         public Int32? TmpDocOrderID { get; set; }
         public Int32 TmpDocTranType { get; set; }
 
+        public Boolean PostLoanTmpDocs { get; set; }
+        public Int32 RepayAccountID { get; set; }
+
         public void Deserialize(IXunitSerializationInfo info)
         {
             String val = info.GetValue<String>("Value");
@@ -191,6 +194,47 @@ namespace hihapi.test.UnitTests.Finance
             TmpDocControlCenterID = other.TmpDocControlCenterID;
             TmpDocOrderID = other.TmpDocOrderID;
             TmpDocTranType = other.TmpDocTranType;
+
+            PostLoanTmpDocs = other.PostLoanTmpDocs;
+        }
+
+        public void Serialize(IXunitSerializationInfo info)
+        {
+            String val = JsonSerializer.Serialize(this);
+            info.AddValue("Value", val, typeof(String));
+        }
+    }
+
+    public class FinanceDocumentsControllerTestData_AssetBuyDoc : IXunitSerializable
+    {
+        public int HomeID { get; set; }
+        public string CurrentUser { get; set; }
+        public string Currency { get; set; }
+        public DateTime TranDate { get; set; }
+        public Decimal Amount { get; set; }
+        public Int32 AccountID { get; set; }
+        public Int32? ControlCenterID { get; set; }
+        public Int32? OrderID { get; set; }
+        public bool IsLegacy { get; set; }
+        public String Desp { get; set; }
+        public FinanceAccountExtraAS AccountExtra { get; set; }
+
+        public void Deserialize(IXunitSerializationInfo info)
+        {
+            String val = info.GetValue<String>("Value");
+            FinanceDocumentsControllerTestData_AssetBuyDoc other = JsonSerializer.Deserialize<FinanceDocumentsControllerTestData_AssetBuyDoc>(val);
+            CurrentUser = other.CurrentUser;
+            HomeID = other.HomeID;
+            Currency = other.Currency;
+            TranDate = other.TranDate;
+            TranDate = other.TranDate;
+            Amount = other.Amount;
+            AccountID = other.AccountID;
+            ControlCenterID = other.ControlCenterID;
+            OrderID = other.OrderID;
+            Desp = other.Desp;
+            IsLegacy = other.IsLegacy;
+            AccountExtra = other.AccountExtra;
         }
 
         public void Serialize(IXunitSerializationInfo info)

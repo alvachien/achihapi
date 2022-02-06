@@ -67,6 +67,7 @@ namespace hihapi.test
         public const int Home1ControlCenter6ID = 6;
         public const int Home1ControlCenter7ID = 7;
         public const int Home1ControlCenter8ID = 8;
+        public const int Home1AssetCategory1ID = 7;
         public const int Home2ID = 2;
         public const string Home2BaseCurrency = "CNY";
         public const int Home2CashAccount1ID = 101;

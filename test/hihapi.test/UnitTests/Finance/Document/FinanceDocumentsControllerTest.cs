@@ -603,6 +603,8 @@ namespace hihapi.test.UnitTests.Finance
                     Comment = "Test Loan 1",
                     TmpDocControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
                     TmpDocTranType = DataSetupUtility.TranType_Expense1,
+
+                    PostLoanTmpDocs = false,
                 },
                 new FinanceDocumentsControllerTestData_LoanDoc()
                 {
@@ -617,14 +619,66 @@ namespace hihapi.test.UnitTests.Finance
                     AccountName = "Test Loan 2",
                     StartDate = new DateTime(2022, 2, 1),
                     EndDate = new DateTime(2023, 2, 1),
-                    InterestFree = false,
-                    AnnualRate = 10,
+                    InterestFree = true,
                     RepaymentMethod = LoanRepaymentMethod.DueRepayment,
+
 
                     Frequency = RepeatFrequency.Month,
                     Comment = "Test Loan 2",
                     TmpDocControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
                     TmpDocTranType = DataSetupUtility.TranType_Expense1,
+
+                    PostLoanTmpDocs = true,
+                    RepayAccountID = DataSetupUtility.Home1CashAccount1ID,
+                },
+                new FinanceDocumentsControllerTestData_LoanDoc()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CurrentUser = DataSetupUtility.UserA,
+                    Currency = DataSetupUtility.Home1BaseCurrency,
+                    TranDate = new DateTime(2022, 1, 30),
+                    Amount = 100000,
+                    AccountID = DataSetupUtility.Home1CashAccount1ID,
+                    ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+
+                    AccountName = "Test Loan 3",
+                    StartDate = new DateTime(2022, 2, 1),
+                    EndDate = new DateTime(2023, 2, 1),
+                    InterestFree = false,
+                    AnnualRate = 10,
+                    RepaymentMethod = LoanRepaymentMethod.DueRepayment,
+
+                    Frequency = RepeatFrequency.Month,
+                    Comment = "Test Loan 3",
+                    TmpDocControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    TmpDocTranType = DataSetupUtility.TranType_Expense1,
+
+                    PostLoanTmpDocs = false,
+                },
+                new FinanceDocumentsControllerTestData_LoanDoc()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CurrentUser = DataSetupUtility.UserA,
+                    Currency = DataSetupUtility.Home1BaseCurrency,
+                    TranDate = new DateTime(2022, 1, 30),
+                    Amount = 100000,
+                    AccountID = DataSetupUtility.Home1CashAccount1ID,
+                    ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+
+                    AccountName = "Test Loan 4",
+                    StartDate = new DateTime(2022, 2, 1),
+                    EndDate = new DateTime(2023, 2, 1),
+                    InterestFree = false,
+                    AnnualRate = 10,
+                    RepaymentMethod = LoanRepaymentMethod.DueRepayment,
+
+                    Frequency = RepeatFrequency.Month,
+                    Comment = "Test Loan 4",
+                    TmpDocControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    TmpDocTranType = DataSetupUtility.TranType_Expense1,
+
+                    PostLoanTmpDocs = true,
+                    RepayAccountID = DataSetupUtility.Home1CashAccount2ID,
                 },
             };
 
@@ -752,17 +806,125 @@ namespace hihapi.test.UnitTests.Finance
             Assert.Equal(dpdates.Count, tmpdocs.Count());
 
             // Post the loan document.
-            foreach(var tmpdoc in tmpdocs)
+            if (testdata.PostLoanTmpDocs)
             {
-                var loanrepayctx = new FinanceLoanRepayDocumentCreateContext();
-                loanrepayctx.HomeID = testdata.HomeID;
-                loanrepayctx.LoanTemplateDocumentID = tmpdoc.DocumentID;
-                loanrepayctx.DocumentInfo = new FinanceDocument()
+                foreach (var tmpdoc in tmpdocs)
                 {
-                    DocType = FinanceDocumentType.DocType_Repay,
-                };
-                //tmpcontroller.PostRepayDocument();
+                    var loanrepayctx = new FinanceLoanRepayDocumentCreateContext();
+                    loanrepayctx.HomeID = testdata.HomeID;
+                    loanrepayctx.LoanTemplateDocumentID = tmpdoc.DocumentID;
+                    loanrepayctx.DocumentInfo = new FinanceDocument()
+                    {
+                        DocType = FinanceDocumentType.DocType_Repay,
+                        HomeID = testdata.HomeID,
+                        TranDate = tmpdoc.TransactionDate,
+                        TranCurr = testdata.Currency,
+                        Desp = tmpdoc.Description,
+                        Items = new List<FinanceDocumentItem> { 
+                            new FinanceDocumentItem
+                            {
+                                ItemID = 1,
+                                AccountID = testdata.RepayAccountID,
+                                TranAmount = tmpdoc.TransactionAmount,
+                                TranType = FinanceTransactionType.TranType_RepaymentOut,
+                                ControlCenterID = testdata.TmpDocControlCenterID,
+                                OrderID = testdata.TmpDocOrderID,
+                                Desp = tmpdoc.Description,
+                            },
+                            new FinanceDocumentItem
+                            {
+                                ItemID = 2,
+                                AccountID = createdAcntID,
+                                TranAmount = tmpdoc.TransactionAmount,
+                                TranType = FinanceTransactionType.TranType_RepaymentIn,
+                                ControlCenterID = testdata.TmpDocControlCenterID,
+                                OrderID = testdata.TmpDocOrderID,
+                                Desp = tmpdoc.Description,
+                            },
+                        },
+                    };
+                    if (tmpdoc.InterestAmount > 0)
+                    {
+                        loanrepayctx.DocumentInfo.Items.Add(new FinanceDocumentItem
+                        {
+                            ItemID = 3,
+                            AccountID = testdata.RepayAccountID,
+                            TranType = FinanceTransactionType.TranType_InterestOut,
+                            TranAmount = tmpdoc.InterestAmount.GetValueOrDefault(),
+                            ControlCenterID = testdata.TmpDocControlCenterID,
+                            OrderID = testdata.TmpDocOrderID,
+                            Desp = tmpdoc.Description,
+                        });
+                    }
+                    var repayrst = await tmpcontroller.PostRepayDocument(loanrepayctx);
+                    Assert.NotNull(repayrst);
+                    var repayokrst = Assert.IsType<OkObjectResult>(repayrst);
+                    var repaydoc = Assert.IsType<FinanceDocument>(repayokrst.Value);
+                    listCreatedDocs.Add(repaydoc.ID);
+                }
+
+                // After all tmp. docs posted, the account status shall be updated.
             }
+
+            await context.DisposeAsync();
+        }
+
+        public static TheoryData<FinanceDocumentsControllerTestData_AssetBuyDoc> AssetBuyDocs =>
+            new TheoryData<FinanceDocumentsControllerTestData_AssetBuyDoc>
+            {
+                new FinanceDocumentsControllerTestData_AssetBuyDoc()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CurrentUser = DataSetupUtility.UserA,
+                    Currency = DataSetupUtility.Home1BaseCurrency,
+                    TranDate = new DateTime(2022, 1, 30),
+                    Amount = 100000,
+                    AccountID = DataSetupUtility.Home1CashAccount1ID,
+                    ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    AccountExtra = new FinanceAccountExtraAS()
+                    {
+                        CategoryID = DataSetupUtility.Home1AssetCategory1ID,
+                        Name = "Test1"
+                    }
+                }
+            };
+
+        [Theory]
+        [MemberData(nameof(AssetBuyDocs))]
+        public async Task TestCase_BuyAsset(FinanceDocumentsControllerTestData_AssetBuyDoc testdata)
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(testdata.HomeID, context);
+
+            FinanceDocumentsController control = new FinanceDocumentsController(context);
+
+            // 1. No authorization
+            try
+            {
+                control.Get();
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
+            var userclaim = DataSetupUtility.GetClaimForUser(testdata.CurrentUser);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            var assetbuycontext = new FinanceAssetBuyDocumentCreateContext();
+            assetbuycontext.HID = testdata.HomeID;
+            assetbuycontext.AccountOwner = testdata.CurrentUser;
+            assetbuycontext.ControlCenterID = testdata.ControlCenterID;
+            assetbuycontext.Desp = testdata.Desp;
+            assetbuycontext.TranAmount = testdata.Amount;
+            assetbuycontext.TranDate = testdata.TranDate;
+            assetbuycontext.IsLegacy = testdata.IsLegacy;
+            assetbuycontext.ExtraAsset = testdata.AccountExtra;
+
+            //var buydocrst = await control.PostAssetBuyDocument(assetbuycontext);
+            //Assert.NotNull(buydocrst);
 
             await context.DisposeAsync();
         }
