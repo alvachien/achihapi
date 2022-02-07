@@ -975,10 +975,10 @@ namespace hihapi.test.UnitTests.Finance
             await context.DisposeAsync();
         }
 
-        public static TheoryData<FinanceDocumentsControllerTestData_AssetBuyDoc> AssetChangeDocs =>
-            new TheoryData<FinanceDocumentsControllerTestData_AssetBuyDoc>
+        public static TheoryData<FinanceDocumentsControllerTestData_AssetChangeDoc> AssetChangeDocs =>
+            new TheoryData<FinanceDocumentsControllerTestData_AssetChangeDoc>
             {
-                new FinanceDocumentsControllerTestData_AssetBuyDoc()
+                new FinanceDocumentsControllerTestData_AssetChangeDoc()
                 {
                     HomeID = DataSetupUtility.Home1ID,
                     CurrentUser = DataSetupUtility.UserA,
@@ -988,6 +988,7 @@ namespace hihapi.test.UnitTests.Finance
                     AccountID = DataSetupUtility.Home1CashAccount1ID,
                     ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
                     Desp = "Test 1",
+                    NewAmount = 1000,
 
                     AccountExtra = new FinanceAccountExtraAS()
                     {
@@ -1007,7 +1008,7 @@ namespace hihapi.test.UnitTests.Finance
                         }
                     }
                 },
-                new FinanceDocumentsControllerTestData_AssetBuyDoc()
+                new FinanceDocumentsControllerTestData_AssetChangeDoc()
                 {
                     HomeID = DataSetupUtility.Home1ID,
                     CurrentUser = DataSetupUtility.UserA,
@@ -1017,6 +1018,7 @@ namespace hihapi.test.UnitTests.Finance
                     AccountID = DataSetupUtility.Home1CashAccount1ID,
                     ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
                     Desp = "Test 1",
+                    NewAmount = 1000,
 
                     AccountExtra = new FinanceAccountExtraAS()
                     {
@@ -1029,28 +1031,19 @@ namespace hihapi.test.UnitTests.Finance
 
         [Theory]
         [MemberData(nameof(AssetChangeDocs))]
-        public async Task TestCase_AssetChange(FinanceDocumentsControllerTestData_AssetBuyDoc testdata)
+        public async Task TestCase_AssetChange(FinanceDocumentsControllerTestData_AssetChangeDoc testdata)
         {
             var context = this.fixture.GetCurrentDataContext();
             this.fixture.InitHomeTestData(testdata.HomeID, context);
 
             FinanceDocumentsController control = new FinanceDocumentsController(context);
-
-            // 1. No authorization
-            try
-            {
-                control.Get();
-            }
-            catch (Exception exp)
-            {
-                Assert.IsType<UnauthorizedAccessException>(exp);
-            }
             var userclaim = DataSetupUtility.GetClaimForUser(testdata.CurrentUser);
             control.ControllerContext = new ControllerContext()
             {
                 HttpContext = new DefaultHttpContext() { User = userclaim }
             };
 
+            // 1. Buy an asset
             var assetbuycontext = new FinanceAssetBuyDocumentCreateContext();
             assetbuycontext.HID = testdata.HomeID;
             assetbuycontext.AccountOwner = testdata.CurrentUser;
@@ -1077,6 +1070,165 @@ namespace hihapi.test.UnitTests.Finance
             }
             Assert.True(nacntid != -1);
             listCreatedAccount.Add(nacntid);
+
+            // 2. Asset value change
+            var assetchangecontext = new FinanceAssetRevaluationDocumentCreateContext();
+            assetchangecontext.HID = testdata.HomeID;
+            assetchangecontext.ControlCenterID = testdata.ControlCenterID;
+            assetchangecontext.OrderID = testdata.OrderID;
+            assetchangecontext.Desp = testdata.Desp;
+            assetchangecontext.TranDate = new DateTime(testdata.TranDate.Ticks).AddDays(1);
+            assetchangecontext.TranCurr = testdata.Currency;
+            assetchangecontext.AssetAccountID = nacntid;
+            var amtdiff = testdata.NewAmount - testdata.Amount;
+            assetchangecontext.Items = new List<FinanceDocumentItem> 
+            {
+                new FinanceDocumentItem
+                {
+                    ItemID = 1,
+                    AccountID = nacntid,
+                    TranType = amtdiff > 0? FinanceTransactionType.TranType_AssetValueIncrease : FinanceTransactionType.TranType_AssetValueDecrease,
+                    TranAmount = Math.Abs(amtdiff),
+                    Desp = testdata.Desp,
+                    ControlCenterID = testdata.ControlCenterID,
+                    OrderID = testdata.OrderID,
+                },
+            };
+            var changerst = await control.PostAssetValueChangeDocument(assetchangecontext);
+            Assert.NotNull(changerst);
+
+            await context.DisposeAsync();
+        }
+
+        public static TheoryData<FinanceDocumentsControllerTestData_AssetSellDoc> AssetSellDocs =>
+            new TheoryData<FinanceDocumentsControllerTestData_AssetSellDoc>
+            {
+                new FinanceDocumentsControllerTestData_AssetSellDoc()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CurrentUser = DataSetupUtility.UserA,
+                    Currency = DataSetupUtility.Home1BaseCurrency,
+                    TranDate = new DateTime(2022, 1, 30),
+                    Amount = 100000,
+                    AccountID = DataSetupUtility.Home1CashAccount1ID,
+                    ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    Desp = "Test 1",
+
+                    NewAmount = 500,
+                    CashAccountID = DataSetupUtility.Home1CashAccount2ID,
+
+                    AccountExtra = new FinanceAccountExtraAS()
+                    {
+                        CategoryID = DataSetupUtility.Home1AssetCategory1ID,
+                        Name = "Test1"
+                    },
+                    Items = new List<FinanceDocumentItem>
+                    {
+                        new FinanceDocumentItem
+                        {
+                            ItemID = 1,
+                            AccountID = DataSetupUtility.Home1CashAccount1ID,
+                            TranType = DataSetupUtility.TranType_Expense3,
+                            TranAmount = 100000,
+                            ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                            Desp = "Test 1",
+                        }
+                    }
+                },
+                new FinanceDocumentsControllerTestData_AssetSellDoc()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    CurrentUser = DataSetupUtility.UserA,
+                    Currency = DataSetupUtility.Home1BaseCurrency,
+                    TranDate = new DateTime(2022, 1, 30),
+                    Amount = 100000,
+                    AccountID = DataSetupUtility.Home1CashAccount1ID,
+                    ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                    Desp = "Test 1",
+
+                    NewAmount = 500,
+                    CashAccountID = DataSetupUtility.Home1CashAccount2ID,
+
+                    AccountExtra = new FinanceAccountExtraAS()
+                    {
+                        CategoryID = DataSetupUtility.Home1AssetCategory1ID,
+                        Name = "Test1"
+                    },
+                    IsLegacy = true,
+                },
+            };
+        
+        [Theory]
+        [MemberData(nameof(AssetSellDocs))]
+        public async Task TestCase_AssetSellCreate(FinanceDocumentsControllerTestData_AssetSellDoc testdata)
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(testdata.HomeID, context);
+
+            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            var userclaim = DataSetupUtility.GetClaimForUser(testdata.CurrentUser);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            // 1. Create asset
+            var assetbuycontext = new FinanceAssetBuyDocumentCreateContext();
+            assetbuycontext.HID = testdata.HomeID;
+            assetbuycontext.AccountOwner = testdata.CurrentUser;
+            assetbuycontext.ControlCenterID = testdata.ControlCenterID;
+            assetbuycontext.Desp = testdata.Desp;
+            assetbuycontext.TranAmount = testdata.Amount;
+            assetbuycontext.TranDate = testdata.TranDate;
+            assetbuycontext.IsLegacy = testdata.IsLegacy;
+            assetbuycontext.ExtraAsset = testdata.AccountExtra;
+            assetbuycontext.TranCurr = testdata.Currency;
+            assetbuycontext.Items = testdata.Items;
+
+            var buydocrst = await control.PostAssetBuyDocument(assetbuycontext);
+            Assert.NotNull(buydocrst);
+            var buydocokrst = Assert.IsType<OkObjectResult>(buydocrst);
+            var buydoc = Assert.IsType<FinanceDocument>(buydocokrst.Value);
+            listCreatedDocs.Add(buydoc.ID);
+
+            var nacntid = -1;
+            foreach (var item in buydoc.Items)
+            {
+                if (item.TranType == FinanceTransactionType.TranType_OpeningAsset)
+                    nacntid = item.AccountID;
+            }
+            Assert.True(nacntid != -1);
+            listCreatedAccount.Add(nacntid);
+
+            // 2. Delete account
+            var sellContext = new FinanceAssetSellDocumentCreateContext();
+            sellContext.TranDate = new DateTime(testdata.TranDate.Ticks).AddDays(1);
+            sellContext.HID = testdata.HomeID;
+            sellContext.TranAmount = testdata.NewAmount;
+            sellContext.AssetAccountID = nacntid;
+            sellContext.ControlCenterID = testdata.ControlCenterID;
+            sellContext.OrderID = testdata.OrderID;
+            sellContext.Desp = testdata.Desp;
+            sellContext.TranCurr = testdata.Currency;
+            sellContext.Items = new List<FinanceDocumentItem>
+            {
+                new FinanceDocumentItem
+                {
+                    ItemID = 1,
+                    AccountID = testdata.CashAccountID,
+                    Desp = testdata.Desp,
+                    TranAmount = testdata.NewAmount,
+                    TranType = FinanceTransactionType.TranType_AssetSoldoutIncome,
+                    ControlCenterID = testdata.ControlCenterID,
+                    OrderID = testdata.OrderID,
+                }
+            };
+            var sellrst = await control.PostAssetSellDocument(sellContext);
+            Assert.NotNull(sellrst);
+
+            // 3. Read all documents
+            var getrst = control.Get();
+            Assert.NotNull(getrst);
 
             await context.DisposeAsync();
         }

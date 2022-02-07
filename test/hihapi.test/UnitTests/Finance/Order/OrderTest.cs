@@ -26,6 +26,7 @@ namespace hihapi.test.UnitTests.Finance
         {
             this.fixture = fixture;
         }
+
         public static TheoryData<OrderTestData> TestData => new TheoryData<OrderTestData>
         {
             new OrderTestData() {
@@ -130,7 +131,7 @@ namespace hihapi.test.UnitTests.Finance
             foreach(var rule in testdata.SRule)
                 order.SRule.Add(rule);
             order.ValidFrom = testdata.ValidFrom;
-            order.ValidTo = testdata.ValidTo;            
+            order.ValidTo = testdata.ValidTo;
             
             var isValid = order.IsValid(context);
 

@@ -225,7 +225,7 @@ namespace hihapi.test.UnitTests.Finance
             this.Items = new List<FinanceDocumentItem>();
         }
 
-        public void Deserialize(IXunitSerializationInfo info)
+        public virtual void Deserialize(IXunitSerializationInfo info)
         {
             String val = info.GetValue<String>("Value");
             FinanceDocumentsControllerTestData_AssetBuyDoc other = JsonSerializer.Deserialize<FinanceDocumentsControllerTestData_AssetBuyDoc>(val);
@@ -246,10 +246,89 @@ namespace hihapi.test.UnitTests.Finance
             this.Items.AddRange(other.Items);
         }
 
-        public void Serialize(IXunitSerializationInfo info)
+        public virtual void Serialize(IXunitSerializationInfo info)
         {
             String val = JsonSerializer.Serialize(this);
             info.AddValue("Value", val, typeof(String));
         }
     }
+
+    public class FinanceDocumentsControllerTestData_AssetChangeDoc : FinanceDocumentsControllerTestData_AssetBuyDoc
+    {
+        public Decimal NewAmount { get; set; }
+
+        public FinanceDocumentsControllerTestData_AssetChangeDoc(): base()
+        {
+        }
+
+        public override void Deserialize(IXunitSerializationInfo info)
+        {
+            String val = info.GetValue<String>("Value");
+            FinanceDocumentsControllerTestData_AssetChangeDoc other = JsonSerializer.Deserialize<FinanceDocumentsControllerTestData_AssetChangeDoc>(val);
+            CurrentUser = other.CurrentUser;
+            HomeID = other.HomeID;
+            Currency = other.Currency;
+            TranDate = other.TranDate;
+            TranDate = other.TranDate;
+            Amount = other.Amount;
+            AccountID = other.AccountID;
+            ControlCenterID = other.ControlCenterID;
+            OrderID = other.OrderID;
+            Desp = other.Desp;
+            IsLegacy = other.IsLegacy;
+
+            NewAmount = other.NewAmount;
+
+            AccountExtra = other.AccountExtra;
+            this.Items.Clear();
+            this.Items.AddRange(other.Items);
+        }
+
+        public override void Serialize(IXunitSerializationInfo info)
+        {
+            String val = JsonSerializer.Serialize(this);
+            info.AddValue("Value", val, typeof(String));
+        }
+    }
+
+    public class FinanceDocumentsControllerTestData_AssetSellDoc : FinanceDocumentsControllerTestData_AssetBuyDoc
+    {
+        public Decimal NewAmount { get; set; }
+        public int CashAccountID { get; set; }
+
+        public FinanceDocumentsControllerTestData_AssetSellDoc() : base()
+        {
+        }
+
+        public override void Deserialize(IXunitSerializationInfo info)
+        {
+            String val = info.GetValue<String>("Value");
+            FinanceDocumentsControllerTestData_AssetSellDoc other = JsonSerializer.Deserialize<FinanceDocumentsControllerTestData_AssetSellDoc>(val);
+            CurrentUser = other.CurrentUser;
+            HomeID = other.HomeID;
+            Currency = other.Currency;
+            TranDate = other.TranDate;
+            TranDate = other.TranDate;
+            Amount = other.Amount;
+            AccountID = other.AccountID;
+            ControlCenterID = other.ControlCenterID;
+            OrderID = other.OrderID;
+            Desp = other.Desp;
+            IsLegacy = other.IsLegacy;
+
+            NewAmount = other.NewAmount;
+            CashAccountID = other.CashAccountID;
+
+            AccountExtra = other.AccountExtra;
+            this.Items.Clear();
+            this.Items.AddRange(other.Items);
+        }
+
+        public override void Serialize(IXunitSerializationInfo info)
+        {
+            String val = JsonSerializer.Serialize(this);
+            info.AddValue("Value", val, typeof(String));
+        }
+    }
+
 }
