@@ -230,6 +230,38 @@ namespace hihapi.test.UnitTests.Finance
             Assert.NotNull(getresult);
             // Verify the attributes - GET won't return the items
             ValidateDocument(doc, getresult, false, true);
+            // 3a. Read document item
+            var docitemcontrol = new FinanceDocumentItemsController(context);
+            try
+            {
+                docitemcontrol.Get();
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
+            docitemcontrol.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+            var docitemrst = docitemcontrol.Get();
+            Assert.NotNull(docitemrst);
+            // 3b. Read document item view
+            var docitemviewcontrol = new FinanceDocumentItemViewsController(context);
+            try
+            {
+                docitemviewcontrol.Get();
+            }
+            catch(Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
+            docitemviewcontrol.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+            var docitemviewrst = docitemviewcontrol.Get();
+            Assert.NotNull(docitemviewrst);
 
             // 4. Do the changes to normal docs.
             var changableResult = control.IsChangable(ndocid);

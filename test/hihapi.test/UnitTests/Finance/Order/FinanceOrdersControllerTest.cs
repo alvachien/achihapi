@@ -225,6 +225,23 @@ namespace hihapi.test.UnitTests.Finance
             Assert.Equal(testdata.ValidFrom, getsingleorder.ValidFrom);
             Assert.Equal(testdata.ValidTo, getsingleorder.ValidTo);
 
+            // 3b. Read SRules.
+            var srulecontrol = new FinanceOrderSRulesController(context);
+            try
+            {
+                srulecontrol.Get();
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
+            srulecontrol.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+            var srulegetrst = control.Get();
+            Assert.NotNull(srulegetrst);
+
             // 4. Simple Change.
             createdorder.Comment += "Changed";
             createdorder.Name += "Changed";

@@ -119,6 +119,23 @@ namespace hihapi.test.UnitTests.Home
             Assert.True(nreadobj.HomeMembers.ElementAt(0).Relation == HomeMemberRelationType.Self);
             Assert.True(nreadobj.HomeMembers.ElementAt(0).User == nreadobj.Host);
 
+            // Read the related member
+            var hmemcontrol = new HomeMembersController(context);
+            try
+            {
+                hmemcontrol.Get();
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
+            hmemcontrol.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+            var hmemgetrst = hmemcontrol.Get();
+            Assert.NotNull(hmemgetrst);
+
             // Change the home define - Add new user
             var hm2 = new HomeMember()
             {

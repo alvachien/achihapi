@@ -168,8 +168,7 @@ namespace hihapi.Controllers
                 return BadRequest();
 
             // Checks.
-            // 1. Not changes to account category
-            
+            // 1. Not changes to account category            
 
             update.Updatedby = usrName;
             update.UpdatedAt = DateTime.Now;

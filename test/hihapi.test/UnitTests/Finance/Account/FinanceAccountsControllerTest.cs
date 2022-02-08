@@ -117,6 +117,12 @@ namespace hihapi.test.UnitTests.Finance
             Assert.Equal(acnt.Comment, getresult.Comment);
 
             // 5. Update account
+            getresult.Comment += "Changed";
+            var updrst = await control.Put(nacntid, getresult);
+            Assert.NotNull(updrst);
+            var updodatarst = Assert.IsType<UpdatedODataResult<FinanceAccount>>(updrst);
+            var updatedacnt = Assert.IsType<FinanceAccount>(updodatarst.Entity);
+            Assert.Equal(getresult.Comment, updatedacnt.Comment);
 
             // 6. Delete account
 
