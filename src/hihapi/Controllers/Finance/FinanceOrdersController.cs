@@ -44,14 +44,13 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            //return option.ApplyTo(query);
             // Check whether User assigned with specified Home ID
             return Ok(from hmem in _context.HomeMembers
                         where hmem.User == usrName
                         select new { hmem.HomeID, hmem.IsChild } into hids
                       join ords in _context.FinanceOrder on hids.HomeID equals ords.HomeID
                         select ords);
-
-            //return option.ApplyTo(query);
         }
 
         [EnableQuery]

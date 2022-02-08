@@ -44,6 +44,118 @@ namespace hihapi.test.UnitTests.Finance
                     },
                 },
             },
+            new OrderControllerTestData() {
+                HomeID = DataSetupUtility.Home1ID,
+                CurrentUser = DataSetupUtility.UserB,
+                Name = "Test 2",
+                ValidFrom = new DateTime(2021, 1, 1),
+                ValidTo = new DateTime(2023, 1, 1),
+                SRule = new List<FinanceOrderSRule> {
+                    new FinanceOrderSRule() {
+                        RuleID = 1,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                        Precent = 20,
+                    },
+                    new FinanceOrderSRule() {
+                        RuleID = 2,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
+                        Precent = 80,
+                    },
+                },
+            },
+            new OrderControllerTestData() {
+                HomeID = DataSetupUtility.Home1ID,
+                CurrentUser = DataSetupUtility.UserB,
+                Name = "Test 2",
+                ValidFrom = new DateTime(2021, 1, 1),
+                ValidTo = new DateTime(2023, 1, 1),
+                SRule = new List<FinanceOrderSRule> {
+                    new FinanceOrderSRule() {
+                        RuleID = 1,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                        Precent = 20,
+                    },
+                    new FinanceOrderSRule() {
+                        RuleID = 2,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
+                        Precent = 80,
+                    },
+                },
+                ChangedSRule = new List<FinanceOrderSRule> {
+                    new FinanceOrderSRule() {
+                        RuleID = 1,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                        Precent = 80,
+                    },
+                    new FinanceOrderSRule() {
+                        RuleID = 2,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
+                        Precent = 20,
+                    },
+                },
+            },
+            new OrderControllerTestData() {
+                HomeID = DataSetupUtility.Home1ID,
+                CurrentUser = DataSetupUtility.UserB,
+                Name = "Test 2",
+                ValidFrom = new DateTime(2021, 1, 1),
+                ValidTo = new DateTime(2023, 1, 1),
+                SRule = new List<FinanceOrderSRule> {
+                    new FinanceOrderSRule() {
+                        RuleID = 1,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                        Precent = 20,
+                    },
+                    new FinanceOrderSRule() {
+                        RuleID = 2,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
+                        Precent = 80,
+                    },
+                },
+                ChangedSRule = new List<FinanceOrderSRule> {
+                    new FinanceOrderSRule() {
+                        RuleID = 1,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                        Precent = 20,
+                    },
+                    new FinanceOrderSRule() {
+                        RuleID = 2,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
+                        Precent = 50,
+                    },
+                    new FinanceOrderSRule() {
+                        RuleID = 3,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter3ID,
+                        Precent = 30,
+                    },
+                },
+            },
+            new OrderControllerTestData() {
+                HomeID = DataSetupUtility.Home1ID,
+                CurrentUser = DataSetupUtility.UserB,
+                Name = "Test 2",
+                ValidFrom = new DateTime(2021, 1, 1),
+                ValidTo = new DateTime(2023, 1, 1),
+                SRule = new List<FinanceOrderSRule> {
+                    new FinanceOrderSRule() {
+                        RuleID = 1,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                        Precent = 20,
+                    },
+                    new FinanceOrderSRule() {
+                        RuleID = 2,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
+                        Precent = 80,
+                    },
+                },
+                ChangedSRule = new List<FinanceOrderSRule> {
+                    new FinanceOrderSRule() {
+                        RuleID = 1,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                        Precent = 100,
+                    }
+                },
+            },
         };
 
         [Theory]
@@ -87,21 +199,70 @@ namespace hihapi.test.UnitTests.Finance
             Assert.NotNull(createrst);
             var createdorderrst = Assert.IsType<CreatedODataResult<FinanceOrder>>(createrst);
             var createdorder = Assert.IsType<FinanceOrder>(createdorderrst.Entity);
+            Assert.Equal(testdata.Name, createdorder.Name);
+            Assert.Equal(testdata.HomeID, createdorder.HomeID);
+            Assert.Equal(testdata.Comment, createdorder.Comment);
+            Assert.Equal(testdata.ValidFrom, createdorder.ValidFrom);
+            Assert.Equal(testdata.ValidTo, createdorder.ValidTo);
             var norderid = createdorder.ID;
             listCreatedID.Add(norderid);
 
             // 3. Read all
             getrst = control.Get();
             Assert.NotNull(getrst);
+            var getokrst = Assert.IsType<OkObjectResult>(getrst);
+            var getorders = Assert.IsAssignableFrom<IQueryable<FinanceOrder>>(getokrst.Value);
+            var idxFornewcreated = getorders.ToList<FinanceOrder>().FindIndex(p => p.ID == norderid);
+            Assert.NotEqual(-1, idxFornewcreated);
 
             // 3a. Read single
             var getsinglerst = control.Get(norderid);
             Assert.NotNull(getsinglerst);
+            var getsingleorder = Assert.IsType<FinanceOrder>(getsinglerst);
+            Assert.Equal(testdata.Name, getsingleorder.Name);
+            Assert.Equal(testdata.HomeID, getsingleorder.HomeID);
+            Assert.Equal(testdata.Comment, getsingleorder.Comment);
+            Assert.Equal(testdata.ValidFrom, getsingleorder.ValidFrom);
+            Assert.Equal(testdata.ValidTo, getsingleorder.ValidTo);
 
-            // 4. Change.
+            // 4. Simple Change.
             createdorder.Comment += "Changed";
+            createdorder.Name += "Changed";
+            createdorder.ValidTo = new DateTime(createdorder.ValidTo.Ticks).AddMonths(1);
             var changerst = await control.Put(norderid, createdorder);
             Assert.NotNull(changerst);
+            var changedrst = Assert.IsType<UpdatedODataResult<FinanceOrder>>(changerst);
+            var changedorder = Assert.IsAssignableFrom<FinanceOrder>(changedrst.Entity);
+            Assert.Equal(createdorder.Name, changedorder.Name);
+            Assert.Equal(createdorder.HomeID, changedorder.HomeID);
+            Assert.Equal(createdorder.Comment, changedorder.Comment);
+            Assert.Equal(createdorder.ValidFrom, changedorder.ValidFrom);
+            Assert.Equal(createdorder.ValidTo, changedorder.ValidTo);
+
+            // 4a. Change the rules
+            if (testdata.ChangedSRule.Count > 0)
+            {
+                createdorder.SRule.Clear();
+                testdata.ChangedSRule.ForEach(srulr => createdorder.SRule.Add(srulr));
+                changerst = await control.Put(norderid, createdorder);
+                Assert.NotNull(changerst);
+                changedrst = Assert.IsType<UpdatedODataResult<FinanceOrder>>(changerst);
+                changedorder = Assert.IsAssignableFrom<FinanceOrder>(changedrst.Entity);
+                Assert.Equal(createdorder.Name, changedorder.Name);
+                Assert.Equal(createdorder.HomeID, changedorder.HomeID);
+                Assert.Equal(createdorder.Comment, changedorder.Comment);
+                Assert.Equal(createdorder.ValidFrom, changedorder.ValidFrom);
+                Assert.Equal(createdorder.ValidTo, changedorder.ValidTo);
+                Assert.Equal(testdata.ChangedSRule.Count, changedorder.SRule.Count);
+            }
+
+            // 5. Delete
+            var deleterst = await control.Delete(norderid);
+            Assert.NotNull(deleterst);
+            var deleteokrst = Assert.IsType<StatusCodeResult>(deleterst);
+            Assert.Equal(204, deleteokrst.StatusCode);
+
+            listCreatedID.Remove(norderid);
 
             await context.DisposeAsync();
         }

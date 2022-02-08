@@ -55,10 +55,12 @@ namespace hihapi.test.UnitTests.Finance
         public String Comment { get; set; }
         public List<FinanceOrderSRule> SRule { get; set; }
         public string CurrentUser { get; set; }
+        public List<FinanceOrderSRule> ChangedSRule { get; set; }
 
         public OrderControllerTestData()
         {
             this.SRule = new List<FinanceOrderSRule>();
+            this.ChangedSRule = new List<FinanceOrderSRule>();
         }
 
         public void Deserialize(IXunitSerializationInfo info)
@@ -73,6 +75,8 @@ namespace hihapi.test.UnitTests.Finance
             ValidTo = other.ValidTo;
             this.SRule.Clear();
             this.SRule.AddRange(other.SRule);
+            this.ChangedSRule.Clear();
+            this.ChangedSRule.AddRange(other.ChangedSRule);
 
             CurrentUser = other.CurrentUser;
         }
