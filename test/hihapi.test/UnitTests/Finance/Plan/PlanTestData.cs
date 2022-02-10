@@ -1,13 +1,9 @@
 ﻿using hihapi.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Xunit.Abstractions;
 
-namespace hihapi.test.UnitTests.Finance
+namespace hihapi.unittest.Finance
 {
     public class PlanTestData : IXunitSerializable
     {

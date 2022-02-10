@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 using System.Text.Json;
 using hihapi.Models;
 
-namespace hihapi.test.UnitTests.Finance
+namespace hihapi.unittest.Finance
 {
     public class FinanceDocumentsControllerTestData_DocItem
     {
@@ -23,7 +23,7 @@ namespace hihapi.test.UnitTests.Finance
         public Int32 HomeID { get; set; }
         public String CurrentUser { get; set; }
         public String Currency { get; set; }
-        public String? SecondCurrency { get; set; }
+        public String SecondCurrency { get; set; }
         public Decimal? ExchangeRate { get; set; }
         public Boolean? ExchangeRateIsPlanned { get; set; }
         public Decimal? SecondExchangeRate { get; set; }
@@ -40,7 +40,7 @@ namespace hihapi.test.UnitTests.Finance
             String usr,
             int hid,
             String curr,
-            String? secondcurr,
+            String secondcurr,
             Decimal? exchangeRate,
             bool? exchangeRateIsPlanned,
             Decimal? exchangeRate2,

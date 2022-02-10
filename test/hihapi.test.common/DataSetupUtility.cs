@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Security.Claims;
 using hihapi.Models;
-using hihapi.Controllers;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
-namespace hihapi.test
+namespace hihapi.test.common
 {
     public static class DataSetupUtility
     {

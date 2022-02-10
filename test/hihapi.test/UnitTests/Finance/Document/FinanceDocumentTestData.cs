@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 using System.Text.Json;
 using hihapi.Models;
 
-namespace hihapi.test.UnitTests.Finance
+namespace hihapi.unittest.Finance
 {
     public class FinanceDocumentTestData : IXunitSerializable
     {
@@ -21,7 +21,7 @@ namespace hihapi.test.UnitTests.Finance
         public String Desp { get; set; }
         public Decimal? ExgRate { get; set; }
         public Boolean? ExgRate_Plan { get; set; }
-        public String? TranCurr2 { get; set; }
+        public String TranCurr2 { get; set; }
         public Decimal? ExgRate2 { get; set; }
         public Boolean? ExgRate_Plan2 { get; set; }
         public List<FinanceDocumentItem> Items { get; set; }

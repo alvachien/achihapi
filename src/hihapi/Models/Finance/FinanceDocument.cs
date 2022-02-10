@@ -51,7 +51,7 @@ namespace hihapi.Models
         
         [StringLength(5)]
         [Column("TRANCURR2", TypeName="NVARCHAR(5)")]
-        public String? TranCurr2 { get; set; }
+        public String TranCurr2 { get; set; }
         
         [Column("EXGRATE2", TypeName = "DECIMAL(17, 4)")]
         public Decimal? ExgRate2 { get; set; }

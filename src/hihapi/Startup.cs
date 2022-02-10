@@ -82,18 +82,7 @@ namespace hihapi
                 .AddRouteComponents("v1", model)
                 );
 
-            if (Environment.EnvironmentName == "IntegrationTest")
-            {
-                services.AddAuthentication("Bearer")
-                    .AddJwtBearer("Bearer", options =>
-                    {
-                        options.Authority = "http://localhost:5005";
-                        options.RequireHttpsMetadata = false;
-
-                        options.Audience = "api.hih";
-                    });
-            }
-            else if (Environment.IsDevelopment())
+            if (Environment.IsDevelopment())
             {
                 // accepts any access token issued by identity server
                 services.AddAuthentication("Bearer")

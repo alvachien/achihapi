@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\hihapi\hihapi.csproj" />
-    <ProjectReference Include="..\test\hihapi.test\hihapi.test.csproj" />
+    <ProjectReference Include="..\..\src\hihapi\hihapi.csproj" />
+    <ProjectReference Include="..\hihapi.test.common\hihapi.test.common.csproj" />
   </ItemGroup>
 
 </Project>

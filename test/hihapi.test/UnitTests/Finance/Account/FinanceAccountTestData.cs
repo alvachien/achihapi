@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using Xunit.Abstractions;
 using System.Text.Json;
 using hihapi.Models;
 
-namespace hihapi.test.UnitTests.Finance
+namespace hihapi.unittest.Finance
 {
     public class FinanceAccountTestData : IXunitSerializable
     {

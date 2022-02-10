@@ -8,8 +8,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using hihapi.test.common;
 
 namespace hihapi.integrationtest
 {
@@ -109,8 +108,9 @@ namespace hihapi.integrationtest
                     {
                         // Utilities.InitializeDbForTests(db);
                     }
-                    catch (Exception ex)
+                    catch (Exception exp)
                     {
+                        
                         //logger.LogError(ex, "An error occurred seeding the " +
                         //    "database with test messages. Error: {Message}", ex.Message);
                     }

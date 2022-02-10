@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using hihapi.test;
-using Xunit;
+﻿using Xunit;
 
-namespace hihapi.test.UnitTests
+namespace hihapi.unittest
 {
     [CollectionDefinition("HIHAPI_UnitTests#1")]
     public class UnitTestCollection: ICollectionFixture<SqliteDatabaseFixture>

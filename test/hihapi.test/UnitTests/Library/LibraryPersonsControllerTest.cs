@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace hihapi.test.UnitTests.Library
+namespace hihapi.unittest.Library
 {
     internal class LibraryPersonsControllerTest
     {

@@ -11,8 +11,9 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.EntityFrameworkCore;
+using hihapi.test.common;
 
-namespace hihapi.test.UnitTests.Finance
+namespace hihapi.unittest.Finance
 {
 
     [Collection("HIHAPI_UnitTests#1")]
@@ -323,7 +324,6 @@ namespace hihapi.test.UnitTests.Finance
 
             // 4.4 Delete an item
             // Delete the item with min. DI
-            FinanceDocumentItem itemtbd = null;
             var tbditem = doc.Items.FirstOrDefault(p => p.ItemID == itemminid);
             if (tbditem != null)
             {

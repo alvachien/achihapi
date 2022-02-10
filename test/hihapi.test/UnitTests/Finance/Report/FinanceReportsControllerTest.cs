@@ -1,23 +1,12 @@
 ﻿using System;
 using Xunit;
-using System.Linq;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Sqlite;
-using hihapi.Models;
-using hihapi.Controllers;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using Moq;
-using System.Security.Claims;
 using System.Collections.Generic;
-using hihapi.Exceptions;
-using Microsoft.AspNetCore.OData.Results;
 using hihapi.Controllers.Finance;
 using Microsoft.AspNetCore.OData.Formatter;
+using hihapi.test.common;
 
-namespace hihapi.test.UnitTests.Finance
+namespace hihapi.unittest.Finance
 {
     [Collection("HIHAPI_UnitTests#1")]
     public class FinanceReportsControllerTest : IDisposable
@@ -53,6 +42,7 @@ namespace hihapi.test.UnitTests.Finance
         [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home1ID, 2022)]
         public async Task TestCase_ReportByTranType(string user, int hid, int year)
         {
+            Assert.NotNull(user);
             var context = this.fixture.GetCurrentDataContext();
 
             FinanceReportsController control = new FinanceReportsController(context);

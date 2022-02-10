@@ -123,7 +123,7 @@ namespace hihapi
                 }
 
                 entity.HasIndex(e => e.Name)
-                    .HasName("UK_t_homedef_NAME")
+                    .HasDatabaseName("UK_t_homedef_NAME")
                     .IsUnique();
             });
             modelBuilder.Entity<HomeMember>(entity =>
@@ -131,7 +131,7 @@ namespace hihapi
                 entity.HasKey(e => new { e.HomeID, e.User });
 
                 entity.HasIndex(e => new { e.HomeID, e.User })
-                    .HasName("UK_t_homemem_USER")
+                    .HasDatabaseName("UK_t_homemem_USER")
                     .IsUnique();
 
                 entity.HasOne(d => d.HomeDefinition)

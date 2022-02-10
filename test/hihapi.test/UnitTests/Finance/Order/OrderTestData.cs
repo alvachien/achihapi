@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 using System.Text.Json;
 using hihapi.Models;
 
-namespace hihapi.test.UnitTests.Finance
+namespace hihapi.unittest.Finance
 {
     public class OrderTestData : IXunitSerializable
     {

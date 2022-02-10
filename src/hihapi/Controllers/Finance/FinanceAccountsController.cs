@@ -159,7 +159,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
             
-            var account = _context.FinanceAccount.FindAsync(key);
+            var account = await _context.FinanceAccount.FindAsync(key);
             if (account == null)
                 return NotFound();
 

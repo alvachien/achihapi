@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Sqlite;
-using hihapi.Models;
+using hihapi.test.common;
 
-namespace hihapi.test
+namespace hihapi.unittest
 {
     public class SqliteDatabaseFixture : IDisposable
     {

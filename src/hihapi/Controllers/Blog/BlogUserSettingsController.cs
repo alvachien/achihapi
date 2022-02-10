@@ -72,7 +72,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] BlogUserSetting newsetting)
+        public IActionResult Post([FromBody] BlogUserSetting newsetting)
         {
             // Not Yet possible
             return Forbid();
