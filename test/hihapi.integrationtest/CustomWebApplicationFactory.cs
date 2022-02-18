@@ -28,7 +28,7 @@ namespace hihapi.integrationtest
                 if (!context.Database.IsSqlite()
                     || context.Database.IsSqlServer())
                 {
-                    throw new Exception("Faield!");
+                    throw new Exception("Failed!");
                 }
 
                 // Create tables and views
@@ -79,6 +79,8 @@ namespace hihapi.integrationtest
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
+            builder.UseEnvironment("INTEGRATION_TEST");
+
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<hihDataContext>));
