@@ -83,6 +83,7 @@ namespace hihapi.Controllers
             return rstquery.SingleOrDefault();
         }
 
+        [HttpPost]
         public async Task<IActionResult> Post([FromBody] FinanceOrder order)
         {
             if (!ModelState.IsValid)
@@ -126,6 +127,7 @@ namespace hihapi.Controllers
             return Created(order);
         }
 
+        [HttpPut]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceOrder update)
         {
             if (!ModelState.IsValid)
@@ -210,14 +212,15 @@ namespace hihapi.Controllers
             return Updated(update);
         }
 
-        public async Task<IActionResult> Patch([FromODataUri] int id, [FromBody] Delta<FinanceOrder> doc)
+        [HttpPatch]
+        public async Task<IActionResult> Patch([FromODataUri] int key, [FromBody] Delta<FinanceOrder> doc)
         {
             if (!ModelState.IsValid)
             {
                 HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
-            var entity = await _context.FinanceOrder.FindAsync(id);
+            var entity = await _context.FinanceOrder.FindAsync(key);
             if (entity == null)
             {
                 return NotFound();
@@ -247,7 +250,7 @@ namespace hihapi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.FinanceOrder.Any(p => p.ID == id))
+                if (!_context.FinanceOrder.Any(p => p.ID == key))
                 {
                     return NotFound();
                 }
@@ -260,6 +263,7 @@ namespace hihapi.Controllers
             return Updated(entity);
         }
 
+        [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
             var cc = await _context.FinanceOrder.FindAsync(key);

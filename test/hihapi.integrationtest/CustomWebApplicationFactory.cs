@@ -79,7 +79,7 @@ namespace hihapi.integrationtest
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            builder.UseEnvironment("INTEGRATION_TEST");
+            // builder.UseEnvironment("INTEGRATION_TEST");
 
             builder.ConfigureServices(services =>
             {

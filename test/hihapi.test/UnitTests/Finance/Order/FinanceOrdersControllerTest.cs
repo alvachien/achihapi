@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.OData.Results;
 using hihapi.test.common;
+using Microsoft.AspNetCore.OData.Deltas;
+using hihapi.Exceptions;
 
 namespace hihapi.unittest.Finance
 {
@@ -237,29 +239,48 @@ namespace hihapi.unittest.Finance
             var srulegetrst = control.Get();
             Assert.NotNull(srulegetrst);
 
-            // 4. Simple Change.
+            // 4. Simple Change: Name and comment.
+            Delta<FinanceOrder> delta = new Delta<FinanceOrder>();
+            delta.UpdatableProperties.Clear();
+            delta.UpdatableProperties.Add("Comment");
+            delta.UpdatableProperties.Add("Name");
             createdorder.Comment += "Changed";
+            delta.TrySetPropertyValue("Comment", createdorder.Comment);
             createdorder.Name += "Changed";
-            createdorder.ValidTo = new DateTime(createdorder.ValidTo.Ticks).AddMonths(1);
-            var changerst = await control.Put(norderid, createdorder);
-            Assert.NotNull(changerst);
-            var changedrst = Assert.IsType<UpdatedODataResult<FinanceOrder>>(changerst);
-            var changedorder = Assert.IsAssignableFrom<FinanceOrder>(changedrst.Entity);
-            Assert.Equal(createdorder.Name, changedorder.Name);
-            Assert.Equal(createdorder.HomeID, changedorder.HomeID);
-            Assert.Equal(createdorder.Comment, changedorder.Comment);
-            Assert.Equal(createdorder.ValidFrom, changedorder.ValidFrom);
-            Assert.Equal(createdorder.ValidTo, changedorder.ValidTo);
+            delta.TrySetPropertyValue("Name", createdorder.Name);
+            var patchresult = await control.Patch(norderid, delta);
+            var patcheddoc = Assert.IsType<UpdatedODataResult<FinanceOrder>>(patchresult);
+            Assert.NotNull(patcheddoc);
+            Assert.Equal(createdorder.Comment, patcheddoc.Entity.Comment);
+            Assert.Equal(createdorder.Name, patcheddoc.Entity.Name);
+            Assert.Equal(createdorder.HomeID, patcheddoc.Entity.HomeID);
+            Assert.Equal(createdorder.ValidFrom, patcheddoc.Entity.ValidFrom);
+            Assert.Equal(createdorder.ValidTo, patcheddoc.Entity.ValidTo);
 
-            // 4a. Change the rules
+            // 4a. Change the validity
+            delta = new Delta<FinanceOrder>();
+            delta.UpdatableProperties.Clear();
+            delta.UpdatableProperties.Add("ValidTo");
+            createdorder.ValidTo = new DateTime(createdorder.ValidTo.Ticks).AddMonths(1);
+            delta.TrySetPropertyValue("ValidTo", createdorder.ValidTo);
+            patchresult = await control.Patch(norderid, delta);
+            patcheddoc = Assert.IsType<UpdatedODataResult<FinanceOrder>>(patchresult);
+            Assert.NotNull(patcheddoc);
+            Assert.Equal(createdorder.Comment, patcheddoc.Entity.Comment);
+            Assert.Equal(createdorder.Name, patcheddoc.Entity.Name);
+            Assert.Equal(createdorder.HomeID, patcheddoc.Entity.HomeID);
+            Assert.Equal(createdorder.ValidFrom, patcheddoc.Entity.ValidFrom);
+            Assert.Equal(createdorder.ValidTo, patcheddoc.Entity.ValidTo);
+
+            // 4b. Change the rules
             if (testdata.ChangedSRule.Count > 0)
             {
                 createdorder.SRule.Clear();
                 testdata.ChangedSRule.ForEach(srulr => createdorder.SRule.Add(srulr));
-                changerst = await control.Put(norderid, createdorder);
+                var changerst = await control.Put(norderid, createdorder);
                 Assert.NotNull(changerst);
-                changedrst = Assert.IsType<UpdatedODataResult<FinanceOrder>>(changerst);
-                changedorder = Assert.IsAssignableFrom<FinanceOrder>(changedrst.Entity);
+                var changedrst = Assert.IsType<UpdatedODataResult<FinanceOrder>>(changerst);
+                var changedorder = Assert.IsAssignableFrom<FinanceOrder>(changedrst.Entity);
                 Assert.Equal(createdorder.Name, changedorder.Name);
                 Assert.Equal(createdorder.HomeID, changedorder.HomeID);
                 Assert.Equal(createdorder.Comment, changedorder.Comment);
@@ -275,6 +296,89 @@ namespace hihapi.unittest.Finance
             Assert.Equal(204, deleteokrst.StatusCode);
 
             listCreatedID.Remove(norderid);
+
+            await context.DisposeAsync();
+        }
+
+        [Theory]
+        [InlineData(DataSetupUtility.Home1ID, 9999)]
+        public async Task TestCase_DeleteNonExistOrder(int hid, int norder)
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            
+            // Arrange
+            this.fixture.InitHomeTestData(hid, context);
+
+            // Action
+            var control = new FinanceOrdersController(context);
+            try
+            {
+                var rst = control.Delete(norder);
+                Assert.IsType<BadRequestResult>(rst);
+            }
+            catch(Exception)
+            {
+            }
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task TestCase_PutWithInvalidModel()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+
+            // Action
+            var control = new FinanceOrdersController(context);
+            control.ModelState.AddModelError("Name", "The Name field is required.");
+            try
+            {
+                await control.Put(9999, null);
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<BadRequestException>(exp);
+            }
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task TestCase_PostWithInvalidMode()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+
+            // Action
+            var control = new FinanceOrdersController(context);
+            control.ModelState.AddModelError("Name", "The Name field is required.");
+            try
+            {
+                await control.Post(new FinanceOrder());
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<BadRequestException>(exp);
+            }
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task TestCase_PatchWithInvalidMode()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+
+            // Action
+            var control = new FinanceOrdersController(context);
+            control.ModelState.AddModelError("Name", "The Name field is required.");
+            try
+            {
+                await control.Patch(999, new Delta<FinanceOrder>());
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<BadRequestException>(exp);
+            }
 
             await context.DisposeAsync();
         }
