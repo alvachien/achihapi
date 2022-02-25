@@ -85,15 +85,11 @@ namespace hihapi.Controllers
         public async Task<IActionResult> Post([FromBody] FinanceTransactionType ctgy)
         {
             if (!ModelState.IsValid)
-            {
                 HIHAPIUtility.HandleModalStateError(ModelState);
-            }
 
             // Check
             if (!ctgy.IsValid(this._context) || !ctgy.HomeID.HasValue)
-            {
-                throw new BadRequestException("Inputted ID mismatched");
-            }
+                throw new BadRequestException("Inputted Object IsValid failed");
 
             // User
             String usrName = String.Empty;
@@ -117,9 +113,6 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            if (!ctgy.IsValid(this._context))
-                throw new BadRequestException("Inputted Object IsValid failed");
-
             ctgy.CreatedAt = DateTime.Now;
             ctgy.Createdby = usrName;
             _context.FinTransactionType.Add(ctgy);
@@ -132,14 +125,10 @@ namespace hihapi.Controllers
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceTransactionType update)
         {
             if (!ModelState.IsValid)
-            {
                 HIHAPIUtility.HandleModalStateError(ModelState);
-            }
 
             if (key != update.ID)
-            {
                 throw new BadRequestException("Inputted ID mismatched");
-            }
 
             // User
             String usrName = String.Empty;
@@ -191,12 +180,6 @@ namespace hihapi.Controllers
         [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
-            var cc = await _context.FinTransactionType.FindAsync(key);
-            if (cc == null)
-            {
-                return NotFound();
-            }
-
             // User
             String usrName = String.Empty;
             try
@@ -211,6 +194,10 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
+
+            var cc = await _context.FinTransactionType.FindAsync(key);
+            if (cc == null)
+                return NotFound();
 
             // Check whether User assigned with specified Home ID
             var hms = _context.HomeMembers.Where(p => p.HomeID == cc.HomeID && p.User == usrName).Count();

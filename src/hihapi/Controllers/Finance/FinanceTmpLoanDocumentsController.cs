@@ -43,9 +43,7 @@ namespace hihapi.Controllers
         public async Task<IActionResult> PostRepayDocument([FromBody]FinanceLoanRepayDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
-            {
                 HIHAPIUtility.HandleModalStateError(ModelState);
-            }
 
             // Checks
             // Check 0: Input data check
@@ -63,9 +61,7 @@ namespace hihapi.Controllers
             {
                 usrName = HIHAPIUtility.GetUserID(this);
                 if (String.IsNullOrEmpty(usrName))
-                {
                     throw new UnauthorizedAccessException();
-                }
             }
             catch
             {
@@ -75,9 +71,7 @@ namespace hihapi.Controllers
             // Check 1: Home ID
             var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.HomeID && p.User == usrName).Count();
             if (hms <= 0)
-            {
                 throw new UnauthorizedAccessException();
-            }
 
             // Check 2: Template doc
             var docLoanTmp = _context.FinanceTmpLoanDocument
@@ -243,9 +237,7 @@ namespace hihapi.Controllers
         public async Task<IActionResult> PostPrepaymentDocument([FromBody]FinanceLoanPrepayDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
-            {
                 HIHAPIUtility.HandleModalStateError(ModelState);
-            }
 
             // Checks
             // Check 0: Input data check

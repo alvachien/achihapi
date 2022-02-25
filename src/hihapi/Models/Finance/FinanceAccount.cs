@@ -100,6 +100,9 @@ namespace hihapi.Models
             // Documents
             refcnt = context.FinanceDocumentItem.Where(p => p.AccountID == this.ID).Count();
             if (refcnt > 0) return false;
+            // Plan
+            refcnt = context.FinancePlan.Where(p => p.PlanType == FinancePlanTypeEnum.Account && p.AccountID == this.ID).Count();
+            if (refcnt > 0) return false;
 
             return true;
         }

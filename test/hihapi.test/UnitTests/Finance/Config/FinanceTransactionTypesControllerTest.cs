@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData.Results;
 using hihapi.test.common;
+using hihapi.Exceptions;
 
 namespace hihapi.unittest.Finance
 {
@@ -104,6 +105,172 @@ namespace hihapi.unittest.Finance
             // 5. Delete it
             var deleteresult = control.Delete(nctgyid);
             Assert.NotNull(deleteresult);
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task TestCase_PostWithInvalidModelState()
+        {
+            var context = fixture.GetCurrentDataContext();
+
+            var control = new FinanceTransactionTypesController(context);
+            control.ModelState.AddModelError("Name", "The Name field is required.");
+
+            try
+            {
+                await control.Post(new FinanceTransactionType());
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<BadRequestException>(ex);
+            }
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task TestCase_PostWithInvalidInput()
+        {
+            var context = fixture.GetCurrentDataContext();
+
+            var control = new FinanceTransactionTypesController(context);
+
+            try
+            {
+                await control.Post(new FinanceTransactionType());
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<BadRequestException>(ex);
+            }
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task TestCase_PostWithInvalidUser()
+        {
+            var context = fixture.GetCurrentDataContext();
+
+            var control = new FinanceTransactionTypesController(context);
+
+            FinanceTransactionType ctgy = new FinanceTransactionType();
+            ctgy.HomeID = DataSetupUtility.Home1ID;
+            ctgy.Name = "Test 1";
+            ctgy.Comment = "Test 1";
+
+            try
+            {
+                await control.Post(ctgy);
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<UnauthorizedAccessException>(ex);
+            }
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task TestCase_PutWithInvalidModelState()
+        {
+            var context = fixture.GetCurrentDataContext();
+
+            var control = new FinanceTransactionTypesController(context);
+            control.ModelState.AddModelError("Name", "The Name field is required.");
+
+            try
+            {
+                await control.Put(999, new FinanceTransactionType());
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<BadRequestException>(ex);
+            }
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task TestCase_PutWithMismatchID()
+        {
+            var context = fixture.GetCurrentDataContext();
+
+            var control = new FinanceTransactionTypesController(context);
+
+            try
+            {
+                await control.Put(999, new FinanceTransactionType { ID = 1 });
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<BadRequestException>(ex);
+            }
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task TestCase_PutWithInvalidUser()
+        {
+            var context = fixture.GetCurrentDataContext();
+
+            var control = new FinanceTransactionTypesController(context);
+
+            try
+            {
+                await control.Put(999, new FinanceTransactionType { ID = 999 });
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<UnauthorizedAccessException>(ex);
+            }
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task TestCase_DeleteWithInvalidUser()
+        {
+            var context = fixture.GetCurrentDataContext();
+
+            var control = new FinanceTransactionTypesController(context);
+
+            try
+            {
+                await control.Delete(999);
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<UnauthorizedAccessException>(ex);
+            }
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task TestCase_DeleteWithInvalidID()
+        {
+            var context = fixture.GetCurrentDataContext();
+
+            var control = new FinanceTransactionTypesController(context);
+            var userclaim = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            try
+            {
+                var delrst = await control.Delete(99999);
+                Assert.NotNull(delrst);
+                var notfoundrst = Assert.IsType<NotFoundResult>(delrst);
+            }
+            catch (Exception ex)
+            {
+                Assert.NotNull(ex);
+            }
 
             await context.DisposeAsync();
         }

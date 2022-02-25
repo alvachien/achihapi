@@ -52,19 +52,36 @@ namespace hihapi.Controllers
             //return Ok(option.ApplyTo(query));
         }
 
+        [EnableQuery]
+        [HttpGet]
+        public SingleResult<FinancePlan> Get([FromODataUri] int key)
+        {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check whether User assigned with specified Home ID
+            return SingleResult.Create(from hmem in _context.HomeMembers
+                      where hmem.User == usrName
+                      select new { HomeID = hmem.HomeID } into hids
+                      join ords in _context.FinancePlan on hids.HomeID equals ords.HomeID
+                      where ords.ID == key
+                      select ords);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] FinancePlan plan)
         {
             if (!ModelState.IsValid)
-            {
                 HIHAPIUtility.HandleModalStateError(ModelState);
-            }
-
-            // Check
-            if (!plan.IsValid(this._context))
-            {
-                throw new BadRequestException("Check IsValid failed");
-            }
 
             // User
             String usrName = String.Empty;
@@ -81,12 +98,14 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            // Check
+            if (!plan.IsValid(this._context))
+                throw new BadRequestException("Check IsValid failed");
+
             // Check whether User assigned with specified Home ID
             var hms = _context.HomeMembers.Where(p => p.HomeID == plan.HomeID && p.User == usrName).Count();
             if (hms <= 0)
-            {
                 throw new UnauthorizedAccessException();
-            }
 
             plan.Createdby = usrName;
             plan.CreatedAt = DateTime.Now;
@@ -100,14 +119,10 @@ namespace hihapi.Controllers
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinancePlan update)
         {
             if (!ModelState.IsValid)
-            {
                 HIHAPIUtility.HandleModalStateError(ModelState);
-            }
 
             if (key != update.ID)
-            {
                 throw new BadRequestException("Inputted ID mismatched");
-            }
 
             // User
             String usrName = String.Empty;
@@ -115,9 +130,7 @@ namespace hihapi.Controllers
             {
                 usrName = HIHAPIUtility.GetUserID(this);
                 if (String.IsNullOrEmpty(usrName))
-                {
                     throw new UnauthorizedAccessException();
-                }
             }
             catch
             {
@@ -161,9 +174,7 @@ namespace hihapi.Controllers
         {
             var cc = await _context.FinancePlan.FindAsync(key);
             if (cc == null)
-            {
                 throw new NotFoundException("Inputted ID not found");
-            }
 
             // User
             String usrName = String.Empty;
