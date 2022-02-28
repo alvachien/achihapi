@@ -438,6 +438,99 @@ namespace hihapi.unittest.Finance
             await context.DisposeAsync();
         }
 
+        [Theory]
+        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.Home1CashAccount1ID, 
+            DataSetupUtility.Home1CashAccount2ID, DataSetupUtility.Home1ControlCenter1ID)]
+        [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home2ID, DataSetupUtility.Home2BaseCurrency, DataSetupUtility.Home2CashAccount1ID,
+            DataSetupUtility.Home2DepositAccount2ID, DataSetupUtility.Home2ControlCenter1ID)]
+        public async Task TestCase_PatchTransferDocument(String user, int hid, string curr, int account1, int account2, int ccid)
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            int ndocid = -1;
+            this.fixture.InitHomeTestData(hid, context);
+
+            FinanceDocumentsController control = new FinanceDocumentsController(context);
+
+            // 1. No authorization
+            try
+            {
+                control.Get();
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
+            var userclaim = DataSetupUtility.GetClaimForUser(user);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            // 2. Create normal docs
+            FinanceDocument doc = new FinanceDocument();
+            doc.HomeID = hid;
+            doc.DocType = FinanceDocumentType.DocType_Transfer;
+            doc.Desp = $"{ hid }_Transfer1";
+            doc.TranCurr = curr;
+            FinanceDocumentItem item = null;
+            item = new FinanceDocumentItem();
+            item.ItemID = 1;
+            item.AccountID = account1;
+            item.TranAmount = 100;
+            item.TranType = FinanceTransactionType.TranType_TransferOut;
+            item.Desp = doc.Desp;
+            item.ControlCenterID = ccid;
+            doc.Items.Add(item);
+            item = new FinanceDocumentItem();
+            item.ItemID = 2;
+            item.AccountID = account2;
+            item.TranAmount = 100;
+            item.TranType = FinanceTransactionType.TranType_TransferIn;
+            item.Desp = doc.Desp;
+            item.ControlCenterID = ccid;
+            doc.Items.Add(item);
+            var postresult = await control.Post(doc);
+            Assert.NotNull(postresult);
+            var createDocResult = Assert.IsType<CreatedODataResult<FinanceDocument>>(postresult);
+            ndocid = createDocResult.Entity.ID;
+            doc.ID = ndocid;
+            this.listCreatedDocs.Add(ndocid);
+
+            // 3. Now patch it - normal case
+            Delta<FinanceDocument> delta = new Delta<FinanceDocument>();
+            delta.UpdatableProperties.Clear();
+            delta.UpdatableProperties.Add("Desp");
+            delta.TrySetPropertyValue("Desp", "New Desp");
+            var patchresult = await control.Patch(ndocid, delta);
+            Assert.NotNull(patchresult);
+            var patcheddoc = Assert.IsType<UpdatedODataResult<FinanceDocument>>(patchresult);
+            Assert.NotNull(patcheddoc);
+            Assert.Equal("New Desp", patcheddoc.Entity.Desp);
+
+            // 3a. Now patch it - normal case
+            delta = new Delta<FinanceDocument>();
+            delta.UpdatableProperties.Clear();
+            delta.UpdatableProperties.Add("TranDate");
+            var deltadate = DateTime.Today.AddDays(2);
+            delta.TrySetPropertyValue("TranDate", deltadate);
+            patchresult = await control.Patch(ndocid, delta);
+            Assert.NotNull(patchresult);
+            patcheddoc = Assert.IsType<UpdatedODataResult<FinanceDocument>>(patchresult);
+            Assert.NotNull(patcheddoc);
+            Assert.Equal(deltadate, patcheddoc.Entity.TranDate);
+
+            // 4. Now patch it - exception case
+            delta = new Delta<FinanceDocument>();
+            delta.UpdatableProperties.Clear();
+            delta.UpdatableProperties.Add("HomeID");
+            delta.TrySetPropertyValue("HomeID", 9999);
+            patchresult = await control.Patch(ndocid, delta);
+            Assert.NotNull(patchresult);
+            Assert.IsType<BadRequestObjectResult>(patchresult);
+
+            await context.DisposeAsync();
+        }
+
         public static TheoryData<FinanceDocumentsControllerTestData_DPDoc> AdvancePaymentDocs =>
             new TheoryData<FinanceDocumentsControllerTestData_DPDoc>
             {

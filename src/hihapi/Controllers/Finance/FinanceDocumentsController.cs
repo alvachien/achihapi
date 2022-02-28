@@ -310,7 +310,8 @@ namespace hihapi.Controllers
             }
 
             // Do the validation.
-            if (!(entity.DocType == FinanceDocumentType.DocType_Normal))
+            if (!(entity.DocType == FinanceDocumentType.DocType_Normal
+                || entity.DocType == FinanceDocumentType.DocType_Transfer))
                 return BadRequest("Not supported document type");
             
             foreach (var prop in doc.GetChangedPropertyNames())

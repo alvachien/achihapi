@@ -20,7 +20,7 @@ namespace hihapi.Controllers
             _context = context;
         }
 
-        [EnableQuery]
+        [EnableQuery(MaxNodeCount = 200)]
         [HttpGet]
         //public IActionResult Get(ODataQueryOptions<FinanceDocumentItemView> option)
         public IActionResult Get()
