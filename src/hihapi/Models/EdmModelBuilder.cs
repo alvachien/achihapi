@@ -62,6 +62,7 @@ namespace hihapi.Models
             modelBuilder.ComplexType<RepeatedDatesWithAmountAndInterest>();
             modelBuilder.EntitySet<FinanceReport>("FinanceReports");
             modelBuilder.EntityType<FinanceReportByTransactionType>();
+            modelBuilder.EntityType<FinanceReportByTransactionTypeMOM>();
             var rptAcntExpense = modelBuilder.EntityType<FinanceReporAccountGroupAndExpenseView>();
             rptAcntExpense.HasKey(p => new {
                 p.HomeID,
@@ -145,7 +146,14 @@ namespace hihapi.Models
             actionReportCurrentMonthByTT.Parameter<int>("Year");
             actionReportCurrentMonthByTT.Parameter<int?>("Month");
             actionReportCurrentMonthByTT.ReturnsFromEntitySet<FinanceReportByTransactionType>("FinanceReportByTransactionTypes");
-            // Action: Get Report By Transaction Type YTD
+            // Action: Get Report By Transaction Type MOM
+            var actionReportCurrentMonthByTTMOM = reportEntity.Collection.Action("GetReportByTranTypeMOM");
+            // .ReturnsCollection<FinanceReportByTransactionType>();
+            actionReportCurrentMonthByTTMOM.Parameter<int>("HomeID");
+            actionReportCurrentMonthByTTMOM.Parameter<int>("TransactionType");
+            actionReportCurrentMonthByTTMOM.Parameter<bool?>("IncludeChildren");
+            actionReportCurrentMonthByTTMOM.Parameter<string>("Period");
+            actionReportCurrentMonthByTTMOM.ReturnsFromEntitySet<FinanceReportByTransactionTypeMOM>("FinanceReportByTransactionTypeMOMs");
             // Action: Get Report by Account
             var actionReportAccount = reportEntity.Collection.Action("GetReportByAccount");
             actionReportAccount.Parameter<int>("HomeID");

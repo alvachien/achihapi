@@ -16,6 +16,9 @@ namespace hihapi.Controllers.Finance
     public class FinanceReportsController : ODataController
     {
         private readonly hihDataContext _context;
+        const String MoMPeriod_Last12Month = "1";   // Last 12 months
+        const String MoMPeriod_Last6Month = "2";    // Last 6 months
+        const String MoMPeriod_Last3Month = "3";    // Last 3 months
 
         public FinanceReportsController(hihDataContext context)
         {
@@ -759,6 +762,118 @@ namespace hihapi.Controllers.Finance
             listResult.Add(keyfigure);
 
             return Ok(listResult);
+        }
+
+        [HttpPost]
+        public IActionResult GetReportByTranTypeMOM([FromBody] ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // 0. Get inputted parameter
+            Int32 hid = (Int32)parameters["HomeID"];
+            Int32 ttid = (int)parameters["TransactionType"];
+            Boolean includeChildren = false;
+            if (parameters.ContainsKey("IncludeChildren"))
+                includeChildren = (bool)parameters["IncludeChildren"];
+            String period = (String)parameters["Period"];
+
+            // 1. Check User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // 2. Check the Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+                throw new UnauthorizedAccessException();
+
+            // 3. Calculate the dates
+            DateTime dtToday = DateTime.Today;
+            DateTime dtbgn = DateTime.Today;
+            DateTime dtNextMonth = DateTime.Today.AddMonths(1);
+            DateTime dtNextMonthFirstDay = new DateTime(dtNextMonth.Year, dtNextMonth.Month, 1);
+            DateTime dtend = new DateTime(dtNextMonth.Year, dtNextMonth.Month, 1).AddDays(-1);
+            List<int> ttids = new List<int>();
+            ttids.Add(ttid);
+            if (includeChildren)
+            {
+                var lvl = (from fintt in _context.FinTransactionType
+                          where fintt.ParID != null
+                          && ttids.Contains(fintt.ParID.GetValueOrDefault())
+                          select fintt.ID).ToList();
+                ttids.AddRange(lvl);
+            }
+            
+            if (String.CompareOrdinal(period, MoMPeriod_Last12Month) == 0)
+            {
+                dtbgn = dtNextMonthFirstDay.AddYears(-1);
+            }
+            else if (String.CompareOrdinal(period, MoMPeriod_Last6Month) == 0)
+            {
+                dtbgn = dtNextMonthFirstDay.AddMonths(-6);
+            }
+            else if (String.CompareOrdinal(period, MoMPeriod_Last3Month) == 0)
+            {
+                dtbgn = dtNextMonthFirstDay.AddMonths(-3);
+            }
+            else
+                return BadRequest("Invalid Period");
+
+            var results = (from item in _context.FinanceDocumentItemView
+                           where item.HomeID == hid
+                             && item.TransactionDate >= dtbgn && item.TransactionDate < dtend
+                             && ttids.Contains(item.TransactionType)
+                           //&& item.TransactionType != FinanceTransactionType.TranType_TransferIn
+                           //&& item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                           //&& item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                           //&& item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                           group item by new { item.TransactionType, item.TransactionTypeName, item.IsExpense, item.TransactionDate.Month } into newresult
+                           select new
+                           {
+                               HomeID = hid,
+                               TransactionType = newresult.Key.TransactionType,
+                               TransactionTypeName = newresult.Key.TransactionTypeName,
+                               IsExpense = newresult.Key.IsExpense,
+                               Month = newresult.Key.Month,
+                               Amount = newresult.Sum(c => c.Amount)
+                           }).ToList();
+
+            List<FinanceReportByTransactionTypeMOM> listResult = new List<FinanceReportByTransactionTypeMOM>();
+            foreach (var result in results)
+            {
+                FinanceReportByTransactionTypeMOM financeReportByTransactionType = new FinanceReportByTransactionTypeMOM();
+                financeReportByTransactionType.HomeID = result.HomeID;
+                financeReportByTransactionType.TransactionTypeName = result.TransactionTypeName;
+                financeReportByTransactionType.TransactionType = result.TransactionType;
+                if (result.IsExpense)
+                    financeReportByTransactionType.OutAmount = result.Amount;
+                else
+                    financeReportByTransactionType.InAmount = result.Amount;
+                financeReportByTransactionType.Month = result.Month;
+                listResult.Add(financeReportByTransactionType);
+            }
+
+            return Ok(listResult);
+
         }
     }
 }

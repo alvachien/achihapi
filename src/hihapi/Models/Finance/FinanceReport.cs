@@ -232,6 +232,11 @@ namespace hihapi.Models
 
         public string TransactionTypeName { get; set; }
     }
+
+    public class FinanceReportByTransactionTypeMOM : FinanceReportByTransactionType
+    {
+        public Int32 Month { get; set; }
+    }
     #endregion
 
     #region Finance Overview KPI
