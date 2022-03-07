@@ -88,7 +88,7 @@ namespace hihapi.Controllers.Finance
                               TransactionType = newresult.Key.TransactionType,
                               TransactionTypeName = newresult.Key.TransactionTypeName,
                               IsExpense = newresult.Key.IsExpense,
-                              Amount = newresult.Sum(c => c.Amount)
+                              Amount = newresult.Sum(c => (double)c.Amount)
                           }).ToList();
 
             List<FinanceReportByTransactionType> listResult = new List<FinanceReportByTransactionType>();
@@ -99,9 +99,9 @@ namespace hihapi.Controllers.Finance
                 financeReportByTransactionType.TransactionTypeName = result.TransactionTypeName;
                 financeReportByTransactionType.TransactionType = result.TransactionType;
                 if (result.IsExpense)
-                    financeReportByTransactionType.OutAmount = result.Amount;
+                    financeReportByTransactionType.OutAmount = (Decimal)result.Amount;
                 else
-                    financeReportByTransactionType.InAmount = result.Amount;
+                    financeReportByTransactionType.InAmount = (Decimal)result.Amount;
                 listResult.Add(financeReportByTransactionType);
             }
 
@@ -854,7 +854,7 @@ namespace hihapi.Controllers.Finance
                                TransactionTypeName = newresult.Key.TransactionTypeName,
                                IsExpense = newresult.Key.IsExpense,
                                Month = newresult.Key.Month,
-                               Amount = newresult.Sum(c => c.Amount)
+                               Amount = newresult.Sum(c => (double)c.Amount)
                            }).ToList();
 
             List<FinanceReportByTransactionTypeMOM> listResult = new List<FinanceReportByTransactionTypeMOM>();
@@ -865,9 +865,9 @@ namespace hihapi.Controllers.Finance
                 financeReportByTransactionType.TransactionTypeName = result.TransactionTypeName;
                 financeReportByTransactionType.TransactionType = result.TransactionType;
                 if (result.IsExpense)
-                    financeReportByTransactionType.OutAmount = result.Amount;
+                    financeReportByTransactionType.OutAmount = (Decimal)result.Amount;
                 else
-                    financeReportByTransactionType.InAmount = result.Amount;
+                    financeReportByTransactionType.InAmount = (Decimal)result.Amount;
                 financeReportByTransactionType.Month = result.Month;
                 listResult.Add(financeReportByTransactionType);
             }

@@ -38,20 +38,32 @@ namespace hihapi.Models
             modelBuilder.EntitySet<FinanceDocument>("FinanceDocuments");
             modelBuilder.EntitySet<FinanceDocumentItem>("FinanceDocumentItems");
             modelBuilder.EntitySet<FinanceDocumentItemView>("FinanceDocumentItemViews");
-            var acntBalRpt = modelBuilder.EntitySet<FinanceReportByAccount>("FinanceReportByAccounts");
-            acntBalRpt.EntityType.HasKey(p => new {
+            //var acntBalRpt = modelBuilder.EntitySet<FinanceReportByAccount>("FinanceReportByAccounts");
+            //acntBalRpt.EntityType.HasKey(p => new {
+            //    p.HomeID,
+            //    p.AccountID,
+            //});
+            modelBuilder.EntityType<FinanceReportByAccount>().HasKey(p => new {
                 p.HomeID,
                 p.AccountID,
             });
-            var ccBalRpt = modelBuilder.EntitySet<FinanceReportByControlCenter>("FinanceReportByControlCenters");
-            ccBalRpt.EntityType.HasKey(p => new
-            {
+            //var ccBalRpt = modelBuilder.EntitySet<FinanceReportByControlCenter>("FinanceReportByControlCenters");
+            //ccBalRpt.EntityType.HasKey(p => new
+            //{
+            //    p.HomeID,
+            //    p.ControlCenterID,
+            //});
+            modelBuilder.EntityType<FinanceReportByControlCenter>().HasKey(p => new {
                 p.HomeID,
                 p.ControlCenterID,
             });
-            var ordBalRpt = modelBuilder.EntitySet<FinanceReportByOrder>("FinanceReportByOrders");
-            ordBalRpt.EntityType.HasKey(p => new
-            {
+            //var ordBalRpt = modelBuilder.EntitySet<FinanceReportByOrder>("FinanceReportByOrders");
+            //ordBalRpt.EntityType.HasKey(p => new
+            //{
+            //    p.HomeID,
+            //    p.OrderID,
+            //});
+            modelBuilder.EntityType<FinanceReportByOrder>().HasKey(p => new {
                 p.HomeID,
                 p.OrderID,
             });

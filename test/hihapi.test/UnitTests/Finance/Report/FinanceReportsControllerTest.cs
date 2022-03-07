@@ -46,6 +46,7 @@ namespace hihapi.unittest.Finance
         public async Task TestCase_ReportByTranType(string user, int hid, int year)
         {
             var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(hid, context);
 
             FinanceReportsController control = new FinanceReportsController(context);
 
@@ -68,8 +69,8 @@ namespace hihapi.unittest.Finance
             {
                 HttpContext = new DefaultHttpContext() { User = userclaim }
             };
-            //var rst = control.GetReportByTranType(parameters);
-            //Assert.NotNull(rst);
+            var rst = control.GetReportByTranType(parameters);
+            Assert.NotNull(rst);
 
             await context.DisposeAsync();
         }
@@ -142,6 +143,62 @@ namespace hihapi.unittest.Finance
             {
                 Assert.IsType<BadRequestException>(exp);
             }
+
+            await context.DisposeAsync();
+        }
+    
+        [Fact]
+        public async Task TestCase_GetReportByTranTypeMOM_InvalidModel()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            FinanceReportsController control = new FinanceReportsController(context);
+            control.ModelState.AddModelError("HomeID", "The HomeIDfield is required.");
+            try
+            {
+                control.GetReportByTranTypeMOM(new ODataActionParameters());
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<BadRequestException>(exp);
+            }
+
+            await context.DisposeAsync();
+        }
+
+        [Theory]
+        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID, DataSetupUtility.TranType_Expense1, "1", null)]
+        [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home1ID, DataSetupUtility.TranType_Expense1, "1", false)]
+        public async Task TestCase_ReportByTranTypeMOM(string user, int hid, int ttid, 
+            string period, Boolean? child)
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(hid, context);
+
+            FinanceReportsController control = new FinanceReportsController(context);
+
+            ODataActionParameters parameters = new ODataActionParameters();
+            parameters.Add("HomeID", hid);
+            parameters.Add("TransactionType", ttid);
+            parameters.Add("Period", period);
+            if (child != null)
+                parameters.Add("IncludeChildren", child.Value);
+
+            // 1. No authorization
+            try
+            {
+                control.GetReportByTranTypeMOM(parameters);
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
+            var userclaim = DataSetupUtility.GetClaimForUser(user);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+            var rst = control.GetReportByTranTypeMOM(parameters);
+            Assert.NotNull(rst);
 
             await context.DisposeAsync();
         }
