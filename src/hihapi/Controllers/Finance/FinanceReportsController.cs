@@ -764,6 +764,17 @@ namespace hihapi.Controllers.Finance
             return Ok(listResult);
         }
 
+        /// <summary>
+        /// Tran. type report, Month on Month
+        /// </summary>
+        /// <param name="parameters">
+        ///     HomeID: Current Home ID
+        ///     TransactionType: Transaction Type
+        ///     IncludeChildren [Optional]: Include the children tran. type
+        ///     Period: Specified period (1 - latest 12 months, 2 - last 6 months, 3 - last 3 months )
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
         public IActionResult GetReportByTranTypeMOM([FromBody] ODataActionParameters parameters)
         {
@@ -840,7 +851,7 @@ namespace hihapi.Controllers.Finance
 
             var results = (from item in _context.FinanceDocumentItemView
                            where item.HomeID == hid
-                             && item.TransactionDate >= dtbgn && item.TransactionDate < dtend
+                             && item.TransactionDate >= dtbgn && item.TransactionDate <= dtend
                              && ttids.Contains(item.TransactionType)
                            //&& item.TransactionType != FinanceTransactionType.TranType_TransferIn
                            //&& item.TransactionType != FinanceTransactionType.TranType_TransferOut
@@ -873,7 +884,259 @@ namespace hihapi.Controllers.Finance
             }
 
             return Ok(listResult);
+        }
 
+        /// <summary>
+        /// Account report, Month on Month
+        /// </summary>
+        /// <param name="parameters">
+        ///     HomeID: Current Home ID
+        ///     AccountID: Account ID
+        ///     Period: Specified period (1 - latest 12 months, 2 - last 6 months, 3 - last 3 months )
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
+        [HttpPost]
+        public IActionResult GetReportByAccountMOM([FromBody] ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // 0. Get inputted parameter
+            Int32 hid = (Int32)parameters["HomeID"];
+            Int32 accountid = (int)parameters["AccountID"];
+            String period = (String)parameters["Period"];
+
+            // 1. Check User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // 2. Check the Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+                throw new UnauthorizedAccessException();
+
+            // 3. Calculate the dates
+            DateTime dtbgn = DateTime.Today;
+            DateTime dtNextMonth = DateTime.Today.AddMonths(1);
+            DateTime dtNextMonthFirstDay = new DateTime(dtNextMonth.Year, dtNextMonth.Month, 1);
+            DateTime dtend = new DateTime(dtNextMonth.Year, dtNextMonth.Month, 1).AddDays(-1);
+
+            if (String.CompareOrdinal(period, MoMPeriod_Last12Month) == 0)
+            {
+                dtbgn = dtNextMonthFirstDay.AddYears(-1);
+
+            }
+            else if (String.CompareOrdinal(period, MoMPeriod_Last6Month) == 0)
+            {
+                dtbgn = dtNextMonthFirstDay.AddMonths(-6);
+            }
+            else if (String.CompareOrdinal(period, MoMPeriod_Last3Month) == 0)
+            {
+                dtbgn = dtNextMonthFirstDay.AddMonths(-3);
+            }
+            else
+                return BadRequest("Invalid Period");
+
+            var results = (from item in _context.FinanceDocumentItemView
+                           where item.HomeID == hid
+                             && item.TransactionDate >= dtbgn && item.TransactionDate <= dtend
+                             && item.AccountID == accountid
+                           //&& item.TransactionType != FinanceTransactionType.TranType_TransferIn
+                           //&& item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                           //&& item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                           //&& item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                           group item by new { item.AccountID, item.IsExpense, item.TransactionDate.Month } into newresult
+                           select new
+                           {
+                               HomeID = hid,
+                               AccountID = newresult.Key.AccountID,
+                               IsExpense = newresult.Key.IsExpense,
+                               Month = newresult.Key.Month,
+                               Amount = newresult.Sum(c => (double)c.Amount)
+                           }).ToList();
+
+            var result = new List<FinanceReportByAccountMOM>();
+            foreach (var dbresult in results)
+            {
+                var idx = result.FindIndex(p => p.AccountID == dbresult.AccountID && p.Month == dbresult.Month);
+                if (idx == -1)
+                {
+                    var finReportByAccountMOM = new FinanceReportByAccountMOM();
+                    finReportByAccountMOM.HomeID = dbresult.HomeID;
+                    finReportByAccountMOM.AccountID = dbresult.AccountID;
+                    if (dbresult.IsExpense)
+                        finReportByAccountMOM.CreditBalance = (Decimal)dbresult.Amount;
+                    else
+                        finReportByAccountMOM.DebitBalance = (Decimal)dbresult.Amount;
+                    finReportByAccountMOM.Month = dbresult.Month;
+                    
+                    result.Add(finReportByAccountMOM);
+                }
+                else
+                {
+                    var finReportByAccountMOM = result[idx];
+                    if (dbresult.IsExpense)
+                        finReportByAccountMOM.CreditBalance = (Decimal)dbresult.Amount;
+                    else
+                        finReportByAccountMOM.DebitBalance = (Decimal)dbresult.Amount;
+                }
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Control Center report, Month on Month
+        /// </summary>
+        /// <param name="parameters">
+        ///     HomeID: Current Home ID
+        ///     ControlCenterID: Control Center ID
+        ///     IncludeChildren [Optional]: Include the children control center
+        ///     Period: Specified period (1 - latest 12 months, 2 - last 6 months, 3 - last 3 months )
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
+        [HttpPost]
+        public IActionResult GetReportByControlCenterMOM([FromBody] ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // 0. Get inputted parameter
+            Int32 hid = (Int32)parameters["HomeID"];
+            Int32 ccid = (int)parameters["ControlCenterID"];
+            Boolean includeChildren = false;
+            if (parameters.ContainsKey("IncludeChildren"))
+                includeChildren = (bool)parameters["IncludeChildren"];
+            String period = (String)parameters["Period"];
+
+            // 1. Check User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // 2. Check the Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+                throw new UnauthorizedAccessException();
+
+            // 3. Calculate the dates
+            DateTime dtToday = DateTime.Today;
+            DateTime dtbgn = DateTime.Today;
+            DateTime dtNextMonth = DateTime.Today.AddMonths(1);
+            DateTime dtNextMonthFirstDay = new DateTime(dtNextMonth.Year, dtNextMonth.Month, 1);
+            DateTime dtend = new DateTime(dtNextMonth.Year, dtNextMonth.Month, 1).AddDays(-1);
+            List<int> ccids = new List<int>();
+            ccids.Add(ccid);
+            if (includeChildren)
+            {
+                var lvl = (from fincc in _context.FinanceControlCenter
+                           where fincc.ParentID != null
+                            && ccids.Contains(fincc.ParentID.GetValueOrDefault())
+                           select fincc.ID).ToList();
+                ccids.AddRange(lvl);
+            }
+
+            if (String.CompareOrdinal(period, MoMPeriod_Last12Month) == 0)
+            {
+                dtbgn = dtNextMonthFirstDay.AddYears(-1);
+            }
+            else if (String.CompareOrdinal(period, MoMPeriod_Last6Month) == 0)
+            {
+                dtbgn = dtNextMonthFirstDay.AddMonths(-6);
+            }
+            else if (String.CompareOrdinal(period, MoMPeriod_Last3Month) == 0)
+            {
+                dtbgn = dtNextMonthFirstDay.AddMonths(-3);
+            }
+            else
+                return BadRequest("Invalid Period");
+
+            var results = (from item in _context.FinanceDocumentItemView
+                           where item.HomeID == hid
+                             && item.TransactionDate >= dtbgn && item.TransactionDate <= dtend
+                             && item.ControlCenterID != null
+                             && ccids.Contains(item.ControlCenterID.GetValueOrDefault())
+                           //&& item.TransactionType != FinanceTransactionType.TranType_TransferIn
+                           //&& item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                           //&& item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                           //&& item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                           group item by new { item.ControlCenterID, item.IsExpense, item.TransactionDate.Month } into newresult
+                           select new
+                           {
+                               HomeID = hid,
+                               ControlCenterID = newresult.Key.ControlCenterID.GetValueOrDefault(),
+                               IsExpense = newresult.Key.IsExpense,
+                               Month = newresult.Key.Month,
+                               Amount = newresult.Sum(c => (double)c.Amount)
+                           }).ToList();
+
+            List<FinanceReportByControlCenterMOM> listResult = new List<FinanceReportByControlCenterMOM>();
+            foreach (var dbresult in results)
+            {
+                var idx = listResult.FindIndex(p => p.ControlCenterID == dbresult.ControlCenterID && p.Month == dbresult.Month);
+                if (idx == -1)
+                {
+                    var finrecord = new FinanceReportByControlCenterMOM();
+                    finrecord.HomeID = dbresult.HomeID;
+                    finrecord.ControlCenterID = dbresult.ControlCenterID;
+                    if (dbresult.IsExpense)
+                        finrecord.CreditBalance = (Decimal)dbresult.Amount;
+                    else
+                        finrecord.DebitBalance = (Decimal)dbresult.Amount;
+                    finrecord.Month = dbresult.Month;
+
+                    listResult.Add(finrecord);
+                }
+                else
+                {
+                    var finrecord = listResult[idx];
+                    if (dbresult.IsExpense)
+                        finrecord.CreditBalance = (Decimal)dbresult.Amount;
+                    else
+                        finrecord.DebitBalance = (Decimal)dbresult.Amount;
+                }
+            }
+
+            return Ok(listResult);
         }
     }
 }

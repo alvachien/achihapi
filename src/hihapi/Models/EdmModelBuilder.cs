@@ -75,6 +75,8 @@ namespace hihapi.Models
             modelBuilder.EntitySet<FinanceReport>("FinanceReports");
             modelBuilder.EntityType<FinanceReportByTransactionType>();
             modelBuilder.EntityType<FinanceReportByTransactionTypeMOM>();
+            modelBuilder.EntityType<FinanceReportByAccountMOM>();
+            modelBuilder.EntityType<FinanceReportByControlCenterMOM>();
             var rptAcntExpense = modelBuilder.EntityType<FinanceReporAccountGroupAndExpenseView>();
             rptAcntExpense.HasKey(p => new {
                 p.HomeID,
@@ -159,21 +161,36 @@ namespace hihapi.Models
             actionReportCurrentMonthByTT.Parameter<int?>("Month");
             actionReportCurrentMonthByTT.ReturnsFromEntitySet<FinanceReportByTransactionType>("FinanceReportByTransactionTypes");
             // Action: Get Report By Transaction Type MOM
-            var actionReportCurrentMonthByTTMOM = reportEntity.Collection.Action("GetReportByTranTypeMOM");
+            var actionReportByTTMOM = reportEntity.Collection.Action("GetReportByTranTypeMOM");
             // .ReturnsCollection<FinanceReportByTransactionType>();
-            actionReportCurrentMonthByTTMOM.Parameter<int>("HomeID");
-            actionReportCurrentMonthByTTMOM.Parameter<int>("TransactionType");
-            actionReportCurrentMonthByTTMOM.Parameter<bool?>("IncludeChildren");
-            actionReportCurrentMonthByTTMOM.Parameter<string>("Period");
-            actionReportCurrentMonthByTTMOM.ReturnsFromEntitySet<FinanceReportByTransactionTypeMOM>("FinanceReportByTransactionTypeMOMs");
+            actionReportByTTMOM.Parameter<int>("HomeID");
+            actionReportByTTMOM.Parameter<int>("TransactionType");
+            actionReportByTTMOM.Parameter<bool?>("IncludeChildren");
+            actionReportByTTMOM.Parameter<string>("Period");
+            actionReportByTTMOM.ReturnsFromEntitySet<FinanceReportByTransactionTypeMOM>("FinanceReportByTransactionTypeMOMs");
             // Action: Get Report by Account
             var actionReportAccount = reportEntity.Collection.Action("GetReportByAccount");
             actionReportAccount.Parameter<int>("HomeID");
             actionReportAccount.ReturnsFromEntitySet<FinanceReportByAccount>("FinanceReportByAccounts");
+            // Action: Get Report By Account MOM
+            var actionReportByAccountMOM = reportEntity.Collection.Action("GetReportByAccountMOM");
+            // .ReturnsCollection<FinanceReportByTransactionType>();
+            actionReportByAccountMOM.Parameter<int>("HomeID");
+            actionReportByAccountMOM.Parameter<int>("AccountID");
+            actionReportByAccountMOM.Parameter<string>("Period");
+            actionReportByAccountMOM.ReturnsFromEntitySet<FinanceReportByAccountMOM>("FinanceReportByAccountMOMs");
             // Action: Get Report by ControlCenter
             var actionReportCC = reportEntity.Collection.Action("GetReportByControlCenter");
             actionReportCC.Parameter<int>("HomeID");
             actionReportCC.ReturnsFromEntitySet<FinanceReportByControlCenter>("FinanceReportByControlCenters");
+            // Action: Get Report By ControlCenter MOM
+            var actionReportByCCMOM = reportEntity.Collection.Action("GetReportByControlCenterMOM");
+            // .ReturnsCollection<FinanceReportByTransactionType>();
+            actionReportByCCMOM.Parameter<int>("HomeID");
+            actionReportByCCMOM.Parameter<int>("ControlCenterID");
+            actionReportByTTMOM.Parameter<bool?>("IncludeChildren");
+            actionReportByCCMOM.Parameter<string>("Period");
+            actionReportByCCMOM.ReturnsFromEntitySet<FinanceReportByControlCenterMOM>("FinanceReportByControlCenterMOMs");
             // Action: Get Report by Order
             var actionReportOrder = reportEntity.Collection.Action("GetReportByOrder");
             actionReportOrder.Parameter<int>("HomeID");

@@ -56,7 +56,7 @@ namespace hihapi.Models
         public Int32? ControlCenterID { get; set; }
         [Column("ORDERID", TypeName = "INT")]
         public Int32? OrderID { get; set; }
-                    
+
         [Column("DESP", TypeName = "nvarchar(50)")]
         public string ItemDesp { get; set; }
     }
@@ -107,9 +107,20 @@ namespace hihapi.Models
         public Decimal Balance { get; set; }
     }
 
-    public sealed class FinanceReportByAccount : FinanceReportAccountBalanceView
+    public class FinanceReportByAccount : FinanceReportAccountBalanceView
     {
     }
+
+    public sealed class FinanceReportByAccountMOM : FinanceReportByAccount
+    {
+        public Int32 Month { get; set; }
+    }
+
+    //public sealed class FinanceReportByAccountMOMResult
+    //{
+    //    public List<FinanceReportByAccountMOM> ReportData { get; set; }
+    //    public List<String> Months { get; set; }
+    //}
     #endregion
 
     #region Control center report
@@ -158,8 +169,13 @@ namespace hihapi.Models
         public Decimal Balance { get; set; }
     }
 
-    public sealed class FinanceReportByControlCenter : FinanceReportControlCenterBalanceView
+    public class FinanceReportByControlCenter : FinanceReportControlCenterBalanceView
     {
+    }
+
+    public class FinanceReportByControlCenterMOM : FinanceReportByControlCenter
+    {
+        public Int32 Month { get; set; }
     }
     #endregion
 
@@ -226,7 +242,7 @@ namespace hihapi.Models
     #endregion
 
     #region Transaction type report
-    public class FinanceReportByTransactionType: FinanceReport
+    public class FinanceReportByTransactionType : FinanceReport
     {
         public Int32 TransactionType { get; set; }
 
@@ -237,6 +253,12 @@ namespace hihapi.Models
     {
         public Int32 Month { get; set; }
     }
+
+    //public sealed class FinanceReportByTransactionTypeMOMResult
+    //{
+    //    public List<FinanceReportByTransactionTypeMOM> ReportData { get; set; }
+    //    public List<String> Months { get; set; }
+    //}
     #endregion
 
     #region Finance Overview KPI
