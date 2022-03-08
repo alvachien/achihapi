@@ -188,7 +188,7 @@ namespace hihapi.Models
             // .ReturnsCollection<FinanceReportByTransactionType>();
             actionReportByCCMOM.Parameter<int>("HomeID");
             actionReportByCCMOM.Parameter<int>("ControlCenterID");
-            actionReportByTTMOM.Parameter<bool?>("IncludeChildren");
+            actionReportByCCMOM.Parameter<bool?>("IncludeChildren");
             actionReportByCCMOM.Parameter<string>("Period");
             actionReportByCCMOM.ReturnsFromEntitySet<FinanceReportByControlCenterMOM>("FinanceReportByControlCenterMOMs");
             // Action: Get Report by Order
