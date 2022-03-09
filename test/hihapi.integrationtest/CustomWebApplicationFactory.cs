@@ -110,9 +110,8 @@ namespace hihapi.integrationtest
                     {
                         // Utilities.InitializeDbForTests(db);
                     }
-                    catch (Exception exp)
-                    {
-                        
+                    catch (Exception)
+                    {                        
                         //logger.LogError(ex, "An error occurred seeding the " +
                         //    "database with test messages. Error: {Message}", ex.Message);
                     }

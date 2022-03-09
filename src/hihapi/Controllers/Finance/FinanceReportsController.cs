@@ -10,7 +10,7 @@ using hihapi.Utilities;
 using Microsoft.AspNetCore.OData.Formatter;
 using System.Threading.Tasks;
 
-namespace hihapi.Controllers.Finance
+namespace hihapi.Controllers
 {
     [Authorize]
     public class FinanceReportsController : ODataController
@@ -55,9 +55,7 @@ namespace hihapi.Controllers.Finance
             {
                 usrName = HIHAPIUtility.GetUserID(this);
                 if (String.IsNullOrEmpty(usrName))
-                {
                     throw new UnauthorizedAccessException();
-                }
             }
             catch
             {
@@ -67,9 +65,7 @@ namespace hihapi.Controllers.Finance
             // 2. Check the Home ID
             var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
             if (hms <= 0)
-            {
                 throw new UnauthorizedAccessException();
-            }
 
             // 3. Calculate the amount            
             DateTime dtlow = new DateTime(year, month == null ? 1 : month.Value, 1);
@@ -107,7 +103,15 @@ namespace hihapi.Controllers.Finance
 
             return Ok(listResult);
         }
-    
+
+        /// <summary>
+        /// Get report by Account
+        /// </summary>
+        /// <param name="parameters">
+        /// HomeID: Home ID
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
         public IActionResult GetReportByAccount([FromBody]ODataActionParameters parameters)
         {
@@ -133,9 +137,7 @@ namespace hihapi.Controllers.Finance
             {
                 usrName = HIHAPIUtility.GetUserID(this);
                 if (String.IsNullOrEmpty(usrName))
-                {
                     throw new UnauthorizedAccessException();
-                }
             }
             catch
             {
@@ -145,9 +147,7 @@ namespace hihapi.Controllers.Finance
             // 2. Check the Home ID
             var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
             if (hms <= 0)
-            {
                 throw new UnauthorizedAccessException();
-            }
 
             // 3. Calculate the amount
             var results = (
@@ -157,7 +157,7 @@ namespace hihapi.Controllers.Finance
                     join trantype in _context.FinTransactionType
                         on docitem.TranType equals trantype.ID
                     join account in _context.FinanceAccount
-                            on new { docitem.AccountID, IsNormal = true } equals new { AccountID = account.ID, IsNormal = account.Status == null || account.Status == (byte)FinanceAccountStatus.Normal }
+                        on new { docitem.AccountID, IsNormal = true } equals new { AccountID = account.ID, IsNormal = account.Status == null || account.Status == (byte)FinanceAccountStatus.Normal }
                     where docheader.HomeID == hid
                 select new
                 {
@@ -181,7 +181,7 @@ namespace hihapi.Controllers.Finance
                     UseCurr2 = docitem3.Key.UseCurr2,
                     ExgRate = docitem3.Key.ExgRate,
                     ExgRate2 = docitem3.Key.ExgRate2,
-                    TranAmount = docitem3.Sum(p => p.TranAmount)
+                    TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
                 }).ToList();
 
             List<FinanceReportByAccount> listResults = new List<FinanceReportByAccount>();
@@ -195,14 +195,14 @@ namespace hihapi.Controllers.Finance
                 {
                     if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
                     {
-                        amountLC *= rst.ExgRate2.GetValueOrDefault();
+                        amountLC *= (Double)rst.ExgRate2.GetValueOrDefault();
                     }
                 }
                 else
                 {
                     if (rst.ExgRate != null && rst.ExgRate.GetValueOrDefault() > 0)
                     {
-                        amountLC *= rst.ExgRate.GetValueOrDefault();
+                        amountLC *= (Double)rst.ExgRate.GetValueOrDefault();
                     }
                 }
 
@@ -214,18 +214,18 @@ namespace hihapi.Controllers.Finance
                     nrst.HomeID = hid;
                     nrst.AccountID = rst.AccountID;
                     if (rst.IsExpense)
-                        nrst.CreditBalance += amountLC;
+                        nrst.CreditBalance += (Decimal)amountLC;
                     else
-                        nrst.DebitBalance += amountLC;
+                        nrst.DebitBalance += (Decimal)amountLC;
                     nrst.Balance = nrst.DebitBalance + nrst.CreditBalance;
                     listResults.Add(nrst);
                 }
                 else
                 {
                     if (rst.IsExpense)
-                        listResults[acntidx].CreditBalance += amountLC;
+                        listResults[acntidx].CreditBalance += (Decimal)amountLC;
                     else
-                        listResults[acntidx].DebitBalance += amountLC;
+                        listResults[acntidx].DebitBalance += (Decimal)amountLC;
                     listResults[acntidx].Balance = listResults[acntidx].DebitBalance + listResults[acntidx].CreditBalance;
                 }
             }
@@ -233,6 +233,14 @@ namespace hihapi.Controllers.Finance
             return Ok(listResults);
         }
 
+        /// <summary>
+        /// Get report by Control Center
+        /// </summary>
+        /// <param name="parameters">
+        ///     HomeID: Home ID
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
         public IActionResult GetReportByControlCenter([FromBody] ODataActionParameters parameters)
         {
@@ -258,9 +266,7 @@ namespace hihapi.Controllers.Finance
             {
                 usrName = HIHAPIUtility.GetUserID(this);
                 if (String.IsNullOrEmpty(usrName))
-                {
                     throw new UnauthorizedAccessException();
-                }
             }
             catch
             {
@@ -270,9 +276,7 @@ namespace hihapi.Controllers.Finance
             // 2. Check the Home ID
             var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
             if (hms <= 0)
-            {
                 throw new UnauthorizedAccessException();
-            }
 
             // 3. Calculate the amount
             var results = (
@@ -304,7 +308,7 @@ namespace hihapi.Controllers.Finance
                     UseCurr2 = docitem3.Key.UseCurr2,
                     ExgRate = docitem3.Key.ExgRate,
                     ExgRate2 = docitem3.Key.ExgRate2,
-                    TranAmount = docitem3.Sum(p => p.TranAmount)
+                    TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
                 }).ToList();
 
             List<FinanceReportByControlCenter> listResults = new List<FinanceReportByControlCenter>();
@@ -318,14 +322,14 @@ namespace hihapi.Controllers.Finance
                 {
                     if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
                     {
-                        amountLC *= rst.ExgRate2.GetValueOrDefault();
+                        amountLC *= (Double)rst.ExgRate2.GetValueOrDefault();
                     }
                 }
                 else
                 {
                     if (rst.ExgRate != null && rst.ExgRate.GetValueOrDefault() > 0)
                     {
-                        amountLC *= rst.ExgRate.GetValueOrDefault();
+                        amountLC *= (Double)rst.ExgRate.GetValueOrDefault();
                     }
                 }
 
@@ -337,18 +341,18 @@ namespace hihapi.Controllers.Finance
                     nrst.HomeID = hid;
                     nrst.ControlCenterID = rst.ControlCenterID.GetValueOrDefault();
                     if (rst.IsExpense)
-                        nrst.CreditBalance += amountLC;
+                        nrst.CreditBalance += (Decimal)amountLC;
                     else
-                        nrst.DebitBalance += amountLC;
+                        nrst.DebitBalance += (Decimal)amountLC;
                     nrst.Balance = nrst.DebitBalance + nrst.CreditBalance;
                     listResults.Add(nrst);
                 }
                 else
                 {
                     if (rst.IsExpense)
-                        listResults[ccidx].CreditBalance += amountLC;
+                        listResults[ccidx].CreditBalance += (Decimal)amountLC;
                     else
-                        listResults[ccidx].DebitBalance += amountLC;
+                        listResults[ccidx].DebitBalance += (Decimal)amountLC;
                     listResults[ccidx].Balance = listResults[ccidx].DebitBalance + listResults[ccidx].CreditBalance;
                 }
             }
@@ -384,9 +388,7 @@ namespace hihapi.Controllers.Finance
             {
                 usrName = HIHAPIUtility.GetUserID(this);
                 if (String.IsNullOrEmpty(usrName))
-                {
                     throw new UnauthorizedAccessException();
-                }
             }
             catch
             {
@@ -396,9 +398,7 @@ namespace hihapi.Controllers.Finance
             // 2. Check the Home ID
             var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
             if (hms <= 0)
-            {
                 throw new UnauthorizedAccessException();
-            }
 
             // 3. Calculate the amount
             List<FinanceReportByOrder> listResults = new List<FinanceReportByOrder>();
@@ -590,9 +590,7 @@ namespace hihapi.Controllers.Finance
             {
                 usrName = HIHAPIUtility.GetUserID(this);
                 if (String.IsNullOrEmpty(usrName))
-                {
                     throw new UnauthorizedAccessException();
-                }
             }
             catch
             {
@@ -602,9 +600,7 @@ namespace hihapi.Controllers.Finance
             // 2. Check the Home ID
             var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
             if (hms <= 0)
-            {
                 throw new UnauthorizedAccessException();
-            }
 
             // 3. Calculate the key figure of current month.
             FinanceOverviewKeyFigure keyfigure = new FinanceOverviewKeyFigure();
