@@ -360,6 +360,14 @@ namespace hihapi.Controllers
             return Ok(listResults);
         }
 
+        /// <summary>
+        /// Get report by Order
+        /// </summary>
+        /// <param name="parameters">
+        ///     HomeID: Home ID
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
         public IActionResult GetReportByOrder([FromBody] ODataActionParameters parameters)
         {
@@ -562,6 +570,23 @@ namespace hihapi.Controllers
             return Ok(listResults);
         }
 
+        /// <summary>
+        /// Get Overview Figures
+        /// </summary>
+        /// <param name="parameters">
+        ///     HomeID: Home ID
+        ///     Year: Year
+        ///     Month: Month
+        ///     ExcludeTransfer: Exclude following transactions:
+        ///             - Transfer In
+        ///             - Transfer Out
+        ///             - Openning Asset
+        ///             - Openning Liability
+        ///             - Advance Payment Out
+        ///             - Advance Receive In
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
         public IActionResult GetFinanceOverviewKeyFigure([FromBody] ODataActionParameters parameters)
         {
@@ -615,6 +640,10 @@ namespace hihapi.Controllers
                                  && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                                  && item.TransactionType != FinanceTransactionType.TranType_TransferIn
                                  && item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                                 && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                                 && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                                 && item.TransactionType != FinanceTransactionType.TranType_AdvancePaymentOut
+                                 && item.TransactionType != FinanceTransactionType.TranType_AdvanceReceiveIn
                                group item by new { item.IsExpense } into newresult
                                select new
                                {
