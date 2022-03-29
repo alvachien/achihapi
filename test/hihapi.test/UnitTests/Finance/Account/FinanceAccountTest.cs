@@ -129,19 +129,19 @@ namespace hihapi.unittest.Finance
                 new FinanceAccountTestData()
                 {
                     CategoryID = FinanceAccountCategory.AccountCategory_Asset,
-                    Status = (byte)FinanceAccountStatus.Closed,
+                    Status = FinanceAccountStatus.Closed,
                     ExpectedIsCloseAllowedResult = false,
                 },
                 new FinanceAccountTestData()
                 {
                     CategoryID = FinanceAccountCategory.AccountCategory_Asset,
-                    Status = (byte)FinanceAccountStatus.Frozen,
+                    Status = FinanceAccountStatus.Frozen,
                     ExpectedIsCloseAllowedResult = false,
                 },
                 new FinanceAccountTestData()
                 {
                     CategoryID = FinanceAccountCategory.AccountCategory_Asset,
-                    Status = (byte)FinanceAccountStatus.Normal,
+                    Status = FinanceAccountStatus.Normal,
                     ExpectedIsCloseAllowedResult = true,
                 },
             };

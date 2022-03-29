@@ -336,7 +336,7 @@ namespace hihapi.Controllers
 
                 if (ret)
                 {
-                    acntDB.Status = (byte?)FinanceAccountStatus.Closed;
+                    acntDB.Status = FinanceAccountStatus.Closed;
                     await _context.SaveChangesAsync();
                 }
             }
@@ -394,7 +394,7 @@ namespace hihapi.Controllers
             if (acntDB != null)
             {
                 // 4. Check account status
-                if (acntDB.Status == null || (FinanceAccountStatus)(acntDB.Status.Value) != FinanceAccountStatus.Normal)
+                if (acntDB.Status != FinanceAccountStatus.Normal)
                 {
                     ret = false;
                 }

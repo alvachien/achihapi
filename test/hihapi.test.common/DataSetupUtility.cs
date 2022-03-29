@@ -18,7 +18,6 @@ namespace hihapi.test.common
         public static List<FinanceAssetCategory> FinanceAssetCategories { get; private set; }
         public static List<FinanceDocumentType> FinanceDocumentTypes { get; private set; }
         public static List<FinanceTransactionType> FinanceTransactionTypes { get; private set; }
-        public static List<LearnCategory> LearnCategories { get; private set; }
 
         /// <summary>
         /// Testing data
@@ -106,7 +105,6 @@ namespace hihapi.test.common
             FinanceAssetCategories = new List<FinanceAssetCategory>();
             FinanceDocumentTypes = new List<FinanceDocumentType>();
             FinanceTransactionTypes = new List<FinanceTransactionType>();
-            LearnCategories = new List<LearnCategory>();
 
             // Setup tables
             SetupTable_DBVersion();
@@ -117,7 +115,6 @@ namespace hihapi.test.common
             SetupTable_FinDocumentType();
             SetupTable_FinAssertCategory();
             SetupTable_FinTransactionType();
-            SetupTable_LearnCategory();
         }
 
         public static ClaimsPrincipal GetClaimForUser(String usr)
@@ -825,7 +822,6 @@ namespace hihapi.test.common
             InitialTable_FinAssetCategory(db);
             InitialTable_FinDocumentType(db);
             InitialTable_FinTransactionType(db);
-            InitialTable_LearnCategory(db);
             db.SaveChanges();
         }
 
@@ -863,11 +859,6 @@ namespace hihapi.test.common
         {
             db.FinTransactionType.AddRange(DataSetupUtility.FinanceTransactionTypes);
         }
-        private static void InitialTable_LearnCategory(hihDataContext db)
-        {
-            db.LearnCategories.AddRange(DataSetupUtility.LearnCategories);
-        }
-
         private static void InitialTable_HomeDefineAndMember(hihDataContext db)
         {
             db.HomeDefines.AddRange(DataSetupUtility.HomeDefines);
@@ -1289,28 +1280,6 @@ namespace hihapi.test.common
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 77, Name = "医药费", Expense = true, ParID = 75, Comment = "医药费" });
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 78, Name = "保健品费", Expense = true, ParID = 75, Comment = "保健品费" });
         }
-
-        private static void SetupTable_LearnCategory()
-        {
-            LearnCategories.Add(new LearnCategory() { ID = 1, ParentID = null, Name = "语文", Comment = "语文" });
-            LearnCategories.Add(new LearnCategory() { ID = 2, ParentID = 1, Name = "诗词", Comment = "唐诗宋词等" });
-            LearnCategories.Add(new LearnCategory() { ID = 3, ParentID = 1, Name = "识字", Comment = "拼音认读和笔画等" });
-            LearnCategories.Add(new LearnCategory() { ID = 4, ParentID = 1, Name = "文言文", Comment = "文言文等" });
-            LearnCategories.Add(new LearnCategory() { ID = 5, ParentID = 1, Name = "古典名著", Comment = "古典名著等" });
-
-            LearnCategories.Add(new LearnCategory() { ID = 6, ParentID = null, Name = "数学", Comment = "数学类" });
-            LearnCategories.Add(new LearnCategory() { ID = 7, ParentID = 6, Name = "算术", Comment = "加减法" });
-            LearnCategories.Add(new LearnCategory() { ID = 8, ParentID = 6, Name = "代数", Comment = "代数" });
-            LearnCategories.Add(new LearnCategory() { ID = 9, ParentID = 6, Name = "几何", Comment = "几何类" });
-
-            LearnCategories.Add(new LearnCategory() { ID = 10, ParentID = null, Name = "英语", Comment = "英语" });
-            LearnCategories.Add(new LearnCategory() { ID = 11, ParentID = 10, Name = "词汇", Comment = "英语词汇" });
-            LearnCategories.Add(new LearnCategory() { ID = 12, ParentID = 10, Name = "语法", Comment = "英语语法" });
-
-            LearnCategories.Add(new LearnCategory() { ID = 13, ParentID = null, Name = "日语", Comment = "日语类" });
-            LearnCategories.Add(new LearnCategory() { ID = 14, ParentID = 13, Name = "词汇", Comment = "日语词汇" });
-            LearnCategories.Add(new LearnCategory() { ID = 15, ParentID = 13, Name = "语法", Comment = "日语语法" });
-        }
         #endregion
 
         #region Setup testing data
@@ -1448,7 +1417,7 @@ namespace hihapi.test.common
                 Name = "Deposit Account 6",
                 Owner = UserA,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = (Byte)FinanceAccountStatus.Closed,
+                Status = FinanceAccountStatus.Closed,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1529,7 +1498,7 @@ namespace hihapi.test.common
                 Name = "Creditcard Account 15",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = (Byte)FinanceAccountStatus.Closed,
+                Status = FinanceAccountStatus.Closed,
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -1990,51 +1959,6 @@ namespace hihapi.test.common
             }
             #endregion
 
-            // Learn category
-            #region Learn Category
-            db.LearnCategories.Add(new LearnCategory
-            {
-                ID = 21,
-                HomeID = Home1ID,
-                Name = "Learn Categor 21",
-                Comment = "Comment of Learn Categor 21",
-            });
-            db.LearnCategories.Add(new LearnCategory
-            {
-                ID = 22,
-                HomeID = Home1ID,
-                Name = "Learn Categorg 22",
-                Comment = "Comment of Learn Categorg 22",
-            });
-            #endregion
-            // Learn object
-            #region Learn object
-            db.LearnObjects.Add(new LearnObject
-            {
-                ID = 1,
-                HomeID = Home1ID,
-                CategoryID = 1,
-                Name = "Object 1",
-                Content = " Content of object 1"
-            });
-            db.LearnObjects.Add(new LearnObject
-            {
-                ID = 2,
-                HomeID = Home1ID,
-                CategoryID = 21,
-                Name = "Object 2",
-                Content = " Content of object 2"
-            });
-            db.LearnObjects.Add(new LearnObject
-            {
-                ID = 3,
-                HomeID = Home1ID,
-                CategoryID = 22,
-                Name = "Object 3",
-                Content = " Content of object 3"
-            });
-            #endregion
-
             // Save it
             db.SaveChanges();
         }
@@ -2090,7 +2014,7 @@ namespace hihapi.test.common
                 Name = "Deposit Account 103",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = (Byte)FinanceAccountStatus.Closed
+                Status = FinanceAccountStatus.Closed
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2108,7 +2032,7 @@ namespace hihapi.test.common
                 Name = "Creditcard Account 105",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = (Byte)FinanceAccountStatus.Closed
+                Status = FinanceAccountStatus.Closed
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2403,7 +2327,7 @@ namespace hihapi.test.common
                 Name = "Deposit Account 204",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = (Byte)FinanceAccountStatus.Closed
+                Status = FinanceAccountStatus.Closed
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2439,7 +2363,7 @@ namespace hihapi.test.common
                 Name = "Creditcard Account 208",
                 Owner = UserB,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = (Byte)FinanceAccountStatus.Closed
+                Status = FinanceAccountStatus.Closed
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2659,7 +2583,7 @@ namespace hihapi.test.common
                 Name = "Creditcard Account 304",
                 Owner = UserC,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = (Byte)FinanceAccountStatus.Closed
+                Status = FinanceAccountStatus.Closed
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2668,7 +2592,7 @@ namespace hihapi.test.common
                 Name = "Virtual Account 305",
                 Owner = UserC,
                 CategoryID = FinanceAccountCategory.AccountCategory_VirtualAccount,
-                Status = (Byte)FinanceAccountStatus.Normal
+                Status = FinanceAccountStatus.Normal
             });
             #endregion
             // Control centers
@@ -2793,7 +2717,7 @@ namespace hihapi.test.common
                 Name = "Cash Account 401",
                 Owner = UserD,
                 CategoryID = FinanceAccountCategory.AccountCategory_Cash,
-                Status = (Byte)FinanceAccountStatus.Normal
+                Status = FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2802,7 +2726,7 @@ namespace hihapi.test.common
                 Name = "Deposit Account 402",
                 Owner = UserD,
                 CategoryID = FinanceAccountCategory.AccountCategory_Deposit,
-                Status = (Byte)FinanceAccountStatus.Normal
+                Status = FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2811,7 +2735,7 @@ namespace hihapi.test.common
                 Name = "Creditcard Account 403",
                 Owner = UserD,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = (Byte)FinanceAccountStatus.Normal
+                Status = FinanceAccountStatus.Normal
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2820,7 +2744,7 @@ namespace hihapi.test.common
                 Name = "Creditcard Account 404",
                 Owner = UserD,
                 CategoryID = FinanceAccountCategory.AccountCategory_Creditcard,
-                Status = (Byte)FinanceAccountStatus.Closed
+                Status = FinanceAccountStatus.Closed
             });
             db.FinanceAccount.Add(new FinanceAccount()
             {
@@ -2829,7 +2753,7 @@ namespace hihapi.test.common
                 Name = "Virtual Account 405",
                 Owner = UserD,
                 CategoryID = FinanceAccountCategory.AccountCategory_VirtualAccount,
-                Status = (Byte)FinanceAccountStatus.Normal
+                Status = FinanceAccountStatus.Normal
             });
             #endregion
             // Control centers

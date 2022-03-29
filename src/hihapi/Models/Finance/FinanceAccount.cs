@@ -50,7 +50,7 @@ namespace hihapi.Models
         public String Owner { get; set; }
 
         [Column("STATUS", TypeName="TINYINT")]
-        public Byte? Status { get; set; }
+        public FinanceAccountStatus Status { get; set; }
 
         public FinanceAccount(): base()
         {
@@ -153,7 +153,7 @@ namespace hihapi.Models
             }
 
             // Status
-            if (Status != null && (FinanceAccountStatus)Status.Value != FinanceAccountStatus.Normal) 
+            if (Status != FinanceAccountStatus.Normal) 
                 return false;
 
             return true;

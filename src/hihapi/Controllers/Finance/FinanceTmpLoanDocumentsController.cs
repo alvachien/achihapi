@@ -206,7 +206,7 @@ namespace hihapi.Controllers
                     // 3. In case balance is zero, update the account status
                     if (Decimal.Compare(acntBalance, 0) == 0)
                     {
-                        loanAccountHeader.Status = (Byte)FinanceAccountStatus.Closed;
+                        loanAccountHeader.Status = FinanceAccountStatus.Closed;
                         loanAccountHeader.Updatedby = usrName;
                         loanAccountHeader.UpdatedAt = DateTime.Now;
                         _context.FinanceAccount.Update(loanAccountHeader);
@@ -380,7 +380,7 @@ namespace hihapi.Controllers
                     // 2. In case balance is zero, update the account status
                     if (Decimal.Compare(acntBalance, 0) == 0)
                     {
-                        loanAccountHeader.Status = (Byte)FinanceAccountStatus.Closed;
+                        loanAccountHeader.Status = FinanceAccountStatus.Closed;
                         loanAccountHeader.Updatedby = usrName;
                         loanAccountHeader.UpdatedAt = DateTime.Now;
                         _context.FinanceAccount.Update(loanAccountHeader);

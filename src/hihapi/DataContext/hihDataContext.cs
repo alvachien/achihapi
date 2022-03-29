@@ -50,8 +50,6 @@ namespace hihapi
         public DbSet<FinanceReportOrderGroupView> FinanceReportOrderGroupView { get; set; }
         public DbSet<FinanceReportOrderGroupAndExpenseView> FinanceReportOrderGroupAndExpenseView { get; set; }
         // public DbSet<FinanceReportOrderBalanceView> FinanceReportOrderBalanceView { get; set; }
-        public DbSet<LearnCategory> LearnCategories { get; set; }
-        public DbSet<LearnObject> LearnObjects { get; set; }
         public DbSet<BlogFormat> BlogFormats { get; set;  }
         public DbSet<BlogUserSetting> BlogUserSettings { get; set; }
         public DbSet<BlogCollection> BlogCollections { get; set; }
@@ -543,65 +541,6 @@ namespace hihapi
             {
                 entity.HasNoKey();
                 entity.ToView("V_FIN_REPORT_ORDER");
-            });
-
-            modelBuilder.Entity<LearnCategory>(entity =>
-            {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.LearnCategories)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_learn_ctgy_HID");
-            });
-            modelBuilder.Entity<LearnObject>(entity =>
-            {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.LearnObjects)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_learn_obj_HID");
             });
 
             // Blogs part

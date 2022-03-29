@@ -157,7 +157,7 @@ namespace hihapi.Controllers
                     join trantype in _context.FinTransactionType
                         on docitem.TranType equals trantype.ID
                     join account in _context.FinanceAccount
-                        on new { docitem.AccountID, IsNormal = true } equals new { AccountID = account.ID, IsNormal = account.Status == null || account.Status == (byte)FinanceAccountStatus.Normal }
+                        on new { docitem.AccountID, IsNormal = true } equals new { AccountID = account.ID, IsNormal = account.Status == FinanceAccountStatus.Normal }
                     where docheader.HomeID == hid
                 select new
                 {

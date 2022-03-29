@@ -82,119 +82,120 @@ CREATE TABLE [dbo].[t_tag] (
 /**
  * 2. Learn part
  */
-CREATE TABLE [dbo].[t_learn_ctgy] (
-    [ID]        INT           IDENTITY (1, 1) NOT NULL,
-    [HID]       INT           NULL,
-    [PARID]     INT           NULL,
-    [NAME]      NVARCHAR (45) NOT NULL,
-    [COMMENT]   NVARCHAR (50) NULL,
-    [CREATEDBY] NVARCHAR (40) NULL,
-    [CREATEDAT] DATE          CONSTRAINT [DF_t_learn_ctgy_CREATEDAT] DEFAULT (getdate()) NULL,
-    [UPDATEDBY] NVARCHAR (40) NULL,
-    [UPDATEDAT] DATE          CONSTRAINT [DF_t_learn_ctgy_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_learn_ctgy] PRIMARY KEY CLUSTERED ([ID] ASC),
-    CONSTRAINT [FK_t_learn_ctgy_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
+ 
+--CREATE TABLE [dbo].[t_learn_ctgy] (
+--    [ID]        INT           IDENTITY (1, 1) NOT NULL,
+--    [HID]       INT           NULL,
+--    [PARID]     INT           NULL,
+--    [NAME]      NVARCHAR (45) NOT NULL,
+--    [COMMENT]   NVARCHAR (50) NULL,
+--    [CREATEDBY] NVARCHAR (40) NULL,
+--    [CREATEDAT] DATE          CONSTRAINT [DF_t_learn_ctgy_CREATEDAT] DEFAULT (getdate()) NULL,
+--    [UPDATEDBY] NVARCHAR (40) NULL,
+--    [UPDATEDAT] DATE          CONSTRAINT [DF_t_learn_ctgy_UPDATEDAT] DEFAULT (getdate()) NULL,
+--    CONSTRAINT [PK_t_learn_ctgy] PRIMARY KEY CLUSTERED ([ID] ASC),
+--    CONSTRAINT [FK_t_learn_ctgy_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
 
-CREATE TABLE [dbo].[t_learn_obj] (
-    [ID]        INT            IDENTITY (1, 1) NOT NULL,
-    [HID]       INT            NOT NULL,
-    [CATEGORY]  INT            NULL,
-    [NAME]      NVARCHAR (45)  NULL,
-    [CONTENT]   NVARCHAR (MAX) NULL,
-    [CREATEDBY] NVARCHAR (40)  NULL,
-    [CREATEDAT] DATE           CONSTRAINT [DF_t_learn_obj_CREATEDAT] DEFAULT (getdate()) NULL,
-    [UPDATEDBY] NVARCHAR (40)  NULL,
-    [UPDATEDAT] DATE           CONSTRAINT [DF_t_learn_obj_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_learn_obj] PRIMARY KEY CLUSTERED ([ID] ASC),
-    CONSTRAINT [FK_t_learn_obj_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
+--CREATE TABLE [dbo].[t_learn_obj] (
+--    [ID]        INT            IDENTITY (1, 1) NOT NULL,
+--    [HID]       INT            NOT NULL,
+--    [CATEGORY]  INT            NULL,
+--    [NAME]      NVARCHAR (45)  NULL,
+--    [CONTENT]   NVARCHAR (MAX) NULL,
+--    [CREATEDBY] NVARCHAR (40)  NULL,
+--    [CREATEDAT] DATE           CONSTRAINT [DF_t_learn_obj_CREATEDAT] DEFAULT (getdate()) NULL,
+--    [UPDATEDBY] NVARCHAR (40)  NULL,
+--    [UPDATEDAT] DATE           CONSTRAINT [DF_t_learn_obj_UPDATEDAT] DEFAULT (getdate()) NULL,
+--    CONSTRAINT [PK_t_learn_obj] PRIMARY KEY CLUSTERED ([ID] ASC),
+--    CONSTRAINT [FK_t_learn_obj_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
 
-CREATE TABLE [dbo].[t_learn_hist] (
-    [HID]       INT           NOT NULL,
-    [USERID]    NVARCHAR (40) NOT NULL,
-    [OBJECTID]  INT           NOT NULL,
-    [LEARNDATE] DATE          NOT NULL,
-    [COMMENT]   NVARCHAR (45) NULL,
-    [CREATEDBY] NVARCHAR (40) NULL,
-    [CREATEDAT] DATE          CONSTRAINT [DF_t_learn_hist_CREATEDAT] DEFAULT (getdate()) NULL,
-    [UPDATEDBY] NVARCHAR (40) NULL,
-    [UPDATEDAT] DATE          CONSTRAINT [DF_t_learn_hist_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_learn_hist] PRIMARY KEY CLUSTERED ([HID] ASC, [USERID] ASC, [OBJECTID] ASC, [LEARNDATE] ASC),
-    CONSTRAINT [FK_t_learn_hist_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
+--CREATE TABLE [dbo].[t_learn_hist] (
+--    [HID]       INT           NOT NULL,
+--    [USERID]    NVARCHAR (40) NOT NULL,
+--    [OBJECTID]  INT           NOT NULL,
+--    [LEARNDATE] DATE          NOT NULL,
+--    [COMMENT]   NVARCHAR (45) NULL,
+--    [CREATEDBY] NVARCHAR (40) NULL,
+--    [CREATEDAT] DATE          CONSTRAINT [DF_t_learn_hist_CREATEDAT] DEFAULT (getdate()) NULL,
+--    [UPDATEDBY] NVARCHAR (40) NULL,
+--    [UPDATEDAT] DATE          CONSTRAINT [DF_t_learn_hist_UPDATEDAT] DEFAULT (getdate()) NULL,
+--    CONSTRAINT [PK_t_learn_hist] PRIMARY KEY CLUSTERED ([HID] ASC, [USERID] ASC, [OBJECTID] ASC, [LEARNDATE] ASC),
+--    CONSTRAINT [FK_t_learn_hist_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
 
-CREATE TABLE [dbo].[t_learn_qtn_bank] (
-    [ID]          INT            IDENTITY (1, 1) NOT NULL,
-    [HID]         INT            NOT NULL,
-    [Type]        TINYINT        NOT NULL,
-    [Question]    NVARCHAR (200) NOT NULL,
-    [BriefAnswer] NVARCHAR (200) NULL,
-    [CREATEDBY]   NVARCHAR (50)  NULL,
-    [CREATEDAT]   DATE           CONSTRAINT [DF_t_learn_qtn_bank_CREATEDAT] DEFAULT (getdate()) NULL,
-    [UPDATEDBY]   NVARCHAR (50)  NULL,
-    [UPDATEDAT]   DATE           CONSTRAINT [DF_t_learn_qtn_bank_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_learn_qtn_bank] PRIMARY KEY CLUSTERED ([ID] ASC),
-    CONSTRAINT [FK_t_learn_qtn_bank_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE TABLE [dbo].[t_learn_qtn_bank_sub] (
-    [QTNID]   INT            NOT NULL,
-    [SUBITEM] NVARCHAR (20)  NOT NULL,
-    [DETAIL]  NVARCHAR (200) NOT NULL,
-    [OTHERS]  NVARCHAR (50)  NULL,
-    CONSTRAINT [PK_t_learn_qtn_bank_sub] PRIMARY KEY CLUSTERED ([QTNID] ASC, [SUBITEM] ASC),
-    CONSTRAINT [FK_t_learn_qtn_bank_sub_QTNID] FOREIGN KEY ([QTNID]) REFERENCES [dbo].[t_learn_qtn_bank] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
+--CREATE TABLE [dbo].[t_learn_qtn_bank] (
+--    [ID]          INT            IDENTITY (1, 1) NOT NULL,
+--    [HID]         INT            NOT NULL,
+--    [Type]        TINYINT        NOT NULL,
+--    [Question]    NVARCHAR (200) NOT NULL,
+--    [BriefAnswer] NVARCHAR (200) NULL,
+--    [CREATEDBY]   NVARCHAR (50)  NULL,
+--    [CREATEDAT]   DATE           CONSTRAINT [DF_t_learn_qtn_bank_CREATEDAT] DEFAULT (getdate()) NULL,
+--    [UPDATEDBY]   NVARCHAR (50)  NULL,
+--    [UPDATEDAT]   DATE           CONSTRAINT [DF_t_learn_qtn_bank_UPDATEDAT] DEFAULT (getdate()) NULL,
+--    CONSTRAINT [PK_t_learn_qtn_bank] PRIMARY KEY CLUSTERED ([ID] ASC),
+--    CONSTRAINT [FK_t_learn_qtn_bank_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
+--CREATE TABLE [dbo].[t_learn_qtn_bank_sub] (
+--    [QTNID]   INT            NOT NULL,
+--    [SUBITEM] NVARCHAR (20)  NOT NULL,
+--    [DETAIL]  NVARCHAR (200) NOT NULL,
+--    [OTHERS]  NVARCHAR (50)  NULL,
+--    CONSTRAINT [PK_t_learn_qtn_bank_sub] PRIMARY KEY CLUSTERED ([QTNID] ASC, [SUBITEM] ASC),
+--    CONSTRAINT [FK_t_learn_qtn_bank_sub_QTNID] FOREIGN KEY ([QTNID]) REFERENCES [dbo].[t_learn_qtn_bank] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
 
-CREATE TABLE [dbo].[t_learn_enword] (
-    [ID]         INT            IDENTITY (1, 1) NOT NULL,
-    [HID]        INT            NOT NULL,
-    [Word]       NVARCHAR (100) NOT NULL,
-    [UKPron]     NVARCHAR (50)  NULL,
-    [USPron]     NVARCHAR (50)  NULL,
-    [UKPronFile] NVARCHAR (100) NULL,
-    [USPronFile] NVARCHAR (100) NULL,
-    [CREATEDBY]  NVARCHAR (40)  NULL,
-    [CREATEDAT]  DATE           CONSTRAINT [DF_t_learn_enword_CREATEDAT] DEFAULT (getdate()) NULL,
-    [UPDATEDBY]  NVARCHAR (50)  NULL,
-    [UPDATEDAT]  DATE           CONSTRAINT [DF_t_learn_enword_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [UK_Table_learn_word] PRIMARY KEY CLUSTERED ([ID] ASC),
-    CONSTRAINT [FK_Table_learn_word_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE TABLE [dbo].[t_learn_enwordexp] (
-    [WORDID]    INT            NOT NULL,
-    [ExpID]     SMALLINT       NOT NULL,
-    [POSAbb]    NVARCHAR (10)  NULL,
-    [LangKey]   NVARCHAR (10)  NOT NULL,
-    [ExpDetail] NVARCHAR (100) NOT NULL,
-    CONSTRAINT [PK_t_learn_enwordexp] PRIMARY KEY CLUSTERED ([WORDID] ASC, [ExpID] ASC),
-    CONSTRAINT [FK_Table_learn_wordexp_word] FOREIGN KEY ([WORDID]) REFERENCES [dbo].[t_learn_enword] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE TABLE [dbo].[t_learn_ensent] (
-    [ID]        INT            IDENTITY (1, 1) NOT NULL,
-    [HID]       INT            NOT NULL,
-    [Sentence]  NVARCHAR (100) NOT NULL,
-    [CREATEDBY] NVARCHAR (50)  NULL,
-    [CREATEDAT] DATE           CONSTRAINT [DF_t_learn_ensent_CREATEDAT] DEFAULT (getdate()) NULL,
-    [UPDATEDBY] NVARCHAR (50)  NULL,
-    [UPDATEDAT] DATE           CONSTRAINT [DF_t_learn_ensent_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_learn_ensent] PRIMARY KEY CLUSTERED ([ID] ASC),
-    CONSTRAINT [FK_Table_learn_ensent_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE TABLE [dbo].[t_learn_ensentexp] (
-    [SentID]    INT            NOT NULL,
-    [ExpID]     SMALLINT       NOT NULL,
-    [LangKey]   NVARCHAR (10)  NOT NULL,
-    [ExpDetail] NVARCHAR (100) NOT NULL,
-    CONSTRAINT [PK_t_learn_ensentexp] PRIMARY KEY CLUSTERED ([SentID] ASC, [ExpID] ASC),
-    CONSTRAINT [FK_Table_ensentexp_SentID] FOREIGN KEY ([SentID]) REFERENCES [dbo].[t_learn_ensent] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE TABLE [dbo].[t_learn_ensent_word] (
-    [SentID] INT NOT NULL,
-    [WordID] INT NOT NULL,
-    CONSTRAINT [PK_t_learn_ensent_word] PRIMARY KEY CLUSTERED ([SentID] ASC, [WordID] ASC),
-    CONSTRAINT [FK_t_learn_ensent_word_sent] FOREIGN KEY ([SentID]) REFERENCES [dbo].[t_learn_ensent] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
+--CREATE TABLE [dbo].[t_learn_enword] (
+--    [ID]         INT            IDENTITY (1, 1) NOT NULL,
+--    [HID]        INT            NOT NULL,
+--    [Word]       NVARCHAR (100) NOT NULL,
+--    [UKPron]     NVARCHAR (50)  NULL,
+--    [USPron]     NVARCHAR (50)  NULL,
+--    [UKPronFile] NVARCHAR (100) NULL,
+--    [USPronFile] NVARCHAR (100) NULL,
+--    [CREATEDBY]  NVARCHAR (40)  NULL,
+--    [CREATEDAT]  DATE           CONSTRAINT [DF_t_learn_enword_CREATEDAT] DEFAULT (getdate()) NULL,
+--    [UPDATEDBY]  NVARCHAR (50)  NULL,
+--    [UPDATEDAT]  DATE           CONSTRAINT [DF_t_learn_enword_UPDATEDAT] DEFAULT (getdate()) NULL,
+--    CONSTRAINT [UK_Table_learn_word] PRIMARY KEY CLUSTERED ([ID] ASC),
+--    CONSTRAINT [FK_Table_learn_word_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
+--CREATE TABLE [dbo].[t_learn_enwordexp] (
+--    [WORDID]    INT            NOT NULL,
+--    [ExpID]     SMALLINT       NOT NULL,
+--    [POSAbb]    NVARCHAR (10)  NULL,
+--    [LangKey]   NVARCHAR (10)  NOT NULL,
+--    [ExpDetail] NVARCHAR (100) NOT NULL,
+--    CONSTRAINT [PK_t_learn_enwordexp] PRIMARY KEY CLUSTERED ([WORDID] ASC, [ExpID] ASC),
+--    CONSTRAINT [FK_Table_learn_wordexp_word] FOREIGN KEY ([WORDID]) REFERENCES [dbo].[t_learn_enword] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
+--CREATE TABLE [dbo].[t_learn_ensent] (
+--    [ID]        INT            IDENTITY (1, 1) NOT NULL,
+--    [HID]       INT            NOT NULL,
+--    [Sentence]  NVARCHAR (100) NOT NULL,
+--    [CREATEDBY] NVARCHAR (50)  NULL,
+--    [CREATEDAT] DATE           CONSTRAINT [DF_t_learn_ensent_CREATEDAT] DEFAULT (getdate()) NULL,
+--    [UPDATEDBY] NVARCHAR (50)  NULL,
+--    [UPDATEDAT] DATE           CONSTRAINT [DF_t_learn_ensent_UPDATEDAT] DEFAULT (getdate()) NULL,
+--    CONSTRAINT [PK_t_learn_ensent] PRIMARY KEY CLUSTERED ([ID] ASC),
+--    CONSTRAINT [FK_Table_learn_ensent_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
+--CREATE TABLE [dbo].[t_learn_ensentexp] (
+--    [SentID]    INT            NOT NULL,
+--    [ExpID]     SMALLINT       NOT NULL,
+--    [LangKey]   NVARCHAR (10)  NOT NULL,
+--    [ExpDetail] NVARCHAR (100) NOT NULL,
+--    CONSTRAINT [PK_t_learn_ensentexp] PRIMARY KEY CLUSTERED ([SentID] ASC, [ExpID] ASC),
+--    CONSTRAINT [FK_Table_ensentexp_SentID] FOREIGN KEY ([SentID]) REFERENCES [dbo].[t_learn_ensent] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
+--CREATE TABLE [dbo].[t_learn_ensent_word] (
+--    [SentID] INT NOT NULL,
+--    [WordID] INT NOT NULL,
+--    CONSTRAINT [PK_t_learn_ensent_word] PRIMARY KEY CLUSTERED ([SentID] ASC, [WordID] ASC),
+--    CONSTRAINT [FK_t_learn_ensent_word_sent] FOREIGN KEY ([SentID]) REFERENCES [dbo].[t_learn_ensent] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
 
 /**
  * 3. Finance part

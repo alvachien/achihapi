@@ -12,7 +12,7 @@ namespace hihapi.unittest.Finance
         public String Name { get; set; }
         public String Comment { get; set; }
         public String Owner { get; set; }
-        public Byte? Status { get; set; }
+        public FinanceAccountStatus Status { get; set; }
         public FinanceAccountExtraDP ExtraDP { get; set; }
         // public FinanceAccountExtraLoan ExtraLoan { get; set; }
         public FinanceAccountExtraAS ExtraAsset { get; set; }
