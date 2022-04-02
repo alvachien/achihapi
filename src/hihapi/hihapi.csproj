@@ -27,6 +27,7 @@
     <None Remove="Sqls\Delta\v15.sql" />
     <None Remove="Sqls\Delta\v16.sql" />
     <None Remove="Sqls\Delta\v17.sql" />
+    <None Remove="Sqls\Delta\v18.sql" />
     <None Remove="Sqls\Delta\v2.sql" />
     <None Remove="Sqls\Delta\v3.sql" />
     <None Remove="Sqls\Delta\v4.sql" />
@@ -55,6 +56,7 @@
     <EmbeddedResource Include="Sqls\Delta\v15.sql" />
     <EmbeddedResource Include="Sqls\Delta\v16.sql" />
     <EmbeddedResource Include="Sqls\Delta\v17.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v18.sql" />
     <EmbeddedResource Include="Sqls\Delta\v2.sql" />
     <EmbeddedResource Include="Sqls\Delta\v3.sql" />
     <EmbeddedResource Include="Sqls\Delta\v4.sql" />

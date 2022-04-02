@@ -15,25 +15,26 @@ INSERT INTO [dbo].[t_fin_currency] ([CURR],[NAME],[SYMBOL]) VALUES (N'TWD', N'Sy
 INSERT INTO [dbo].[t_fin_currency] ([CURR],[NAME],[SYMBOL]) VALUES (N'USD', N'Sys.Currency.USD', N'$');
 
 -- Content for learn category, updated at 2017.9.9
-SET IDENTITY_INSERT dbo.[t_learn_ctgy] ON;
+-- Commented out on 2022.4.1 because LEARN part has been removed
+--SET IDENTITY_INSERT dbo.[t_learn_ctgy] ON;
 
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (1,NULL,N'语文',N'语文');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (2,1,N'诗词',N'唐诗宋词等');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (3,1,N'识字',N'拼音认读和笔画等');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (4,1,N'文言文',N'文言文等');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (5,1,N'古典名著',N'古典名著等');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (6,NULL,N'数学',N'数学类');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (7,6,N'算术',N'加减法');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (8,6,N'代数',N'代数');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (9,6,N'几何',N'几何类');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (10,NULL,N'英语',N'英语类');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (11,10,N'词汇',N'英语词汇');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (12,10,N'语法',N'英语语法');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (13,NULL,N'日语',N'日语类');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (14,13,N'词汇',N'日语词汇');
-INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (15,13,N'语法',N'日语语法');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (1,NULL,N'语文',N'语文');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (2,1,N'诗词',N'唐诗宋词等');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (3,1,N'识字',N'拼音认读和笔画等');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (4,1,N'文言文',N'文言文等');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (5,1,N'古典名著',N'古典名著等');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (6,NULL,N'数学',N'数学类');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (7,6,N'算术',N'加减法');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (8,6,N'代数',N'代数');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (9,6,N'几何',N'几何类');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (10,NULL,N'英语',N'英语类');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (11,10,N'词汇',N'英语词汇');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (12,10,N'语法',N'英语语法');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (13,NULL,N'日语',N'日语类');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (14,13,N'词汇',N'日语词汇');
+--INSERT INTO dbo.[t_learn_ctgy] ([ID],[PARID],[NAME],[COMMENT]) VALUES (15,13,N'语法',N'日语语法');
 
-SET IDENTITY_INSERT dbo.[t_learn_ctgy] OFF;
+--SET IDENTITY_INSERT dbo.[t_learn_ctgy] OFF;
 
 -- Content for FIN account category, updated at 2017.9.10
 --SET IDENTITY_INSERT dbo.[t_fin_account_ctgy] ON;
@@ -433,6 +434,7 @@ SET IDENTITY_INSERT dbo.[t_fin_tran_type] ON;
 
 INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (92, N'资产出售费用', 1, 25, N'资产出售导致的资产');
 INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (93, N'资产出售收益', 0, 5, N'资产出售所得收益');
+INSERT INTO dbo.[t_fin_tran_type] ([ID],[NAME],[EXPENSE],[PARID],[COMMENT]) VALUES (94, N'爱心捐赠', 1, 5, N'爱心捐赠支出');
 
 SET IDENTITY_INSERT dbo.[t_fin_tran_type] OFF;
 
@@ -464,6 +466,14 @@ INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (12,'2019.4.
 -------------------------------------------------------------------------------------------------------------------
 -- Updated at 2020.2.28
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (13,'2020.02.28');
+
+-------------------------------------------------------------------------------------------------------------------
+-- Updated at 2020.4.2
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (14,'2020.03.15');
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (15,'2020.4.1');
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (16,'2020.04.15');
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (17,'2020.09.12');
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (18,'2022.05.31');
 
 ---------------------------------
 -- TODO...

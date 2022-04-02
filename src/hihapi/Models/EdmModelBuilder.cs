@@ -75,6 +75,7 @@ namespace hihapi.Models
             modelBuilder.EntityType<FinanceReportByTransactionTypeMOM>();
             modelBuilder.EntityType<FinanceReportByAccountMOM>();
             modelBuilder.EntityType<FinanceReportByControlCenterMOM>();
+            modelBuilder.EntityType<FinanceReportMOM>();
             var rptAcntExpense = modelBuilder.EntityType<FinanceReporAccountGroupAndExpenseView>();
             rptAcntExpense.HasKey(p => new {
                 p.HomeID,
@@ -194,6 +195,16 @@ namespace hihapi.Models
             actionReportOrder.Parameter<int>("HomeID");
             actionReportOrder.Parameter<int?>("OrderID");
             actionReportOrder.ReturnsFromEntitySet<FinanceReportByOrder>("FinanceReportByOrders");
+            // Action: Get Cash Report
+            var actionCashReport = reportEntity.Collection.Action("GetCashReport");
+            actionCashReport.Parameter<int>("HomeID");
+            actionCashReport.Parameter<string>("Period");
+            actionCashReport.ReturnsFromEntitySet<FinanceReport>("FinanceReports");
+            // Action: Get Cash Report MOM
+            var actionCashReportMOM = reportEntity.Collection.Action("GetCashReportMOM");
+            actionCashReportMOM.Parameter<int>("HomeID");
+            actionCashReportMOM.Parameter<string>("Period");
+            actionCashReportMOM.ReturnsFromEntitySet<FinanceReportMOM>("FinanceReportMOMs");
             // Overview key figures
             var entityFinOverviewKeyfigure = modelBuilder.EntityType<FinanceOverviewKeyFigure>();
             entityFinOverviewKeyfigure.HasKey(p => new {

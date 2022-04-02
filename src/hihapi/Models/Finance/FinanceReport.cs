@@ -239,6 +239,11 @@ namespace hihapi.Models
         public Decimal InAmount { get; set; }
         public Decimal OutAmount { get; set; }
     }
+
+    public class FinanceReportMOM: FinanceReport
+    {
+        public Int32 Month { get; set; }
+    }
     #endregion
 
     #region Transaction type report
@@ -275,13 +280,6 @@ namespace hihapi.Models
 
         public Decimal CurrentMonthIncomePrecentage { get; set; }
         public Decimal CurrentMonthOutgoPrecentage { get; set; }
-    }
-    #endregion
-
-    #region Date report
-    public class FinanceReportDateView
-    {
-
     }
     #endregion
 }
