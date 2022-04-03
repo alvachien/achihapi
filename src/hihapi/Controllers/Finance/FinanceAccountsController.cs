@@ -262,9 +262,7 @@ namespace hihapi.Controllers
             {
                 usrName = HIHAPIUtility.GetUserID(this);
                 if (String.IsNullOrEmpty(usrName))
-                {
                     throw new UnauthorizedAccessException();
-                }
             }
             catch
             {

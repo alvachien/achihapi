@@ -121,6 +121,12 @@ namespace hihapi.Models
             if (!base.IsDeleteAllowed(context))
                 return false;
 
+            // Doc has been used in Tempalte DP
+            var doccnt = (from acnt in context.FinanceAccountExtraDP
+                          where acnt.RefenceDocumentID == this.ID
+                          select acnt).Count();
+            if (doccnt > 0) return false;
+
             // Doc has been used in Template Asset
             if (UsedInAsset(context))
                 return false;
