@@ -10,7 +10,7 @@ on:
         - '**.csproj'
 
 env:
-  DOTNET_VERSION: '5.0.405' # The .NET SDK version to use
+  DOTNET_VERSION: '6.0.201' # The .NET SDK version to use
 
 jobs:
   build:
