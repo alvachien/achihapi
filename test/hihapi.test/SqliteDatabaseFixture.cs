@@ -168,16 +168,6 @@ namespace hihapi.unittest
             context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + docid.ToString());
         }
 
-        public void DeleteLearnCategory(hihDataContext context, int ctgyid)
-        {
-            context.Database.ExecuteSqlRaw("DELETE FROM t_learn_ctgy WHERE ID = " + ctgyid.ToString());
-        }
-
-        public void DeleteLearnObject(hihDataContext context, int ctgyid)
-        {
-            context.Database.ExecuteSqlRaw("DELETE FROM t_learn_obj WHERE ID = " + ctgyid.ToString());
-        }
-
         public void DeleteBlogCollection(hihDataContext context, int collid) 
         {
             context.Database.ExecuteSqlRaw("DELETE FROM t_blog_coll WHERE ID = " + collid.ToString());

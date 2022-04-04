@@ -1023,6 +1023,7 @@ namespace hihapi.test.common
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (15,'2020.4.1');
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (16,'2020.4.15');
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (17,'2020.9.12');
+            // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (18,'2022.5.1');
             DBVersions.Add(new DBVersion()
             {
                 VersionID = 1,
@@ -1107,6 +1108,11 @@ namespace hihapi.test.common
             {
                 VersionID = 17,
                 ReleasedDate = new DateTime(2020, 9, 12)
+            });
+            DBVersions.Add(new DBVersion()
+            {
+                VersionID = 18,
+                ReleasedDate = new DateTime(2022, 5, 1)
             });
         }
 
