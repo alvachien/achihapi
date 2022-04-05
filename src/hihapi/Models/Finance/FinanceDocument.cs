@@ -122,14 +122,10 @@ namespace hihapi.Models
                 return false;
 
             // Doc has been used in Tempalte DP
-            var doccnt = (from acnt in context.FinanceAccountExtraDP
-                          where acnt.RefenceDocumentID == this.ID
-                          select acnt).Count();
-            if (doccnt > 0) return false;
+            if (UsedInDPCreating(context)) return false;
 
             // Doc has been used in Template Asset
-            if (UsedInAsset(context))
-                return false;
+            if (UsedInAsset(context)) return false;
 
             return true;
         }
@@ -161,6 +157,22 @@ namespace hihapi.Models
                 return false;
 
             return true;
+        }
+
+        private bool UsedInDPCreating(hihDataContext context)
+        {
+            var doccnt = (from acnt in context.FinanceAccountExtraDP
+                          where acnt.RefenceDocumentID == this.ID
+                          select acnt).Count();
+            if (doccnt > 0)
+            {
+                var tmpdoccnt = (from dpdoc in context.FinanceTmpDPDocument
+                                where dpdoc.ReferenceDocumentID != null
+                                select dpdoc).Count();
+                if(tmpdoccnt > 0) return true;
+            }
+
+            return false;
         }
 
         private bool UsedInAsset(hihDataContext context)

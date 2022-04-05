@@ -783,7 +783,8 @@ namespace hihapi.unittest.Finance
             var postokresult = Assert.IsType<OkObjectResult>(postresult);
             var createdoc = Assert.IsAssignableFrom<FinanceDocument>(postokresult.Value as FinanceDocument);
 
-            listCreatedDocs.Add(createdoc.ID);
+            var ncreatedocid = createdoc.ID;
+            listCreatedDocs.Add(ncreatedocid);
             ValidateDocument(createContext.DocumentInfo, createdoc, true, true);
             var createdAcntID = -1;
             foreach (var item in createdoc.Items)
@@ -808,21 +809,65 @@ namespace hihapi.unittest.Finance
             Assert.NotNull(getresult);
             var gettmpokresult = Assert.IsType<OkObjectResult>(getresult);
             var tmpdocs = Assert.IsAssignableFrom<IQueryable<FinanceTmpDPDocument>>(gettmpokresult.Value);
-            Assert.Equal(dpdates.Count, tmpdocs.Count());
+            var tmpdocList = tmpdocs.Where(x => x.ReferenceDocumentID == null).ToList();
+            Assert.Equal(dpdates.Count, tmpdocList.Count);
 
-            // Perform the post
+            // Perform the post 
+            var nposted = 5;
+            var listDPPosted = new List<Int32>();
             foreach (var tmpdoc in tmpdocs)
             {
-                var tmppostcontex = new FinanceTmpDPDocumentPostContext();
-                tmppostcontex.HomeID = hid;
-                tmppostcontex.AccountID = createdAcntID;
-                tmppostcontex.DocumentID = tmpdoc.DocumentID;
-                var tmppostresult = await tmpcontroller.PostDocument(tmppostcontex);
-                Assert.NotNull(tmppostresult);
-                var tmppostokrst = Assert.IsType<OkObjectResult>(tmppostresult);
-                var tmppostdoc = Assert.IsType<FinanceDocument>(tmppostokrst.Value);
-                listCreatedDocs.Add(tmppostdoc.ID);
+                if (nposted > 0)
+                {
+                    var tmppostcontex = new FinanceTmpDPDocumentPostContext();
+                    tmppostcontex.HomeID = hid;
+                    tmppostcontex.AccountID = createdAcntID;
+                    tmppostcontex.DocumentID = tmpdoc.DocumentID;
+                    var tmppostresult = await tmpcontroller.PostDocument(tmppostcontex);
+                    Assert.NotNull(tmppostresult);
+                    var tmppostokrst = Assert.IsType<OkObjectResult>(tmppostresult);
+                    var tmppostdoc = Assert.IsType<FinanceDocument>(tmppostokrst.Value);
+                    listDPPosted.Add(tmppostdoc.ID);
+
+                    nposted--;
+                }
             }
+            Assert.Equal(5, listDPPosted.Count);
+
+            // Now delete the document which posted
+            var deldocrst = await control.Delete(ncreatedocid);
+            Assert.NotNull(deldocrst);
+            var badrequest = Assert.IsType<BadRequestResult>(deldocrst);
+            Assert.NotNull(badrequest);
+
+            // Read the template docs again
+            getresult = tmpcontroller.Get();
+            Assert.NotNull(getresult);
+            gettmpokresult = Assert.IsType<OkObjectResult>(getresult);
+            tmpdocs = Assert.IsAssignableFrom<IQueryable<FinanceTmpDPDocument>>(gettmpokresult.Value);
+            tmpdocList = tmpdocs.Where(x => x.ReferenceDocumentID == null).ToList();
+            Assert.Equal(7, tmpdocList.Count); // 12 - 5 = 7
+
+            // Perform the deletion
+            foreach (var dpdocid in listDPPosted)
+            {
+                var delrst = await control.Delete(dpdocid);
+                Assert.NotNull(delrst);
+            }
+
+            // Read the template docs again
+            getresult = tmpcontroller.Get();
+            Assert.NotNull(getresult);
+            gettmpokresult = Assert.IsType<OkObjectResult>(getresult);
+            tmpdocs = Assert.IsAssignableFrom<IQueryable<FinanceTmpDPDocument>>(gettmpokresult.Value);
+            tmpdocList = tmpdocs.Where(x => x.ReferenceDocumentID == null).ToList();
+            Assert.Equal(dpdates.Count, tmpdocList.Count);
+
+            // Now delete the document which posted
+            deldocrst = await control.Delete(ncreatedocid);
+            Assert.NotNull(deldocrst);
+            badrequest = Assert.IsType<BadRequestResult>(deldocrst);
+            Assert.NotNull(badrequest);
 
             await context.DisposeAsync();
         }
