@@ -866,8 +866,8 @@ namespace hihapi.unittest.Finance
             // Now delete the document which posted
             deldocrst = await control.Delete(ncreatedocid);
             Assert.NotNull(deldocrst);
-            badrequest = Assert.IsType<BadRequestResult>(deldocrst);
-            Assert.NotNull(badrequest);
+            var statusCodeResult = Assert.IsType<StatusCodeResult>(deldocrst);
+            Assert.NotNull(statusCodeResult);
 
             await context.DisposeAsync();
         }

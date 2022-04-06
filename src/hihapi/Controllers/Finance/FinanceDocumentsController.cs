@@ -257,22 +257,100 @@ namespace hihapi.Controllers
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
+            // Is allow to delete
             if (!cc.IsDeleteAllowed(this._context))
                 return BadRequest();
 
             _context.FinanceDocument.Remove(cc);
 
             // Further steps
-            // 1. DP docs
+            var bFurtherStep = false;
+            // 1. DP tmplate docs
             var dpDoc = _context.FinanceTmpDPDocument.SingleOrDefault(p => p.ReferenceDocumentID == cc.ID && p.HomeID == cc.HomeID);
             if (dpDoc != null)
-                dpDoc.ReferenceDocumentID = null;
-            else
             {
-                // Loan doc
+                dpDoc.ReferenceDocumentID = null;
+                bFurtherStep = true;
+            }
+
+            // 2. Loan template doc
+            if (bFurtherStep == false)
+            {
                 var loanDoc = _context.FinanceTmpLoanDocument.SingleOrDefault(p => p.ReferenceDocumentID == cc.ID && p.HomeID == cc.HomeID);
                 if (loanDoc != null)
+                {
                     loanDoc.ReferenceDocumentID = null;
+                    bFurtherStep = true;
+                }
+            }
+
+            // 3. DP created doc
+            if (bFurtherStep == false)
+            {
+                var crtedacnt = (from acntdp in _context.FinanceAccountExtraDP
+                                    join acnt in _context.FinanceAccount
+                                on acntdp.AccountID equals acnt.ID
+                                where acnt.HomeID == cc.HomeID
+                                && acntdp.RefenceDocumentID == cc.ID
+                                select acnt).SingleOrDefault();
+                if (crtedacnt != null)
+                {
+                    // Delete the account
+                    _context.FinanceAccount.Remove(crtedacnt);
+                    bFurtherStep = true;
+                }
+            }
+
+            // 4. Loan created doc
+            if (bFurtherStep == false)
+            {
+                var crtedacnt = (from acntloan in _context.FinanceAccountExtraLoan
+                                 join acnt in _context.FinanceAccount
+                             on acntloan.AccountID equals acnt.ID
+                                 where acnt.HomeID == cc.HomeID
+                                 && acntloan.RefDocID == cc.ID
+                                 select acnt).SingleOrDefault();
+                if (crtedacnt != null)
+                {
+                    // Delete the account
+                    _context.FinanceAccount.Remove(crtedacnt);
+                    bFurtherStep = true;
+                }
+            }
+
+            // 5. Asset sold doc
+            if (bFurtherStep == false)
+            {
+                var crtedacnt = (from acntset in _context.FinanceAccountExtraAS
+                                 join acnt in _context.FinanceAccount
+                             on acntset.AccountID equals acnt.ID
+                                 where acnt.HomeID == cc.HomeID
+                                 && acntset.RefenceSoldDocumentID == cc.ID
+                                 select acntset).SingleOrDefault();
+                if (crtedacnt != null)
+                {
+                    // Clear the doc id.
+                    crtedacnt.RefenceSoldDocumentID = null;
+                    //_context.FinanceAccount.Remove(crtedacnt);
+                    bFurtherStep = true;
+                }
+            }
+
+            // 6. Asset sold doc
+            if (bFurtherStep == false)
+            {
+                var crtedacnt = (from acntset in _context.FinanceAccountExtraAS
+                                 join acnt in _context.FinanceAccount
+                             on acntset.AccountID equals acnt.ID
+                                 where acnt.HomeID == cc.HomeID
+                                 && acntset.RefenceBuyDocumentID == cc.ID
+                                 select acnt).SingleOrDefault();
+                if (crtedacnt != null)
+                {
+                    // Delete the account.
+                    _context.FinanceAccount.Remove(crtedacnt);
+                    bFurtherStep = true;
+                }
             }
 
             await _context.SaveChangesAsync();

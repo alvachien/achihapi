@@ -125,7 +125,7 @@ namespace hihapi.Models
             if (UsedInDPCreating(context)) return false;
 
             // Doc has been used in Template Asset
-            if (UsedInAsset(context)) return false;
+            // if (UsedInAsset(context)) return false;
 
             return true;
         }
@@ -177,32 +177,11 @@ namespace hihapi.Models
 
         private bool UsedInAsset(hihDataContext context)
         {
-            var usedInAsset = (from dp in context.FinanceAccountExtraAS
+            var usedInAsset = (from acntasset in context.FinanceAccountExtraAS
                                join acnt in context.FinanceAccount
-                                on dp.AccountID equals acnt.ID
-                               select new
-                               {
-                                   HomeID = acnt.HomeID,
-                                   RefDoc = dp.RefenceBuyDocumentID
-                               } into assetacounts
-                               join doc in context.FinanceDocument
-                               on assetacounts.RefDoc equals doc.ID
-                               where doc.ID == this.ID && assetacounts.HomeID == this.HomeID && doc.HomeID == this.HomeID
-                               select doc).Count();
-            if (usedInAsset > 0) return true;
-
-            usedInAsset = (from dp in context.FinanceAccountExtraAS
-                           join acnt in context.FinanceAccount
-                            on dp.AccountID equals acnt.ID
-                           select new
-                           {
-                               HomeID = acnt.HomeID,
-                               RefDoc = dp.RefenceSoldDocumentID
-                           } into assetacounts
-                           join doc in context.FinanceDocument
-                           on assetacounts.RefDoc equals doc.ID
-                           where doc.ID == this.ID && assetacounts.HomeID == this.HomeID && doc.HomeID == this.HomeID
-                           select doc).Count();
+                                on acntasset.AccountID equals acnt.ID
+                               where acnt.HomeID == this.HomeID && (acntasset.RefenceBuyDocumentID == this.ID || acntasset.RefenceSoldDocumentID == this.ID)
+                               select acntasset).Count();
             if (usedInAsset > 0) return true;
 
             return false;
