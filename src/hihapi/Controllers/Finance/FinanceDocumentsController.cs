@@ -235,9 +235,7 @@ namespace hihapi.Controllers
         {
             var cc = await _context.FinanceDocument.FindAsync(key);
             if (cc == null)
-            {
                 return NotFound();
-            }
 
             // User
             String usrName = String.Empty;
@@ -336,7 +334,7 @@ namespace hihapi.Controllers
                 }
             }
 
-            // 6. Asset sold doc
+            // 6. Asset buy doc
             if (bFurtherStep == false)
             {
                 var crtedacnt = (from acntset in _context.FinanceAccountExtraAS

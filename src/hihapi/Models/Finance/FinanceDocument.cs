@@ -122,19 +122,14 @@ namespace hihapi.Models
                 return false;
 
             // Check must on db.
-            if (context == null)
-                return false;
+            if (context == null) return false;
 
             // 1. Used in DP Created doc:
             //      1.1 If any of DP template document got posted,
             //          Not allowed;
             //      1.2 If DP document has no posted document(means new created)
             //          Allowed;
-            var dpacnt = (from acnt in context.FinanceAccountExtraDP
-                          join acntheader in context.FinanceAccount
-                            on acnt.AccountID equals acntheader.ID
-                          where acntheader.HomeID == this.HomeID && acnt.RefenceDocumentID == this.ID
-                          select acnt).SingleOrDefault();
+            var dpacnt = getDPAccountIfCurrentDocUsedInCreating(context);
             if (dpacnt != null)
             {
                 var tmpdoccnt = (from dpdoc in context.FinanceTmpDPDocument
@@ -146,22 +141,15 @@ namespace hihapi.Models
 
             // 2. Used in DP template document
             //      Allowed
-            var tmpdpdoc = (from tmpdoc in context.FinanceTmpDPDocument
-                            where tmpdoc.ReferenceDocumentID == this.ID && tmpdoc.HomeID == this.HomeID
-                            select tmpdoc).SingleOrDefault();
-            if (tmpdpdoc != null)
-                return true;
+            var tmpdpdoc = getDPTmpDocForCurrentDocIfExist(context);
+            if (tmpdpdoc != null) return true;
 
             // 3. Used in Loan created doc:
             //    3.1 If Loan document got posted already
             //        Not allowed
             //    3.2 If Loan document has no posted document
             //        Allowed
-            var loanacnt = (from acnt in context.FinanceAccountExtraLoan
-                            join acntheader in context.FinanceAccount
-                              on acnt.AccountID equals acntheader.ID
-                            where acntheader.HomeID == this.HomeID && acnt.RefDocID == this.ID
-                            select acnt).SingleOrDefault();
+            var loanacnt = getLoanAccountIfCurrentDocUsedInCreating(context);
             if (loanacnt != null)
             {
                 var tmpdoccnt = (from tmpdoc in context.FinanceTmpLoanDocument
@@ -173,50 +161,22 @@ namespace hihapi.Models
 
             // 4. Used in loan template document
             //      Allowed
-            var loantmpdoc = (from tmpdoc in context.FinanceTmpLoanDocument
-                            where tmpdoc.ReferenceDocumentID == this.ID && tmpdoc.HomeID == this.HomeID
-                            select tmpdoc).SingleOrDefault();
-            if (loantmpdoc != null)
-                return true;
-
+            var loantmpdoc = getLoanTmpDocForCurrentDocIfExist(context);
+            if (loantmpdoc != null) return true;
 
             // 5. Used in Asset Buy Doc:
             //    5.1 If asset value change doc or asset sold douc exist
             //        Not allowed;
             //    5.2 If no asset value change doc and no asset sold doc exist
             //        Allowed
-            if (this.DocType == FinanceDocumentType.DocType_AssetBuyIn)
-            {
-                var assetacnt = (from item in context.FinanceDocumentItem
-                                 join acntheader in context.FinanceAccount
-                                 on item.AccountID equals acntheader.ID
-                                 where item.DocID == this.ID && acntheader.CategoryID == FinanceAccountCategory.AccountCategory_Asset
-                                 select acntheader).SingleOrDefault();
-                if (assetacnt != null)
-                {
-                    var doccnt = (from docitem in context.FinanceDocumentItem
-                                  join docheader in context.FinanceDocument
-                                  on docitem.DocID equals docheader.ID
-                                  where docitem.AccountID == assetacnt.ID
-                                    && docheader.HomeID == this.HomeID
-                                    && (docheader.DocType == FinanceDocumentType.DocType_AssetSoldOut || docheader.DocType == FinanceDocumentType.DocType_AssetValChg)
-                                  select docheader).Count();
-                    return doccnt == 0;
-                }
-            }
-
             // 6. Used in Asset value change doc
             //    6.1 If asset value change doc(after that date) or asset sold doc exists
             //        Not allowed
             //    6.2 If no asset value change doc(after that date) or asset sold doc exists
             //        Allowed
-            if (this.DocType == FinanceDocumentType.DocType_AssetValChg)
+            if (this.DocType == FinanceDocumentType.DocType_AssetBuyIn || this.DocType == FinanceDocumentType.DocType_AssetValChg)
             {
-                var assetacnt = (from item in context.FinanceDocumentItem
-                                 join acntheader in context.FinanceAccount
-                                 on item.AccountID equals acntheader.ID
-                                 where item.DocID == this.ID && acntheader.CategoryID == FinanceAccountCategory.AccountCategory_Asset
-                                 select acntheader).SingleOrDefault();
+                var assetacnt = getAccountIfCurrentDocUsedInAssetTransaction(context);
                 if (assetacnt != null)
                 {
                     var doccnt = (from docitem in context.FinanceDocumentItem
@@ -261,42 +221,82 @@ namespace hihapi.Models
         public bool IsChangeAllowed(hihDataContext context)
         {
             // Doc type: Only normal doc allows the change
-            if (this.DocType != FinanceDocumentType.DocType_Normal)
-                return false;
+            if (this.DocType != FinanceDocumentType.DocType_Normal) return false;
 
-            // Doc has been used in Template DP?
-            var usedInDP = (from dp in context.FinanceTmpDPDocument
-                            join doc in context.FinanceDocument
-                            on dp.ReferenceDocumentID equals doc.ID
-                            where doc.ID == this.ID && dp.HomeID == this.HomeID && doc.HomeID == this.HomeID
-                            select doc).Count();
-            if (usedInDP > 0) return false;
+            // 1. Used in DP created doc:
+            //    Not allowed(exclude the description)
+            // Doc type check shall prevent it happens...
+            //var dpacnt = getDPAccountIfCurrentDocUsedInCreating(context);
+            //if (dpacnt != null) return false;
 
-            // Doc has been used in Template Loan
-            var usedInLoan = (from dp in context.FinanceTmpLoanDocument
-                              join doc in context.FinanceDocument
-                              on dp.ReferenceDocumentID equals doc.ID
-                              where doc.ID == this.ID && dp.HomeID == this.HomeID && doc.HomeID == this.HomeID
-                              select doc).Count();
-            if (usedInLoan > 0) return false;
+            // 2. Used in DP template document
+            //    Not allowed(exclude the description)
+            var tmpdpdoc = getDPTmpDocForCurrentDocIfExist(context);
+            if (tmpdpdoc != null) return false;
 
-            // Doc has been used in Template Asset
-            if (UsedInAsset(context))
-                return false;
+            // 3. Used in Loan created doc:
+            //    Not allowed(exclude the description)
+            // Doc type check shall prevent it happens...
+            //var loanacnt = getLoanAccountIfCurrentDocUsedInCreating(context);
+            //if (loanacnt != null) return false;
+
+            // 4. Used in Loan template document
+            //    Not allowed(exclude the description)
+            var loantmpdoc = getLoanTmpDocForCurrentDocIfExist(context);
+            if(loantmpdoc != null) return false;
+
+            // 5. Used in Asset buy Doc
+            //    Not allowed(exclude description)
+            // 6. Used in asset value change doc
+            //    Not allowed(exclude description)
+            // 7. Used in Asset Sold doc
+            //    Not allowed(exclude description)
+            // Doc type check shall prevent it happens...
+            //var assetacnt = getAccountIfCurrentDocUsedInAssetTransaction(context);
+            //if (assetacnt != null) return false;
 
             return true;
         }
 
-        private bool UsedInAsset(hihDataContext context)
+        private FinanceAccountExtraDP getDPAccountIfCurrentDocUsedInCreating(hihDataContext context)
         {
-            var usedInAsset = (from acntasset in context.FinanceAccountExtraAS
-                               join acnt in context.FinanceAccount
-                                on acntasset.AccountID equals acnt.ID
-                               where acnt.HomeID == this.HomeID && (acntasset.RefenceBuyDocumentID == this.ID || acntasset.RefenceSoldDocumentID == this.ID)
-                               select acntasset).Count();
-            if (usedInAsset > 0) return true;
+            return (from acnt in context.FinanceAccountExtraDP
+                    join acntheader in context.FinanceAccount
+                        on acnt.AccountID equals acntheader.ID
+                    where acntheader.HomeID == this.HomeID && acnt.RefenceDocumentID == this.ID
+                    select acnt).SingleOrDefault();
+        }
 
-            return false;
+        private FinanceTmpDPDocument getDPTmpDocForCurrentDocIfExist(hihDataContext context)
+        {
+            return (from tmpdoc in context.FinanceTmpDPDocument
+                    where tmpdoc.ReferenceDocumentID == this.ID && tmpdoc.HomeID == this.HomeID
+                    select tmpdoc).SingleOrDefault();
+        }
+
+        private FinanceAccountExtraLoan getLoanAccountIfCurrentDocUsedInCreating(hihDataContext context)
+        {
+            return (from acnt in context.FinanceAccountExtraLoan
+                    join acntheader in context.FinanceAccount
+                      on acnt.AccountID equals acntheader.ID
+                    where acntheader.HomeID == this.HomeID && acnt.RefDocID == this.ID
+                    select acnt).SingleOrDefault();
+        }
+
+        private FinanceTmpLoanDocument getLoanTmpDocForCurrentDocIfExist(hihDataContext context)
+        {
+            return (from tmpdoc in context.FinanceTmpLoanDocument
+                    where tmpdoc.ReferenceDocumentID == this.ID && tmpdoc.HomeID == this.HomeID
+                    select tmpdoc).SingleOrDefault();
+        }
+
+        private FinanceAccount getAccountIfCurrentDocUsedInAssetTransaction(hihDataContext context)
+        {
+            return (from item in context.FinanceDocumentItem
+                    join acntheader in context.FinanceAccount
+                    on item.AccountID equals acntheader.ID
+                    where item.DocID == this.ID && acntheader.CategoryID == FinanceAccountCategory.AccountCategory_Asset
+                    select acntheader).SingleOrDefault();
         }
     }
 

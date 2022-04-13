@@ -683,9 +683,8 @@ namespace hihapi.unittest.Finance
             Assert.NotNull(getresult);
             var gettmpokresult = Assert.IsType<OkObjectResult>(getresult);
             var tmpdocs = Assert.IsAssignableFrom<IQueryable<FinanceTmpDPDocument>>(gettmpokresult.Value);
-            Assert.Equal(dpdates.Count, tmpdocs.Count());
-
-            //acntDP.DPTmpDocs.OrderBy(p => p.TransactionDate);
+            var tmpdocList = tmpdocs.Where(x => x.ReferenceDocumentID == null && x.AccountID == createdAcntID).ToList();
+            Assert.Equal(dpdates.Count, tmpdocList.Count);
 
             // Perform the post
             foreach (var tmpdoc in tmpdocs)
@@ -809,7 +808,7 @@ namespace hihapi.unittest.Finance
             Assert.NotNull(getresult);
             var gettmpokresult = Assert.IsType<OkObjectResult>(getresult);
             var tmpdocs = Assert.IsAssignableFrom<IQueryable<FinanceTmpDPDocument>>(gettmpokresult.Value);
-            var tmpdocList = tmpdocs.Where(x => x.ReferenceDocumentID == null).ToList();
+            var tmpdocList = tmpdocs.Where(x => x.ReferenceDocumentID == null && x.AccountID == createdAcntID).ToList();
             Assert.Equal(dpdates.Count, tmpdocList.Count);
 
             // Perform the post 
@@ -828,6 +827,7 @@ namespace hihapi.unittest.Finance
                     var tmppostokrst = Assert.IsType<OkObjectResult>(tmppostresult);
                     var tmppostdoc = Assert.IsType<FinanceDocument>(tmppostokrst.Value);
                     listDPPosted.Add(tmppostdoc.ID);
+                    listCreatedDocs.Add(tmppostdoc.ID);
 
                     nposted--;
                 }
@@ -848,11 +848,13 @@ namespace hihapi.unittest.Finance
             tmpdocList = tmpdocs.Where(x => x.ReferenceDocumentID == null).ToList();
             Assert.Equal(7, tmpdocList.Count); // 12 - 5 = 7
 
-            // Perform the deletion
+            // Perform the deletion of the posted tmplate docs. => 5 docs need be deleted
             foreach (var dpdocid in listDPPosted)
             {
                 var delrst = await control.Delete(dpdocid);
                 Assert.NotNull(delrst);
+
+                listCreatedDocs.Remove(dpdocid); // Remove it.
             }
 
             // Read the template docs again
@@ -860,14 +862,24 @@ namespace hihapi.unittest.Finance
             Assert.NotNull(getresult);
             gettmpokresult = Assert.IsType<OkObjectResult>(getresult);
             tmpdocs = Assert.IsAssignableFrom<IQueryable<FinanceTmpDPDocument>>(gettmpokresult.Value);
-            tmpdocList = tmpdocs.Where(x => x.ReferenceDocumentID == null).ToList();
-            Assert.Equal(dpdates.Count, tmpdocList.Count);
+            tmpdocList = tmpdocs.Where(x => x.ReferenceDocumentID == null && x.AccountID == createdAcntID).ToList();
+            Assert.Equal(dpdates.Count, tmpdocList.Count); // Got the 12 docs again
 
             // Now delete the document which posted
             deldocrst = await control.Delete(ncreatedocid);
             Assert.NotNull(deldocrst);
             var statusCodeResult = Assert.IsType<StatusCodeResult>(deldocrst);
             Assert.NotNull(statusCodeResult);
+
+            // Ensure the account has been deleted
+            var acntheader = context.FinanceAccount.Where(p => p.ID == createdAcntID && p.HomeID == hid).FirstOrDefault();
+            Assert.Null(acntheader);
+            var acntExtraDP = context.FinanceAccountExtraDP.Where(p => p.AccountID == createdAcntID).FirstOrDefault();
+            Assert.Null(acntExtraDP);
+
+            // Ensure the templated docs of that account has been deleted too
+            var tmpDPDocCount = context.FinanceTmpDPDocument.Where(p => p.AccountID == createdAcntID).Count();
+            Assert.Equal(0, tmpDPDocCount);
 
             await context.DisposeAsync();
         }
@@ -939,7 +951,7 @@ namespace hihapi.unittest.Finance
                     EndDate = new DateTime(2023, 2, 1),
                     InterestFree = false,
                     AnnualRate = 10,
-                    RepaymentMethod = LoanRepaymentMethod.DueRepayment,
+                    RepaymentMethod = LoanRepaymentMethod.EqualPrincipal,
 
                     Frequency = RepeatFrequency.Month,
                     Comment = "Test Loan 3",
@@ -963,7 +975,7 @@ namespace hihapi.unittest.Finance
                     EndDate = new DateTime(2023, 2, 1),
                     InterestFree = false,
                     AnnualRate = 10,
-                    RepaymentMethod = LoanRepaymentMethod.DueRepayment,
+                    RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterset,
 
                     Frequency = RepeatFrequency.Month,
                     Comment = "Test Loan 4",
@@ -1096,6 +1108,7 @@ namespace hihapi.unittest.Finance
             Assert.NotNull(getresult);
             var gettmpokresult = Assert.IsType<OkObjectResult>(getresult);
             var tmpdocs = Assert.IsAssignableFrom<IQueryable<FinanceTmpLoanDocument>>(gettmpokresult.Value);
+            var tmpdocsList = tmpdocs.Where(x => x.ReferenceDocumentID == null && x.AccountID == createdAcntID).ToList();
             Assert.Equal(dpdates.Count, tmpdocs.Count());
 
             // Post the loan document.
@@ -1113,7 +1126,8 @@ namespace hihapi.unittest.Finance
                         TranDate = tmpdoc.TransactionDate,
                         TranCurr = testdata.Currency,
                         Desp = tmpdoc.Description,
-                        Items = new List<FinanceDocumentItem> { 
+                        Items = new List<FinanceDocumentItem>
+                        { 
                             new FinanceDocumentItem
                             {
                                 ItemID = 1,
