@@ -783,7 +783,7 @@ namespace hihapi.Controllers
             if (keyfigure.LastMonthOutgo != 0)
                 keyfigure.CurrentMonthOutgoPrecentage = 100 * (keyfigure.CurrentMonthOutgo - keyfigure.LastMonthOutgo) / keyfigure.LastMonthOutgo;
 
-            List < FinanceOverviewKeyFigure > listResult = new List<FinanceOverviewKeyFigure>();
+            List<FinanceOverviewKeyFigure> listResult = new List<FinanceOverviewKeyFigure>();
             listResult.Add(keyfigure);
 
             return Ok(listResult);

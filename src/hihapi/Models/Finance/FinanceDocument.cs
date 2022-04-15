@@ -154,7 +154,7 @@ namespace hihapi.Models
             {
                 var tmpdoccnt = (from tmpdoc in context.FinanceTmpLoanDocument
                                  where tmpdoc.ReferenceDocumentID != null
-                                    && tmpdoc.AccountID == dpacnt.AccountID
+                                    && tmpdoc.AccountID == loanacnt.AccountID
                                  select tmpdoc).Count();
                 return tmpdoccnt == 0;
             }
