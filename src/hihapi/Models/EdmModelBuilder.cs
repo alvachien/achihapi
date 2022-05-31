@@ -205,7 +205,13 @@ namespace hihapi.Models
             actionCashReportMOM.Parameter<int>("HomeID");
             actionCashReportMOM.Parameter<string>("Period");
             actionCashReportMOM.ReturnsFromEntitySet<FinanceReportMOM>("FinanceReportMOMs");
-            // Overview key figures
+            // Action: Statement of Income and ExpenseMOM
+            var actionIEStatementMOM = reportEntity.Collection.Action("GetStatementOfIncomeAndExpenseMOM");
+            actionIEStatementMOM.Parameter<int>("HomeID");
+            actionIEStatementMOM.Parameter<string>("Period");
+            actionIEStatementMOM.Parameter<bool>("ExcludeTransfer");
+            actionIEStatementMOM.ReturnsFromEntitySet<FinanceReportMOM>("FinanceReportMOMs");
+            // Action: Overview key figures
             var entityFinOverviewKeyfigure = modelBuilder.EntityType<FinanceOverviewKeyFigure>();
             entityFinOverviewKeyfigure.HasKey(p => new {
                 p.HomeID,
