@@ -1358,16 +1358,27 @@ namespace hihapi.Controllers
             List<FinanceReportMOM> listResult = new List<FinanceReportMOM>();
             foreach (var dbresult in results)
             {
-                var finrecord = new FinanceReportMOM();
-                finrecord.HomeID = hid;
-                finrecord.Month = dbresult.Month;
+                var idx = listResult.FindIndex(p => p.HomeID == hid && p.Month == dbresult.Month);
+                if (idx == -1)
+                {
+                    var finrecord = new FinanceReportMOM();
+                    finrecord.HomeID = hid;
+                    finrecord.Month = dbresult.Month;
 
-                if (dbresult.IsExpense)
-                    finrecord.OutAmount = (Decimal)dbresult.Amount;
+                    if (dbresult.IsExpense)
+                        finrecord.OutAmount = (Decimal)dbresult.Amount;
+                    else
+                        finrecord.InAmount = (Decimal)dbresult.Amount;
+
+                    listResult.Add(finrecord);
+                }
                 else
-                    finrecord.InAmount = (Decimal)dbresult.Amount;
-
-                listResult.Add(finrecord);
+                {
+                    if (dbresult.IsExpense)
+                        listResult[idx].OutAmount += (Decimal)dbresult.Amount;
+                    else
+                        listResult[idx].InAmount += (Decimal)dbresult.Amount;
+                }
             }
 
             return Ok(listResult);
@@ -1446,7 +1457,7 @@ namespace hihapi.Controllers
             else
                 return BadRequest("Invalid Period");
 
-            List<FinanceReport> listResult = new List<FinanceReport>();
+            List<FinanceReportMOM> listResult = new List<FinanceReportMOM>();
             var results = (from item in _context.FinanceDocumentItemView
                            where item.HomeID == hid
                              && item.TransactionDate >= dtbgn && item.TransactionDate < dtend
@@ -1467,16 +1478,27 @@ namespace hihapi.Controllers
                            }).ToList();
             results.ForEach(dbresult =>
             {
-                var finrecord = new FinanceReportMOM();
-                finrecord.HomeID = hid;
-                finrecord.Month = dbresult.Month;
+                var idx = listResult.FindIndex(p => p.HomeID == hid && p.Month == dbresult.Month);
+                if (idx == -1)
+                {
+                    var finrecord = new FinanceReportMOM();
+                    finrecord.HomeID = hid;
+                    finrecord.Month = dbresult.Month;
 
-                if (dbresult.IsExpense)
-                    finrecord.OutAmount = (Decimal)dbresult.Amount;
+                    if (dbresult.IsExpense)
+                        finrecord.OutAmount = (Decimal)dbresult.Amount;
+                    else
+                        finrecord.InAmount = (Decimal)dbresult.Amount;
+
+                    listResult.Add(finrecord);
+                } 
                 else
-                    finrecord.InAmount = (Decimal)dbresult.Amount;
-
-                listResult.Add(finrecord);
+                {
+                    if (dbresult.IsExpense)
+                        listResult[idx].OutAmount += (Decimal)dbresult.Amount;
+                    else
+                        listResult[idx].InAmount += (Decimal)dbresult.Amount;
+                }
             });
 
             return Ok(listResult);
