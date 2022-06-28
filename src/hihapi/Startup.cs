@@ -14,6 +14,7 @@ using Microsoft.OData.Edm;
 using Microsoft.AspNetCore.OData;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using System.Text.Json.Serialization;
 
 namespace hihapi
 {
@@ -77,7 +78,12 @@ namespace hihapi
 
             IEdmModel model = EdmModelBuilder.GetEdmModel();
 
-            services.AddControllers().AddOData(opt => opt.Count().Filter().Expand().Select().OrderBy().SetMaxTop(100)
+            services.AddControllers()
+                .AddJsonOptions(x =>
+                {
+                    x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                })
+                .AddOData(opt => opt.Count().Filter().Expand().Select().OrderBy().SetMaxTop(100)
                 .AddRouteComponents(model)
                 .AddRouteComponents("v1", model)
                 );

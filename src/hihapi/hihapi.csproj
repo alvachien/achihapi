@@ -3,7 +3,7 @@
   <PropertyGroup>
 	  <TargetFramework>net6.0</TargetFramework>
 	  <UserSecretsId>cf80adf9-ce70-4ce9-bb4e-a73887a492a6</UserSecretsId>
-    <Version>1.5.260</Version>
+    <Version>1.5.262</Version>
     <Authors>Alva Chien</Authors>
     <Product>H.I.H.</Product>
     <Copyright>© Alva Chien, 2019 - Present</Copyright>
@@ -39,7 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.3" />
-    <PackageReference Include="Microsoft.AspNetCore.OData" Version="8.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.OData" Version="8.0.10" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="4.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.3" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
