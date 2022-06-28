@@ -76,6 +76,7 @@ namespace hihapi.Models
             modelBuilder.EntityType<FinanceReportByAccountMOM>();
             modelBuilder.EntityType<FinanceReportByControlCenterMOM>();
             modelBuilder.EntityType<FinanceReportMOM>();
+            modelBuilder.EntityType<FinanceReportPerDate>();
             var rptAcntExpense = modelBuilder.EntityType<FinanceReporAccountGroupAndExpenseView>();
             rptAcntExpense.HasKey(p => new {
                 p.HomeID,
@@ -205,12 +206,25 @@ namespace hihapi.Models
             actionCashReportMOM.Parameter<int>("HomeID");
             actionCashReportMOM.Parameter<string>("Period");
             actionCashReportMOM.ReturnsFromEntitySet<FinanceReportMOM>("FinanceReportMOMs");
+            // Action: Daily Cash Report
+            var actionDailyCashReport = reportEntity.Collection.Action("GetDailyCashReport");
+            actionDailyCashReport.Parameter<int>("HomeID");
+            actionDailyCashReport.Parameter<int>("Year");
+            actionDailyCashReport.Parameter<int>("Month");
+            actionDailyCashReport.ReturnsFromEntitySet<FinanceReportPerDate>("FinanceReportPerDates");
             // Action: Statement of Income and ExpenseMOM
             var actionIEStatementMOM = reportEntity.Collection.Action("GetStatementOfIncomeAndExpenseMOM");
             actionIEStatementMOM.Parameter<int>("HomeID");
             actionIEStatementMOM.Parameter<string>("Period");
             actionIEStatementMOM.Parameter<bool>("ExcludeTransfer");
             actionIEStatementMOM.ReturnsFromEntitySet<FinanceReportMOM>("FinanceReportMOMs");
+            // Action: Daily statement of Incomen and Expense
+            var actionDailyIEStatement = reportEntity.Collection.Action("GetDailyStatementOfIncomeAndExpense");
+            actionDailyIEStatement.Parameter<int>("HomeID");
+            actionDailyIEStatement.Parameter<int>("Year");
+            actionDailyIEStatement.Parameter<int>("Month");
+            actionDailyIEStatement.Parameter<bool>("ExcludeTransfer");
+            actionDailyIEStatement.ReturnsFromEntitySet<FinanceReportPerDate>("FinanceReportPerDates");
             // Action: Overview key figures
             var entityFinOverviewKeyfigure = modelBuilder.EntityType<FinanceOverviewKeyFigure>();
             entityFinOverviewKeyfigure.HasKey(p => new {

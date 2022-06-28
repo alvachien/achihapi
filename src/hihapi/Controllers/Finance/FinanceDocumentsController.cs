@@ -773,7 +773,7 @@ namespace hihapi.Controllers
             var vmAccount = new FinanceAccount();
             vmAccount.HomeID = createContext.HID;
             vmAccount.Name = createContext.ExtraAsset.Name;
-            vmAccount.Status = (Byte)FinanceAccountStatus.Normal;
+            vmAccount.Status = FinanceAccountStatus.Normal;
             vmAccount.CategoryID = FinanceAccountCategory.AccountCategory_Asset;
             vmAccount.ExtraAsset = new FinanceAccountExtraAS();
             vmAccount.Owner = createContext.AccountOwner;

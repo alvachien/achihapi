@@ -244,6 +244,11 @@ namespace hihapi.Models
     {
         public Int32 Month { get; set; }
     }
+
+    public class FinanceReportPerDate: FinanceReport
+    {
+        public DateTime TransactionDate { get; set; }
+    }
     #endregion
 
     #region Transaction type report

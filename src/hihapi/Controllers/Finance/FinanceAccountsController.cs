@@ -285,6 +285,160 @@ namespace hihapi.Controllers
             return StatusCode(204); // HttpStatusCode.NoContent
         }
 
+        /// <summary>
+        /// Create a legacy loan account
+        /// </summary>
+        /// <param name="parameters">
+        ///     AccountInfo: Account INfo
+        ///     LoanDate: Transaction date
+        ///     Amount: Amount on transaction date
+        ///     ControlCenterID (?): Control Center ID
+        ///     OrderID (?): Order ID
+        /// </param>
+        /// <returns>New created account</returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
+        [HttpPost]
+        public async Task<IActionResult> CreateLegacyLoanAccount([FromBody] ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // 0. Get inputted parameter
+            FinanceAccount accountInfo = (FinanceAccount)parameters["AccountInfo"];
+            DateTime tranDate = (DateTime)parameters["LoanDate"];
+            Decimal tranAmount = (Decimal)parameters["Amount"];
+            Int32? ccid = (Int32?)parameters["ControlCenterID"];
+            Int32? orderid = (Int32?)parameters["OrderID"];
+
+            // 1. Check User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+            // 2a. Check data
+            if (accountInfo.CategoryID != FinanceAccountCategory.AccountCategory_BorrowFrom
+                || String.IsNullOrEmpty(accountInfo.Name)
+                || accountInfo.HomeID == 0)
+            {
+                return BadRequest();
+            }
+            // 2b. Check the Home ID
+            var homedef = (from dbhomedef in _context.HomeDefines
+                           where dbhomedef.ID == accountInfo.HomeID
+                           select dbhomedef).SingleOrDefault();
+            if (homedef == null)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var hms = _context.HomeMembers.Where(p => p.HomeID == accountInfo.HomeID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Database update
+            var errorString = "";
+            var errorOccur = false;
+            var origdocid = 0;
+            var loanAccountID = 0;
+
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    // Create account
+                    accountInfo.CreatedAt = DateTime.Now;
+                    accountInfo.Createdby = usrName;
+                    accountInfo.Status = FinanceAccountStatus.Normal;
+                    accountInfo.CategoryID = FinanceAccountCategory.AccountCategory_BorrowFrom;
+                    accountInfo.ExtraLoan = new FinanceAccountExtraLoan();
+                    accountInfo.ExtraLoan.InterestFree = true;
+                    accountInfo.ExtraLoan.StartDate = tranDate;
+                    accountInfo.ExtraLoan.RepaymentMethod = LoanRepaymentMethod.InformalPayment;
+                    accountInfo.ExtraLoan.AccountHeader = accountInfo;
+
+                    var acntEntity = _context.FinanceAccount.Add(accountInfo);
+                    await _context.SaveChangesAsync();
+                    loanAccountID = acntEntity.Entity.ID;
+
+                    // Create the document
+                    var vmFIDoc = new FinanceDocument();
+                    vmFIDoc.HomeID = accountInfo.HomeID;
+                    vmFIDoc.Createdby = usrName;
+                    vmFIDoc.TranDate = tranDate;
+                    vmFIDoc.TranCurr = homedef.BaseCurrency;
+                    vmFIDoc.DocType = FinanceDocumentType.DocType_BorrowFrom;
+                    vmFIDoc.Desp = accountInfo.Name;
+                    vmFIDoc.CreatedAt = DateTime.Now;
+                    vmFIDoc.Createdby = usrName;
+                    var nitem = new FinanceDocumentItem();
+                    nitem.ItemID = 1;
+                    nitem.AccountID = loanAccountID;
+                    nitem.TranAmount = tranAmount;
+                    nitem.Desp = accountInfo.Name;
+                    nitem.TranType = FinanceTransactionType.TranType_OpeningAsset;
+                    if (ccid.HasValue)
+                        nitem.ControlCenterID = ccid.Value;
+                    if (orderid.HasValue)
+                        nitem.OrderID = orderid.Value;
+                    nitem.DocumentHeader = vmFIDoc;
+
+                    var docEntity = _context.FinanceDocument.Add(vmFIDoc);
+                    await _context.SaveChangesAsync();
+                    origdocid = docEntity.Entity.ID;
+
+                    // Update the account
+                    var extraEntry = _context.FinanceAccountExtraLoan.Find(loanAccountID);
+                    if (extraEntry != null)
+                    {
+                        extraEntry.RefDocID = origdocid;                        
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    transaction.Commit();
+                }
+                catch (Exception exp)
+                {
+                    errorOccur = true;
+                    errorString = exp.Message;
+                    transaction.Rollback();
+                }
+            }
+
+            if (errorOccur)
+            {
+                throw new BadRequestException(errorString);
+            }
+
+            return Created(accountInfo);
+        }
+
+        /// <summary>
+        /// Close an account
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
         public async Task<IActionResult> CloseAccount([FromBody] ODataActionParameters parameters)
         {

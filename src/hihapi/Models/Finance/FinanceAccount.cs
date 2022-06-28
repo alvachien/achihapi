@@ -18,7 +18,8 @@ namespace hihapi.Models
     {
         EqualPrincipalAndInterset   = 1,    // Equal principal & interest
         EqualPrincipal              = 2,    // Equal principal
-        DueRepayment                = 3     // Due repayment
+        DueRepayment                = 3,    // Due repayment
+        InformalPayment             = 4,    // Informal payment
     }
 
     [Table("T_FIN_ACCOUNT")]
@@ -622,6 +623,10 @@ namespace hihapi.Models
                 {
                     if (!EndDate.HasValue)
                         return false; //  throw new Exception("End date must input");
+                }
+                else if (RepaymentMethod.Value == LoanRepaymentMethod.InformalPayment)
+                {
+                    // It is allowed
                 }
                 else
                     return false; //  throw new Exception("Not supported method");

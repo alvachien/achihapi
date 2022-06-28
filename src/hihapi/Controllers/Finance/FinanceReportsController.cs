@@ -1385,6 +1385,109 @@ namespace hihapi.Controllers
         }
 
         /// <summary>
+        /// Daily cash report
+        /// </summary>
+        /// <param name="parameters">
+        ///     HomeID: Current Home ID
+        ///     Year: Year
+        ///     Month: Month
+        /// </param>
+        /// <returns>
+        ///     List of result
+        /// </returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
+        [HttpPost]
+        public IActionResult GetDailyCashReport([FromBody] ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // 0. Get inputted parameter
+            Int32 hid = (Int32)parameters["HomeID"];
+            Int32 year = (Int32)parameters["Year"];
+            Int32 month = (Int32)parameters["Month"];
+
+            // 1. Check User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // 2. Check the Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+                throw new UnauthorizedAccessException();
+
+            // 3. Calculate the dates
+            DateTime dtbgn = new DateTime(year, month, 1);
+            DateTime dtend = new DateTime(year, month, 1).AddMonths(1).AddDays(-1);
+
+            // Account
+            List<int> acntids = (from finacc in _context.FinanceAccount
+                                 where finacc.CategoryID == FinanceAccountCategory.AccountCategory_AccountReceivable
+                                      || finacc.CategoryID == FinanceAccountCategory.AccountCategory_AdvancePayment
+                                 select finacc.ID).ToList();
+
+            var results = (from item in _context.FinanceDocumentItemView
+                           where item.HomeID == hid
+                             && item.TransactionDate >= dtbgn && item.TransactionDate <= dtend
+                             && item.ControlCenterID != null
+                             && !acntids.Contains(item.AccountID)
+                           group item by new { item.IsExpense, item.TransactionDate } into newresult
+                           select new
+                           {
+                               IsExpense = newresult.Key.IsExpense,
+                               TransactionDate = newresult.Key.TransactionDate,
+                               Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency)
+                           }).ToList();
+
+            List<FinanceReportPerDate> listResult = new List<FinanceReportPerDate>();
+            foreach (var dbresult in results)
+            {
+                var idx = listResult.FindIndex(p => p.HomeID == hid && p.TransactionDate == dbresult.TransactionDate);
+                if (idx == -1)
+                {
+                    var finrecord = new FinanceReportPerDate();
+                    finrecord.HomeID = hid;
+                    finrecord.TransactionDate = dbresult.TransactionDate;
+
+                    if (dbresult.IsExpense)
+                        finrecord.OutAmount = (Decimal)dbresult.Amount;
+                    else
+                        finrecord.InAmount = (Decimal)dbresult.Amount;
+
+                    listResult.Add(finrecord);
+                }
+                else
+                {
+                    if (dbresult.IsExpense)
+                        listResult[idx].OutAmount += (Decimal)dbresult.Amount;
+                    else
+                        listResult[idx].InAmount += (Decimal)dbresult.Amount;
+                }
+            }
+
+            return Ok(listResult);
+        }
+
+        /// <summary>
         /// Statement of Income and Expense
         /// </summary>
         /// <param name="parameters">
@@ -1492,6 +1595,110 @@ namespace hihapi.Controllers
 
                     listResult.Add(finrecord);
                 } 
+                else
+                {
+                    if (dbresult.IsExpense)
+                        listResult[idx].OutAmount += (Decimal)dbresult.Amount;
+                    else
+                        listResult[idx].InAmount += (Decimal)dbresult.Amount;
+                }
+            });
+
+            return Ok(listResult);
+        }
+
+        /// <summary>
+        /// Statement of Income and Expense
+        /// </summary>
+        /// <param name="parameters">
+        ///     HomeID: Current Home ID
+        ///     Year: Year
+        ///     Month: Month
+        ///     ExcludeTransfer: Exclude the transfer
+        /// </param>
+        /// <returns>
+        ///     List of MOM result
+        /// </returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
+        [HttpPost]
+        public IActionResult GetDailyStatementOfIncomeAndExpense([FromBody] ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // 0. Get inputted parameter
+            Int32 hid = (Int32)parameters["HomeID"];
+            Int32 year = (Int32)parameters["Year"];
+            Int32 month = (Int32)parameters["Month"];
+            bool excludeTransfer = (bool)parameters["ExcludeTransfer"];
+
+            // 1. Check User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // 2. Check the Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+                throw new UnauthorizedAccessException();
+
+            // 3. Calculate the dates
+            DateTime dtbgn = new DateTime(year, month, 1);
+            DateTime dtend = new DateTime(year, month, 1).AddMonths(1).AddDays(-1);
+
+            List<FinanceReportPerDate> listResult = new List<FinanceReportPerDate>();
+            var results = (from item in _context.FinanceDocumentItemView
+                           where item.HomeID == hid
+                             && item.TransactionDate >= dtbgn && item.TransactionDate < dtend
+                             && (!excludeTransfer
+                                    || excludeTransfer && item.TransactionType != FinanceTransactionType.TranType_TransferIn
+                                                       && item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                                                       && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                                                       && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                                                       && item.TransactionType != FinanceTransactionType.TranType_AdvancePaymentOut
+                                                       && item.TransactionType != FinanceTransactionType.TranType_AdvanceReceiveIn)
+                           group item by new { item.TransactionDate, item.IsExpense } into newresult
+                           select new
+                           {
+                               HomeID = hid,
+                               TransactionDate = newresult.Key.TransactionDate,
+                               IsExpense = newresult.Key.IsExpense,
+                               Amount = newresult.Sum(c => c.AmountInLocalCurrency)
+                           }).ToList();
+            results.ForEach(dbresult =>
+            {
+                var idx = listResult.FindIndex(p => p.HomeID == hid && p.TransactionDate == dbresult.TransactionDate);
+                if (idx == -1)
+                {
+                    var finrecord = new FinanceReportPerDate();
+                    finrecord.HomeID = hid;
+                    finrecord.TransactionDate = dbresult.TransactionDate;
+
+                    if (dbresult.IsExpense)
+                        finrecord.OutAmount = (Decimal)dbresult.Amount;
+                    else
+                        finrecord.InAmount = (Decimal)dbresult.Amount;
+
+                    listResult.Add(finrecord);
+                }
                 else
                 {
                     if (dbresult.IsExpense)

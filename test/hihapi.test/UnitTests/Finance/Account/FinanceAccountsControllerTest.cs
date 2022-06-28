@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.OData.Results;
 using hihapi.test.common;
+using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.unittest.Finance
 {
@@ -120,6 +121,49 @@ namespace hihapi.unittest.Finance
             Assert.Equal(getresult.Comment, updatedacnt.Comment);
 
             // 6. Delete account
+
+            await context.DisposeAsync();
+        }
+
+        [Theory]
+        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID, 100, DataSetupUtility.Home1ControlCenter1ID, null)]
+        public async Task TestCase_CreateLegacyLoanAccount(string user, int hid, Decimal tranAmount, Int32? ccid, Int32? orderID)
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            // Pre. setup
+            this.fixture.InitHomeTestData(hid, context);
+
+            FinanceAccountsController control = new FinanceAccountsController(context);
+
+            var userclaim = DataSetupUtility.GetClaimForUser(user);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            // Create account
+            var trandate = new DateTime(2022, 6, 5);
+            var accountInfo = new FinanceAccount();
+            accountInfo.Name = "Test_LegacyLoan";
+            accountInfo.CategoryID = FinanceAccountCategory.AccountCategory_BorrowFrom;
+            accountInfo.HomeID = hid;
+            accountInfo.ExtraLoan = new FinanceAccountExtraLoan();
+            accountInfo.ExtraLoan.StartDate = trandate;
+            accountInfo.ExtraLoan.InterestFree = true;
+            accountInfo.ExtraLoan.RepaymentMethod = LoanRepaymentMethod.InformalPayment;
+
+            ODataActionParameters parameters = new ODataActionParameters();
+            parameters.Add("AccountInfo", accountInfo);
+            parameters.Add("LoanDate", trandate);
+            parameters.Add("Amount", tranAmount);
+            parameters.Add("ControlCenterID", ccid);
+            parameters.Add("OrderID", orderID);
+
+            var crtresult = await control.CreateLegacyLoanAccount(parameters);
+            Assert.NotNull(crtresult);
+            var createdresult = Assert.IsType<CreatedODataResult<FinanceAccount>>(crtresult);
+            Assert.NotNull(createdresult);
+            this.listCreatedID.Add(createdresult.Entity.ID);
 
             await context.DisposeAsync();
         }
