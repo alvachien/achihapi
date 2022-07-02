@@ -606,31 +606,22 @@ namespace hihapi.Models
         {
             if (RefDocID <= 0)
                 return false;
-            //if (LoanTmpDocs.Count < 0)
-            //    return false;
-            if (InterestFree.HasValue && InterestFree.Value == true && AnnualRate.HasValue && AnnualRate.Value >= 0)
-                return false; // throw new Exception("Cannot input interest rate for Interest-Free loan");
-            if (AnnualRate.HasValue && AnnualRate.Value < 0)
-                return false; // throw new Exception("Interest rate can not be negative");
-            if (RepaymentMethod.HasValue)
+            var vm = new RepeatDatesWithAmountAndInterestCalInput
             {
-                if (RepaymentMethod.Value == LoanRepaymentMethod.EqualPrincipal
-                    || RepaymentMethod.Value == LoanRepaymentMethod.EqualPrincipalAndInterset)
-                {
-                    if (!TotalMonths.HasValue || (TotalMonths.HasValue && TotalMonths.Value <= 0))
-                        return false; //  throw new Exception("Total months must large than zero");
-                }
-                else if (RepaymentMethod.Value == LoanRepaymentMethod.DueRepayment)
-                {
-                    if (!EndDate.HasValue)
-                        return false; //  throw new Exception("End date must input");
-                }
-                else if (RepaymentMethod.Value == LoanRepaymentMethod.InformalPayment)
-                {
-                    // It is allowed
-                }
-                else
-                    return false; //  throw new Exception("Not supported method");
+                RepaymentMethod = this.RepaymentMethod.GetValueOrDefault(),
+                InterestFreeLoan = this.InterestFree.GetValueOrDefault(),
+                TotalMonths = this.TotalMonths.GetValueOrDefault(),
+                InterestRate = this.AnnualRate.GetValueOrDefault(),
+                StartDate = this.StartDate,
+                EndDate = this.EndDate,
+            };
+            try
+            {
+                vm.doVerify(false);
+            }
+            catch (Exception ex)
+            {
+                return false;
             }
 
             return true;

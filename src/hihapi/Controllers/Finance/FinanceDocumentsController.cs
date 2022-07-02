@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Deltas;
+using Microsoft.Extensions.Logging;
 
 namespace hihapi.Controllers
 {
@@ -19,11 +20,14 @@ namespace hihapi.Controllers
     public class FinanceDocumentsController : ODataController
     {
         private readonly hihDataContext _context;
+        private readonly ILogger<FinanceDocumentsController> _logger;
+
         private Dictionary<String, Object> changableProperites = new Dictionary<string, object>();
 
-        public FinanceDocumentsController(hihDataContext context)
+        public FinanceDocumentsController(hihDataContext context, ILogger<FinanceDocumentsController> logger)
         {
             _context = context;
+            _logger = logger;
 
             // Changable properites
             changableProperites.Add("Desp", null);
@@ -580,29 +584,39 @@ namespace hihapi.Controllers
                 HIHAPIUtility.HandleModalStateError(ModelState);
             }
 
+            Boolean isLegacyLoan = createContext.IsLegacy.GetValueOrDefault() ? true : false;
             if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null
                 || createContext.AccountInfo.HomeID <= 0
-                || createContext.AccountInfo.Status != (Byte)FinanceAccountStatus.Normal
+                || createContext.AccountInfo.Status != FinanceAccountStatus.Normal
                 || createContext.DocumentInfo.HomeID <= 0
                 || createContext.DocumentInfo.HomeID != createContext.AccountInfo.HomeID
                 || createContext.AccountInfo.ExtraLoan == null
-                || createContext.AccountInfo.ExtraLoan.LoanTmpDocs.Count <= 0)
+                || (!isLegacyLoan && createContext.AccountInfo.ExtraLoan.LoanTmpDocs.Count <= 0) )
             {
                 throw new BadRequestException("Invalid inputted data");
             }
-            // Check tmp doc ID
-            var tmpdocids = new Dictionary<int, int>();
-            foreach (var tmpdoc in createContext.AccountInfo.ExtraLoan.LoanTmpDocs)
+
+            // Non-legacy: Check tmp doc ID
+            if (!isLegacyLoan)
             {
-                if (tmpdoc.DocumentID <= 0)
+                var tmpdocids = new Dictionary<int, int>();
+                foreach (var tmpdoc in createContext.AccountInfo.ExtraLoan.LoanTmpDocs)
                 {
-                    throw new BadRequestException("Invalid document ID");
+                    if (tmpdoc.DocumentID <= 0)
+                    {
+                        throw new BadRequestException("Invalid document ID");
+                    }
+                    if (tmpdocids.ContainsKey(tmpdoc.DocumentID))
+                    {
+                        throw new BadRequestException("Duplicated Document ID found: " + tmpdoc.DocumentID);
+                    }
+                    tmpdocids.Add(tmpdoc.DocumentID, tmpdoc.DocumentID);
                 }
-                if (tmpdocids.ContainsKey(tmpdoc.DocumentID))
-                {
-                    throw new BadRequestException("Duplicated Document ID found: " + tmpdoc.DocumentID);
-                }
-                tmpdocids.Add(tmpdoc.DocumentID, tmpdoc.DocumentID);
+            }
+            else
+            {
+                _logger.LogInformation("PostLoanDocument in FinanceDocumentsController, Legacy loan case");
+
             }
 
             // User
@@ -619,6 +633,7 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
+
             // Check whether User assigned with specified Home ID
             var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.AccountInfo.HomeID && p.User == usrName).Count();
             if (hms <= 0)
@@ -635,19 +650,22 @@ namespace hihapi.Controllers
             {
                 throw new BadRequestException("Only one item doc is supported by far");
             }
-            foreach (var tdoc in createContext.AccountInfo.ExtraLoan.LoanTmpDocs)
+            if (!isLegacyLoan)
             {
-                if (!tdoc.ControlCenterID.HasValue && !tdoc.OrderID.HasValue)
+                foreach (var tdoc in createContext.AccountInfo.ExtraLoan.LoanTmpDocs)
                 {
-                    throw new BadRequestException("Either control center or order shall be specified in Loan Template doc");
-                }
-                if (tdoc.TransactionAmount <= 0)
-                {
-                    throw new BadRequestException("Amount is zero!");
-                }
+                    if (!tdoc.ControlCenterID.HasValue && !tdoc.OrderID.HasValue)
+                    {
+                        throw new BadRequestException("Either control center or order shall be specified in Loan Template doc");
+                    }
+                    if (tdoc.TransactionAmount <= 0)
+                    {
+                        throw new BadRequestException("Amount is zero!");
+                    }
 
-                tdoc.Createdby = usrName;
-                tdoc.CreatedAt = DateTime.Now;
+                    tdoc.Createdby = usrName;
+                    tdoc.CreatedAt = DateTime.Now;
+                }
             }
 
             // Database update

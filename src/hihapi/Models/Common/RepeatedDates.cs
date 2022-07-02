@@ -65,24 +65,36 @@ namespace hihapi.Models
         [DataType(DataType.Date)]
         public DateTime? FirstRepayDate { get; set; }
 
-        public void doVerify()
+        public void doVerify(Boolean checkAmount = true)
         {
+            if (checkAmount && TotalAmount <= 0)
+                throw new Exception("Total amount must large than zero!");
             if (InterestFreeLoan && InterestRate != 0)
                 throw new Exception("Cannot input interest rate for Interest-Free loan");
             if (InterestRate < 0)
                 throw new Exception("Interest rate can not be negative");
-            if (TotalAmount <= 0)
-                throw new Exception("Total amount must large than zero!");
             if (RepaymentMethod == LoanRepaymentMethod.EqualPrincipal
                 || RepaymentMethod == LoanRepaymentMethod.EqualPrincipalAndInterset)
             {
                 if (TotalMonths <= 0)
                     throw new Exception("Total months must large than zero");
+                if (RepaymentMethod == LoanRepaymentMethod.EqualPrincipalAndInterset && InterestFreeLoan)
+                    throw new Exception("Payment method need interest");
             }
             else if (RepaymentMethod == LoanRepaymentMethod.DueRepayment)
             {
                 if (!EndDate.HasValue)
-                    throw new Exception("End date must input");
+                    throw new Exception("End date is mandatory");
+                else
+                {
+                    if (EndDate.Value <= StartDate)
+                        throw new Exception("End date must later than start date");
+                }
+            }
+            else if (RepaymentMethod == LoanRepaymentMethod.InformalPayment)
+            {
+                if (EndDate.HasValue)
+                    throw new Exception("End date is not input");
             }
             else
                 throw new Exception("Not supported method");

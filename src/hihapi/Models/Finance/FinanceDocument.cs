@@ -376,11 +376,12 @@ namespace hihapi.Models
     {
         public FinanceDocument DocumentInfo { get; set; }
         public FinanceAccount AccountInfo { get; set; }
+        public Boolean? IsLegacy { get; set; }
     }
 
     public sealed class FinanceLoanRepayDocumentCreateContext
     {
-        public int LoanTemplateDocumentID { get; set; }
+        public int? LoanTemplateDocumentID { get; set; }
         public int HomeID { get; set; }
         public FinanceDocument DocumentInfo { get; set; }
     }

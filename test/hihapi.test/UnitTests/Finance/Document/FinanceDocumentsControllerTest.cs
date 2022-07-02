@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.EntityFrameworkCore;
 using hihapi.test.common;
+using Moq;
+using Microsoft.Extensions.Logging;
 
 namespace hihapi.unittest.Finance
 {
@@ -176,8 +178,9 @@ namespace hihapi.unittest.Finance
             //int itemminid = normalDoc.DocItems.Min(p => p.ItemID);
             // Pre. setup
             this.fixture.InitHomeTestData(normalDoc.HomeID, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
 
-            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
 
             // 1. No authorization
             try
@@ -368,8 +371,9 @@ namespace hihapi.unittest.Finance
             var context = this.fixture.GetCurrentDataContext();
             int ndocid = -1;
             this.fixture.InitHomeTestData(hid, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
 
-            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
 
             // 1. No authorization
             try
@@ -448,8 +452,9 @@ namespace hihapi.unittest.Finance
             var context = this.fixture.GetCurrentDataContext();
             int ndocid = -1;
             this.fixture.InitHomeTestData(hid, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
 
-            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
 
             // 1. No authorization
             try
@@ -575,8 +580,9 @@ namespace hihapi.unittest.Finance
             var context = fixture.GetCurrentDataContext();
 
             this.fixture.InitHomeTestData(testdata.HomeID, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
 
-            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
 
             // 1. No authorization
             try
@@ -710,8 +716,9 @@ namespace hihapi.unittest.Finance
             var context = fixture.GetCurrentDataContext();
 
             this.fixture.InitHomeTestData(hid, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
 
-            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
 
             var userclaim = DataSetupUtility.GetClaimForUser(user);
             control.ControllerContext = new ControllerContext()
@@ -837,8 +844,9 @@ namespace hihapi.unittest.Finance
             var context = fixture.GetCurrentDataContext();
 
             this.fixture.InitHomeTestData(hid, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
 
-            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
 
             var userclaim = DataSetupUtility.GetClaimForUser(user);
             control.ControllerContext = new ControllerContext()
@@ -1122,8 +1130,9 @@ namespace hihapi.unittest.Finance
         {
             var context = this.fixture.GetCurrentDataContext();
             this.fixture.InitHomeTestData(testdata.HomeID, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
 
-            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
 
             // 1. No authorization
             try
@@ -1312,8 +1321,9 @@ namespace hihapi.unittest.Finance
         {
             var context = this.fixture.GetCurrentDataContext();
             this.fixture.InitHomeTestData(hid, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
 
-            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
             var userclaim = DataSetupUtility.GetClaimForUser(user);
             control.ControllerContext = new ControllerContext()
             {
@@ -1454,8 +1464,9 @@ namespace hihapi.unittest.Finance
         {
             var context = this.fixture.GetCurrentDataContext();
             this.fixture.InitHomeTestData(hid, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
 
-            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
             var userclaim = DataSetupUtility.GetClaimForUser(user);
             control.ControllerContext = new ControllerContext()
             {
@@ -1724,8 +1735,9 @@ namespace hihapi.unittest.Finance
         {
             var context = this.fixture.GetCurrentDataContext();
             this.fixture.InitHomeTestData(testdata.HomeID, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
 
-            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
 
             // 1. No authorization
             try
@@ -1832,8 +1844,9 @@ namespace hihapi.unittest.Finance
         {
             var context = this.fixture.GetCurrentDataContext();
             this.fixture.InitHomeTestData(testdata.HomeID, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
 
-            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
             var userclaim = DataSetupUtility.GetClaimForUser(testdata.CurrentUser);
             control.ControllerContext = new ControllerContext()
             {
@@ -1961,8 +1974,9 @@ namespace hihapi.unittest.Finance
         {
             var context = this.fixture.GetCurrentDataContext();
             this.fixture.InitHomeTestData(testdata.HomeID, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
 
-            FinanceDocumentsController control = new FinanceDocumentsController(context);
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
             var userclaim = DataSetupUtility.GetClaimForUser(testdata.CurrentUser);
             control.ControllerContext = new ControllerContext()
             {
