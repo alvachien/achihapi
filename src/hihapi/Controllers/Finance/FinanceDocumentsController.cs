@@ -585,20 +585,36 @@ namespace hihapi.Controllers
             }
 
             Boolean isLegacyLoan = createContext.IsLegacy.GetValueOrDefault() ? true : false;
-            if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null
-                || createContext.AccountInfo.HomeID <= 0
-                || createContext.AccountInfo.Status != FinanceAccountStatus.Normal
-                || createContext.DocumentInfo.HomeID <= 0
-                || createContext.DocumentInfo.HomeID != createContext.AccountInfo.HomeID
-                || createContext.AccountInfo.ExtraLoan == null
-                || (!isLegacyLoan && createContext.AccountInfo.ExtraLoan.LoanTmpDocs.Count <= 0) )
+            if (isLegacyLoan)
             {
-                throw new BadRequestException("Invalid inputted data");
+                if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null
+                    || createContext.AccountInfo.HomeID <= 0
+                    || createContext.AccountInfo.Status != FinanceAccountStatus.Normal
+                    || createContext.DocumentInfo.HomeID <= 0
+                    || createContext.DocumentInfo.HomeID != createContext.AccountInfo.HomeID
+                    || createContext.AccountInfo.ExtraLoan == null
+                    || createContext.AccountInfo.ExtraLoan.LoanTmpDocs.Count > 0
+                    || createContext.LegacyAmount.GetValueOrDefault() <= 0
+                    || (createContext.ControlCenterID.HasValue && createContext.OrderID.HasValue)
+                    || (!createContext.ControlCenterID.HasValue && !createContext.OrderID.HasValue)
+                    )
+                {
+                    throw new BadRequestException("Invalid inputted data");
+                }
             }
-
-            // Non-legacy: Check tmp doc ID
-            if (!isLegacyLoan)
+            else
             {
+                if (createContext == null || createContext.DocumentInfo == null || createContext.AccountInfo == null
+                    || createContext.AccountInfo.HomeID <= 0
+                    || createContext.AccountInfo.Status != FinanceAccountStatus.Normal
+                    || createContext.DocumentInfo.HomeID <= 0
+                    || createContext.DocumentInfo.HomeID != createContext.AccountInfo.HomeID
+                    || createContext.AccountInfo.ExtraLoan == null
+                    || createContext.AccountInfo.ExtraLoan.LoanTmpDocs.Count <= 0)
+                {
+                    throw new BadRequestException("Invalid inputted data");
+                }
+
                 var tmpdocids = new Dictionary<int, int>();
                 foreach (var tmpdoc in createContext.AccountInfo.ExtraLoan.LoanTmpDocs)
                 {
@@ -612,11 +628,6 @@ namespace hihapi.Controllers
                     }
                     tmpdocids.Add(tmpdoc.DocumentID, tmpdoc.DocumentID);
                 }
-            }
-            else
-            {
-                _logger.LogInformation("PostLoanDocument in FinanceDocumentsController, Legacy loan case");
-
             }
 
             // User
@@ -646,12 +657,12 @@ namespace hihapi.Controllers
             {
                 throw new BadRequestException("Invalid document type");
             }
-            if (createContext.DocumentInfo.Items.Count != 1)
-            {
-                throw new BadRequestException("Only one item doc is supported by far");
-            }
             if (!isLegacyLoan)
             {
+                if (createContext.DocumentInfo.Items.Count != 1)
+                {
+                    throw new BadRequestException("Only one item doc is supported by far");
+                }
                 foreach (var tdoc in createContext.AccountInfo.ExtraLoan.LoanTmpDocs)
                 {
                     if (!tdoc.ControlCenterID.HasValue && !tdoc.OrderID.HasValue)
@@ -694,22 +705,41 @@ namespace hihapi.Controllers
                     dpaccountid = acntEntity.Entity.ID;
 
                     // 3, Update the document
-                    var itemid = docEntity.Entity.Items.ElementAt(0).ItemID;
-                    // _context.Attach(docEntity);
+                    if (isLegacyLoan)
+                    {
+                        var ndi = new FinanceDocumentItem();
+                        ndi.ItemID = 1;
+                        ndi.AccountID = dpaccountid;
+                        ndi.ControlCenterID = createContext.ControlCenterID;
+                        ndi.OrderID = createContext.OrderID;
+                        ndi.Desp = docEntity.Entity.Desp;
+                        ndi.TranAmount = createContext.LegacyAmount.Value;
+                        ndi.UseCurr2 = false;
+                        if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_BorrowFrom)
+                            ndi.TranType = FinanceTransactionType.TranType_OpeningLiability;
+                        else if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_LendTo)
+                            ndi.TranType = FinanceTransactionType.TranType_OpeningAsset;
+                        docEntity.Entity.Items.Add(ndi);
+                    }
+                    else
+                    {
+                        var itemid = docEntity.Entity.Items.ElementAt(0).ItemID;
+                        // _context.Attach(docEntity);
 
-                    var ndi = new FinanceDocumentItem();
-                    ndi.ItemID = ++itemid;
-                    ndi.AccountID = dpaccountid;
-                    ndi.ControlCenterID = docEntity.Entity.Items.ElementAt(0).ControlCenterID;
-                    ndi.OrderID = docEntity.Entity.Items.ElementAt(0).OrderID;
-                    ndi.Desp = docEntity.Entity.Items.ElementAt(0).Desp;
-                    ndi.TranAmount = docEntity.Entity.Items.ElementAt(0).TranAmount;
-                    ndi.UseCurr2 = docEntity.Entity.Items.ElementAt(0).UseCurr2;
-                    if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_BorrowFrom)
-                        ndi.TranType = FinanceTransactionType.TranType_OpeningLiability;
-                    else if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_LendTo)
-                        ndi.TranType = FinanceTransactionType.TranType_OpeningAsset;
-                    docEntity.Entity.Items.Add(ndi);
+                        var ndi = new FinanceDocumentItem();
+                        ndi.ItemID = ++itemid;
+                        ndi.AccountID = dpaccountid;
+                        ndi.ControlCenterID = docEntity.Entity.Items.ElementAt(0).ControlCenterID;
+                        ndi.OrderID = docEntity.Entity.Items.ElementAt(0).OrderID;
+                        ndi.Desp = docEntity.Entity.Items.ElementAt(0).Desp;
+                        ndi.TranAmount = docEntity.Entity.Items.ElementAt(0).TranAmount;
+                        ndi.UseCurr2 = docEntity.Entity.Items.ElementAt(0).UseCurr2;
+                        if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_BorrowFrom)
+                            ndi.TranType = FinanceTransactionType.TranType_OpeningLiability;
+                        else if (createContext.DocumentInfo.DocType == FinanceDocumentType.DocType_LendTo)
+                            ndi.TranType = FinanceTransactionType.TranType_OpeningAsset;
+                        docEntity.Entity.Items.Add(ndi);
+                    }
 
                     docEntity.State = EntityState.Modified;
 

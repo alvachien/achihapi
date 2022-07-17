@@ -377,6 +377,9 @@ namespace hihapi.Models
         public FinanceDocument DocumentInfo { get; set; }
         public FinanceAccount AccountInfo { get; set; }
         public Boolean? IsLegacy { get; set; }
+        public Decimal? LegacyAmount { get; set; }
+        public Int32? ControlCenterID { get; set; }
+        public Int32? OrderID { get; set; }
     }
 
     public sealed class FinanceLoanRepayDocumentCreateContext

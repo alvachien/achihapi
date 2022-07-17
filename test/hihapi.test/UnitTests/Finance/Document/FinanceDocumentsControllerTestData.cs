@@ -205,6 +205,69 @@ namespace hihapi.unittest.Finance
         }
     }
 
+    public class FinanceDocumentsControllerTestData_LegacyLoan : IXunitSerializable
+    {
+        public int HomeID { get; set; }
+        public string CurrentUser { get; set; }
+        public string Currency { get; set; }
+        public DateTime TranDate { get; set; }
+        public Decimal Amount { get; set; }
+        public Int32? ControlCenterID { get; set; }
+        public Int32? OrderID { get; set; }
+        public String AccountName { get; set; }
+        public Boolean? InterestFree { get; set; }
+        public String Others { get; set; }
+        public Int32? PayingAccount { get; set; }
+        public String Partner { get; set; }
+
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public RepeatFrequency Frequency { get; set; }
+        public String Comment { get; set; }
+        public Int32? TmpDocControlCenterID { get; set; }
+        public Int32? TmpDocOrderID { get; set; }
+        public Int32 TmpDocTranType { get; set; }
+
+        public Boolean PostLoanTmpDocs { get; set; }
+        public Int32 RepayAccountID { get; set; }
+
+        public void Deserialize(IXunitSerializationInfo info)
+        {
+            String val = info.GetValue<String>("Value");
+            FinanceDocumentsControllerTestData_LoanDoc other = JsonSerializer.Deserialize<FinanceDocumentsControllerTestData_LoanDoc>(val);
+            CurrentUser = other.CurrentUser;
+            HomeID = other.HomeID;
+            Currency = other.Currency;
+            TranDate = other.TranDate;
+            TranDate = other.TranDate;
+            Amount = other.Amount;
+            ControlCenterID = other.ControlCenterID;
+            OrderID = other.OrderID;
+
+            AccountName = other.AccountName;
+            InterestFree = other.InterestFree;
+            Others = other.Others;
+            PayingAccount = other.PayingAccount;
+            Partner = other.Partner;
+
+            StartDate = other.StartDate;
+            EndDate = other.EndDate;
+            Frequency = other.Frequency;
+            Comment = other.Comment;
+            TmpDocControlCenterID = other.TmpDocControlCenterID;
+            TmpDocOrderID = other.TmpDocOrderID;
+            TmpDocTranType = other.TmpDocTranType;
+
+            PostLoanTmpDocs = other.PostLoanTmpDocs;
+        }
+
+        public void Serialize(IXunitSerializationInfo info)
+        {
+            String val = JsonSerializer.Serialize(this);
+            info.AddValue("Value", val, typeof(String));
+        }
+    }
+
     public class FinanceDocumentsControllerTestData_AssetBuyDoc : IXunitSerializable
     {
         public int HomeID { get; set; }

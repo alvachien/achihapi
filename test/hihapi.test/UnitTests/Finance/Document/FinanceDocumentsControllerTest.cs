@@ -34,7 +34,7 @@ namespace hihapi.unittest.Finance
                     DataSetupUtility.UserA, DataSetupUtility.Home1ID,
                     DataSetupUtility.Home1BaseCurrency, null, null, null, null, null, "H1_NORMAL_DOC_1",
                     new List<FinanceDocumentsControllerTestData_DocItem> {
-                        new FinanceDocumentsControllerTestData_DocItem { ItemID = 1, 
+                        new FinanceDocumentsControllerTestData_DocItem { ItemID = 1,
                             AccountID = DataSetupUtility.Home1CashAccount1ID,
                             ControlCenterID = DataSetupUtility.Home1ControlCenter3ID, Amount = 100, OrderID = null,
                             TranType = DataSetupUtility.TranType_Income1
@@ -157,7 +157,7 @@ namespace hihapi.unittest.Finance
                 this.listCreatedCC.ForEach(x => this.fixture.DeleteFinanceControlCenter(this.fixture.GetCurrentDataContext(), x));
 
                 this.listCreatedCC.Clear();
-            }    
+            }
             if (this.listCreatedDocs.Count > 0)
             {
                 this.listCreatedDocs.ForEach(x => this.fixture.DeleteFinanceDocument(this.fixture.GetCurrentDataContext(), x));
@@ -256,7 +256,7 @@ namespace hihapi.unittest.Finance
             {
                 docitemviewcontrol.Get();
             }
-            catch(Exception exp)
+            catch (Exception exp)
             {
                 Assert.IsType<UnauthorizedAccessException>(exp);
             }
@@ -306,7 +306,7 @@ namespace hihapi.unittest.Finance
 
             // 4.3 Update the item with min. id
             int itemminid = doc.Items.Min(p => p.ItemID);
-            foreach(var docitem in doc.Items)
+            foreach (var docitem in doc.Items)
             {
                 if (docitem.ItemID == itemminid)
                 {
@@ -354,7 +354,7 @@ namespace hihapi.unittest.Finance
         }
 
         [Theory]
-        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID, FinanceDocumentType.DocType_Normal, 
+        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID, FinanceDocumentType.DocType_Normal,
             DataSetupUtility.Home1CashAccount1ID, DataSetupUtility.TranType_Expense1,
             DataSetupUtility.Home1ControlCenter1ID)]
         [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home1ID, FinanceDocumentType.DocType_Normal,
@@ -394,7 +394,7 @@ namespace hihapi.unittest.Finance
             FinanceDocument doc = new FinanceDocument();
             doc.HomeID = hid;
             doc.DocType = doctype;
-            doc.Desp = $"{ hid }_{accountid}_{ccid}";
+            doc.Desp = $"{hid}_{accountid}_{ccid}";
             doc.TranCurr = "CNY";
             FinanceDocumentItem item = null;
             item = new FinanceDocumentItem();
@@ -443,7 +443,7 @@ namespace hihapi.unittest.Finance
         }
 
         [Theory]
-        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.Home1CashAccount1ID, 
+        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1ID, DataSetupUtility.Home1BaseCurrency, DataSetupUtility.Home1CashAccount1ID,
             DataSetupUtility.Home1CashAccount2ID, DataSetupUtility.Home1ControlCenter1ID)]
         [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home2ID, DataSetupUtility.Home2BaseCurrency, DataSetupUtility.Home2CashAccount1ID,
             DataSetupUtility.Home2DepositAccount2ID, DataSetupUtility.Home2ControlCenter1ID)]
@@ -475,7 +475,7 @@ namespace hihapi.unittest.Finance
             FinanceDocument doc = new FinanceDocument();
             doc.HomeID = hid;
             doc.DocType = FinanceDocumentType.DocType_Transfer;
-            doc.Desp = $"{ hid }_Transfer1";
+            doc.Desp = $"{hid}_Transfer1";
             doc.TranCurr = curr;
             FinanceDocumentItem item = null;
             item = new FinanceDocumentItem();
@@ -646,8 +646,8 @@ namespace hihapi.unittest.Finance
                 TranDate = testdata.TranDate,
                 Desp = testdata.Comment,
                 DocType = FinanceDocumentType.DocType_AdvancePayment,
-                Items = new List<FinanceDocumentItem> 
-                { 
+                Items = new List<FinanceDocumentItem>
+                {
                     new FinanceDocumentItem()
                     {
                         ItemID = 1,
@@ -667,7 +667,7 @@ namespace hihapi.unittest.Finance
             listCreatedDocs.Add(createdoc.ID);
             ValidateDocument(createContext.DocumentInfo, createdoc, true, true);
             var createdAcntID = -1;
-            foreach(var item in createdoc.Items)
+            foreach (var item in createdoc.Items)
             {
                 if (item.AccountID != testdata.AccountID)
                 {
@@ -1195,7 +1195,7 @@ namespace hihapi.unittest.Finance
                 TranDate = testdata.TranDate,
                 Desp = testdata.Comment,
                 DocType = FinanceDocumentType.DocType_BorrowFrom,
-                Items = new List<FinanceDocumentItem> 
+                Items = new List<FinanceDocumentItem>
                 {
                     new FinanceDocumentItem()
                     {
@@ -1266,7 +1266,7 @@ namespace hihapi.unittest.Finance
                         TranCurr = testdata.Currency,
                         Desp = tmpdoc.Description,
                         Items = new List<FinanceDocumentItem>
-                        { 
+                        {
                             new FinanceDocumentItem
                             {
                                 ItemID = 1,
@@ -1311,6 +1311,130 @@ namespace hihapi.unittest.Finance
 
                 // After all tmp. docs posted, the account status shall be updated.
             }
+
+            await context.DisposeAsync();
+        }
+
+        public static TheoryData<FinanceDocumentsControllerTestData_LegacyLoan> LegacyBorrowFromDocs =>
+            new TheoryData<FinanceDocumentsControllerTestData_LegacyLoan>
+            {
+                    new FinanceDocumentsControllerTestData_LegacyLoan()
+                    {
+                        HomeID = DataSetupUtility.Home1ID,
+                        CurrentUser = DataSetupUtility.UserA,
+                        Currency = DataSetupUtility.Home1BaseCurrency,
+                        TranDate = new DateTime(2022, 1, 30),
+                        Amount = 100000,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+
+                        AccountName = "Test Legacy Loan 1",
+                        StartDate = new DateTime(2022, 2, 1),
+                        EndDate = new DateTime(2023, 2, 1),
+                        InterestFree = true,
+
+                        Frequency = RepeatFrequency.Month,
+                        Comment = "Test Loan 1",
+                        TmpDocControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                        TmpDocTranType = DataSetupUtility.TranType_Expense1,
+
+                        PostLoanTmpDocs = false,
+                    },
+                    new FinanceDocumentsControllerTestData_LegacyLoan()
+                    {
+                        HomeID = DataSetupUtility.Home1ID,
+                        CurrentUser = DataSetupUtility.UserA,
+                        Currency = DataSetupUtility.Home1BaseCurrency,
+                        TranDate = new DateTime(2022, 1, 30),
+                        Amount = 100000,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+
+                        AccountName = "Test Legacy Loan 2",
+                        StartDate = new DateTime(2022, 2, 1),
+                        EndDate = new DateTime(2023, 2, 1),
+                        InterestFree = true,
+
+
+                        Frequency = RepeatFrequency.Month,
+                        Comment = "Test Loan 2",
+                        TmpDocControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                        TmpDocTranType = DataSetupUtility.TranType_Expense1,
+
+                        PostLoanTmpDocs = true,
+                        RepayAccountID = DataSetupUtility.Home1CashAccount1ID,
+                    },
+            };
+
+        [Theory]
+        [MemberData(nameof(LegacyBorrowFromDocs))]
+        public async Task TestCase_LegacyBorrowFrom(FinanceDocumentsControllerTestData_LegacyLoan testdata)
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(testdata.HomeID, context);
+            var _mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
+
+            FinanceDocumentsController control = new FinanceDocumentsController(context, _mockLogger.Object);
+
+            // 1. No authorization
+            try
+            {
+                control.Get();
+            }
+            catch (Exception exp)
+            {
+                Assert.IsType<UnauthorizedAccessException>(exp);
+            }
+            var userclaim = DataSetupUtility.GetClaimForUser(testdata.CurrentUser);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            var loanContext = new FinanceLoanDocumentCreateContext();
+            loanContext.IsLegacy = true;
+            loanContext.LegacyAmount = testdata.Amount;
+            loanContext.ControlCenterID = testdata.ControlCenterID;
+            loanContext.OrderID = testdata.OrderID;            
+            var acntLoan = new FinanceAccountExtraLoan()
+            {
+                StartDate = testdata.StartDate,
+                EndDate = testdata.EndDate,
+                InterestFree = testdata.InterestFree,
+                Others = testdata.Others,
+                PayingAccount = testdata.PayingAccount,
+                Partner = testdata.Partner,
+            };
+            loanContext.DocumentInfo = new FinanceDocument
+            {
+                HomeID = testdata.HomeID,
+                TranCurr = testdata.Currency,
+                TranDate = testdata.TranDate,
+                Desp = testdata.Comment,
+                DocType = FinanceDocumentType.DocType_BorrowFrom,
+            };
+            loanContext.AccountInfo = new FinanceAccount
+            {
+                HomeID = testdata.HomeID,
+                CategoryID = FinanceAccountCategory.AccountCategory_BorrowFrom,
+                Name = testdata.AccountName,
+                Status = (byte)FinanceAccountStatus.Normal,
+                ExtraLoan = acntLoan,
+            };
+            var postloanrst = await control.PostLoanDocument(loanContext);
+            Assert.NotNull(postloanrst);
+            var postokrst = Assert.IsType<OkObjectResult>(postloanrst);
+            var createdoc = Assert.IsType<FinanceDocument>(postokrst.Value);
+            listCreatedDocs.Add(createdoc.ID);
+            ValidateDocument(loanContext.DocumentInfo, createdoc, true, true);
+            Assert.True(createdoc.Items.Count() == 1);
+
+            var createdAcntID = createdoc.Items.ElementAt(0).AccountID;
+            Assert.True(createdAcntID != -1);
+            listCreatedAccount.Add(createdAcntID);
+
+            var createdocItem = createdoc.Items.ElementAt(0);
+            Assert.True(createdocItem.AccountID == createdAcntID);
+            Assert.True(createdocItem.TranAmount == testdata.Amount);
+            Assert.True(createdocItem.TranType == FinanceTransactionType.TranType_OpeningLiability);
 
             await context.DisposeAsync();
         }
@@ -1576,7 +1700,7 @@ namespace hihapi.unittest.Finance
             // Post the loan document.
             int nPostedDocs = 3;
             List<int> tmpDocPosted = new List<int>();
-            for(int i = 0; i < nPostedDocs; i++)
+            for (int i = 0; i < nPostedDocs; i++)
             {
                 var tmpdoc = tmpdocsList[i];
 
@@ -1891,7 +2015,7 @@ namespace hihapi.unittest.Finance
             assetchangecontext.TranCurr = testdata.Currency;
             assetchangecontext.AssetAccountID = nacntid;
             var amtdiff = testdata.NewAmount - testdata.Amount;
-            assetchangecontext.Items = new List<FinanceDocumentItem> 
+            assetchangecontext.Items = new List<FinanceDocumentItem>
             {
                 new FinanceDocumentItem
                 {
@@ -1967,7 +2091,7 @@ namespace hihapi.unittest.Finance
                     IsLegacy = true,
                 },
             };
-        
+
         [Theory]
         [MemberData(nameof(AssetSellDocs))]
         public async Task TestCase_AssetSellCreate(FinanceDocumentsControllerTestData_AssetSellDoc testdata)

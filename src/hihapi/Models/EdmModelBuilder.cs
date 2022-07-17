@@ -153,6 +153,11 @@ namespace hihapi.Models
 
             // Actions on reports
             var reportEntity = modelBuilder.EntityType<FinanceReport>();
+            // Action: GetAccountBalance
+            var actionGetBalance = reportEntity.Collection.Action("GetAccountBalance");
+            actionGetBalance.Parameter<int>("HomeID");
+            actionGetBalance.Parameter<int>("AccountID");
+            actionGetBalance.Returns<double>();
             // Action: GetMonthlyReportByTranType
             var actionReportCurrentMonthByTT = reportEntity.Collection.Action("GetReportByTranType");
                 // .ReturnsCollection<FinanceReportByTransactionType>();
