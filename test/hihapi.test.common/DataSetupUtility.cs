@@ -384,6 +384,9 @@ namespace hihapi.test.common
                 REFDOC_BUY  INT            NOT NULL,
                 COMMENT     NVARCHAR (100) NULL,
                 REFDOC_SOLD INT            NULL,
+                BOUGHT_DATE DATE           NULL,
+                EXPIRED_DATE DATE          NULL,
+                RESIDUAL_VALUE DECIMAL(17, 2) NULL,
                 CONSTRAINT FK_t_fin_account_ext_as_ACNT FOREIGN KEY (ACCOUNTID) 
                     REFERENCES t_fin_account (ID) ON DELETE CASCADE ON UPDATE CASCADE,
                 CONSTRAINT FK_t_fin_account_ext_as_CTGY FOREIGN KEY (CTGYID) 
@@ -1024,6 +1027,7 @@ namespace hihapi.test.common
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (16,'2020.4.15');
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (17,'2020.9.12');
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (18,'2022.5.1');
+            // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (19,'2022.10.31');
             DBVersions.Add(new DBVersion()
             {
                 VersionID = 1,
@@ -1114,6 +1118,11 @@ namespace hihapi.test.common
                 VersionID = 18,
                 ReleasedDate = new DateTime(2022, 5, 1)
             });
+            DBVersions.Add(new DBVersion()
+            {
+                VersionID = 19,
+                ReleasedDate = new DateTime(2022, 10, 31)
+            });
         }
 
         private static void SetupTable_Currency()
@@ -1167,6 +1176,7 @@ namespace hihapi.test.common
             FinanceDocumentTypes.Add(new FinanceDocumentType() { ID = 12, Name = "Sys.DocTy.AdvancedRecv", Comment = "预收款" });
             FinanceDocumentTypes.Add(new FinanceDocumentType() { ID = 13, Name = "Sys.DocTy.AssetValChg", Comment = "资产净值变动" });
             FinanceDocumentTypes.Add(new FinanceDocumentType() { ID = 14, Name = "Sys.DocTy.Insurance", Comment = "保险" });
+            FinanceDocumentTypes.Add(new FinanceDocumentType() { ID = 15, Name = "Sys.DocTy.AssetDeprec", Comment = "资产折旧" });
         }
 
         private static void SetupTable_FinAssertCategory()

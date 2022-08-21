@@ -9,6 +9,8 @@ namespace hihapi.Models
         public static IEdmModel GetEdmModel()
         {
             var modelBuilder = new ODataConventionModelBuilder();
+            modelBuilder.Namespace = typeof(Currency).Namespace;
+
             modelBuilder.EntitySet<Currency>("Currencies");
             modelBuilder.EntitySet<Language>("Languages");
             modelBuilder.EntitySet<DBVersion>("DBVersions");
@@ -70,6 +72,8 @@ namespace hihapi.Models
             modelBuilder.ComplexType<RepeatedDatesWithAmount>();
             modelBuilder.ComplexType<RepeatDatesWithAmountCalculationInput>();
             modelBuilder.ComplexType<RepeatedDatesWithAmountAndInterest>();
+            var dprerst = modelBuilder.EntityType<FinanceAssetDepreicationResult>();
+            dprerst.Property(c => c.TranDate).AsDate();
             modelBuilder.EntitySet<FinanceReport>("FinanceReports");
             modelBuilder.EntityType<FinanceReportByTransactionType>();
             modelBuilder.EntityType<FinanceReportByTransactionTypeMOM>();
@@ -116,7 +120,7 @@ namespace hihapi.Models
             // Functions/Actions on Documents
             var docEntity = modelBuilder.EntityType<FinanceDocument>();
             docEntity.Property(c => c.TranDate).AsDate();
-            // Functions
+            // Function : Is Document Changable
             var functionIsDocChangable = docEntity.Function("IsChangable");
             functionIsDocChangable.Returns<bool>();
 
@@ -136,7 +140,13 @@ namespace hihapi.Models
             docEntity.Collection
                 .Action("PostAssetValueChangeDocument")
                 .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
-            modelBuilder.Namespace = typeof(Currency).Namespace;
+            // Function : Get asset depreciation
+            var actionGetDepreResult = docEntity.Collection.Action("GetAssetDepreciationResult");
+            actionGetDepreResult.Parameter<int>("HomeID");
+            actionGetDepreResult.Parameter<int>("Year");
+            actionGetDepreResult.Parameter<int?>("Month");
+            actionGetDepreResult.ReturnsFromEntitySet<FinanceAssetDepreicationResult>("FinanceAssetDepreicationResults");
+
             // Function on DP template documents
             var tmpTpDocEntity = modelBuilder.EntityType<FinanceTmpDPDocument>();
             var tmpTpDocPostFunc =

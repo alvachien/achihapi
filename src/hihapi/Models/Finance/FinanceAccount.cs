@@ -374,6 +374,17 @@ namespace hihapi.Models
         [Column("REFDOC_SOLD", TypeName="INT")]
         public Int32? RefenceSoldDocumentID { get; set; }
 
+        [Column("BOUGHT_DATE", TypeName = "DATE")]
+        [DataType(DataType.Date)]
+        public DateTime? BoughtDate { get; set; }
+
+        [Column("EXPIRED_DATE", TypeName = "DATE")]
+        [DataType(DataType.Date)]
+        public DateTime? ExpiredDate { get; set; }
+
+        [Column("RESIDUAL_VALUE", TypeName = "DECIMAL(17, 2)")]
+        public Decimal? ResidualValue { get; set; }
+
         [NotMapped]
         public FinanceAssetCategory AssetCategory { get; set; }
 
@@ -391,6 +402,8 @@ namespace hihapi.Models
             dictFieldNames.Add("Comment", "COMMENT");
             dictFieldNames.Add("RefDocForBuy", "REFDOC_BUY");
             dictFieldNames.Add("RefDocForSold", "REFDOC_SOLD");
+            dictFieldNames.Add("ExpiredDate", "EXPIRED_DATE");
+            dictFieldNames.Add("ResidualValue", "RESIDUAL_VALUE");
         }
         public override String GetDBFieldName(String strField)
         {
@@ -621,6 +634,7 @@ namespace hihapi.Models
             }
             catch (Exception ex)
             {
+                System.Console.WriteLine(ex.Message);
                 return false;
             }
 

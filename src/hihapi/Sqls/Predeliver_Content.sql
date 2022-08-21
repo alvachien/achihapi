@@ -475,6 +475,15 @@ INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (16,'2020.04
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (17,'2020.09.12');
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (18,'2022.05.31');
 
+-------------------------------------------------------------------------------------------------------------------
+-- Updated at 2020.4.2
+SET IDENTITY_INSERT dbo.[t_fin_doc_type] ON;
+INSERT INTO dbo.[t_fin_doc_type] ([ID],[NAME],[COMMENT]) VALUES (15,N'Sys.DocTy.AssetDeprec', N'资产折旧');
+SET IDENTITY_INSERT dbo.[t_fin_doc_type] OFF;
+
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (19, '2022.10.31');
+
+
 ---------------------------------
 -- TODO...
 

@@ -445,5 +445,47 @@ namespace hihapi.Models
         [Required]
         public Int32 AssetAccountID { get; set; }
     }
+
+    // Asset: Depreciation
+    public sealed class FinanceAssetDepreciationInfo
+    {
+        [Required]
+        public Int32 HID { get; set; }
+
+        [Required]
+        public Int32 AssetAccountID { get; set; }
+
+        [Required]
+        public Int32 Year { get; set; }
+
+        [Required]
+        public Int32 Month { get; set; }
+    }
+
+    public sealed class FinanceAssetDepreciationContext
+    {
+        [Required]
+        public Int32 HID { get; set; }
+
+        [Required]
+        public Int32 AssetAccountID { get; set; }
+
+        [Required]
+        public Decimal TranAmount { get; set; }
+        public Int32? ControlCenterID { get; set; }
+        public Int32? OrderID { get; set; }
+        public String Desp { get; set; }
+        public String TranCurr { get; set; }
+    }
+    public sealed class FinanceAssetDepreicationResult
+    {
+        [Key]
+        public Int32 HID { get; set; }
+        [Key]
+        public Int32 AssetAccountID { get; set; }
+        public DateTime TranDate { get; set; }
+        public Decimal TranAmount { get; set; }
+        public String TranCurr { get; set; }
+    }
     #endregion
 }

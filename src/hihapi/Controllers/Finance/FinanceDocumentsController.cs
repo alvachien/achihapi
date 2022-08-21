@@ -54,14 +54,14 @@ namespace hihapi.Controllers
 
             // Check whether User assigned with specified Home ID
             return Ok(from hmem in _context.HomeMembers
-                        where hmem.User == usrName
-                        select new { HomeID = hmem.HomeID, User = hmem.User, IsChild = hmem.IsChild } into hmems
-                        join docs in _context.FinanceDocument
-                          on hmems.HomeID equals docs.HomeID
-                        where (hmems.IsChild == true && hmems.User == docs.Createdby)
-                            || hmems.IsChild == null
-                            || hmems.IsChild == false
-                        select docs);
+                      where hmem.User == usrName
+                      select new { HomeID = hmem.HomeID, User = hmem.User, IsChild = hmem.IsChild } into hmems
+                      join docs in _context.FinanceDocument
+                        on hmems.HomeID equals docs.HomeID
+                      where (hmems.IsChild == true && hmems.User == docs.Createdby)
+                          || hmems.IsChild == null
+                          || hmems.IsChild == false
+                      select docs);
         }
 
         [EnableQuery]
@@ -93,7 +93,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody]FinanceDocument document)
+        public async Task<IActionResult> Post([FromBody] FinanceDocument document)
         {
             if (!ModelState.IsValid)
             {
@@ -146,7 +146,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody]FinanceDocument update)
+        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceDocument update)
         {
             if (!ModelState.IsValid)
             {
@@ -290,11 +290,11 @@ namespace hihapi.Controllers
             if (bFurtherStep == false)
             {
                 var crtedacnt = (from acntdp in _context.FinanceAccountExtraDP
-                                    join acnt in _context.FinanceAccount
-                                on acntdp.AccountID equals acnt.ID
-                                where acnt.HomeID == cc.HomeID
-                                && acntdp.RefenceDocumentID == cc.ID
-                                select acnt).SingleOrDefault();
+                                 join acnt in _context.FinanceAccount
+                             on acntdp.AccountID equals acnt.ID
+                                 where acnt.HomeID == cc.HomeID
+                                 && acntdp.RefenceDocumentID == cc.ID
+                                 select acnt).SingleOrDefault();
                 if (crtedacnt != null)
                 {
                     // Delete the account
@@ -393,7 +393,7 @@ namespace hihapi.Controllers
             if (!(entity.DocType == FinanceDocumentType.DocType_Normal
                 || entity.DocType == FinanceDocumentType.DocType_Transfer))
                 return BadRequest("Not supported document type");
-            
+
             foreach (var prop in doc.GetChangedPropertyNames())
             {
                 if (!changableProperites.ContainsKey(prop))
@@ -423,7 +423,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostDPDocument([FromBody]FinanceADPDocumentCreateContext createContext)
+        public async Task<IActionResult> PostDPDocument([FromBody] FinanceADPDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
             {
@@ -432,7 +432,7 @@ namespace hihapi.Controllers
 
             if (createContext == null
                 || createContext.DocumentInfo == null
-                || createContext.AccountInfo == null 
+                || createContext.AccountInfo == null
                 || createContext.AccountInfo.HomeID <= 0
                 || createContext.AccountInfo.Status != (Byte)FinanceAccountStatus.Normal
                 || createContext.DocumentInfo.HomeID <= 0
@@ -444,7 +444,7 @@ namespace hihapi.Controllers
             }
             // Check tmp doc ID
             var tmpdocids = new Dictionary<int, int>();
-            foreach(var tmpdoc in createContext.AccountInfo.ExtraDP.DPTmpDocs)
+            foreach (var tmpdoc in createContext.AccountInfo.ExtraDP.DPTmpDocs)
             {
                 if (tmpdoc.DocumentID <= 0)
                 {
@@ -567,7 +567,7 @@ namespace hihapi.Controllers
                     transaction.Rollback();
                 }
             }
-            
+
             if (errorOccur)
             {
                 throw new BadRequestException(errorString);
@@ -577,7 +577,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostLoanDocument([FromBody]FinanceLoanDocumentCreateContext createContext)
+        public async Task<IActionResult> PostLoanDocument([FromBody] FinanceLoanDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
             {
@@ -762,9 +762,9 @@ namespace hihapi.Controllers
 
             return Ok(createContext.DocumentInfo);
         }
-    
+
         [HttpPost]
-        public async Task<IActionResult> PostAssetBuyDocument([FromBody]FinanceAssetBuyDocumentCreateContext createContext)
+        public async Task<IActionResult> PostAssetBuyDocument([FromBody] FinanceAssetBuyDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
             {
@@ -930,7 +930,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostAssetValueChangeDocument([FromBody]FinanceAssetRevaluationDocumentCreateContext createContext)
+        public async Task<IActionResult> PostAssetValueChangeDocument([FromBody] FinanceAssetRevaluationDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
             {
@@ -1099,7 +1099,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostAssetSellDocument([FromBody]FinanceAssetSellDocumentCreateContext createContext)
+        public async Task<IActionResult> PostAssetSellDocument([FromBody] FinanceAssetSellDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
             {
@@ -1163,9 +1163,9 @@ namespace hihapi.Controllers
 
             // Check 1: check account is a valid asset?
             var query = (from account in this._context.FinanceAccount
-                        join assetaccount in this._context.FinanceAccountExtraAS on account.ID equals assetaccount.AccountID
-                        where account.ID == createContext.AssetAccountID
-                        select new { Status = account.Status, RefSellDoc = assetaccount.RefenceSoldDocumentID }).FirstOrDefault();
+                         join assetaccount in this._context.FinanceAccountExtraAS on account.ID equals assetaccount.AccountID
+                         where account.ID == createContext.AssetAccountID
+                         select new { Status = account.Status, RefSellDoc = assetaccount.RefenceSoldDocumentID }).FirstOrDefault();
             if (query.Status != (Byte)FinanceAccountStatus.Normal)
             {
                 throw new BadRequestException("Account status is not normal");
@@ -1177,17 +1177,17 @@ namespace hihapi.Controllers
 
             // Check 2: check the inputted date is valid > must be the later than all existing transactions;
             var query2 = (from docitem in this._context.FinanceDocumentItem
-                         join docheader in this._context.FinanceDocument on docitem.DocID equals docheader.ID
-                         where docitem.AccountID == createContext.AssetAccountID
-                         orderby docheader.TranDate descending
-                         select new { TranDate = docheader.TranDate }).FirstOrDefault();
+                          join docheader in this._context.FinanceDocument on docitem.DocID equals docheader.ID
+                          where docitem.AccountID == createContext.AssetAccountID
+                          orderby docheader.TranDate descending
+                          select new { TranDate = docheader.TranDate }).FirstOrDefault();
             if (createContext.TranDate < query2.TranDate)
                 throw new BadRequestException("Tran. data is invalid");
 
             // Check 3. Fetch current balance
             var query3 = (from acntbal in this._context.FinanceReporAccountGroupView
-                         where acntbal.AccountID == createContext.AssetAccountID
-                         select acntbal.Balance).First();
+                          where acntbal.AccountID == createContext.AssetAccountID
+                          select acntbal.Balance).First();
             if (query3 <= 0)
                 throw new BadRequestException("Balance is less than zero");
 
@@ -1270,6 +1270,231 @@ namespace hihapi.Controllers
             }
 
             return Ok(vmFIDoc);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PostAssetDepreciationDocument([FromBody] FinanceAssetDepreciationContext depContext)
+        {
+            if (!ModelState.IsValid)
+            {
+                HIHAPIUtility.HandleModalStateError(ModelState);
+            }
+
+            if (depContext.HID <= 0)
+                throw new BadRequestException("Not HID inputted");
+            if (depContext.AssetAccountID <= 0)
+                throw new BadRequestException("Asset Account is invalid");
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == depContext.HID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Construct the Doc.
+            var vmFIDoc = new FinanceDocument();
+            vmFIDoc.DocType = FinanceDocumentType.DocType_AssetDepreciation;
+            vmFIDoc.HomeID = depContext.HID;
+            vmFIDoc.TranCurr = depContext.TranCurr;
+            vmFIDoc.Desp = depContext.Desp;
+            var docItem = new FinanceDocumentItem();
+            docItem.Desp = depContext.Desp;
+            docItem.ItemID = 1;
+            docItem.AccountID = depContext.AssetAccountID;
+            docItem.TranType = FinanceTransactionType.TranType_AssetValueDecrease;
+            docItem.ControlCenterID = depContext.ControlCenterID;
+            docItem.OrderID = depContext.OrderID;
+            docItem.TranAmount = depContext.TranAmount;
+
+            // Database update
+            var errorString = "";
+            var errorOccur = false;
+            var origdocid = 0;
+
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    // 1. Create the document
+                    vmFIDoc.CreatedAt = DateTime.Now;
+                    vmFIDoc.Createdby = usrName;
+                    var docEntity = _context.FinanceDocument.Add(vmFIDoc);
+
+                    await _context.SaveChangesAsync();
+                    origdocid = docEntity.Entity.ID;
+
+                    vmFIDoc = docEntity.Entity;
+
+                    transaction.Commit();
+                }
+                catch (Exception exp)
+                {
+                    errorOccur = true;
+                    errorString = exp.Message;
+                    transaction.Rollback();
+                }
+            }
+
+            if (errorOccur)
+            {
+                throw new BadRequestException(errorString);
+            }
+
+            return Ok(vmFIDoc);
+        }
+
+        [HttpPost]
+        public IActionResult GetAssetDepreciationResult([FromBody] ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+            // 0. Get inputted parameter
+            Int32 hid = (Int32)parameters["HomeID"];
+            Int32 year = (Int32)parameters["Year"];
+            Int32 month = (Int32)parameters["Month"];
+
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            List<FinanceAssetDepreicationResult> rsts = new List<FinanceAssetDepreicationResult>();
+            // Fetch all asset account
+            var acnts = from account in _context.FinanceAccount
+                          join accountext in _context.FinanceAccountExtraAS
+                            on account.ID equals accountext.AccountID
+                          where account.HomeID == hid && account.CategoryID == FinanceAccountCategory.AccountCategory_Asset
+                            && account.Status == FinanceAccountStatus.Normal
+                            && accountext.BoughtDate != null
+                            && accountext.ExpiredDate != null
+                          select new {
+                            account.ID,
+                            accountext.ExpiredDate,
+                            accountext.BoughtDate,
+                            accountext.ResidualValue
+                          };
+            // Find out the date
+            DateTime dtMonthFirstday = new DateTime(year, month, 1);
+            DateTime dtMonthLastday = dtMonthFirstday.AddMonths(1).AddDays(-1);
+            var lc = _context.HomeDefines.First(prop => prop.ID == hid).BaseCurrency;
+
+            // Get the balance
+            var dbresults = (
+                from docitem in _context.FinanceDocumentItem
+                join docheader in _context.FinanceDocument
+                    on docitem.DocID equals docheader.ID
+                join trantype in _context.FinTransactionType
+                    on docitem.TranType equals trantype.ID
+                join acnt in acnts
+                    on docitem.AccountID equals acnt.ID
+                select new
+                {
+                    AccountID = docitem.AccountID,
+                    IsExpense = trantype.Expense,
+                    TranCurr = docheader.TranCurr,
+                    TranCurr2 = docheader.TranCurr2,
+                    UseCurr2 = docitem.UseCurr2,
+                    TranAmount = docitem.TranAmount,
+                    docheader.ExgRate,
+                    docheader.ExgRate2,
+                }
+                into docitem2
+                group docitem2 by new { docitem2.AccountID, docitem2.IsExpense, docitem2.TranCurr, docitem2.TranCurr2, docitem2.UseCurr2, docitem2.ExgRate, docitem2.ExgRate2 } into docitem3
+                select new
+                {
+                    AccountID = docitem3.Key.AccountID,
+                    IsExpense = docitem3.Key.IsExpense,
+                    TranCurr = docitem3.Key.TranCurr,
+                    TranCurr2 = docitem3.Key.TranCurr2,
+                    UseCurr2 = docitem3.Key.UseCurr2,
+                    ExgRate = docitem3.Key.ExgRate,
+                    ExgRate2 = docitem3.Key.ExgRate2,
+                    TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
+                }).ToList();
+
+            foreach(var acnt in acnts)
+            {
+                Double doubleAmount = 0;
+
+                foreach (var dbrst in dbresults)
+                {
+                    if (dbrst.AccountID == acnt.ID)
+                    {
+                        var amountLC = dbrst.TranAmount;
+                        // Calculte the amount
+                        if (dbrst.IsExpense)
+                            amountLC = -1 * dbrst.TranAmount;
+                        if (dbrst.UseCurr2 != null)
+                        {
+                            if (dbrst.ExgRate2 != null && dbrst.ExgRate2.GetValueOrDefault() > 0)
+                            {
+                                amountLC *= (Double)dbrst.ExgRate2.GetValueOrDefault();
+                            }
+                        }
+                        else
+                        {
+                            if (dbrst.ExgRate != null && dbrst.ExgRate.GetValueOrDefault() > 0)
+                            {
+                                amountLC *= (Double)dbrst.ExgRate.GetValueOrDefault();
+                            }
+                        }
+
+                        doubleAmount += amountLC;
+                    }
+                }
+                // Now we got the total amount
+                if (acnt.ResidualValue != null)
+                    doubleAmount -= (double)acnt.ResidualValue.Value;
+
+                // Calculate how many months left
+                var leftMonth = (acnt.ExpiredDate.Value - dtMonthLastday).TotalDays / 30;
+                if (leftMonth > 0)
+                {
+                    FinanceAssetDepreicationResult result = new FinanceAssetDepreicationResult();
+                    result.TranCurr = lc;
+                    result.TranDate = dtMonthLastday;
+                    result.TranAmount = Math.Round((Decimal)(doubleAmount / leftMonth), 2);
+                    result.HID = hid;
+                    result.AssetAccountID = acnt.ID;
+                    rsts.Add(result);
+                }
+            }
+
+            return Ok(rsts);
         }
 
         [HttpGet]

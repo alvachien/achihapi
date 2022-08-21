@@ -315,6 +315,9 @@ CREATE TABLE [dbo].[t_fin_account_ext_as] (
     [REFDOC_BUY]  INT            NOT NULL,
     [COMMENT]     NVARCHAR (100) NULL,
     [REFDOC_SOLD] INT            NULL,
+    [BOUGHT_DATE] DATE           NULL,
+    [EXPIRED_DATE] DATE          NULL,
+    [RESIDUAL_VALUE] DECIMAL(17, 2) NULL,
     CONSTRAINT [PK_t_fin_account_ext_as] PRIMARY KEY CLUSTERED ([ACCOUNTID] ASC),
     CONSTRAINT [FK_t_fin_account_ext_as_ACNT] FOREIGN KEY ([ACCOUNTID]) REFERENCES [dbo].[t_fin_account] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT [FK_t_fin_account_ext_as_CTGY] FOREIGN KEY ([CTGYID]) REFERENCES [dbo].[t_fin_asset_ctgy] ([ID])
