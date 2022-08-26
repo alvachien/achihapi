@@ -1424,6 +1424,8 @@ namespace hihapi.Controllers
                 select new
                 {
                     AccountID = docitem.AccountID,
+                    docheader.TranDate,
+                    docheader.DocType,
                     IsExpense = trantype.Expense,
                     TranCurr = docheader.TranCurr,
                     TranCurr2 = docheader.TranCurr2,
@@ -1431,45 +1433,47 @@ namespace hihapi.Controllers
                     TranAmount = docitem.TranAmount,
                     docheader.ExgRate,
                     docheader.ExgRate2,
-                }
-                into docitem2
-                group docitem2 by new { docitem2.AccountID, docitem2.IsExpense, docitem2.TranCurr, docitem2.TranCurr2, docitem2.UseCurr2, docitem2.ExgRate, docitem2.ExgRate2 } into docitem3
-                select new
-                {
-                    AccountID = docitem3.Key.AccountID,
-                    IsExpense = docitem3.Key.IsExpense,
-                    TranCurr = docitem3.Key.TranCurr,
-                    TranCurr2 = docitem3.Key.TranCurr2,
-                    UseCurr2 = docitem3.Key.UseCurr2,
-                    ExgRate = docitem3.Key.ExgRate,
-                    ExgRate2 = docitem3.Key.ExgRate2,
-                    TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
                 }).ToList();
+                //into docitem2
+                //group docitem2 by new { docitem2.AccountID, docitem2.IsExpense, docitem2.TranCurr, docitem2.TranCurr2, docitem2.UseCurr2, docitem2.ExgRate, docitem2.ExgRate2 } into docitem3
+                //select new
+                //{
+                //    AccountID = docitem3.Key.AccountID,
+                //    IsExpense = docitem3.Key.IsExpense,
+                //    TranCurr = docitem3.Key.TranCurr,
+                //    TranCurr2 = docitem3.Key.TranCurr2,
+                //    UseCurr2 = docitem3.Key.UseCurr2,
+                //    ExgRate = docitem3.Key.ExgRate,
+                //    ExgRate2 = docitem3.Key.ExgRate2,
+                //    TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
+                //}).ToList();
 
             foreach(var acnt in acnts)
             {
                 Double doubleAmount = 0;
+                if (dbresults.FindIndex(p => p.TranDate >= dtMonthFirstday && p.DocType == FinanceDocumentType.DocType_AssetDepreciation) != -1)
+                    continue;
 
                 foreach (var dbrst in dbresults)
                 {
                     if (dbrst.AccountID == acnt.ID)
                     {
-                        var amountLC = dbrst.TranAmount;
+                        double amountLC = (double)dbrst.TranAmount;
                         // Calculte the amount
                         if (dbrst.IsExpense)
-                            amountLC = -1 * dbrst.TranAmount;
+                            amountLC = -1 * (double)dbrst.TranAmount;
                         if (dbrst.UseCurr2 != null)
                         {
                             if (dbrst.ExgRate2 != null && dbrst.ExgRate2.GetValueOrDefault() > 0)
                             {
-                                amountLC *= (Double)dbrst.ExgRate2.GetValueOrDefault();
+                                amountLC *= (double)dbrst.ExgRate2.GetValueOrDefault();
                             }
                         }
                         else
                         {
                             if (dbrst.ExgRate != null && dbrst.ExgRate.GetValueOrDefault() > 0)
                             {
-                                amountLC *= (Double)dbrst.ExgRate.GetValueOrDefault();
+                                amountLC *= (double)dbrst.ExgRate.GetValueOrDefault();
                             }
                         }
 
