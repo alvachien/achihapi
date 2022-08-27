@@ -472,6 +472,10 @@ namespace hihapi.Models
 
         [Required]
         public Decimal TranAmount { get; set; }
+
+        [Required]
+        public DateTime TranDate { get; set; }
+
         public Int32? ControlCenterID { get; set; }
         public Int32? OrderID { get; set; }
         public String Desp { get; set; }

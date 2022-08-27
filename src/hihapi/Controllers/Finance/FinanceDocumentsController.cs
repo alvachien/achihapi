@@ -1312,6 +1312,7 @@ namespace hihapi.Controllers
             vmFIDoc.HomeID = depContext.HID;
             vmFIDoc.TranCurr = depContext.TranCurr;
             vmFIDoc.Desp = depContext.Desp;
+            vmFIDoc.TranDate = depContext.TranDate;
             var docItem = new FinanceDocumentItem();
             docItem.Desp = depContext.Desp;
             docItem.ItemID = 1;
@@ -1320,6 +1321,7 @@ namespace hihapi.Controllers
             docItem.ControlCenterID = depContext.ControlCenterID;
             docItem.OrderID = depContext.OrderID;
             docItem.TranAmount = depContext.TranAmount;
+            vmFIDoc.Items.Add(docItem);
 
             // Database update
             var errorString = "";

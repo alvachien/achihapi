@@ -140,6 +140,9 @@ namespace hihapi.Models
             docEntity.Collection
                 .Action("PostAssetValueChangeDocument")
                 .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
+            docEntity.Collection
+                .Action("PostAssetDepreciationDocument")
+                .ReturnsFromEntitySet<FinanceDocument>("FinanceDocuments");
             // Function : Get asset depreciation
             var actionGetDepreResult = docEntity.Collection.Action("GetAssetDepreciationResult");
             actionGetDepreResult.Parameter<int>("HomeID");

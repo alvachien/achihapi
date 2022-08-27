@@ -3,7 +3,7 @@
   <PropertyGroup>
 	  <TargetFramework>net6.0</TargetFramework>
 	  <UserSecretsId>cf80adf9-ce70-4ce9-bb4e-a73887a492a6</UserSecretsId>
-    <Version>1.5.270</Version>
+    <Version>1.5.278</Version>
     <Authors>Alva Chien</Authors>
     <Product>H.I.H.</Product>
     <Copyright>© Alva Chien, 2019 - Present</Copyright>
@@ -28,6 +28,7 @@
     <None Remove="Sqls\Delta\v16.sql" />
     <None Remove="Sqls\Delta\v17.sql" />
     <None Remove="Sqls\Delta\v18.sql" />
+    <None Remove="Sqls\Delta\v19.sql" />
     <None Remove="Sqls\Delta\v2.sql" />
     <None Remove="Sqls\Delta\v3.sql" />
     <None Remove="Sqls\Delta\v4.sql" />
@@ -57,6 +58,7 @@
     <EmbeddedResource Include="Sqls\Delta\v16.sql" />
     <EmbeddedResource Include="Sqls\Delta\v17.sql" />
     <EmbeddedResource Include="Sqls\Delta\v18.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v19.sql" />
     <EmbeddedResource Include="Sqls\Delta\v2.sql" />
     <EmbeddedResource Include="Sqls\Delta\v3.sql" />
     <EmbeddedResource Include="Sqls\Delta\v4.sql" />
