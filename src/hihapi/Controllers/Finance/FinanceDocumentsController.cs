@@ -830,6 +830,12 @@ namespace hihapi.Controllers
             vmAccount.ExtraAsset.Comment = createContext.ExtraAsset.Comment;
             vmAccount.ExtraAsset.CategoryID = createContext.ExtraAsset.CategoryID;
             vmAccount.ExtraAsset.AccountHeader = vmAccount;
+            if (createContext.ExtraAsset.BoughtDate.HasValue)
+                vmAccount.ExtraAsset.BoughtDate = createContext.ExtraAsset.BoughtDate;
+            if (createContext.ExtraAsset.ExpiredDate.HasValue)
+                vmAccount.ExtraAsset.ExpiredDate = createContext.ExtraAsset.ExpiredDate;
+            if (createContext.ExtraAsset.ResidualValue.HasValue)
+                vmAccount.ExtraAsset.ResidualValue = createContext.ExtraAsset.ResidualValue;
 
             // Construct the Doc.
             var vmFIDoc = new FinanceDocument();
@@ -1395,23 +1401,23 @@ namespace hihapi.Controllers
             }
 
             List<FinanceAssetDepreicationResult> rsts = new List<FinanceAssetDepreicationResult>();
+            // Find out the date
+            DateTime dtMonthFirstday = new DateTime(year, month, 1);
+            DateTime dtMonthLastday = dtMonthFirstday.AddMonths(1).AddDays(-1);
             // Fetch all asset account
             var acnts = from account in _context.FinanceAccount
                           join accountext in _context.FinanceAccountExtraAS
                             on account.ID equals accountext.AccountID
                           where account.HomeID == hid && account.CategoryID == FinanceAccountCategory.AccountCategory_Asset
                             && account.Status == FinanceAccountStatus.Normal
-                            && accountext.BoughtDate != null
-                            && accountext.ExpiredDate != null
-                          select new {
+                            && accountext.BoughtDate != null && accountext.BoughtDate < dtMonthFirstday
+                            && accountext.ExpiredDate != null && accountext.ExpiredDate > dtMonthFirstday
+                        select new {
                             account.ID,
                             accountext.ExpiredDate,
                             accountext.BoughtDate,
                             accountext.ResidualValue
                           };
-            // Find out the date
-            DateTime dtMonthFirstday = new DateTime(year, month, 1);
-            DateTime dtMonthLastday = dtMonthFirstday.AddMonths(1).AddDays(-1);
             var lc = _context.HomeDefines.First(prop => prop.ID == hid).BaseCurrency;
 
             // Get the balance
@@ -1453,7 +1459,7 @@ namespace hihapi.Controllers
             foreach(var acnt in acnts)
             {
                 Double doubleAmount = 0;
-                if (dbresults.FindIndex(p => p.TranDate >= dtMonthFirstday && p.DocType == FinanceDocumentType.DocType_AssetDepreciation) != -1)
+                if (dbresults.FindIndex(p => p.TranDate >= dtMonthFirstday && p.TranDate <= dtMonthLastday && p.DocType == FinanceDocumentType.DocType_AssetDepreciation) != -1)
                     continue;
 
                 foreach (var dbrst in dbresults)
