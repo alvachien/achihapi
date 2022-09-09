@@ -6,36 +6,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace hihapi.Models.Library
 {
-    [Table("T_LIB_PERSON_DEF")]
-    public class LibraryPerson
+    public class LibraryOrganization
     {
         [Key]
         [Required]
         [Column("ID", TypeName = "INT")]
         public int Id { get; set; }
 
-        [Required]
-        [Column("HID", TypeName = "INT")]
-        public Int32 HomeID { get; set; }
-
-        [Required]
-        [StringLength(100)]
         [Column("NATIVE_NAME", TypeName = "NVARCHAR(100)")]
         public string NativeName { get; set; }
-
-        [StringLength(100)]
-        [Column("CHINESE_NAME", TypeName = "NVARCHAR(100)")]
+        [Column("CHINESE_NAME", TypeName = "NVARCHAR(200)")]
         public string ChineseName { get; set; }
 
         [Column("ISCHN", TypeName = "BIT")]
-        public Boolean? NativeIsChinese { get; set; }
+        public Boolean NativeIsChinese { get; set; }
 
         [Column("DETAIL", TypeName = "NVARCHAR(200)")]
         public string Detail { get; set; }
-
-        public HomeDefine CurrentHome { get; set; }
-
-        public IList<LibraryPersonRole> Roles { get; set; }
-        public IList<LibraryPersonRoleLinkage> PersonRoles { get; set; }
     }
 }

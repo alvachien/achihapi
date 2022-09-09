@@ -1,6 +1,8 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using hihapi.Models;
+using hihapi.Models.Library;
+using System.Collections.Generic;
 
 namespace hihapi
 {
@@ -56,6 +58,10 @@ namespace hihapi
         public DbSet<BlogPost> BlogPosts { get; set; }
         public DbSet<BlogPostCollection> BlogPostCollections { get; set; }
         public DbSet<BlogPostTag> BlogPostTags { get; set; }
+        //public DbSet<LibraryBookCategory> BookCategories { get; set; }
+        //public DbSet<LibraryBook> Books { get; set; }
+        public DbSet<LibraryPersonRole> PersonRoles { get; set; }
+        public DbSet<LibraryPerson> Persons { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -613,6 +619,54 @@ namespace hihapi
                     .HasForeignKey(d => d.PostID)
                     .HasConstraintName("FK_t_blog_post_tag_post");
             });
+
+            // Library part
+            modelBuilder.Entity<LibraryPersonRole>()
+                .HasOne(d => d.CurrentHome)
+                .WithMany(p => p.PersonRoles)
+                .HasForeignKey(d => d.HomeID)
+                .HasConstraintName("FK_t_lib_personrole_HID");
+
+            var entityPerson = modelBuilder.Entity<LibraryPerson>();
+            entityPerson
+                .HasMany(b => b.Roles)
+                .WithMany(c => c.Persons)
+                // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
+                .UsingEntity<LibraryPersonRoleLinkage>(
+                    j => j
+                        .HasOne(pt => pt.Role)
+                        .WithMany(p => p.PersonRoles)
+                        .HasForeignKey(pt => pt.RoleId),
+                    j => j
+                        .HasOne(pt => pt.Person)
+                        .WithMany(t => t.PersonRoles)
+                        .HasForeignKey(pt => pt.PersonId),
+                    j =>
+                    {
+                        j.HasKey(t => new { t.PersonId, t.RoleId });
+                    });   
+            //.UsingEntity<Dictionary<int, object>>(
+            //    "PersonRole",
+            //    l => l.HasOne<LibraryPersonRole>().WithMany().HasForeignKey("RoleId"),
+            //    r => r.HasOne<LibraryPerson>().WithMany().HasForeignKey("PersonId"),
+            //    j =>
+            //    {
+            //        j.HasKey("PersonId", "RoleId");
+            //        j.ToTable("t_lib_person_role");
+            //        //j.HasIndex(new[] { "TagsId" }, "IX_PostTag_TagsId");
+            //    });
+
+
+            entityPerson
+                .HasOne(d => d.CurrentHome)
+                .WithMany(p => p.Persons)
+                .HasForeignKey(d => d.HomeID)
+                .HasConstraintName("FK_t_lib_person_HID");
+
+            //modelBuilder.Entity<LibraryBook>()
+            //    .HasMany(b => b.Categories)
+            //    .WithMany(c => c.Books)
+            //    .UsingEntity(j => j.ToTable("PostTags"));
         }
     }
 }

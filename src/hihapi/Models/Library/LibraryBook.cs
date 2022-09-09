@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace hihapi.Models.Library
 {
+    //[Table("T_LIB_BOOK_DEF")]
     public class LibraryBook
     {
         [Key]
@@ -22,6 +23,9 @@ namespace hihapi.Models.Library
         [Column("ChineseName", TypeName = "NVARCHAR(200)")]
         public String ChineseName { get; set; }
 
+        [Column("ISCHN", TypeName = "BIT")]
+        public Boolean NativeIsChinese { get; set; }
+
         [StringLength(20)]
         [Column("ISBN", TypeName = "NVARCHAR(200)")]
         public String ISBN { get; set; }
@@ -29,6 +33,17 @@ namespace hihapi.Models.Library
         [Column("PublishedYear", TypeName = "DATE")]
         public Int32? PublishedYear { get; set; }
 
-        public ICollection<LibraryBookCategory> Categories { get; set; }
+        [Column("DETAIL", TypeName = "NVARCHAR(200)")]
+        public string Detail { get; set; }
+
+        [Column("ORIGIN_LANG", TypeName = "INT")]
+        public Int32? OriginLangID { get; set; }
+        [Column("BOOK_LANG", TypeName = "INT")]
+        public Int32? BookLangID { get; set; }
+
+        [Column("PAGE_COUNT", TypeName = "INT")]
+        public Int32? PageCount { get; set; }
+
+        public IList<LibraryBookCategory> Categories { get; set; }
     }
 }

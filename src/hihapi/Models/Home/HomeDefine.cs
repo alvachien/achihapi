@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using hihapi.Models.Library;
 
 namespace hihapi.Models
 {
@@ -21,6 +22,8 @@ namespace hihapi.Models
             FinanceOrders = new List<FinanceOrder>();
             FinancePlans = new List<FinancePlan>();
             FinanceDocuments = new List<FinanceDocument>();
+            PersonRoles = new List<LibraryPersonRole>();
+            Persons = new List<LibraryPerson>();
         }
 
         [Key]
@@ -57,6 +60,8 @@ namespace hihapi.Models
         public ICollection<FinanceOrder> FinanceOrders { get; set; }
         public ICollection<FinancePlan> FinancePlans { get; set; }
         public ICollection<FinanceDocument> FinanceDocuments { get; set; }
+        public IList<LibraryPersonRole> PersonRoles { get; set; }
+        public IList<LibraryPerson> Persons { get; set; }
 
         public override bool IsValid(hihDataContext context)
         {
@@ -114,6 +119,8 @@ namespace hihapi.Models
             // Documents
             refcnt = context.FinanceDocument.Where(p => p.HomeID == this.ID).Count();
             if (refcnt > 0) return false;
+
+            // TBD: library part
 
             return true;
         }

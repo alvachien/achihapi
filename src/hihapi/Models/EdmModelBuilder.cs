@@ -1,4 +1,5 @@
 ﻿using System;
+using hihapi.Models.Library;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
 
@@ -270,6 +271,10 @@ namespace hihapi.Models
             var blogsetting = modelBuilder.EntityType<BlogUserSetting>();
             blogsetting.Function("Deploy")
                     .Returns<string>();
+
+            // Library
+            modelBuilder.EntitySet<LibraryPersonRole>("LibraryPersonRoles");
+            modelBuilder.EntitySet<LibraryPerson>("LibraryPersons");
 
             return modelBuilder.GetEdmModel();
         }

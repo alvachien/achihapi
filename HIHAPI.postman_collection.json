@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "7f7e5ff4-5291-49e0-b3ab-4af38c5ed504",
+		"_postman_id": "b220bf00-8ac3-43ac-989e-0ff12b29aa35",
 		"name": "HIHAPI",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -999,6 +999,181 @@
 							""
 						]
 					}
+				}
+			]
+		},
+		{
+			"name": "Debugging",
+			"item": [
+				{
+					"name": "PersonRole",
+					"item": [
+						{
+							"name": "Get Collections",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryPersonRoles",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryPersonRoles"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create new role",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"HomeID\": 2,\r\n    \"Name\": \"Test\",\r\n    \"Comment\": \"Comment of test\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44360/LibraryPersonRoles",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryPersonRoles"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Role",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryPersonRoles(2)",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryPersonRoles(2)"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Person",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryPersons",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryPersons"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Person with role",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"HomeID\": 2,\r\n    \"NativeName\": \"User 2\",\r\n    \"NativeIsChinese\": true,\r\n    \"PersonRoles\": \r\n    [\r\n        {\r\n            \"RoleId\": 1\r\n        }\r\n    ]\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44360/LibraryPersons",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryPersons"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Person wo role",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"HomeID\": 2,\r\n    \"NativeName\": \"User 3\",\r\n    \"NativeIsChinese\": true\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44360/LibraryPersons",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryPersons"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Person",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryPersons(1)",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryPersons(1)"
+									]
+								}
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		}
