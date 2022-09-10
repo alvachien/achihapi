@@ -489,90 +489,90 @@ CREATE TABLE [dbo].[t_fin_plan] (
  * Library
  */
 
-CREATE TABLE [dbo].[t_lib_person] (
-    [ID]              INT            IDENTITY (1, 1) NOT NULL,
-    [HID]             INT            NOT NULL,
-    [NativeName]      NVARCHAR (50)  NOT NULL,
-    [EnglishName]     NVARCHAR (50)  NULL,
-    [EnglishIsNative] BIT            NULL,
-    [Gender]          TINYINT        NULL,
-    [ShortIntro]      NVARCHAR (100) NULL,
-    [ExtLink1]        NVARCHAR (100) NULL,
-    [CREATEDBY]       NVARCHAR (40)  NULL,
-    [CREATEDAT]       DATE           CONSTRAINT [DF_t_lib_person_CREATEDAT] DEFAULT (getdate()) NULL,
-    [UPDATEDBY]       NVARCHAR (40)  NULL,
-    [UPDATEDAT]       DATE           CONSTRAINT [DF_t_lib_person_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_lib_person] PRIMARY KEY CLUSTERED ([ID] ASC),
-    CONSTRAINT [FK_t_lib_person_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE TABLE [dbo].[t_lib_book_ctgy] (
-    [ID]        INT           IDENTITY (1, 1) NOT NULL,
-    [HID]       INT           NULL,
-    [Name]      NVARCHAR (50) NOT NULL,
-    [ParID]     INT           NULL,
-    [Others]    NVARCHAR (50) NULL,
-    [CREATEDBY] NVARCHAR (40) NULL,
-    [CREATEDAT] DATE          CONSTRAINT [DF_t_lib_book_ctgy_CREATEDAT] DEFAULT (getdate()) NULL,
-    [UPDATEDBY] NVARCHAR (40) NULL,
-    [UPDATEDAT] DATE          CONSTRAINT [DF_t_lib_book_ctgy_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_lib_book_ctgy] PRIMARY KEY CLUSTERED ([ID] ASC),
-    CONSTRAINT [FK_t_lib_book_ctgy_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE TABLE [dbo].[t_lib_movie_genre] (
-    [ID]        INT           IDENTITY (1, 1) NOT NULL,
-    [HID]       INT           NULL,
-    [Name]      NVARCHAR (50) NOT NULL,
-    [ParID]     INT           NULL,
-    [Others]    NVARCHAR (50) NULL,
-    [CREATEDBY] NVARCHAR (40) NULL,
-    [CREATEDAT] DATE          CONSTRAINT [DF_t_lib_movie_genre_CREATEDAT] DEFAULT (getdate()) NULL,
-    [UPDATEDBY] NVARCHAR (40) NULL,
-    [UPDATEDAT] DATE          CONSTRAINT [DF_t_lib_movie_genre_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_lib_movie_genre] PRIMARY KEY CLUSTERED ([ID] ASC),
-    CONSTRAINT [FK_t_lib_movie_genre_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
+--CREATE TABLE [dbo].[t_lib_person] (
+--    [ID]              INT            IDENTITY (1, 1) NOT NULL,
+--    [HID]             INT            NOT NULL,
+--    [NativeName]      NVARCHAR (50)  NOT NULL,
+--    [EnglishName]     NVARCHAR (50)  NULL,
+--    [EnglishIsNative] BIT            NULL,
+--    [Gender]          TINYINT        NULL,
+--    [ShortIntro]      NVARCHAR (100) NULL,
+--    [ExtLink1]        NVARCHAR (100) NULL,
+--    [CREATEDBY]       NVARCHAR (40)  NULL,
+--    [CREATEDAT]       DATE           CONSTRAINT [DF_t_lib_person_CREATEDAT] DEFAULT (getdate()) NULL,
+--    [UPDATEDBY]       NVARCHAR (40)  NULL,
+--    [UPDATEDAT]       DATE           CONSTRAINT [DF_t_lib_person_UPDATEDAT] DEFAULT (getdate()) NULL,
+--    CONSTRAINT [PK_t_lib_person] PRIMARY KEY CLUSTERED ([ID] ASC),
+--    CONSTRAINT [FK_t_lib_person_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
+--CREATE TABLE [dbo].[t_lib_book_ctgy] (
+--    [ID]        INT           IDENTITY (1, 1) NOT NULL,
+--    [HID]       INT           NULL,
+--    [Name]      NVARCHAR (50) NOT NULL,
+--    [ParID]     INT           NULL,
+--    [Others]    NVARCHAR (50) NULL,
+--    [CREATEDBY] NVARCHAR (40) NULL,
+--    [CREATEDAT] DATE          CONSTRAINT [DF_t_lib_book_ctgy_CREATEDAT] DEFAULT (getdate()) NULL,
+--    [UPDATEDBY] NVARCHAR (40) NULL,
+--    [UPDATEDAT] DATE          CONSTRAINT [DF_t_lib_book_ctgy_UPDATEDAT] DEFAULT (getdate()) NULL,
+--    CONSTRAINT [PK_t_lib_book_ctgy] PRIMARY KEY CLUSTERED ([ID] ASC),
+--    CONSTRAINT [FK_t_lib_book_ctgy_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
+--CREATE TABLE [dbo].[t_lib_movie_genre] (
+--    [ID]        INT           IDENTITY (1, 1) NOT NULL,
+--    [HID]       INT           NULL,
+--    [Name]      NVARCHAR (50) NOT NULL,
+--    [ParID]     INT           NULL,
+--    [Others]    NVARCHAR (50) NULL,
+--    [CREATEDBY] NVARCHAR (40) NULL,
+--    [CREATEDAT] DATE          CONSTRAINT [DF_t_lib_movie_genre_CREATEDAT] DEFAULT (getdate()) NULL,
+--    [UPDATEDBY] NVARCHAR (40) NULL,
+--    [UPDATEDAT] DATE          CONSTRAINT [DF_t_lib_movie_genre_UPDATEDAT] DEFAULT (getdate()) NULL,
+--    CONSTRAINT [PK_t_lib_movie_genre] PRIMARY KEY CLUSTERED ([ID] ASC),
+--    CONSTRAINT [FK_t_lib_movie_genre_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
 
-CREATE TABLE [dbo].[t_lib_location] (
-    [ID]        INT           IDENTITY (1, 1) NOT NULL,
-    [HID]       INT           NOT NULL,
-    [Name]      NVARCHAR (50) NOT NULL,
-    [IsDevice]  BIT           NULL,
-    [Desp]      NVARCHAR (50) NULL,
-    [CREATEDBY] NVARCHAR (40) NULL,
-    [CREATEDAT] DATE          CONSTRAINT [DF_t_lib_location_CREATEDAT] DEFAULT (getdate()) NULL,
-    [UPDATEDBY] NVARCHAR (40) NULL,
-    [UPDATEDAT] DATE          CONSTRAINT [DF_t_lib_location_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_lib_location] PRIMARY KEY CLUSTERED ([ID] ASC),
-    CONSTRAINT [FK_t_lib_location_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
+--CREATE TABLE [dbo].[t_lib_location] (
+--    [ID]        INT           IDENTITY (1, 1) NOT NULL,
+--    [HID]       INT           NOT NULL,
+--    [Name]      NVARCHAR (50) NOT NULL,
+--    [IsDevice]  BIT           NULL,
+--    [Desp]      NVARCHAR (50) NULL,
+--    [CREATEDBY] NVARCHAR (40) NULL,
+--    [CREATEDAT] DATE          CONSTRAINT [DF_t_lib_location_CREATEDAT] DEFAULT (getdate()) NULL,
+--    [UPDATEDBY] NVARCHAR (40) NULL,
+--    [UPDATEDAT] DATE          CONSTRAINT [DF_t_lib_location_UPDATEDAT] DEFAULT (getdate()) NULL,
+--    CONSTRAINT [PK_t_lib_location] PRIMARY KEY CLUSTERED ([ID] ASC),
+--    CONSTRAINT [FK_t_lib_location_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
 
-CREATE TABLE [dbo].[t_lib_location_detail] (
-    [LOCID]       INT           NOT NULL,
-    [SEQNO]       INT           NOT NULL,
-    [CONTENTTYPE] TINYINT       NOT NULL,
-    [CONTENTID]   INT           NOT NULL,
-    [Others]      NVARCHAR (50) NULL,
-    CONSTRAINT [PK_t_lib_location_detail] PRIMARY KEY CLUSTERED ([LOCID] ASC, [SEQNO] ASC),
-    CONSTRAINT [FK_t_lib_locationdet_LOCID] FOREIGN KEY ([LOCID]) REFERENCES [dbo].[t_lib_location] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
+--CREATE TABLE [dbo].[t_lib_location_detail] (
+--    [LOCID]       INT           NOT NULL,
+--    [SEQNO]       INT           NOT NULL,
+--    [CONTENTTYPE] TINYINT       NOT NULL,
+--    [CONTENTID]   INT           NOT NULL,
+--    [Others]      NVARCHAR (50) NULL,
+--    CONSTRAINT [PK_t_lib_location_detail] PRIMARY KEY CLUSTERED ([LOCID] ASC, [SEQNO] ASC),
+--    CONSTRAINT [FK_t_lib_locationdet_LOCID] FOREIGN KEY ([LOCID]) REFERENCES [dbo].[t_lib_location] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
 
-CREATE TABLE [dbo].[t_lib_book] (
-    [ID]              INT            IDENTITY (1, 1) NOT NULL,
-    [HID]             INT            NOT NULL,
-    [Ctgy]            INT            NULL,
-    [NativeName]      NVARCHAR (50)  NOT NULL,
-    [EnglishName]     NVARCHAR (50)  NULL,
-    [EnglishIsNative] BIT            NULL,
-    [ShortIntro]      NVARCHAR (100) NULL,
-    [ExtLink1]        NVARCHAR (100) NULL,
-    [CREATEDBY]       NVARCHAR (40)  NULL,
-    [CREATEDAT]       DATE           CONSTRAINT [DF_t_lib_book_CREATEDAT] DEFAULT (getdate()) NULL,
-    [UPDATEDBY]       NVARCHAR (40)  NULL,
-    [UPDATEDAT]       DATE           CONSTRAINT [DF_t_lib_book_UPDATEDAT] DEFAULT (getdate()) NULL,
-    CONSTRAINT [PK_t_lib_book] PRIMARY KEY CLUSTERED ([ID] ASC),
-    CONSTRAINT [FK_t_lib_book_ctgy] FOREIGN KEY ([Ctgy]) REFERENCES [dbo].[t_lib_book_ctgy] ([ID]),
-    CONSTRAINT [FK_t_lib_book_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
-);
+--CREATE TABLE [dbo].[t_lib_book] (
+--    [ID]              INT            IDENTITY (1, 1) NOT NULL,
+--    [HID]             INT            NOT NULL,
+--    [Ctgy]            INT            NULL,
+--    [NativeName]      NVARCHAR (50)  NOT NULL,
+--    [EnglishName]     NVARCHAR (50)  NULL,
+--    [EnglishIsNative] BIT            NULL,
+--    [ShortIntro]      NVARCHAR (100) NULL,
+--    [ExtLink1]        NVARCHAR (100) NULL,
+--    [CREATEDBY]       NVARCHAR (40)  NULL,
+--    [CREATEDAT]       DATE           CONSTRAINT [DF_t_lib_book_CREATEDAT] DEFAULT (getdate()) NULL,
+--    [UPDATEDBY]       NVARCHAR (40)  NULL,
+--    [UPDATEDAT]       DATE           CONSTRAINT [DF_t_lib_book_UPDATEDAT] DEFAULT (getdate()) NULL,
+--    CONSTRAINT [PK_t_lib_book] PRIMARY KEY CLUSTERED ([ID] ASC),
+--    CONSTRAINT [FK_t_lib_book_ctgy] FOREIGN KEY ([Ctgy]) REFERENCES [dbo].[t_lib_book_ctgy] ([ID]),
+--    CONSTRAINT [FK_t_lib_book_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
+--);
 
 
 /*

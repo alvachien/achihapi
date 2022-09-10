@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace hihapi.Models.Library
 {
-    public enum LibraryBookCategoryEnum
+    public enum LibraryBookLocationTypeEnum
     {
-        OwnDefined = 0,
-        Novel = 1
+        PaperBook = 0,
+        Ebook = 1,
     }
 
-    [Table("T_LIB_BOOKCTGY_DEF")]
-    public class LibraryBookCategory : BaseModel
+    [Table("t_lib_bookloc_def")]
+    public class LibraryBookLocation : BaseModel
     {
         [Key]
         [Required]
@@ -28,20 +27,17 @@ namespace hihapi.Models.Library
         [Column("NAME", TypeName = "NVARCHAR(30)")]
         public String Name { get; set; }
 
+        [Required]
+        [Column("LOCTYPE", TypeName = "INT")]
+        public int LocationType { get; set; }
+
         [StringLength(100)]
         [Column("COMMENT", TypeName = "NVARCHAR(100)")]
         public String Comment { get; set; }
 
-        [Column("PARID", TypeName = "INT")]
-        public Int32? ParentID { get; set; }
-
-        //[StringLength(45)]
-        //[Column("VALUE", TypeName = "INT")]
-        //public LibraryBookCategoryEnum CategoryValue { get; set; }
-
         public HomeDefine CurrentHome { get; set; }
 
         public IList<LibraryBook> Books { get; set; }
-        public IList<LibraryBookCategoryLinkage> BookCategories { get; set; }
+        public IList<LibraryBookLocationLinkage> BooksInLocation { get; set; }
     }
 }

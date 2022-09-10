@@ -275,6 +275,11 @@ namespace hihapi.Models
             // Library
             modelBuilder.EntitySet<LibraryPersonRole>("LibraryPersonRoles");
             modelBuilder.EntitySet<LibraryPerson>("LibraryPersons");
+            modelBuilder.EntitySet<LibraryOrganizationType>("LibraryOrganizationTypes");
+            modelBuilder.EntitySet<LibraryOrganization>("LibraryOrganizations");
+            modelBuilder.EntitySet<LibraryBookCategory>("LibraryBookCategories");
+            modelBuilder.EntitySet<LibraryBookLocation>("LibraryBookLocations");
+            modelBuilder.EntitySet<LibraryBook>("LibraryBooks");
 
             return modelBuilder.GetEdmModel();
         }

@@ -15,7 +15,7 @@ namespace hihapi.Models.Library
     }
 
     [Table("t_lib_personrole_def")]
-    public class LibraryPersonRole
+    public class LibraryPersonRole : BaseModel
     {
         [Key]
         [Required]
@@ -30,7 +30,6 @@ namespace hihapi.Models.Library
         [Column("NAME", TypeName = "NVARCHAR(30)")]
         public String Name { get; set; }
 
-        [Required]
         [StringLength(100)]
         [Column("COMMENT", TypeName = "NVARCHAR(100)")]
         public String Comment { get; set; }

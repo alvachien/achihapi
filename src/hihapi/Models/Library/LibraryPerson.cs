@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace hihapi.Models.Library
 {
     [Table("T_LIB_PERSON_DEF")]
-    public class LibraryPerson
+    public class LibraryPerson : BaseModel
     {
         [Key]
         [Required]
@@ -37,5 +37,9 @@ namespace hihapi.Models.Library
 
         public IList<LibraryPersonRole> Roles { get; set; }
         public IList<LibraryPersonRoleLinkage> PersonRoles { get; set; }
+        public IList<LibraryBook> WritenBooks { get; set; }
+        public IList<LibraryBookAuthorLinkage> WrittenBooksByAuthor { get; set; }
+        public IList<LibraryBook> TranslatedBooks { get; set; }
+        public IList<LibraryBookTranslatorLinkage> TranslatedBooksByTranslator { get; set; }
     }
 }

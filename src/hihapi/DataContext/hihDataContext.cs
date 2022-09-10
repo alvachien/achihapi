@@ -62,6 +62,11 @@ namespace hihapi
         //public DbSet<LibraryBook> Books { get; set; }
         public DbSet<LibraryPersonRole> PersonRoles { get; set; }
         public DbSet<LibraryPerson> Persons { get; set; }
+        public DbSet<LibraryOrganizationType> OrganizationTypes { get; set; }
+        public DbSet<LibraryOrganization> Organizations { get; set; }
+        public DbSet<LibraryBookCategory> BookCategories { get; set; }
+        public DbSet<LibraryBookLocation> BookLocations { get; set; }
+        public DbSet<LibraryBook> Books { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -621,52 +626,346 @@ namespace hihapi
             });
 
             // Library part
-            modelBuilder.Entity<LibraryPersonRole>()
-                .HasOne(d => d.CurrentHome)
-                .WithMany(p => p.PersonRoles)
-                .HasForeignKey(d => d.HomeID)
-                .HasConstraintName("FK_t_lib_personrole_HID");
+            modelBuilder.Entity<LibraryPersonRole>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.Id)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.Id)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.PersonRoles)
+                    .HasForeignKey(d => d.HomeID)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_t_lib_personrole_HID");
+            });
 
-            var entityPerson = modelBuilder.Entity<LibraryPerson>();
-            entityPerson
-                .HasMany(b => b.Roles)
-                .WithMany(c => c.Persons)
-                // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
-                .UsingEntity<LibraryPersonRoleLinkage>(
-                    j => j
-                        .HasOne(pt => pt.Role)
-                        .WithMany(p => p.PersonRoles)
-                        .HasForeignKey(pt => pt.RoleId),
-                    j => j
-                        .HasOne(pt => pt.Person)
-                        .WithMany(t => t.PersonRoles)
-                        .HasForeignKey(pt => pt.PersonId),
-                    j =>
-                    {
-                        j.HasKey(t => new { t.PersonId, t.RoleId });
-                    });   
-            //.UsingEntity<Dictionary<int, object>>(
-            //    "PersonRole",
-            //    l => l.HasOne<LibraryPersonRole>().WithMany().HasForeignKey("RoleId"),
-            //    r => r.HasOne<LibraryPerson>().WithMany().HasForeignKey("PersonId"),
-            //    j =>
-            //    {
-            //        j.HasKey("PersonId", "RoleId");
-            //        j.ToTable("t_lib_person_role");
-            //        //j.HasIndex(new[] { "TagsId" }, "IX_PostTag_TagsId");
-            //    });
+            modelBuilder.Entity<LibraryPerson>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.Id)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.Id)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.Persons)
+                    .HasForeignKey(d => d.HomeID)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_t_lib_person_HID");
+                
+                entity.HasMany(b => b.Roles)
+                    .WithMany(c => c.Persons)
+                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
+                    .UsingEntity<LibraryPersonRoleLinkage>(
+                        j => j
+                            .HasOne(pt => pt.Role)
+                            .WithMany(p => p.PersonRoles)
+                            .HasForeignKey(pt => pt.RoleId),
+                        j => j
+                            .HasOne(pt => pt.Person)
+                            .WithMany(t => t.PersonRoles)
+                            .HasForeignKey(pt => pt.PersonId),
+                        j =>
+                        {
+                            j.HasKey(t => new { t.PersonId, t.RoleId });
+                        });
+                //.UsingEntity<Dictionary<int, object>>(
+                //    "PersonRole",
+                //    l => l.HasOne<LibraryPersonRole>().WithMany().HasForeignKey("RoleId"),
+                //    r => r.HasOne<LibraryPerson>().WithMany().HasForeignKey("PersonId"),
+                //    j =>
+                //    {
+                //        j.HasKey("PersonId", "RoleId");
+                //        j.ToTable("t_lib_person_role");
+                //        //j.HasIndex(new[] { "TagsId" }, "IX_PostTag_TagsId");
+                //    });
 
+            });
 
-            entityPerson
-                .HasOne(d => d.CurrentHome)
-                .WithMany(p => p.Persons)
-                .HasForeignKey(d => d.HomeID)
-                .HasConstraintName("FK_t_lib_person_HID");
+            modelBuilder.Entity<LibraryOrganizationType>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.Id)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.Id)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.OrganizationTypes)
+                    .HasForeignKey(d => d.HomeID)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_t_lib_orgtype_HID");
+            });
 
-            //modelBuilder.Entity<LibraryBook>()
-            //    .HasMany(b => b.Categories)
-            //    .WithMany(c => c.Books)
-            //    .UsingEntity(j => j.ToTable("PostTags"));
+            modelBuilder.Entity<LibraryOrganization>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.Id)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.Id)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.Organizations)
+                    .HasForeignKey(d => d.HomeID)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_t_lib_org_HID");
+
+                entity.HasMany(b => b.Types)
+                    .WithMany(c => c.Organizations)
+                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
+                    .UsingEntity<LibraryOrganizationTypeLinkage>(
+                        j => j
+                            .HasOne(pt => pt.OrganizationType)
+                            .WithMany(p => p.OrganizationTypes)
+                            .HasForeignKey(pt => pt.TypeId),
+                        j => j
+                            .HasOne(pt => pt.Organization)
+                            .WithMany(t => t.OrganizationTypes)
+                            .HasForeignKey(pt => pt.OrganizationId),
+                        j =>
+                        {
+                            j.HasKey(t => new { t.OrganizationId, t.TypeId });
+                        });
+            });
+
+            modelBuilder.Entity<LibraryBookCategory>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.Id)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.Id)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.BookCategories)
+                    .HasForeignKey(d => d.HomeID)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_t_lib_bookctgy_HID");
+            });
+
+            modelBuilder.Entity<LibraryBookLocation>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.Id)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.Id)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.BookLocations)
+                    .HasForeignKey(d => d.HomeID)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_t_lib_bookctgy_HID");
+            });
+
+            modelBuilder.Entity<LibraryBook>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.Id)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
+                    entity.Property(e => e.Id)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.Books)
+                    .HasForeignKey(d => d.HomeID)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_t_lib_book_HID");
+
+                entity.HasMany(b => b.Categories)
+                    .WithMany(c => c.Books)
+                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
+                    .UsingEntity<LibraryBookCategoryLinkage>(
+                        j => j
+                            .HasOne(pt => pt.Category)
+                            .WithMany(p => p.BookCategories)
+                            .HasForeignKey(pt => pt.CategoryId),
+                        j => j
+                            .HasOne(pt => pt.Book)
+                            .WithMany(t => t.BookCategories)
+                            .HasForeignKey(pt => pt.BookId),
+                        j =>
+                        {
+                            j.HasKey(t => new { t.BookId, t.CategoryId });
+                        });
+
+                entity.HasMany(b => b.Authors)
+                    .WithMany(c => c.WritenBooks)
+                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
+                    .UsingEntity<LibraryBookAuthorLinkage>(
+                        j => j
+                            .HasOne(pt => pt.Author)
+                            .WithMany(p => p.WrittenBooksByAuthor)
+                            .HasForeignKey(pt => pt.AuthorId),
+                        j => j
+                            .HasOne(pt => pt.Book)
+                            .WithMany(t => t.BookAuthors)
+                            .HasForeignKey(pt => pt.BookId),
+                        j =>
+                        {
+                            j.HasKey(t => new { t.BookId, t.AuthorId });
+                        });
+
+                entity.HasMany(b => b.Translators)
+                    .WithMany(c => c.TranslatedBooks)
+                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
+                    .UsingEntity<LibraryBookTranslatorLinkage>(
+                        j => j
+                            .HasOne(pt => pt.Translator)
+                            .WithMany(p => p.TranslatedBooksByTranslator)
+                            .HasForeignKey(pt => pt.TranslatorId),
+                        j => j
+                            .HasOne(pt => pt.Book)
+                            .WithMany(t => t.BookTranslators)
+                            .HasForeignKey(pt => pt.BookId),
+                        j =>
+                        {
+                            j.HasKey(t => new { t.BookId, t.TranslatorId });
+                        });
+
+                entity.HasMany(b => b.Presses)
+                    .WithMany(c => c.Books)
+                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
+                    .UsingEntity<LibraryBookPressLinkage>(
+                        j => j
+                            .HasOne(pt => pt.Press)
+                            .WithMany(p => p.PressedBooks)
+                            .HasForeignKey(pt => pt.PressId),
+                        j => j
+                            .HasOne(pt => pt.Book)
+                            .WithMany(t => t.BookPresses)
+                            .HasForeignKey(pt => pt.BookId),
+                        j =>
+                        {
+                            j.HasKey(t => new { t.BookId, t.PressId });
+                        });
+
+                entity.HasMany(b => b.Locations)
+                    .WithMany(c => c.Books)
+                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
+                    .UsingEntity<LibraryBookLocationLinkage>(
+                        j => j
+                            .HasOne(pt => pt.Location)
+                            .WithMany(p => p.BooksInLocation)
+                            .HasForeignKey(pt => pt.LocationId),
+                        j => j
+                            .HasOne(pt => pt.Book)
+                            .WithMany(t => t.BookLocations)
+                            .HasForeignKey(pt => pt.BookId),
+                        j =>
+                        {
+                            j.HasKey(t => new { t.BookId, t.LocationId });
+                        });
+            });
         }
     }
 }

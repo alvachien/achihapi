@@ -24,6 +24,11 @@ namespace hihapi.Models
             FinanceDocuments = new List<FinanceDocument>();
             PersonRoles = new List<LibraryPersonRole>();
             Persons = new List<LibraryPerson>();
+            OrganizationTypes = new List<LibraryOrganizationType>();
+            Organizations = new List<LibraryOrganization>();
+            BookCategories = new List<LibraryBookCategory>();
+            BookLocations = new List<LibraryBookLocation>();
+            Books = new List<LibraryBook>();
         }
 
         [Key]
@@ -62,6 +67,11 @@ namespace hihapi.Models
         public ICollection<FinanceDocument> FinanceDocuments { get; set; }
         public IList<LibraryPersonRole> PersonRoles { get; set; }
         public IList<LibraryPerson> Persons { get; set; }
+        public IList<LibraryOrganizationType> OrganizationTypes { get; set; }
+        public IList<LibraryOrganization> Organizations { get; set; }
+        public IList<LibraryBookCategory> BookCategories { get; set; }
+        public IList<LibraryBookLocation> BookLocations { get; set; }
+        public IList<LibraryBook> Books { get; set; }
 
         public override bool IsValid(hihDataContext context)
         {
