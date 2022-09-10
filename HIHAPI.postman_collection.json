@@ -1028,6 +1028,31 @@
 							"response": []
 						},
 						{
+							"name": "Get Collections with Person",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryPersonRoles?$expand=Persons",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryPersonRoles"
+									],
+									"query": [
+										{
+											"key": "$expand",
+											"value": "Persons"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "Create new role",
 							"request": {
 								"method": "POST",
@@ -1093,6 +1118,31 @@
 									"port": "44360",
 									"path": [
 										"LibraryPersons"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Collection With Roles",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryPersons?$expand=Roles",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryPersons"
+									],
+									"query": [
+										{
+											"key": "$expand",
+											"value": "Roles"
+										}
 									]
 								}
 							},
@@ -1168,6 +1218,316 @@
 									"port": "44360",
 									"path": [
 										"LibraryPersons(1)"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Organization",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryOrganizations",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryOrganizations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Collection with type",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryOrganizations?$expand=Types",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryOrganizations"
+									],
+									"query": [
+										{
+											"key": "$expand",
+											"value": "Types"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create new org with org type",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"HomeID\": 2,\r\n    \"NativeName\": \"人民文学出版社\",\r\n    \"NativeIsChinese\": true,\r\n    \"OrganizationTypes\": [\r\n        {\r\n            \"TypeID\": 1\r\n        }\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44360/LibraryOrganizations",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryOrganizations"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "OrganizationType",
+					"item": [
+						{
+							"name": "Get Collections",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryOrganizationTypes",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryOrganizationTypes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create new org type",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"HomeID\": 2,\r\n    \"Name\": \"出版社\",\r\n    \"Comment\": \"Press House\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44360/LibraryOrganizationTypes",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryOrganizationTypes"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "BookCategory",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryBookCategories",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryBookCategories"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create new category",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"HomeID\": 2,\r\n    \"Name\": \"现代小说\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44360/LibraryBookCategories",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryBookCategories"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "BookLocation",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryBookLocations",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryBookLocations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create a new location",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"HomeID\": 2,\r\n    \"Name\": \"书房\",\r\n    \"LocationType\": 0\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44360/LibraryBookLocations",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryBookLocations"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Book",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryBooks",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryBooks"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Collection and expand values",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/LibraryBooks?$expand=Categories,Locations,Authors,Translators,Presses",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryBooks"
+									],
+									"query": [
+										{
+											"key": "$expand",
+											"value": "Categories,Locations,Authors,Translators,Presses"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create a book",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"HomeID\": 2,\r\n    \"NativeName\": \"Test Book 1\",\r\n    \"NativeIsChinese\": true,\r\n    \"PageCount\": 500,\r\n    \"BookCategories\": [\r\n        {\r\n            \"CategoryId\": 2\r\n        }\r\n    ],\r\n    \"BookLocations\":[\r\n        {\r\n            \"LocationId\": 1\r\n        }\r\n    ],\r\n    \"BookAuthors\": [\r\n        {\r\n            \"AuthorId\": 1\r\n        }\r\n    ],\r\n    \"BookTranslators\": [\r\n        {\r\n            \"TranslatorId\": 2\r\n        }\r\n    ],\r\n    \"BookPresses\": [\r\n        {\r\n            \"PressId\": 1\r\n        }\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44360/LibraryBooks",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"LibraryBooks"
 									]
 								}
 							},
