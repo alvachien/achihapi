@@ -163,8 +163,19 @@ CREATE TABLE [t_lib_book_location](
 
 -- Content
 -- Person role
+SET IDENTITY_INSERT [t_lib_personrole_def] ON;
+INSERT INTO [t_lib_personrole_def] ([ID],[NAME],[COMMENT]) VALUES (1, 'Library.Author', 'Library.Author');
+SET IDENTITY_INSERT [t_lib_personrole_def] OFF;
+
 -- Organzation type
+SET IDENTITY_INSERT [t_lib_orgtype_def] ON;
+INSERT INTO [t_lib_orgtype_def] ([ID],[NAME],[COMMENT]) VALUES (1, 'Library.Press', 'Library.Press');
+SET IDENTITY_INSERT [t_lib_orgtype_def] OFF;
+
 -- Book category
+SET IDENTITY_INSERT [t_lib_bookctgy_def] ON;
+
+SET IDENTITY_INSERT [t_lib_bookctgy_def] OFF;
 
 -- Set the version
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (20, '2022.12.31');

@@ -61,11 +61,26 @@ namespace hihapi.Controllers.Library
                 return NotFound();
             }
 
-            _context.Books.Remove(tbd);
-            await _context.SaveChangesAsync();
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_author WHERE BOOK_ID = " + key.ToString());
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_ctgy WHERE BOOK_ID = " + key.ToString());
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_location WHERE BOOK_ID = " + key.ToString());
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_press WHERE BOOK_ID = " + key.ToString());
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_translator WHERE BOOK_ID = " + key.ToString());
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_def WHERE ID = " + key.ToString());
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception exp)
+            {
+                transaction.Rollback();
+            }
+            //_context.Books.Remove(tbd);
+            //await _context.SaveChangesAsync();
 
             return StatusCode(204); // HttpStatusCode.NoContent
         }
-
     }
 }
