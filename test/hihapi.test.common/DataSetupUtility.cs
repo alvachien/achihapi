@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using hihapi.Models;
+using hihapi.Models.Library;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -18,6 +19,9 @@ namespace hihapi.test.common
         public static List<FinanceAssetCategory> FinanceAssetCategories { get; private set; }
         public static List<FinanceDocumentType> FinanceDocumentTypes { get; private set; }
         public static List<FinanceTransactionType> FinanceTransactionTypes { get; private set; }
+        public static List<LibraryPersonRole> LibraryPersonRoles { get; private set; }
+        public static List<LibraryOrganizationType> LibraryOrganizationTypes { get; private set; }
+        public static List<LibraryBookCategory> LibraryBookCategories { get; private set; }
 
         /// <summary>
         /// Testing data
@@ -105,6 +109,9 @@ namespace hihapi.test.common
             FinanceAssetCategories = new List<FinanceAssetCategory>();
             FinanceDocumentTypes = new List<FinanceDocumentType>();
             FinanceTransactionTypes = new List<FinanceTransactionType>();
+            LibraryPersonRoles = new List<LibraryPersonRole>();
+            LibraryOrganizationTypes = new List<LibraryOrganizationType>();
+            LibraryBookCategories = new List<LibraryBookCategory>();
 
             // Setup tables
             SetupTable_DBVersion();
@@ -115,6 +122,9 @@ namespace hihapi.test.common
             SetupTable_FinDocumentType();
             SetupTable_FinAssertCategory();
             SetupTable_FinTransactionType();
+            SetupTable_LibraryPersonRole();
+            SetupTable_LibraryOrganizationType();
+            SetupTable_LibraryBookCategory();
         }
 
         public static ClaimsPrincipal GetClaimForUser(String usr)
@@ -825,6 +835,9 @@ namespace hihapi.test.common
             InitialTable_FinAssetCategory(db);
             InitialTable_FinDocumentType(db);
             InitialTable_FinTransactionType(db);
+            InitialTable_LibraryPersonRole(db);
+            InitialTable_LibraryOrganizationType(db);
+            InitialTable_LibraryBookCategory(db);
             db.SaveChanges();
         }
 
@@ -861,6 +874,18 @@ namespace hihapi.test.common
         private static void InitialTable_FinTransactionType(hihDataContext db)
         {
             db.FinTransactionType.AddRange(DataSetupUtility.FinanceTransactionTypes);
+        }
+        private static void InitialTable_LibraryPersonRole(hihDataContext db)
+        {
+            db.PersonRoles.AddRange(DataSetupUtility.LibraryPersonRoles);
+        }
+        private static void InitialTable_LibraryOrganizationType(hihDataContext db)
+        {
+            db.OrganizationTypes.AddRange(DataSetupUtility.LibraryOrganizationTypes);
+        }
+        private static void InitialTable_LibraryBookCategory(hihDataContext db)
+        {
+            db.BookCategories.AddRange(DataSetupUtility.LibraryBookCategories);
         }
         private static void InitialTable_HomeDefineAndMember(hihDataContext db)
         {
@@ -1028,6 +1053,7 @@ namespace hihapi.test.common
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (17,'2020.9.12');
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (18,'2022.5.1');
             // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (19,'2022.10.31');
+            // INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (20,'2022.12.31');
             DBVersions.Add(new DBVersion()
             {
                 VersionID = 1,
@@ -1122,6 +1148,11 @@ namespace hihapi.test.common
             {
                 VersionID = 19,
                 ReleasedDate = new DateTime(2022, 10, 31)
+            });
+            DBVersions.Add(new DBVersion()
+            {
+                VersionID = 20,
+                ReleasedDate = new DateTime(2022, 12, 31)
             });
         }
 
@@ -1295,6 +1326,24 @@ namespace hihapi.test.common
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 76, Name = "诊疗费", Expense = true, ParID = 75, Comment = "诊疗费" });
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 77, Name = "医药费", Expense = true, ParID = 75, Comment = "医药费" });
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 78, Name = "保健品费", Expense = true, ParID = 75, Comment = "保健品费" });
+        }
+        
+        private static void SetupTable_LibraryPersonRole()
+        {
+            LibraryPersonRoles.Add(new LibraryPersonRole() { Id = 1, Name = "Library.Author", Comment = "Author" });
+        }
+
+        private static void SetupTable_LibraryOrganizationType()
+        {
+            LibraryOrganizationTypes.Add(new LibraryOrganizationType() { Id = 1, Name = "Library.Press", Comment = "Press" });
+        }
+
+        private static void SetupTable_LibraryBookCategory()
+        {
+            LibraryBookCategories.Add(new LibraryBookCategory() { Id = 1, Name = "Sys.BkCtgy.Novel", Comment = "Novel" });
+            LibraryBookCategories.Add(new LibraryBookCategory() { Id = 2, Name = "Sys.BkCtgy.SciFiction", Comment = "Sci Fiction", ParentID = 1 });
+            LibraryBookCategories.Add(new LibraryBookCategory() { Id = 3, Name = "Sys.BkCtgy.Romance", Comment = "Romance", ParentID = 1 });
+            LibraryBookCategories.Add(new LibraryBookCategory() { Id = 4, Name = "Sys.BkCtgy.Thriller", Comment = "Thriller", ParentID = 1 });
         }
         #endregion
 

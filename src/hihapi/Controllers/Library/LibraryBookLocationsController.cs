@@ -16,6 +16,7 @@ using hihapi.Models.Library;
 
 namespace hihapi.Controllers.Library
 {
+    [Authorize]
     public class LibraryBookLocationsController : ODataController
     {
         private readonly hihDataContext _context;
@@ -66,6 +67,5 @@ namespace hihapi.Controllers.Library
 
             return StatusCode(204); // HttpStatusCode.NoContent
         }
-
     }
 }

@@ -9,14 +9,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData.Results;
 using hihapi.test.common;
 
-namespace hihapi.unittest.Library
+namespace hihapi.unittest.UnitTests.Library
 {
     [Collection("HIHAPI_UnitTests#1")]
-    public class LibraryPersonsControllerTest
+    public class LibraryPersonRolesControllerTest
     {
         private SqliteDatabaseFixture fixture = null;
 
-        public LibraryPersonsControllerTest(SqliteDatabaseFixture fixture)
+        public LibraryPersonRolesControllerTest(SqliteDatabaseFixture fixture)
         {
             this.fixture = fixture;
         }

@@ -16,6 +16,7 @@ using hihapi.Models.Library;
 
 namespace hihapi.Controllers.Library
 {
+    [Authorize]
     public class LibraryBooksController : ODataController
     {
         private readonly hihDataContext _context;

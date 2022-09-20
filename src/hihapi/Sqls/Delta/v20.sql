@@ -1,4 +1,41 @@
 ﻿-- Tables
+IF EXISTS 
+  (SELECT object_id FROM sys.tables
+  WHERE name = 't_lib_book'
+  AND SCHEMA_NAME(schema_id) = 'dbo')
+  DROP TABLE [dbo].[t_lib_book];
+
+IF EXISTS 
+  (SELECT object_id FROM sys.tables
+  WHERE name = 't_lib_person'
+  AND SCHEMA_NAME(schema_id) = 'dbo')
+  DROP TABLE [t_lib_person];
+
+IF EXISTS 
+  (SELECT object_id FROM sys.tables
+  WHERE name = 't_lib_book_ctgy'
+  AND SCHEMA_NAME(schema_id) = 'dbo')
+  DROP TABLE [dbo].[t_lib_book_ctgy];
+
+IF EXISTS 
+  (SELECT object_id FROM sys.tables
+  WHERE name = 't_lib_location_detail'
+  AND SCHEMA_NAME(schema_id) = 'dbo')
+  DROP TABLE [dbo].[t_lib_location_detail];
+
+IF EXISTS 
+  (SELECT object_id FROM sys.tables
+  WHERE name = 't_lib_location'
+  AND SCHEMA_NAME(schema_id) = 'dbo')
+  DROP TABLE [dbo].[t_lib_location];
+
+IF EXISTS 
+  (SELECT object_id FROM sys.tables
+  WHERE name = 't_lib_movie_genre'
+  AND SCHEMA_NAME(schema_id) = 'dbo')
+  DROP TABLE [dbo].[t_lib_movie_genre];
+
+
 CREATE TABLE [t_lib_person_def](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[HID] [int] NOT NULL,
@@ -177,7 +214,7 @@ SET IDENTITY_INSERT [t_lib_bookctgy_def] ON;
 INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (1, 'Sys.BkCtgy.Novel', 'Novel', NULL);
 INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (2, 'Sys.BkCtgy.SciFiction', 'Sci Fiction', 1);
 INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (3, 'Sys.BkCtgy.Romance', 'Romance', 1);
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (4, 'Sys.BkCtgy.Thriler', 'Thriller', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (4, 'Sys.BkCtgy.Thriller', 'Thriller', 1);
 
 INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (21, 'Sys.BkCtgy.Computer', 'Computer', NULL);
 

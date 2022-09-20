@@ -60,7 +60,26 @@ namespace hihapi.Controllers.Library
         [HttpGet]
         public LibraryOrganizationType Get([FromODataUri] Int32 key)
         {
-            return (from p in _context.OrganizationTypes where p.Id == key select p).SingleOrDefault();
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+            }
+            catch
+            {
+                // Do nothing
+                usrName = String.Empty;
+            }
+
+            if (String.IsNullOrEmpty(usrName))
+                return _context.OrganizationTypes.Where(p => p.Id == key && p.HomeID == null).SingleOrDefault();
+
+            return (from ctgy in _context.OrganizationTypes
+                    join hmem in _context.HomeMembers
+                      on ctgy.HomeID equals hmem.HomeID into hmem2
+                    from nhmem in hmem2.DefaultIfEmpty()
+                    where ctgy.Id == key && (nhmem == null || nhmem.User == usrName)
+                    select ctgy).SingleOrDefault();
         }
 
         [HttpPost]
@@ -70,6 +89,18 @@ namespace hihapi.Controllers.Library
             {
                 HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+            }
+            catch
+            {
+                // Do nothing
+                usrName = String.Empty;
+            }
+
             _context.OrganizationTypes.Add(tbc);
             await _context.SaveChangesAsync();
 
@@ -79,6 +110,17 @@ namespace hihapi.Controllers.Library
         [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+            }
+            catch
+            {
+                // Do nothing
+                usrName = String.Empty;
+            }
+
             var tbd = await _context.OrganizationTypes.FindAsync(key);
             if (tbd == null)
             {
