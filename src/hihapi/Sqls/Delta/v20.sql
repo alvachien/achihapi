@@ -174,7 +174,18 @@ SET IDENTITY_INSERT [t_lib_orgtype_def] OFF;
 
 -- Book category
 SET IDENTITY_INSERT [t_lib_bookctgy_def] ON;
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (1, 'Sys.BkCtgy.Novel', 'Novel', NULL);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (2, 'Sys.BkCtgy.SciFiction', 'Sci Fiction', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (3, 'Sys.BkCtgy.Romance', 'Romance', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (4, 'Sys.BkCtgy.Thriler', 'Thriller', 1);
 
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (21, 'Sys.BkCtgy.Computer', 'Computer', NULL);
+
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (41, 'Sys.BkCtgy.Education', 'Education', NULL);
+
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (51, 'Sys.BkCtgy.ChildBk', 'Chidlren books', NULL);
+
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (61, 'Sys.BkCtgy.Finance', 'Chidlren books', NULL);
 SET IDENTITY_INSERT [t_lib_bookctgy_def] OFF;
 
 -- Set the version

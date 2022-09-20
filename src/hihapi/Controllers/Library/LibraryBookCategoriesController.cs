@@ -16,6 +16,7 @@ using hihapi.Models.Library;
 
 namespace hihapi.Controllers.Library
 {
+    [Authorize]
     public class LibraryBookCategoriesController : ODataController
     {
         private readonly hihDataContext _context;
@@ -29,14 +30,56 @@ namespace hihapi.Controllers.Library
         [HttpGet]
         public IActionResult Get()
         {
-            return Ok(_context.BookCategories);
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+            }
+            catch
+            {
+                // Do nothing
+                usrName = String.Empty;
+            }
+
+            if (String.IsNullOrEmpty(usrName))
+                return Ok(_context.FinAccountCategories.Where(p => p.HomeID == null));
+
+            var rst0 = from ctgy in _context.BookCategories
+                       where ctgy.HomeID == null
+                       select ctgy;
+            var rst1 = from hmem in _context.HomeMembers
+                       where hmem.User == usrName
+                       select new { HomeID = hmem.HomeID } into hids
+                       join ctgy in _context.BookCategories on hids.HomeID equals ctgy.HomeID
+                       select ctgy;
+
+            return Ok(rst0.Union(rst1));
         }
 
         [EnableQuery]
         [HttpGet]
         public LibraryBookCategory Get([FromODataUri] Int32 key)
         {
-            return (from p in _context.BookCategories where p.Id == key select p).SingleOrDefault();
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+            }
+            catch
+            {
+                // Do nothing
+                usrName = String.Empty;
+            }
+
+            if (String.IsNullOrEmpty(usrName))
+                return _context.BookCategories.Where(p => p.Id == key && p.HomeID == null).SingleOrDefault();
+
+            return (from ctgy in _context.BookCategories
+                    join hmem in _context.HomeMembers
+                      on ctgy.HomeID equals hmem.HomeID into hmem2
+                    from nhmem in hmem2.DefaultIfEmpty()
+                    where ctgy.Id == key && (nhmem == null || nhmem.User == usrName)
+                    select ctgy).SingleOrDefault();
         }
 
         [HttpPost]
