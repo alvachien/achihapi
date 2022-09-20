@@ -37,6 +37,7 @@
     <None Remove="Sqls\Delta\v7.sql" />
     <None Remove="Sqls\Delta\v8.sql" />
     <None Remove="Sqls\Delta\v9.sql" />
+    <None Remove="Sqls\Delta\v20.sql" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.3" />
@@ -67,6 +68,7 @@
     <EmbeddedResource Include="Sqls\Delta\v7.sql" />
     <EmbeddedResource Include="Sqls\Delta\v8.sql" />
     <EmbeddedResource Include="Sqls\Delta\v9.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v20.sql" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\PublishProfiles\" />
