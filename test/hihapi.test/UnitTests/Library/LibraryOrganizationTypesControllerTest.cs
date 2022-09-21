@@ -14,11 +14,11 @@ using hihapi.Models.Library;
 namespace hihapi.unittest.UnitTests.Library
 {
     [Collection("HIHAPI_UnitTests#1")]
-    public class LibraryPersonRolesControllerTest
+    public class LibraryOrganizationTypesControllerTest
     {
         private SqliteDatabaseFixture fixture = null;
 
-        public LibraryPersonRolesControllerTest(SqliteDatabaseFixture fixture)
+        public LibraryOrganizationTypesControllerTest(SqliteDatabaseFixture fixture)
         {
             this.fixture = fixture;
         }
@@ -31,7 +31,7 @@ namespace hihapi.unittest.UnitTests.Library
             var context = fixture.GetCurrentDataContext();
 
             // 1. Read it without User assignment
-            var control = new LibraryPersonRolesController(context);
+            var control = new LibraryOrganizationTypesController(context);
             if (String.IsNullOrEmpty(strusr))
             {
                 var userclaim = DataSetupUtility.GetClaimForUser(strusr);
@@ -43,13 +43,13 @@ namespace hihapi.unittest.UnitTests.Library
             var getresult = control.Get();
             Assert.NotNull(getresult);
             var getokresult = Assert.IsType<OkObjectResult>(getresult);
-            var getqueryresult = Assert.IsAssignableFrom<IQueryable<LibraryPersonRole>>(getokresult.Value);
+            var getqueryresult = Assert.IsAssignableFrom<IQueryable<LibraryOrganizationType>>(getokresult.Value);
             Assert.NotNull(getqueryresult);
             if (String.IsNullOrEmpty(strusr))
             {
-                var dbcategories = (from acntctgy in context.PersonRoles
+                var dbcategories = (from acntctgy in context.OrganizationTypes
                                     where acntctgy.HomeID == null
-                                    select acntctgy).ToList<LibraryPersonRole>();
+                                    select acntctgy).ToList<LibraryOrganizationType>();
                 Assert.Equal(dbcategories.Count, getqueryresult.Count());
             }
 
@@ -64,7 +64,7 @@ namespace hihapi.unittest.UnitTests.Library
             var context = fixture.GetCurrentDataContext();
 
             // 1. Read it out before insert.
-            var control = new LibraryPersonRolesController(context);
+            var control = new LibraryOrganizationTypesController(context);
             var userclaim = DataSetupUtility.GetClaimForUser(currentUser);
             control.ControllerContext = new ControllerContext()
             {
@@ -74,16 +74,16 @@ namespace hihapi.unittest.UnitTests.Library
             var getresult = control.Get();
             Assert.NotNull(getresult);
             var getokresult = Assert.IsType<OkObjectResult>(getresult);
-            var getqueryresult = Assert.IsAssignableFrom<IQueryable<LibraryPersonRole>>(getokresult.Value);
+            var getqueryresult = Assert.IsAssignableFrom<IQueryable<LibraryOrganizationType>>(getokresult.Value);
             Assert.NotNull(getqueryresult);
 
             // 2. Insert a new one.
-            LibraryPersonRole ctgy = new LibraryPersonRole();
+            LibraryOrganizationType ctgy = new LibraryOrganizationType();
             ctgy.HomeID = hid;
             ctgy.Name = name;
             ctgy.Comment = name;
             var postresult = await control.Post(ctgy);
-            var createdResult = Assert.IsType<CreatedODataResult<LibraryPersonRole>>(postresult);
+            var createdResult = Assert.IsType<CreatedODataResult<LibraryOrganizationType>>(postresult);
             Assert.NotNull(createdResult);
             int nctgyid = createdResult.Entity.Id;
             Assert.Equal(hid, createdResult.Entity.HomeID);
@@ -93,7 +93,7 @@ namespace hihapi.unittest.UnitTests.Library
             // 3. Read it out
             var getsingleresult = control.Get(nctgyid);
             Assert.NotNull(getsingleresult);
-            var getctgy = Assert.IsType<LibraryPersonRole>(getsingleresult);
+            var getctgy = Assert.IsType<LibraryOrganizationType>(getsingleresult);
             Assert.Equal(hid, getctgy.HomeID);
             Assert.Equal(ctgy.Name, getctgy.Name);
             Assert.Equal(ctgy.Comment, getctgy.Comment);

@@ -42,7 +42,7 @@ namespace hihapi.Controllers.Library
             }
 
             if (String.IsNullOrEmpty(usrName))
-                return Ok(_context.FinAccountCategories.Where(p => p.HomeID == null));
+                return Ok(_context.PersonRoles.Where(p => p.HomeID == null));
 
             var rst0 = from ctgy in _context.PersonRoles
                        where ctgy.HomeID == null
@@ -60,7 +60,26 @@ namespace hihapi.Controllers.Library
         [HttpGet]
         public LibraryPersonRole Get([FromODataUri] Int32 key)
         {
-            return (from p in _context.PersonRoles where p.Id == key select p).SingleOrDefault();
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+            }
+            catch
+            {
+                // Do nothing
+                usrName = String.Empty;
+            }
+
+            if (String.IsNullOrEmpty(usrName))
+                return _context.PersonRoles.Where(p => p.Id == key && p.HomeID == null).SingleOrDefault();
+
+            return (from ctgy in _context.PersonRoles
+                    join hmem in _context.HomeMembers
+                      on ctgy.HomeID equals hmem.HomeID into hmem2
+                    from nhmem in hmem2.DefaultIfEmpty()
+                    where ctgy.Id == key && (nhmem == null || nhmem.User == usrName)
+                    select ctgy).SingleOrDefault();
         }
 
         [HttpPost]
@@ -70,6 +89,32 @@ namespace hihapi.Controllers.Library
             {
                 HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == tbc.HomeID.Value && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            tbc.CreatedAt = DateTime.Now;
+            tbc.Createdby = usrName;
+
             _context.PersonRoles.Add(tbc);
             await _context.SaveChangesAsync();
 
@@ -79,34 +124,33 @@ namespace hihapi.Controllers.Library
         [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             var tbd = await _context.PersonRoles.FindAsync(key);
             if (tbd == null)
             {
                 return NotFound();
             }
 
-            //// User
-            //String usrName = String.Empty;
-            //try
-            //{
-            //    usrName = HIHAPIUtility.GetUserID(this);
-            //    if (String.IsNullOrEmpty(usrName))
-            //        throw new UnauthorizedAccessException();
-            //}
-            //catch
-            //{
-            //    throw new UnauthorizedAccessException();
-            //}
-
-            //// Check whether User assigned with specified Home ID
-            //var hms = _context.HomeMembers.Where(p => p.HomeID == cc.HomeID && p.User == usrName).Count();
-            //if (hms <= 0)
-            //{
-            //    throw new UnauthorizedAccessException();
-            //}
-
-            //if (!cc.IsDeleteAllowed(this._context))
-            //    return BadRequest();
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == tbd.HomeID.Value && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
 
             _context.PersonRoles.Remove(tbd);
             await _context.SaveChangesAsync();

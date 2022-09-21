@@ -2,9 +2,6 @@
 using Xunit;
 using System.Linq;
 using hihapi.Models;
-using Xunit;
-using System.Linq;
-using hihapi.Models;
 using hihapi.Controllers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -14,16 +11,17 @@ using hihapi.test.common;
 using hihapi.Controllers.Library;
 using hihapi.Models.Library;
 
-namespace hihapi.unittest.Library
+namespace hihapi.unittest.UnitTests.Library
 {
     [Collection("HIHAPI_UnitTests#1")]
-    public class LibraryPersonsControllerTest
+    public class LibraryOrganizationsControllerTest
     {
         private SqliteDatabaseFixture fixture = null;
 
-        public LibraryPersonsControllerTest(SqliteDatabaseFixture fixture)
+        public LibraryOrganizationsControllerTest(SqliteDatabaseFixture fixture)
         {
             this.fixture = fixture;
         }
+
     }
 }

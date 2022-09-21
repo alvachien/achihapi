@@ -26,64 +26,60 @@ namespace hihapi.Controllers.Library
             _context = context;
         }
 
-        /// GET: /FinanceAccounts
+        /// GET: /LibraryPersons
         [EnableQuery]
         [HttpGet]
         //public IActionResult Get(ODataQueryOptions<FinanceAccount> option)
         public IActionResult Get()
         {
-            //String usrName = String.Empty;
-            //try
-            //{
-            //    usrName = HIHAPIUtility.GetUserID(this);
-            //    if (String.IsNullOrEmpty(usrName))
-            //        throw new UnauthorizedAccessException();
-            //}
-            //catch
-            //{
-            //    throw new UnauthorizedAccessException();
-            //}
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
 
-            //// Check whether User assigned with specified Home ID
-            //return Ok(from hmem in _context.HomeMembers
-            //          where hmem.User == usrName
-            //          select new { hmem.HomeID, hmem.User, hmem.IsChild } into hmems
-            //          join acnts in _context.FinanceAccount
-            //            on hmems.HomeID equals acnts.HomeID
-            //          where (hmems.IsChild == true && hmems.User == acnts.Owner)
-            //              || !hmems.IsChild.HasValue
-            //              || hmems.IsChild == false
-            //          select acnts);
-            return Ok(_context.Persons);
+            return Ok(from hmem in _context.HomeMembers
+                      where hmem.User == usrName
+                      select new { hmem.HomeID, hmem.User, hmem.IsChild } into hmems
+                      join person in _context.Persons
+                        on hmems.HomeID equals person.HomeID
+                      select person);
         }
 
         [EnableQuery]
         [HttpGet]
         public LibraryPerson Get([FromODataUri] Int32 key)
         {
-            //String usrName = String.Empty;
-            //try
-            //{
-            //    usrName = HIHAPIUtility.GetUserID(this);
-            //    if (String.IsNullOrEmpty(usrName))
-            //        throw new UnauthorizedAccessException();
-            //}
-            //catch
-            //{
-            //    throw new UnauthorizedAccessException();
-            //}
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
 
-            //var hidquery = from hmem in _context.HomeMembers
-            //               where hmem.User == usrName
-            //               select new { HomeID = hmem.HomeID };
-            //var acntquery = from acnt in _context.FinanceAccount
-            //                where acnt.ID == key
-            //                select acnt;
-            //return (from acnt in acntquery
-            //        join hid in hidquery
-            //        on acnt.HomeID equals hid.HomeID
-            //        select acnt).SingleOrDefault();
-            return (from p in _context.Persons where p.Id == key select p).SingleOrDefault();
+            var hidquery = from hmem in _context.HomeMembers
+                           where hmem.User == usrName
+                           select new { HomeID = hmem.HomeID };
+            var ordquery = from ord in _context.Persons
+                           where ord.Id == key
+                           select ord;
+            var rstquery = from ord in ordquery
+                           join hid in hidquery
+                           on ord.HomeID equals hid.HomeID
+                           select ord;
+
+            return rstquery.SingleOrDefault();
         }
 
         [HttpPost]
@@ -95,33 +91,29 @@ namespace hihapi.Controllers.Library
             }
 
             // User
-            //String usrName = String.Empty;
-            //try
-            //{
-            //    usrName = HIHAPIUtility.GetUserID(this);
-            //    if (String.IsNullOrEmpty(usrName))
-            //    {
-            //        throw new UnauthorizedAccessException();
-            //    }
-            //}
-            //catch
-            //{
-            //    throw new UnauthorizedAccessException();
-            //}
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
 
-            //// Check whether User assigned with specified Home ID
-            //var hms = _context.HomeMembers.Where(p => p.HomeID == account.HomeID && p.User == usrName).Count();
-            //if (hms <= 0)
-            //{
-            //    throw new UnauthorizedAccessException();
-            //}
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == tbc.HomeID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
 
-            //if (!account.IsValid(this._context))
-            //    return BadRequest();
-
-            //account.CreatedAt = DateTime.Now;
-            //account.Createdby = usrName;
-            //_context.FinanceAccount.Add(account);
+            tbc.CreatedAt = DateTime.Now;
+            tbc.Createdby = usrName;
             _context.Persons.Add(tbc);
             await _context.SaveChangesAsync();
 
@@ -131,10 +123,32 @@ namespace hihapi.Controllers.Library
         [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             var tbd = await _context.Persons.FindAsync(key);
             if (tbd == null)
             {
                 return NotFound();
+            }
+
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == tbd.HomeID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
             }
 
             _context.Persons.Remove(tbd);

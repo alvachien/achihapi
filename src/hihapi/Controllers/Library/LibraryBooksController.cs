@@ -30,14 +30,54 @@ namespace hihapi.Controllers.Library
         [HttpGet]
         public IActionResult Get()
         {
-            return Ok(_context.Books);
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            return Ok(from hmem in _context.HomeMembers
+                      where hmem.User == usrName
+                      select new { hmem.HomeID, hmem.User, hmem.IsChild } into hmems
+                      join book in _context.Books
+                        on hmems.HomeID equals book.HomeID
+                      select book);
         }
 
         [EnableQuery]
         [HttpGet]
         public LibraryBook Get([FromODataUri] Int32 key)
         {
-            return (from p in _context.Books where p.Id == key select p).SingleOrDefault();
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var hidquery = from hmem in _context.HomeMembers
+                           where hmem.User == usrName
+                           select new { HomeID = hmem.HomeID };
+            var ordquery = from ord in _context.Books
+                           where ord.Id == key
+                           select ord;
+            var rstquery = from ord in ordquery
+                           join hid in hidquery
+                           on ord.HomeID equals hid.HomeID
+                           select ord;
+
+            return rstquery.SingleOrDefault();
         }
 
         [HttpPost]
@@ -47,6 +87,32 @@ namespace hihapi.Controllers.Library
             {
                 HIHAPIUtility.HandleModalStateError(ModelState);
             }
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == tbc.HomeID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            tbc.CreatedAt = DateTime.Now;
+            tbc.Createdby = usrName;
+
             _context.Books.Add(tbc);
             await _context.SaveChangesAsync();
 
@@ -56,10 +122,32 @@ namespace hihapi.Controllers.Library
         [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             var tbd = await _context.Books.FindAsync(key);
             if (tbd == null)
             {
                 return NotFound();
+            }
+
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == tbd.HomeID && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
             }
 
             using var transaction = await _context.Database.BeginTransactionAsync();

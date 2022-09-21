@@ -42,7 +42,7 @@ namespace hihapi.Controllers.Library
             }
 
             if (String.IsNullOrEmpty(usrName))
-                return Ok(_context.FinAccountCategories.Where(p => p.HomeID == null));
+                return Ok(_context.OrganizationTypes.Where(p => p.HomeID == null));
 
             var rst0 = from ctgy in _context.OrganizationTypes
                        where ctgy.HomeID == null
@@ -101,6 +101,15 @@ namespace hihapi.Controllers.Library
                 usrName = String.Empty;
             }
 
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == tbc.HomeID.Value && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            tbc.CreatedAt = DateTime.Now;
+            tbc.Createdby = usrName;
             _context.OrganizationTypes.Add(tbc);
             await _context.SaveChangesAsync();
 
@@ -110,21 +119,32 @@ namespace hihapi.Controllers.Library
         [HttpDelete]
         public async Task<IActionResult> Delete([FromODataUri] int key)
         {
+            // User
             String usrName = String.Empty;
             try
             {
                 usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
             }
             catch
             {
-                // Do nothing
-                usrName = String.Empty;
+                throw new UnauthorizedAccessException();
             }
 
             var tbd = await _context.OrganizationTypes.FindAsync(key);
             if (tbd == null)
             {
                 return NotFound();
+            }
+
+            // Check whether User assigned with specified Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == tbd.HomeID.Value && p.User == usrName).Count();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
             }
 
             _context.OrganizationTypes.Remove(tbd);

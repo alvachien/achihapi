@@ -569,6 +569,164 @@ namespace hihapi.test.common
               CONSTRAINT FK_t_blog_post_reply_post FOREIGN KEY(PostID) REFERENCES t_blog_post (ID) ON DELETE CASCADE ON UPDATE CASCADE
             )");
             #endregion
+
+            #region Library
+            // Person
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_person_def(
+	            ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID         INT            NOT NULL,
+	            NATIVE_NAME nvarchar(100) NOT NULL,
+	            CHINESE_NAME nvarchar(100) NULL,
+	            ISCHN bit NULL,
+	            DETAIL nvarchar(200) NULL,
+                CREATEDBY       NVARCHAR (40)  NULL,
+                CREATEDAT       DATE           NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY       NVARCHAR (40)  NULL,
+                UPDATEDAT       DATE           NULL DEFAULT CURRENT_DATE,
+	            CONSTRAINT FK_t_lib_person_HID FOREIGN KEY (HID) REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
+            // Person role
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_personrole_def (
+                ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+                HID         INT           NULL,
+                NAME        nvarchar(30) NOT NULL,
+	            COMMENT     nvarchar(100) NULL,
+                CREATEDBY   NVARCHAR (40) NULL,
+                CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY   NVARCHAR (40) NULL,
+                UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+                CONSTRAINT  FK_t_lib_personrole_HID FOREIGN KEY (HID)
+                    REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
+            // Person role linkage
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_person_role(
+	            PERSON_ID int NOT NULL,
+	            ROLE_ID int NOT NULL,
+                CONSTRAINT PK_t_lib_person_role PRIMARY KEY ( PERSON_ID ,	ROLE_ID ),
+                CONSTRAINT FK_lib_person_role_person FOREIGN KEY(PERSON_ID) REFERENCES t_lib_person_def (ID),
+                CONSTRAINT FK_t_lib_person_role_role FOREIGN KEY(ROLE_ID) REFERENCES t_lib_personrole_def (ID)
+            )");
+            // Organization
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_org_def(
+	            ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID         INT            NOT NULL,
+	            NATIVE_NAME nvarchar(100) NOT NULL,
+	            CHINESE_NAME nvarchar(100) NULL,
+	            ISCHN bit NULL,
+	            DETAIL nvarchar(200) NULL,
+                CREATEDBY       NVARCHAR (40)  NULL,
+                CREATEDAT       DATE           NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY       NVARCHAR (40)  NULL,
+                UPDATEDAT       DATE           NULL DEFAULT CURRENT_DATE,
+	            CONSTRAINT FK_t_lib_org_HID FOREIGN KEY (HID) REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
+            // Organization type
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_orgtype_def (
+                ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+                HID         INT           NULL,
+                NAME        nvarchar(30) NOT NULL,
+	            COMMENT     nvarchar(100) NULL,
+                CREATEDBY   NVARCHAR (40) NULL,
+                CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY   NVARCHAR (40) NULL,
+                UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+                CONSTRAINT  FK_t_lib_personrole_HID FOREIGN KEY (HID)
+                    REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
+            // Organization type linkage
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_org_type(
+	            ORG_ID int NOT NULL,
+	            TYPE_ID int NOT NULL,
+                CONSTRAINT PK_t_lib_org_type PRIMARY KEY ( ORG_ID ,	TYPE_ID ),
+	            CONSTRAINT FK_lib_org_type_org FOREIGN KEY(ORG_ID) REFERENCES t_lib_org_def (ID),
+	            CONSTRAINT FK_t_lib_org_type_type FOREIGN KEY(TYPE_ID) REFERENCES t_lib_orgtype_def (ID)
+            )");
+            // Book category
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_bookctgy_def (
+                ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+                HID         INT           NULL,
+                NAME        nvarchar(30) NOT NULL,
+	            COMMENT     nvarchar(100) NULL,
+	            PARID       int NULL,
+                CREATEDBY   NVARCHAR (40) NULL,
+                CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY   NVARCHAR (40) NULL,
+                UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+	            CONSTRAINT  FK_t_lib_bookctgy_HID FOREIGN KEY (HID) REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
+            // Book location
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_bookloc_def (
+                ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+                HID         INT           NULL,
+                NAME        nvarchar(30) NOT NULL,
+	            COMMENT     nvarchar(100) NULL,
+	            LOCTYPE     int DEFAULT 1,
+                CREATEDBY   NVARCHAR (40) NULL,
+                CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY   NVARCHAR (40) NULL,
+                UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+	            CONSTRAINT  FK_t_lib_bookloc_HID FOREIGN KEY (HID) REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
+            // Book
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_book_def (
+                ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+                HID         INT           NULL,
+	            NATIVE_NAME nvarchar(100) NOT NULL,
+	            CHINESE_NAME nvarchar(100) NULL,
+	            ISCHN bit NULL,
+	            ISBN nvarchar(50) NULL,
+	            PUB_YEAR INT NULL,
+	            DETAIL nvarchar(200) NULL,
+	            ORIGIN_LANG INT NULL,
+	            BOOK_LANG INT NULL,
+	            PAGE_COUNT INT NULL,
+                CREATEDBY   NVARCHAR (40) NULL,
+                CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY   NVARCHAR (40) NULL,
+                UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+	            CONSTRAINT  FK_t_lib_book_HID FOREIGN KEY (HID) REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
+            // Book author linkage
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_book_author(
+	            BOOK_ID int NOT NULL,
+	            AUTHOR_ID int NOT NULL,
+	            CONSTRAINT PK_t_lib_book_author PRIMARY KEY ( BOOK_ID, AUTHOR_ID ),
+	            CONSTRAINT FK_lib_book_author_book FOREIGN KEY(BOOK_ID) REFERENCES t_lib_book_def (ID),
+	            CONSTRAINT FK_lib_book_author_author FOREIGN KEY(AUTHOR_ID) REFERENCES t_lib_person_def (ID)
+            )");
+            // Book translator linkage
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_book_translator(
+	            BOOK_ID int NOT NULL,
+	            TRANSLATOR_ID int NOT NULL,
+	            CONSTRAINT PK_t_lib_book_translator PRIMARY KEY ( BOOK_ID, TRANSLATOR_ID ),
+	            CONSTRAINT FK_lib_book_translator_book FOREIGN KEY(BOOK_ID) REFERENCES t_lib_book_def (ID),
+	            CONSTRAINT FK_lib_book_translator_translator FOREIGN KEY(TRANSLATOR_ID) REFERENCES t_lib_person_def (ID)
+            )");
+            // Book press linkage
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_book_press(
+	            BOOK_ID int NOT NULL,
+	            PRESS_ID int NOT NULL,
+	            CONSTRAINT PK_t_lib_book_press PRIMARY KEY ( BOOK_ID, PRESS_ID ),
+	            CONSTRAINT FK_lib_book_press_book FOREIGN KEY(BOOK_ID) REFERENCES t_lib_book_def (ID),
+	            CONSTRAINT FK_lib_book_press_press FOREIGN KEY(PRESS_ID) REFERENCES t_lib_org_def (ID)
+            )");
+            // Book location linkage
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_book_location(
+	            BOOK_ID int NOT NULL,
+	            LOCATION_ID int NOT NULL,
+	            CONSTRAINT PK_t_lib_book_location PRIMARY KEY ( BOOK_ID, LOCATION_ID ),
+	            CONSTRAINT FK_lib_book_location_book FOREIGN KEY(BOOK_ID) REFERENCES t_lib_book_def (ID),
+	            CONSTRAINT FK_lib_book_location_location FOREIGN KEY(LOCATION_ID) REFERENCES t_lib_bookloc_def (ID)
+            )");
+            // Book category linkage
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_book_ctgy(
+	            BOOK_ID int NOT NULL,
+	            CTGY_ID int NOT NULL,
+	            CONSTRAINT PK_t_lib_book_ctgy PRIMARY KEY ( BOOK_ID, CTGY_ID ),
+	            CONSTRAINT FK_lib_book_ctgy_book FOREIGN KEY(BOOK_ID) REFERENCES t_lib_book_def (ID),
+	            CONSTRAINT FK_lib_book_ctgy_ctgy FOREIGN KEY(CTGY_ID) REFERENCES t_lib_bookctgy_def (ID)
+            )");
+            #endregion
         }
 
         public static void CreateDatabaseViews(DatabaseFacade database)
