@@ -91,6 +91,22 @@ namespace hihapi.Models.Library
         public LibraryBookLocation Location { get; set; }
     }
 
+    public class LibraryBookReadNote
+    {
+        [Key]
+        [Required]
+        //[Column("ID", TypeName = "INT")]
+        public Int32 Id { get; set; }
+
+        [Required]
+        public int BookId { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        //[Column("USER", TypeName = "NVARCHAR(50)")]
+        public String User { get; set; }
+    }
+
     [Table("T_LIB_BOOK_DEF")]
     public class LibraryBook: BaseModel
     {

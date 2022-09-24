@@ -201,28 +201,28 @@ CREATE TABLE [t_lib_book_location](
 -- Content
 -- Person role
 SET IDENTITY_INSERT [t_lib_personrole_def] ON;
-INSERT INTO [t_lib_personrole_def] ([ID],[NAME],[COMMENT]) VALUES (1, 'Library.Author', 'Library.Author');
+INSERT INTO [t_lib_personrole_def] ([ID],[NAME],[COMMENT]) VALUES (1, 'Library.Author', '作者');
 SET IDENTITY_INSERT [t_lib_personrole_def] OFF;
 
 -- Organzation type
 SET IDENTITY_INSERT [t_lib_orgtype_def] ON;
-INSERT INTO [t_lib_orgtype_def] ([ID],[NAME],[COMMENT]) VALUES (1, 'Library.Press', 'Library.Press');
+INSERT INTO [t_lib_orgtype_def] ([ID],[NAME],[COMMENT]) VALUES (1, 'Library.Press', '出版社');
 SET IDENTITY_INSERT [t_lib_orgtype_def] OFF;
 
 -- Book category
 SET IDENTITY_INSERT [t_lib_bookctgy_def] ON;
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (1, 'Sys.BkCtgy.Novel', 'Novel', NULL);
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (2, 'Sys.BkCtgy.SciFiction', 'Sci Fiction', 1);
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (3, 'Sys.BkCtgy.Romance', 'Romance', 1);
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (4, 'Sys.BkCtgy.Thriller', 'Thriller', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (1, 'Sys.BkCtgy.Novel', '小说', NULL);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (2, 'Sys.BkCtgy.SciFiction', '科幻小说', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (3, 'Sys.BkCtgy.Romance', '爱情小说', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (4, 'Sys.BkCtgy.Thriller', '恐怖小说', 1);
 
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (21, 'Sys.BkCtgy.Computer', 'Computer', NULL);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (21, 'Sys.BkCtgy.Computer', '计算机类', NULL);
 
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (41, 'Sys.BkCtgy.Education', 'Education', NULL);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (41, 'Sys.BkCtgy.Education', '教育类', NULL);
 
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (51, 'Sys.BkCtgy.ChildBk', 'Chidlren books', NULL);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (51, 'Sys.BkCtgy.ChildBk', '儿童图书类', NULL);
 
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (61, 'Sys.BkCtgy.Finance', 'Chidlren books', NULL);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (61, 'Sys.BkCtgy.Finance', '财务管理类', NULL);
 SET IDENTITY_INSERT [t_lib_bookctgy_def] OFF;
 
 -- Set the version

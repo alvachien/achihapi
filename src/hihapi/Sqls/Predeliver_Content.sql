@@ -483,6 +483,58 @@ SET IDENTITY_INSERT dbo.[t_fin_doc_type] OFF;
 
 INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (19, '2022.10.31');
 
+-------------------------------------------------------------------------------------------------------------------
+-- Updated at 2022.9.2
+
+-- Person role
+SET IDENTITY_INSERT [t_lib_personrole_def] ON;
+INSERT INTO [t_lib_personrole_def] ([ID],[NAME],[COMMENT]) VALUES (1, 'Library.Author', 'Library.Author');
+SET IDENTITY_INSERT [t_lib_personrole_def] OFF;
+
+-- Organzation type
+SET IDENTITY_INSERT [t_lib_orgtype_def] ON;
+INSERT INTO [t_lib_orgtype_def] ([ID],[NAME],[COMMENT]) VALUES (1, 'Library.Press', 'Library.Press');
+SET IDENTITY_INSERT [t_lib_orgtype_def] OFF;
+
+-- Book category
+SET IDENTITY_INSERT [t_lib_bookctgy_def] ON;
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (1, 'Sys.BkCtgy.Novel', 'Novel', NULL);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (2, 'Sys.BkCtgy.SciFiction', 'Sci Fiction', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (3, 'Sys.BkCtgy.Romance', 'Romance', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (4, 'Sys.BkCtgy.Thriller', 'Thriller', 1);
+
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (21, 'Sys.BkCtgy.Computer', 'Computer', NULL);
+
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (41, 'Sys.BkCtgy.Education', 'Education', NULL);
+
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (51, 'Sys.BkCtgy.ChildBk', 'Chidlren books', NULL);
+
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (61, 'Sys.BkCtgy.Finance', 'Chidlren books', NULL);
+SET IDENTITY_INSERT [t_lib_bookctgy_def] OFF;
+
+-- Set the version
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (20, '2022.12.31');
+
+-------------------------------------------------------------------------------------------------------------------
+-- Updated at 2022.9.24
+SET IDENTITY_INSERT [t_lib_personrole_def] ON;
+INSERT INTO [t_lib_personrole_def] ([ID],[NAME],[COMMENT]) VALUES (2, 'Library.Translator', '译者');
+SET IDENTITY_INSERT [t_lib_personrole_def] OFF;
+
+
+SET IDENTITY_INSERT [t_lib_orgtype_def] ON;
+INSERT INTO [t_lib_orgtype_def] ([ID],[NAME],[COMMENT]) VALUES (2, 'Library.Library', '图书馆');
+SET IDENTITY_INSERT [t_lib_orgtype_def] OFF;
+
+SET IDENTITY_INSERT [t_lib_bookctgy_def] ON;
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (5, 'Sys.BkCtgy.DetectiveStory', '侦探、推理类', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (6, 'Sys.BkCtgy.KungfuNovels', '武侠小说类', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (7, 'Sys.BkCtgy.FantasyNovel', '玄幻小说类', 1);
+SET IDENTITY_INSERT [t_lib_bookctgy_def] OFF;
+
+-- Set the version
+INSERT INTO [dbo].[t_dbversion] ([VersionID],[ReleasedDate]) VALUES (21, '2023.1.1');
+
 
 ---------------------------------
 -- TODO...

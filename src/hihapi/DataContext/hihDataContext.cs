@@ -67,6 +67,7 @@ namespace hihapi
         public DbSet<LibraryBookCategory> BookCategories { get; set; }
         public DbSet<LibraryBookLocation> BookLocations { get; set; }
         public DbSet<LibraryBook> Books { get; set; }
+        public DbSet<LibraryBookBorrowRecord> BookBorrowRecords { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

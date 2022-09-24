@@ -280,6 +280,7 @@ namespace hihapi.Models
             modelBuilder.EntitySet<LibraryBookCategory>("LibraryBookCategories");
             modelBuilder.EntitySet<LibraryBookLocation>("LibraryBookLocations");
             modelBuilder.EntitySet<LibraryBook>("LibraryBooks");
+            modelBuilder.EntitySet<LibraryBookBorrowRecord>("LibraryBookBorrowRecords");
 
             return modelBuilder.GetEdmModel();
         }
