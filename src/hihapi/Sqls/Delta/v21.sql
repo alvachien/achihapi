@@ -3,11 +3,13 @@
 CREATE TABLE [t_lib_book_borrow_record](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[HID] [int] NOT NULL,
+	[BOOK_ID] [int] NOT NULL,
 	[USER] [nvarchar](40) NOT NULL,
 	[FROMORG] [int] NULL,
 	[FROMDATE] [date] NULL,
 	[TODATE] [date] NULL,
 	[ISRETURNED] [bit] NOT NULL CONSTRAINT [DF_t_lib_book_brwrd_isret] DEFAULT(0),
+	[COMMENT] [nvarchar](50) NULL,
     [CREATEDBY]       NVARCHAR (40)  NULL,
     [CREATEDAT]       DATE           CONSTRAINT [DF_t_lib_book_brwrd_CREATEDAT] DEFAULT (getdate()) NULL,
     [UPDATEDBY]       NVARCHAR (40)  NULL,

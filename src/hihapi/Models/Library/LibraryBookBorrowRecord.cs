@@ -15,9 +15,11 @@ namespace hihapi.Models.Library
         public Int32 Id { get; set; }
 
         [Required]
+        [Column("HID", TypeName = "INT")]
         public Int32 HomeID { get; set; }
 
         [Required]
+        [Column("BOOK_ID", TypeName = "INT")]
         public int BookId { get; set; }
 
         [Required]
