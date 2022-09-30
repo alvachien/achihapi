@@ -478,34 +478,34 @@ namespace hihapi.test.common
             #endregion
 
             #region Learn
-            // Learn category
-            database.ExecuteSqlRaw(@"CREATE TABLE t_learn_ctgy (
-                ID          INTEGER PRIMARY KEY AUTOINCREMENT,
-                HID         INT           NULL,
-                PARID       INT           NULL,
-                NAME        NVARCHAR (45) NOT NULL,
-                COMMENT     NVARCHAR (50) NULL,
-                CREATEDBY   NVARCHAR (40) NULL,
-                CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
-                UPDATEDBY   NVARCHAR (40) NULL,
-                UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
-                CONSTRAINT  FK_t_learn_ctgy_HID FOREIGN KEY (HID)
-                    REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
-            )");
-            // Learn object
-            database.ExecuteSqlRaw(@"CREATE TABLE t_learn_obj (
-                ID          INTEGER PRIMARY KEY AUTOINCREMENT,
-                HID         INT            NOT NULL,
-                CATEGORY    INT            NULL,
-                NAME        NVARCHAR (45)  NULL,
-                CONTENT     TEXT           NULL,
-                CREATEDBY   NVARCHAR (40)  NULL,
-                CREATEDAT   DATE           NULL DEFAULT CURRENT_DATE,
-                UPDATEDBY   NVARCHAR (40)  NULL,
-                UPDATEDAT   DATE           NULL DEFAULT CURRENT_DATE,
-                CONSTRAINT FK_t_learn_obj_HID FOREIGN KEY (HID) 
-                    REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
-            )");
+            //// Learn category
+            //database.ExecuteSqlRaw(@"CREATE TABLE t_learn_ctgy (
+            //    ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+            //    HID         INT           NULL,
+            //    PARID       INT           NULL,
+            //    NAME        NVARCHAR (45) NOT NULL,
+            //    COMMENT     NVARCHAR (50) NULL,
+            //    CREATEDBY   NVARCHAR (40) NULL,
+            //    CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+            //    UPDATEDBY   NVARCHAR (40) NULL,
+            //    UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+            //    CONSTRAINT  FK_t_learn_ctgy_HID FOREIGN KEY (HID)
+            //        REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            //)");
+            //// Learn object
+            //database.ExecuteSqlRaw(@"CREATE TABLE t_learn_obj (
+            //    ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+            //    HID         INT            NOT NULL,
+            //    CATEGORY    INT            NULL,
+            //    NAME        NVARCHAR (45)  NULL,
+            //    CONTENT     TEXT           NULL,
+            //    CREATEDBY   NVARCHAR (40)  NULL,
+            //    CREATEDAT   DATE           NULL DEFAULT CURRENT_DATE,
+            //    UPDATEDBY   NVARCHAR (40)  NULL,
+            //    UPDATEDAT   DATE           NULL DEFAULT CURRENT_DATE,
+            //    CONSTRAINT FK_t_learn_obj_HID FOREIGN KEY (HID) 
+            //        REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            //)");
             #endregion
 
             #region Blog
@@ -725,6 +725,23 @@ namespace hihapi.test.common
 	            CONSTRAINT PK_t_lib_book_ctgy PRIMARY KEY ( BOOK_ID, CTGY_ID ),
 	            CONSTRAINT FK_lib_book_ctgy_book FOREIGN KEY(BOOK_ID) REFERENCES t_lib_book_def (ID),
 	            CONSTRAINT FK_lib_book_ctgy_ctgy FOREIGN KEY(CTGY_ID) REFERENCES t_lib_bookctgy_def (ID)
+            )");
+            // Borrow record
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_book_borrow_record(
+	            ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID int NOT NULL,
+	            BOOK_ID int NOT NULL,
+	            USER nvarchar(40) NOT NULL,
+	            FROMORG int NULL,
+	            FROMDATE date NULL,
+	            TODATE date NULL,
+	            ISRETURNED bit NOT NULL DEFAULT(0),
+	            COMMENT nvarchar(50) NULL,
+                CREATEDBY   NVARCHAR (40) NULL,
+                CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY   NVARCHAR (40) NULL,
+                UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+	            CONSTRAINT FK_t_lib_book_brwrd_HID FOREIGN KEY (HID) REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
             )");
             #endregion
         }
@@ -1312,6 +1329,11 @@ namespace hihapi.test.common
                 VersionID = 20,
                 ReleasedDate = new DateTime(2022, 12, 31)
             });
+            DBVersions.Add(new DBVersion()
+            {
+                VersionID = 21,
+                ReleasedDate = new DateTime(2023, 1, 1)
+            });
         }
 
         private static void SetupTable_Currency()
@@ -1489,11 +1511,13 @@ namespace hihapi.test.common
         private static void SetupTable_LibraryPersonRole()
         {
             LibraryPersonRoles.Add(new LibraryPersonRole() { Id = 1, Name = "Library.Author", Comment = "Author" });
+            LibraryPersonRoles.Add(new LibraryPersonRole() { Id = 2, Name = "Library.Translator", Comment = "译者" });
         }
 
         private static void SetupTable_LibraryOrganizationType()
         {
-            LibraryOrganizationTypes.Add(new LibraryOrganizationType() { Id = 1, Name = "Library.Press", Comment = "Press" });
+            LibraryOrganizationTypes.Add(new LibraryOrganizationType() { Id = 1, Name = "Library.Press", Comment = "出版社" });
+            LibraryOrganizationTypes.Add(new LibraryOrganizationType() { Id = 2, Name = "Library.Library", Comment = "图书馆" });
         }
 
         private static void SetupTable_LibraryBookCategory()
@@ -1501,7 +1525,10 @@ namespace hihapi.test.common
             LibraryBookCategories.Add(new LibraryBookCategory() { Id = 1, Name = "Sys.BkCtgy.Novel", Comment = "Novel" });
             LibraryBookCategories.Add(new LibraryBookCategory() { Id = 2, Name = "Sys.BkCtgy.SciFiction", Comment = "Sci Fiction", ParentID = 1 });
             LibraryBookCategories.Add(new LibraryBookCategory() { Id = 3, Name = "Sys.BkCtgy.Romance", Comment = "Romance", ParentID = 1 });
-            LibraryBookCategories.Add(new LibraryBookCategory() { Id = 4, Name = "Sys.BkCtgy.Thriller", Comment = "Thriller", ParentID = 1 });
+            LibraryBookCategories.Add(new LibraryBookCategory() { Id = 4, Name = "Sys.BkCtgy.Thriller", Comment = "悬疑类", ParentID = 1 });
+            LibraryBookCategories.Add(new LibraryBookCategory() { Id = 5, Name = "Sys.BkCtgy.DetectiveStory", Comment = "侦探、推理类", ParentID = 1 });
+            LibraryBookCategories.Add(new LibraryBookCategory() { Id = 6, Name = "Sys.BkCtgy.KungfuNovels", Comment = "武侠小说类", ParentID = 1 });
+            LibraryBookCategories.Add(new LibraryBookCategory() { Id = 7, Name = "Sys.BkCtgy.FantasyNovel", Comment = "玄幻小说类", ParentID = 1 });
         }
         #endregion
 
