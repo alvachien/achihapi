@@ -20,18 +20,20 @@ CREATE TABLE [t_lib_book_borrow_record](
 
 -- Content
 SET IDENTITY_INSERT [t_lib_personrole_def] ON;
-INSERT INTO [t_lib_personrole_def] ([ID],[NAME],[COMMENT]) VALUES (2, 'Library.Translator', '译者');
+INSERT INTO [t_lib_personrole_def] ([ID],[NAME],[COMMENT]) VALUES (2, 'Library.Translator', N'译者');
 SET IDENTITY_INSERT [t_lib_personrole_def] OFF;
 
 
 SET IDENTITY_INSERT [t_lib_orgtype_def] ON;
-INSERT INTO [t_lib_orgtype_def] ([ID],[NAME],[COMMENT]) VALUES (2, 'Library.Library', '图书馆');
+INSERT INTO [t_lib_orgtype_def] ([ID],[NAME],[COMMENT]) VALUES (2, 'Library.Library', N'图书馆');
 SET IDENTITY_INSERT [t_lib_orgtype_def] OFF;
 
 SET IDENTITY_INSERT [t_lib_bookctgy_def] ON;
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (5, 'Sys.BkCtgy.DetectiveStory', '侦探、推理类', 1);
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (6, 'Sys.BkCtgy.KungfuNovels', '武侠小说类', 1);
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (7, 'Sys.BkCtgy.FantasyNovel', '玄幻小说类', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (5, 'Sys.BkCtgy.DetectiveStory', N'侦探、推理类小说', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (6, 'Sys.BkCtgy.KungfuNovels', N'武侠小说类', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (7, 'Sys.BkCtgy.FantasyNovel', N'玄幻小说类', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (8, 'Sys.BkCtgy.ChineseClassical', N'中国古典小说', 1);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (9, 'Sys.BkCtgy.WorldFamousBook', N'世界名著', 1);
 SET IDENTITY_INSERT [t_lib_bookctgy_def] OFF;
 
 -- Set the version
