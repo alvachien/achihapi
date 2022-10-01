@@ -45,5 +45,16 @@ namespace hihapi.Models.Library
         [Column("COMMENT", TypeName = "NVARCHAR(50)")]
         [MaxLength(50)]
         public String Comment { get; set; }
+
+        public override bool IsValid(hihDataContext context)
+        {
+            bool isvalid = base.IsValid(context);
+            if (isvalid)
+            {
+
+            }
+
+            return isvalid;
+        }
     }
 }
