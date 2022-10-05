@@ -744,6 +744,43 @@ namespace hihapi.test.common
 	            CONSTRAINT FK_t_lib_book_brwrd_HID FOREIGN KEY (HID) REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
             )");
             #endregion
+
+            #region Event
+            // Normal event
+            database.ExecuteSqlRaw(@"CREATE TABLE t_event (
+	            ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID         INT            NOT NULL,
+                Name        NVARCHAR (50)  NOT NULL,
+                StartTime   DATE           NOT NULL DEFAULT CURRENT_DATE, 
+                EndTime     DATE           NULL,
+                CompleteTime DATE           NULL,
+                Content      TEXT NULL,
+                IsPublic     BIT            NOT NULL DEFAULT 1,
+                Assignee     NVARCHAR (40)  NULL,
+                RefRecurID   INT            NULL,
+                CREATEDBY       NVARCHAR (40)  NULL,
+                CREATEDAT       DATE           NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY       NVARCHAR (40)  NULL,
+                UPDATEDAT       DATE           NULL DEFAULT CURRENT_DATE,
+	            CONSTRAINT FK_t_event_HID FOREIGN KEY (HID) REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE )");
+
+            // Recur event
+            database.ExecuteSqlRaw(@"CREATE TABLE t_event_recur (
+	            ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID         INT            NOT NULL,
+                STARTDATE   DATE           NOT NULL,
+                ENDDATE     DATE           NOT NULL,
+                RPTTYPE     TINYINT        NOT NULL,
+                NAME        NVARHCAR (50)   NOT NULL,
+                CONTENT     TEXT NULL,
+                ISPUBLIC     BIT           NOT NULL DEFAULT 0,
+                ASSIGNEE     NVARCHAR (40) NULL,
+                CREATEDBY       NVARCHAR (40)  NULL,
+                CREATEDAT       DATE           NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY       NVARCHAR (40)  NULL,
+                UPDATEDAT       DATE           NULL DEFAULT CURRENT_DATE,
+	            CONSTRAINT FK_t_event_recur_HID FOREIGN KEY (HID) REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE )");
+            #endregion
         }
 
         public static void CreateDatabaseViews(DatabaseFacade database)

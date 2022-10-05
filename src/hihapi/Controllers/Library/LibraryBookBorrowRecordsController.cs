@@ -95,6 +95,11 @@ namespace hihapi.Controllers.Library
                 throw new UnauthorizedAccessException();
             }
 
+            if (!tbc.IsValid(_context))
+            {
+                throw new BadRequestException("Not a valid object");
+            }
+
             tbc.CreatedAt = DateTime.Now;
             tbc.Createdby = usrName;
 

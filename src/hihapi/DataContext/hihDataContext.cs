@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using hihapi.Models;
 using hihapi.Models.Library;
 using System.Collections.Generic;
+using hihapi.Models.Event;
 
 namespace hihapi
 {
@@ -68,6 +69,8 @@ namespace hihapi
         public DbSet<LibraryBookLocation> BookLocations { get; set; }
         public DbSet<LibraryBook> Books { get; set; }
         public DbSet<LibraryBookBorrowRecord> BookBorrowRecords { get; set; }
+        public DbSet<NormalEvent> NormalEvents { get; set; }
+        public DbSet<RecurEvent> RecurEvents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -966,6 +969,76 @@ namespace hihapi
                         {
                             j.HasKey(t => new { t.BookId, t.LocationId });
                         });
+            });
+
+            // Event part
+            modelBuilder.Entity<NormalEvent>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.Id)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.StartDate)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    entity.Property(e => e.Id)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.StartDate)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.NormalEvents)
+                    .HasForeignKey(d => d.HomeID)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_t_event_hid");
+                entity.HasOne(d => d.CurrentRecurEvent)
+                    .WithMany(p => p.RelatedEvents)
+                    .HasForeignKey(d => d.RefRecurrID)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<RecurEvent>(entity =>
+            {
+                if (!TestingMode)
+                {
+                    entity.Property(e => e.Id)
+                        .UseIdentityColumn();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("(getdate())");
+                    entity.Property(e => e.StartDate)
+                        .HasDefaultValueSql("(getdate())");
+                }
+                else
+                {
+                    // Workaround for Sqlite in testing mode
+                    entity.Property(e => e.Id)
+                        .HasColumnType("INTEGER")
+                        .ValueGeneratedOnAdd();
+                    entity.Property(e => e.CreatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.UpdatedAt)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                    entity.Property(e => e.StartDate)
+                        .HasDefaultValueSql("CURRENT_DATE");
+                }
+                entity.HasOne(d => d.CurrentHome)
+                    .WithMany(p => p.RecurEvents)
+                    .HasForeignKey(d => d.HomeID)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_t_event_recur_HID");
             });
         }
     }

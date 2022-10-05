@@ -1279,7 +1279,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"HomeID\": 2,\r\n    \"NativeName\": \"人民文学出版社\",\r\n    \"NativeIsChinese\": true,\r\n    \"OrganizationTypes\": [\r\n        {\r\n            \"TypeID\": 1\r\n        }\r\n    ]\r\n}",
+									"raw": "{\r\n    \"HomeID\": 2,\r\n    \"NativeName\": \"人民文学出版社\",\r\n    \"NativeIsChinese\": true,\r\n    \"OrganizationTypes\": [\r\n        {\r\n            \"TypeId\": 1\r\n        }\r\n    ]\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1528,6 +1528,54 @@
 									"port": "44360",
 									"path": [
 										"LibraryBooks"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "NormalEvents",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/NormalEvents",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"NormalEvents"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "RecurEvents",
+					"item": [
+						{
+							"name": "Get Collection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:44360/RecurEvents",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44360",
+									"path": [
+										"RecurEvents"
 									]
 								}
 							},

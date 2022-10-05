@@ -1,4 +1,5 @@
 ﻿using System;
+using hihapi.Models.Event;
 using hihapi.Models.Library;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
@@ -281,6 +282,10 @@ namespace hihapi.Models
             modelBuilder.EntitySet<LibraryBookLocation>("LibraryBookLocations");
             modelBuilder.EntitySet<LibraryBook>("LibraryBooks");
             modelBuilder.EntitySet<LibraryBookBorrowRecord>("LibraryBookBorrowRecords");
+
+            // Event
+            modelBuilder.EntitySet<NormalEvent>("NormalEvents");
+            modelBuilder.EntitySet<RecurEvent>("RecurEvents");
 
             return modelBuilder.GetEdmModel();
         }

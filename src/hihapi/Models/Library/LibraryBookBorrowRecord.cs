@@ -51,7 +51,17 @@ namespace hihapi.Models.Library
             bool isvalid = base.IsValid(context);
             if (isvalid)
             {
-
+                if (HomeID == 0)
+                    isvalid = false;
+                if (BookId == 0)
+                    isvalid = false;
+                if (String.IsNullOrEmpty(User))
+                    isvalid = false;
+                if (FromDate != null && ToDate != null)
+                {
+                    if (ToDate.Value <= FromDate.Value)
+                        isvalid = false;
+                }
             }
 
             return isvalid;

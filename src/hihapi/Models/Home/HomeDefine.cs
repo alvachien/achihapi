@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using hihapi.Models.Library;
+using hihapi.Models.Event;
 
 namespace hihapi.Models
 {
@@ -29,6 +30,8 @@ namespace hihapi.Models
             BookCategories = new List<LibraryBookCategory>();
             BookLocations = new List<LibraryBookLocation>();
             Books = new List<LibraryBook>();
+            NormalEvents = new List<NormalEvent>();
+            RecurEvents = new List<RecurEvent>();
         }
 
         [Key]
@@ -72,6 +75,8 @@ namespace hihapi.Models
         public IList<LibraryBookCategory> BookCategories { get; set; }
         public IList<LibraryBookLocation> BookLocations { get; set; }
         public IList<LibraryBook> Books { get; set; }
+        public IList<NormalEvent> NormalEvents { get; set; }
+        public IList<RecurEvent> RecurEvents { get; set; }
 
         public override bool IsValid(hihDataContext context)
         {

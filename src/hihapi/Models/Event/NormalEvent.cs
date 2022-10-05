@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace hihapi.Models.Event
 {
+    [Table("T_EVENT")]
     public class NormalEvent : BaseModel
     {
         [Key]
@@ -19,18 +20,42 @@ namespace hihapi.Models.Event
 
         [Required]
         [StringLength(100)]
-        [Column("EVENT_NAME", TypeName = "NVARCHAR(100)")]
-        public string EventName { get; set; }
+        [Column("NAME", TypeName = "NVARCHAR(100)")]
+        public string Name { get; set; }
 
         [Required]
-        public DateTime StartTimePoint { get; set; }
-        public DateTime? EndTimePoint { get; set; }
-        public DateTime? CompleteTimePoint { get; set; }
+        [Column("StartTime", TypeName = "DATE")]
+        [DataType(DataType.Date)]
+        public DateTime StartDate{ get; set; }
+        
+        [Column("EndTime", TypeName = "DATE")]
+        [DataType(DataType.Date)]
+        public DateTime? EndDate{ get; set; }
+
+        [Column("CompleteTime", TypeName = "DATE")]
+        [DataType(DataType.Date)]
+        public DateTime? CompleteDate { get; set; }
+
+        [Column("Content", TypeName = "NVARCHAR(MAX)")]
         public String Content { get; set; }
+
+        [Column("IsPublic", TypeName = "BIT")]
         public Boolean IsPublic { get; set; }
+
         [StringLength(40)]
+        [Column("Assignee", TypeName = "NVARCHAR(40)")]
         public String Assignee { get; set; }
+
+        [Column("RefRecurID", TypeName = "INT")]
         public Int32? RefRecurrID { get; set; }
 
+        public HomeDefine CurrentHome { get; set; }
+        public RecurEvent CurrentRecurEvent { get; set; }
+
+        public NormalEvent()
+        {
+            this.IsPublic = true;
+            this.StartDate = DateTime.Today;
+        }
     }
 }
