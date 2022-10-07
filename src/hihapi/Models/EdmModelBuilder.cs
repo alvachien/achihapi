@@ -286,6 +286,19 @@ namespace hihapi.Models
             // Event
             modelBuilder.EntitySet<NormalEvent>("NormalEvents");
             modelBuilder.EntitySet<RecurEvent>("RecurEvents");
+            var normalEventEntity = modelBuilder.EntityType<NormalEvent>();
+            normalEventEntity.Property(c => c.StartDate).AsDate();
+            normalEventEntity.Property(c => c.EndDate).AsDate();
+            // Action: Mark as completed
+            var actionMarkAsCompleted = normalEventEntity.Collection.Action("MarkAsCompleted");
+            actionMarkAsCompleted.Parameter<int>("HomeID");
+            actionMarkAsCompleted.Parameter<int>("EventID");
+            actionMarkAsCompleted.Returns<bool>();
+            //// Action: Generate normal events
+            //var recurEventEntity = modelBuilder.EntityType<RecurEvent>();
+            //var actionGenerateNormalEvents = recurEventEntity.Collection.Action("GenerateNormalEvents");
+            //actionGenerateNormalEvents.Parameter<int>("HomeID");
+            //actionGenerateNormalEvents.ReturnsFromEntitySet<NormalEvent>("NormalEvents");
 
             return modelBuilder.GetEdmModel();
         }

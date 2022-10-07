@@ -59,8 +59,6 @@ namespace hihapi
         public DbSet<BlogPost> BlogPosts { get; set; }
         public DbSet<BlogPostCollection> BlogPostCollections { get; set; }
         public DbSet<BlogPostTag> BlogPostTags { get; set; }
-        //public DbSet<LibraryBookCategory> BookCategories { get; set; }
-        //public DbSet<LibraryBook> Books { get; set; }
         public DbSet<LibraryPersonRole> PersonRoles { get; set; }
         public DbSet<LibraryPerson> Persons { get; set; }
         public DbSet<LibraryOrganizationType> OrganizationTypes { get; set; }
