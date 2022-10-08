@@ -110,6 +110,26 @@ namespace hihapi.Controllers.Event
                 throw new UnauthorizedAccessException();
             }
 
+            // Generate the 
+            var eventdates = CommonUtility.WorkoutRepeatedDates(new RepeatDatesCalculationInput
+            {
+                StartDate = tbc.StartDate,
+                EndDate = tbc.EndDate,
+                RepeatType = tbc.RecurType,
+            });
+
+            var dateidx = 1;
+            foreach(var edate in eventdates)
+            {
+                var gevent = new NormalEvent();
+                gevent.StartDate = edate.StartDate;
+                gevent.EndDate = edate.EndDate;
+                gevent.Name = tbc.Name + (dateidx++) + '/' + eventdates.Count;
+                gevent.CreatedAt = DateTime.Now;
+                gevent.Createdby = usrName;
+                tbc.RelatedEvents.Add(gevent);
+            }
+
             tbc.CreatedAt = DateTime.Now;
             tbc.Createdby = usrName;
 
@@ -149,6 +169,7 @@ namespace hihapi.Controllers.Event
             }
 
             _context.RecurEvents.Remove(tbd);
+            // TBD. Delete the generated events
             await _context.SaveChangesAsync();
 
             return StatusCode(204); // HttpStatusCode.NoContent

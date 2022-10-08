@@ -90,17 +90,17 @@ namespace hihapi.Utilities
 
                 case RepeatFrequency.Fortnight:
                     {
-                        var tspans = dtEnd - dtStart;
-                        var tdays = (Int32)tspans.Days;
-
-                        var tfortnights = tdays / 14;
-
-                        for (int i = 0; i <= tfortnights; i++)
+                        var curdate = dtStart;
+                        while (true)
                         {
                             listResults.Add(new RepeatedDates
                             {
-                                StartDate = datInput.StartDate.AddDays(i * 14),
+                                StartDate = curdate,
                             });
+
+                            curdate = curdate.AddDays(14);
+                            if (curdate > dtEnd)
+                                break;
                         }
 
                         for (int i = 0; i < listResults.Count; i++)
@@ -119,22 +119,24 @@ namespace hihapi.Utilities
 
                 case RepeatFrequency.HalfYear:
                     {
-                        var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
-                        var nhalfyear = nmonths / 6;
-
-                        for (int i = 0; i <= nhalfyear; i++)
+                        var curdate = dtStart;
+                        while (true)
                         {
                             listResults.Add(new RepeatedDates
                             {
-                                StartDate = datInput.StartDate.AddMonths(i * 6),
+                                StartDate = curdate,
                             });
+
+                            curdate = curdate.AddMonths(6);
+                            if (curdate > dtEnd)
+                                break;
                         }
 
                         for (int i = 0; i < listResults.Count; i++)
                         {
                             if (i == listResults.Count - 1)
                             {
-                                listResults[i].EndDate = listResults[i].StartDate.AddMonths(6);
+                                listResults[i].EndDate = dtEnd;
                             }
                             else
                             {
@@ -146,21 +148,24 @@ namespace hihapi.Utilities
 
                 case RepeatFrequency.Month:
                     {
-                        var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
-
-                        for (int i = 0; i <= nmonths; i++)
+                        var curdate = dtStart;
+                        while(true)
                         {
                             listResults.Add(new RepeatedDates
                             {
-                                StartDate = datInput.StartDate.AddMonths(i),
+                                StartDate = curdate,
                             });
+
+                            curdate = curdate.AddMonths(1);
+                            if (curdate > dtEnd)
+                                break;
                         }
 
                         for (int i = 0; i < listResults.Count; i++)
                         {
                             if (i == listResults.Count - 1)
                             {
-                                listResults[i].EndDate = listResults[i].StartDate.AddMonths(1).AddDays(-1);
+                                listResults[i].EndDate = dtEnd;
                             }
                             else
                             {
@@ -172,22 +177,24 @@ namespace hihapi.Utilities
 
                 case RepeatFrequency.Quarter:
                     {
-                        var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
-                        var nquarters = nmonths / 3;
-
-                        for (int i = 0; i <= nquarters; i++)
+                        var curdate = dtStart;
+                        while (true)
                         {
                             listResults.Add(new RepeatedDates
                             {
-                                StartDate = datInput.StartDate.AddMonths(i * 3),
+                                StartDate = curdate,
                             });
+
+                            curdate = curdate.AddMonths(3);
+                            if (curdate > dtEnd)
+                                break;
                         }
 
                         for (int i = 0; i < listResults.Count; i++)
                         {
                             if (i == listResults.Count - 1)
                             {
-                                listResults[i].EndDate = listResults[i].StartDate.AddMonths(3).AddDays(-1);
+                                listResults[i].EndDate = dtEnd;
                             }
                             else
                             {
@@ -199,24 +206,24 @@ namespace hihapi.Utilities
 
                 case RepeatFrequency.Week:
                     {
-                        var tspans = dtEnd - dtStart;
-                        var tdays = (Int32)tspans.Days;
-
-                        var tweeks = tdays / 7;
-
-                        for (int i = 0; i <= tweeks; i++)
+                        var curdate = dtStart;
+                        while (true)
                         {
                             listResults.Add(new RepeatedDates
                             {
-                                StartDate = datInput.StartDate.AddDays(i * 7),
+                                StartDate = curdate,
                             });
+
+                            curdate = curdate.AddDays(7);
+                            if (curdate > dtEnd)
+                                break;
                         }
 
                         for (int i = 0; i < listResults.Count; i++)
                         {
                             if (i == listResults.Count - 1)
                             {
-                                listResults[i].EndDate = listResults[i].StartDate.AddDays(6);
+                                listResults[i].EndDate = dtEnd;
                             }
                             else
                             {
@@ -228,21 +235,24 @@ namespace hihapi.Utilities
 
                 case RepeatFrequency.Year:
                     {
-                        var nyears = datInput.EndDate.Year - datInput.StartDate.Year;
-
-                        for (int i = 0; i <= nyears; i++)
+                        var curdate = dtStart;
+                        while (true)
                         {
                             listResults.Add(new RepeatedDates
                             {
-                                StartDate = datInput.StartDate.AddYears(i),
+                                StartDate = curdate,
                             });
+
+                            curdate = curdate.AddYears(1);
+                            if (curdate > dtEnd)
+                                break;
                         }
 
                         for (int i = 0; i < listResults.Count; i++)
                         {
                             if (i == listResults.Count - 1)
                             {
-                                listResults[i].EndDate = listResults[i].StartDate.AddYears(1).AddDays(-1);
+                                listResults[i].EndDate = dtEnd;
                             }
                             else
                             {

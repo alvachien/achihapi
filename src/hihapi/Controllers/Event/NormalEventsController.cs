@@ -148,6 +148,11 @@ namespace hihapi.Controllers.Event
                 throw new UnauthorizedAccessException();
             }
 
+            if (tbd.RefRecurrID != null)
+            {
+                throw new BadRequestException("Event from recur cannot be deleted directly");
+            }
+
             _context.NormalEvents.Remove(tbd);
             await _context.SaveChangesAsync();
 

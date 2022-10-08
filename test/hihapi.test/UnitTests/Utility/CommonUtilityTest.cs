@@ -241,8 +241,38 @@ namespace hihapi.unittest.Utility
                 Assert.Equal(startdate.Year, results[i].StartDate.Year);
                 Assert.Equal(results[i].StartDate.Year, results[i].EndDate.Year);
 
-                TimeSpan ts = ((DateTime)results[i].EndDate).Subtract(results[i].StartDate);
-                Assert.Equal(90, ts.TotalDays);
+                if (i != results.Count - 1)
+                {
+                    TimeSpan ts = ((DateTime)results[i].EndDate).Subtract(results[i].StartDate);
+                    Assert.Equal(90, ts.TotalDays);
+                }
+            }
+        }
+
+        [Fact]
+        public void WorkoutRepeatedDates_Quarter2()
+        {
+            var startdate = new DateTime(2022, 10, 8);
+            var enddate = new DateTime(2023, 10, 7); ;
+            RepeatDatesCalculationInput vm = new RepeatDatesCalculationInput
+            {
+                StartDate = startdate,
+                EndDate = enddate,
+                RepeatType = RepeatFrequency.Quarter
+            };
+            List<RepeatedDates> results = CommonUtility.WorkoutRepeatedDates(vm);
+
+            Assert.Equal(4, results.Count);
+
+            for (int i = 0; i < results.Count; i++)
+            {
+                //Assert.Equal(startdate.Year, results[i].StartDate.Year);
+                //Assert.Equal(results[i].StartDate.Year, results[i].EndDate.Year);
+
+                if (i != results.Count - 1)
+                {
+                    Assert.Equal(results[i].StartDate.AddMonths(3).AddDays(-1), results[i].EndDate);
+                }
             }
         }
 
