@@ -104,7 +104,7 @@ CREATE TABLE [t_lib_org_type](
 	[ORG_ID] [int] NOT NULL,
 	[TYPE_ID] [int] NOT NULL,
 	CONSTRAINT [PK_t_lib_org_type] PRIMARY KEY CLUSTERED ( [ORG_ID] ASC, [TYPE_ID] ASC ),
-	CONSTRAINT [FK_lib_org_type_org] FOREIGN KEY([ORG_ID]) REFERENCES [t_lib_org_def] ([ID]),
+	CONSTRAINT [FK_lib_org_type_org] FOREIGN KEY([ORG_ID]) REFERENCES [t_lib_org_def] ([ID]) ON DELETE CASCADE,
 	CONSTRAINT [FK_t_lib_org_type_type] FOREIGN KEY([TYPE_ID]) REFERENCES [t_lib_orgtype_def] ([ID])
 );
 
