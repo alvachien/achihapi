@@ -133,7 +133,7 @@ namespace hihapi.Controllers
         }
 
         [HttpGet]
-        public IActionResult Deploy([FromODataUri]string owner)
+        public IActionResult Deploy(string owner)
         {
             // User
             string usrName = "";
