@@ -133,7 +133,7 @@ namespace hihapi.Controllers
         }
 
         [HttpGet]
-        public IActionResult Deploy(string owner)
+        public IActionResult Deploy(string key)
         {
             // User
             string usrName = "";
@@ -150,15 +150,15 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            if (!string.IsNullOrEmpty(owner))
+            if (!string.IsNullOrEmpty(key))
             {                
-                if (String.CompareOrdinal(owner, usrName) != 0)
+                if (String.CompareOrdinal(key, usrName) != 0)
                 {
                     throw new UnauthorizedAccessException();
                 }
             }
 
-            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
+            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == key);
             if (setting == null)
             {
                 throw new NotFoundException("Owner not found");
