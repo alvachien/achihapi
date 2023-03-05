@@ -66,7 +66,7 @@ namespace hihapi.Utilities
             }
         }
 
-        public static void DeployPost(string deployFolder, BlogPost post, List<BlogCollection> blogCollections)
+        public static async void DeployPost(string deployFolder, BlogPost post, List<BlogCollection> blogCollections)
         {
             if (String.IsNullOrEmpty(deployFolder) || !Directory.Exists(Startup.BlogFolder))
             {
@@ -100,6 +100,13 @@ namespace hihapi.Utilities
                 title = post.Title,
                 brief = post.Brief,
             };
+            // Tags
+            foreach(var tagterm in post.BlogPostTags)
+            {
+                newpost.tag.Add(tagterm.Tag);
+            }
+
+            // Post itself
             if (post.CreatedAt.HasValue)
             {
                 newpost.createdat = post.CreatedAt.Value.ToString("s");
@@ -134,12 +141,18 @@ namespace hihapi.Utilities
             {
                 listposts[postidx] = newpost;
             }
-            jsonstr = JsonSerializer.Serialize(listposts);
-            File.WriteAllText(fileName, jsonstr);
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            using FileStream createStream = File.Create(fileName);
+            await JsonSerializer.SerializeAsync(createStream, listposts, options);
+            await createStream.DisposeAsync();
+            //File.WriteAllText(fileName, jsonstr);
 
             // MD file
             fileName = Path.Combine(postFolder, post.ID.ToString() + ".md");
-            File.WriteAllText(fileName, post.Content);
+            using (StreamWriter writer = File.CreateText("newfile.txt"))
+            {
+                await writer.WriteAsync(post.Content);
+            }
         }
  
         public static void RevokePostDeliver(string deployFolder, int postid)
@@ -174,14 +187,13 @@ namespace hihapi.Utilities
 
             // MD file
             string postFolder = Path.Combine(rootFolder, PostsFolder);
-            if (!Directory.Exists(postFolder))
+            if (Directory.Exists(postFolder))
             {
-                return;
-            }
-            fileName = Path.Combine(postFolder, postid.ToString() + ".md");
-            if (File.Exists(fileName))
-            {
-                File.Delete(fileName);
+                fileName = Path.Combine(postFolder, postid.ToString() + ".md");
+                if (File.Exists(fileName))
+                {
+                    File.Delete(fileName);
+                }
             }
         }
     }
