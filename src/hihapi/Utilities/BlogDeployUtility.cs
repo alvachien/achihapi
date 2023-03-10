@@ -66,7 +66,7 @@ namespace hihapi.Utilities
             }
         }
 
-        public static async void DeployPost(string deployFolder, BlogPost post, List<BlogCollection> blogCollections)
+        public static async Task DeployPost(string deployFolder, BlogPost post, List<BlogCollection> blogCollections)
         {
             if (String.IsNullOrEmpty(deployFolder) || !Directory.Exists(Startup.BlogFolder))
             {
@@ -149,7 +149,7 @@ namespace hihapi.Utilities
 
             // MD file
             fileName = Path.Combine(postFolder, post.ID.ToString() + ".md");
-            using (StreamWriter writer = File.CreateText("newfile.txt"))
+            using (StreamWriter writer = File.CreateText(fileName))
             {
                 await writer.WriteAsync(post.Content);
             }

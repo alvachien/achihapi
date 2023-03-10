@@ -252,7 +252,7 @@ namespace hihapi.Controllers
         }
 
         [HttpGet]
-        public IActionResult Deploy(int key)
+        public async Task<IActionResult> Deploy(int key)
         {
             var cc = _context.BlogPosts.Find(key);
             if (cc == null)
@@ -296,7 +296,7 @@ namespace hihapi.Controllers
             {
                 if (cc.Status == BlogPost.BlogPostStatus_PublishAsPublic)
                 {
-                    BlogDeployUtility.DeployPost(setting.DeployFolder, cc, _context.BlogCollections.Where(p => p.Owner == usrName).ToList());
+                    await BlogDeployUtility.DeployPost(setting.DeployFolder, cc, _context.BlogCollections.Where(p => p.Owner == usrName).ToList());
                 }
                 else
                 {
@@ -313,14 +313,7 @@ namespace hihapi.Controllers
                 throw new Exception(errstr);
             }
 
-            return Ok("");
-
-            //if (string.IsNullOrEmpty(errstr))
-            //{
-            //    return Ok();
-            //}
-
-            //throw new Exception(errstr);
+            return Ok("done");
         }
 
         [HttpGet]
