@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using hihapi.Models.Event;
 using hihapi.Models.Library;
 using Microsoft.OData.Edm;
@@ -83,6 +84,7 @@ namespace hihapi.Models
             modelBuilder.EntityType<FinanceReportByControlCenterMOM>();
             modelBuilder.EntityType<FinanceReportMOM>();
             modelBuilder.EntityType<FinanceReportPerDate>();
+            modelBuilder.EntityType<FinanceAccountBalancePerDate>();
             var rptAcntExpense = modelBuilder.EntityType<FinanceReporAccountGroupAndExpenseView>();
             rptAcntExpense.HasKey(p => new {
                 p.HomeID,
@@ -173,6 +175,12 @@ namespace hihapi.Models
             actionGetBalance.Parameter<int>("HomeID");
             actionGetBalance.Parameter<int>("AccountID");
             actionGetBalance.Returns<double>();
+            // Action: GetAccountBalanceEx
+            var actionGetBalanceEx = reportEntity.Collection.Action("GetAccountBalanceEx");
+            actionGetBalanceEx.Parameter<int>("HomeID");
+            actionGetBalanceEx.Parameter<int>("AccountID");
+            actionGetBalanceEx.Parameter<List<DateTime>>("SelectedDates");
+            actionGetBalanceEx.ReturnsFromEntitySet<FinanceAccountBalancePerDate>("FinanceAccountBalancePerDates");
             // Action: GetMonthlyReportByTranType
             var actionReportCurrentMonthByTT = reportEntity.Collection.Action("GetReportByTranType");
                 // .ReturnsCollection<FinanceReportByTransactionType>();

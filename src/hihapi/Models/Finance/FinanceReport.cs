@@ -116,6 +116,18 @@ namespace hihapi.Models
         public Int32 Month { get; set; }
     }
 
+    public sealed class FinanceAccountBalancePerDate
+    {
+        [Key]
+        public Int32 HomeID { get; set; }
+        [Key]
+        public Int32 AccountID { get; set; }
+        [Key]
+        public DateTime BalanceDate { get; set; }
+        public Decimal Balance { get; set; }
+        public String BalanceCurrency { get; set; }
+    }
+
     //public sealed class FinanceReportByAccountMOMResult
     //{
     //    public List<FinanceReportByAccountMOM> ReportData { get; set; }

@@ -9,6 +9,7 @@ using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.OData.Formatter;
 using System.Threading.Tasks;
+using System.Collections.Immutable;
 
 namespace hihapi.Controllers
 {
@@ -260,68 +261,82 @@ namespace hihapi.Controllers
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
-            var maxdate = dtDates.Max();
-
-            // 3. Calculate the amount
-            var results = (
-                from docitem in _context.FinanceDocumentItem
-                join docheader in _context.FinanceDocument
-                    on docitem.DocID equals docheader.ID
-                join trantype in _context.FinTransactionType
-                    on docitem.TranType equals trantype.ID
-                where docheader.HomeID == hid && docitem.AccountID == accountid && docheader.TranDate <= maxdate
-                select new
-                {
-                    TranDate = docheader.TranDate,
-                    IsExpense = trantype.Expense,
-                    TranCurr = docheader.TranCurr,
-                    TranCurr2 = docheader.TranCurr2,
-                    UseCurr2 = docitem.UseCurr2,
-                    TranAmount = docitem.TranAmount,
-                    docheader.ExgRate,
-                    docheader.ExgRate2,
-                }
-                into docitem2
-                group docitem2 by new { docitem2.TranDate, docitem2.IsExpense, docitem2.TranCurr, docitem2.TranCurr2, docitem2.UseCurr2, docitem2.ExgRate, docitem2.ExgRate2 } into docitem3
-                select new
-                {
-                    TranDate = docitem3.Key.TranDate,
-                    IsExpense = docitem3.Key.IsExpense,
-                    TranCurr = docitem3.Key.TranCurr,
-                    TranCurr2 = docitem3.Key.TranCurr2,
-                    UseCurr2 = docitem3.Key.UseCurr2,
-                    ExgRate = docitem3.Key.ExgRate,
-                    ExgRate2 = docitem3.Key.ExgRate2,
-                    TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
-                }).ToList();
-
+            List<DateTime> listDates = new List<DateTime>();
+            listDates.AddRange(dtDates);
+            listDates.Sort();
+            var lastDate = DateTime.MinValue;
             Double doubleAmount = 0;
+            List<FinanceAccountBalancePerDate> listResults = new List<FinanceAccountBalancePerDate>();
 
-            foreach (var rst in results)
+            foreach (var curdate in listDates)
             {
-                var amountLC = rst.TranAmount;
-                // Calculte the amount
-                if (rst.IsExpense)
-                    amountLC = -1 * rst.TranAmount;
-                if (rst.UseCurr2 != null)
-                {
-                    if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
+                var results = (
+                    from docitem in _context.FinanceDocumentItem
+                    join docheader in _context.FinanceDocument
+                        on docitem.DocID equals docheader.ID
+                    join trantype in _context.FinTransactionType
+                        on docitem.TranType equals trantype.ID
+                    where docheader.HomeID == hid && docitem.AccountID == accountid && docheader.TranDate >= lastDate && docheader.TranDate <= curdate
+                    select new
                     {
-                        amountLC *= (Double)rst.ExgRate2.GetValueOrDefault();
+                        TranDate = docheader.TranDate,
+                        IsExpense = trantype.Expense,
+                        TranCurr = docheader.TranCurr,
+                        TranCurr2 = docheader.TranCurr2,
+                        UseCurr2 = docitem.UseCurr2,
+                        TranAmount = docitem.TranAmount,
+                        docheader.ExgRate,
+                        docheader.ExgRate2,
                     }
-                }
-                else
-                {
-                    if (rst.ExgRate != null && rst.ExgRate.GetValueOrDefault() > 0)
+                    into docitem2
+                    group docitem2 by new { docitem2.TranDate, docitem2.IsExpense, docitem2.TranCurr, docitem2.TranCurr2, docitem2.UseCurr2, docitem2.ExgRate, docitem2.ExgRate2 } into docitem3
+                    select new
                     {
-                        amountLC *= (Double)rst.ExgRate.GetValueOrDefault();
-                    }
-                }
+                        TranDate = docitem3.Key.TranDate,
+                        IsExpense = docitem3.Key.IsExpense,
+                        TranCurr = docitem3.Key.TranCurr,
+                        TranCurr2 = docitem3.Key.TranCurr2,
+                        UseCurr2 = docitem3.Key.UseCurr2,
+                        ExgRate = docitem3.Key.ExgRate,
+                        ExgRate2 = docitem3.Key.ExgRate2,
+                        TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
+                    }).ToList();
+                lastDate = curdate;
 
-                doubleAmount += amountLC;
+                doubleAmount = 0;
+                foreach (var rst in results)
+                {
+                    var amountLC = rst.TranAmount;
+                    // Calculte the amount
+                    if (rst.IsExpense)
+                        amountLC = -1 * rst.TranAmount;
+                    if (rst.UseCurr2 != null)
+                    {
+                        if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
+                        {
+                            amountLC *= (Double)rst.ExgRate2.GetValueOrDefault();
+                        }
+                    }
+                    else
+                    {
+                        if (rst.ExgRate != null && rst.ExgRate.GetValueOrDefault() > 0)
+                        {
+                            amountLC *= (Double)rst.ExgRate.GetValueOrDefault();
+                        }
+                    }
+
+                    doubleAmount += amountLC;
+                }
+                listResults.Add(new FinanceAccountBalancePerDate
+                {
+                    HomeID = hid,
+                    AccountID = accountid,
+                    BalanceDate = curdate,
+                    Balance = (decimal)doubleAmount,                    
+                });
             }
 
-            return Ok(doubleAmount);
+            return Ok(listResults);
         }
 
         /// <summary>
