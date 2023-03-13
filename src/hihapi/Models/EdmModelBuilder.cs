@@ -179,7 +179,8 @@ namespace hihapi.Models
             var actionGetBalanceEx = reportEntity.Collection.Action("GetAccountBalanceEx");
             actionGetBalanceEx.Parameter<int>("HomeID");
             actionGetBalanceEx.Parameter<int>("AccountID");
-            actionGetBalanceEx.Parameter<List<DateTime>>("SelectedDates");
+            actionGetBalanceEx.CollectionParameter<String>("SelectedDates");
+            //actionGetBalanceEx.Parameter<List<String>>("SelectedDates"); // Must be List<String> not String[] because there is constructor for String[] when parsing the JSON
             actionGetBalanceEx.ReturnsFromEntitySet<FinanceAccountBalancePerDate>("FinanceAccountBalancePerDates");
             // Action: GetMonthlyReportByTranType
             var actionReportCurrentMonthByTT = reportEntity.Collection.Action("GetReportByTranType");

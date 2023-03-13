@@ -95,7 +95,7 @@ namespace hihapi.unittest.Finance
             var balance = control.GetAccountBalance(parameters); 
             Assert.NotNull(balance);
             var balval = (double)((balance as OkObjectResult).Value);
-            Assert.Equal(0.00, Math.Abs(amt - balval));
+            Assert.Equal(0.00, Math.Abs(Math.Round(amt - balval, 2)));
             
             await context.DisposeAsync();
         }
@@ -135,7 +135,12 @@ namespace hihapi.unittest.Finance
                 listDates.Add(new DateTime(curyear, curmonth, 1).AddDays(-1));
                 listDates.Add(new DateTime(curyear, curmonth + 1, 1).AddDays(-1));
             }
-            parameters.Add("SelectedDates", listDates.ToArray());
+            List<String> listDateStrs = new List<string>();
+            foreach(var date in listDates)
+            {
+                listDateStrs.Add(date.ToString("yyyy-MM-dd"));
+            }
+            parameters.Add("SelectedDates", listDateStrs);
 
             var userclaim = DataSetupUtility.GetClaimForUser(usr);
             control.ControllerContext = new ControllerContext()

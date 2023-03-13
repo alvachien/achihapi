@@ -241,7 +241,7 @@ namespace hihapi.Controllers
             // 0. Get inputted parameter
             Int32 hid = (Int32)parameters["HomeID"];
             Int32 accountid = (Int32)parameters["AccountID"];
-            DateTime[] dtDates = (DateTime[])parameters["SelectedDates"];
+            IEnumerable<String> arDateStrs = parameters["SelectedDates"] as IEnumerable<String>;
 
             // 1. Check User
             String usrName = String.Empty;
@@ -262,7 +262,8 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
 
             List<DateTime> listDates = new List<DateTime>();
-            listDates.AddRange(dtDates);
+            foreach (var dstr in arDateStrs)
+                listDates.Add(DateTime.Parse(dstr));
             listDates.Sort();
             var lastDate = DateTime.MinValue;
             Double doubleAmount = 0;
