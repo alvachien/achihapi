@@ -880,6 +880,8 @@ namespace hihapi.Controllers
                                  && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
                                  && item.TransactionType != FinanceTransactionType.TranType_AdvancePaymentOut
                                  && item.TransactionType != FinanceTransactionType.TranType_AdvanceReceiveIn
+                                 && item.TransactionType != FinanceTransactionType.TranType_AssetValueDecrease
+                                 && item.TransactionType != FinanceTransactionType.TranType_AssetValueIncrease
                                group item by new { item.IsExpense } into newresult
                                select new
                                {
@@ -926,6 +928,12 @@ namespace hihapi.Controllers
                                  && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                                  && item.TransactionType != FinanceTransactionType.TranType_TransferIn
                                  && item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                                 && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                                 && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                                 && item.TransactionType != FinanceTransactionType.TranType_AdvancePaymentOut
+                                 && item.TransactionType != FinanceTransactionType.TranType_AdvanceReceiveIn
+                                 && item.TransactionType != FinanceTransactionType.TranType_AssetValueDecrease
+                                 && item.TransactionType != FinanceTransactionType.TranType_AssetValueIncrease
                                group item by new { item.IsExpense } into newresult
                                select new
                                {
@@ -972,7 +980,13 @@ namespace hihapi.Controllers
                              && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                              && item.TransactionType != FinanceTransactionType.TranType_TransferIn
                              && item.TransactionType != FinanceTransactionType.TranType_TransferOut
-                           group item by new { item.IsExpense } into newresult
+                             && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                             && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                             && item.TransactionType != FinanceTransactionType.TranType_AdvancePaymentOut
+                             && item.TransactionType != FinanceTransactionType.TranType_AdvanceReceiveIn
+                             && item.TransactionType != FinanceTransactionType.TranType_AssetValueDecrease
+                             && item.TransactionType != FinanceTransactionType.TranType_AssetValueIncrease
+                             group item by new { item.IsExpense } into newresult
                            select new
                            {
                                HomeID = hid,
