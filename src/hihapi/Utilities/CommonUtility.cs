@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using hihapi.Exceptions;
@@ -50,6 +51,19 @@ namespace hihapi.Utilities
                 return ctrl.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return String.Empty;
         }
+
+        internal static string EnsureFolderExistence(String rootPath, String subFolders)
+        {
+            var fullPath = Path.Combine(rootPath, subFolders);
+            if (!Directory.Exists(fullPath))
+            {
+                Directory.CreateDirectory(fullPath);
+            }
+            return fullPath;
+        }
+
+        internal static string UploadFolder { get; set; }
+        internal static string BlogFolder { get; set; }
     }
 
     public class CommonUtility

@@ -3,6 +3,7 @@
   <PropertyGroup>
 	  <TargetFramework>net8.0</TargetFramework>
 	  <UserSecretsId>cf80adf9-ce70-4ce9-bb4e-a73887a492a6</UserSecretsId>
+	  <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
     <Version>1.6.355</Version>
     <Authors>Alva Chien</Authors>
     <Product>H.I.H.</Product>
@@ -45,9 +46,8 @@
     <PackageReference Include="Microsoft.AspNetCore.OData" Version="9.2.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Sqls\Delta\v1.sql" />

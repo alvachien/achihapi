@@ -27,10 +27,10 @@ namespace hihapi.Controllers
         [ResponseCache(Duration = 864000)]
         public IActionResult Get(string filename)
         {
-            String strFullFile = Startup.UploadFolder + "\\" + filename;
+            String strFullFile = HIHAPIUtility.UploadFolder + "\\" + filename;
             if (System.IO.File.Exists(strFullFile))
             {
-                var image = System.IO.File.OpenRead(Startup.UploadFolder + "\\" + filename);
+                var image = System.IO.File.OpenRead(HIHAPIUtility.UploadFolder + "\\" + filename);
                 return File(image, "image/jpeg");
             }
 
@@ -66,7 +66,7 @@ namespace hihapi.Controllers
                     var fileext = filename1.Substring(idx1);
                     var newfilename = Guid.NewGuid().ToString("N") + fileext;
 
-                    using (var fileStream = new FileStream(Path.Combine(Startup.UploadFolder, newfilename), FileMode.Create))
+                    using (var fileStream = new FileStream(Path.Combine(HIHAPIUtility.UploadFolder, newfilename), FileMode.Create))
                     {
                         await file.CopyToAsync(fileStream);
                     }
@@ -93,7 +93,7 @@ namespace hihapi.Controllers
                     var fileext = filename1.Substring(idx1);
                     var newfilename = Guid.NewGuid().ToString("N") + fileext;
 
-                    using (var fileStream = new FileStream(Path.Combine(Startup.UploadFolder, newfilename), FileMode.Create))
+                    using (var fileStream = new FileStream(Path.Combine(HIHAPIUtility.UploadFolder, newfilename), FileMode.Create))
                     {
                         await file.CopyToAsync(fileStream);
                     }
@@ -134,7 +134,7 @@ namespace hihapi.Controllers
         [Authorize]
         public IActionResult DeleteUploadedFile(String strfile)
         {
-            var fileFullPath = Path.Combine(Startup.UploadFolder, strfile);
+            var fileFullPath = Path.Combine(HIHAPIUtility.UploadFolder, strfile);
             var filename = Path.GetFileNameWithoutExtension(fileFullPath);
             var fileext = Path.GetExtension(fileFullPath);
 

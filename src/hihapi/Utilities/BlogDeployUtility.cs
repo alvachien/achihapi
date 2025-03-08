@@ -41,7 +41,7 @@ namespace hihapi.Utilities
 
         public static void UpdatePostSetting(BlogUserSetting setting)
         {
-            string rootFolder = Path.Combine(Startup.BlogFolder, setting.DeployFolder);
+            string rootFolder = Path.Combine(HIHAPIUtility.BlogFolder, setting.DeployFolder);
             if (!Directory.Exists(rootFolder))
             {
                 Directory.CreateDirectory(rootFolder);
@@ -68,12 +68,12 @@ namespace hihapi.Utilities
 
         public static async Task DeployPost(string deployFolder, BlogPost post, List<BlogCollection> blogCollections)
         {
-            if (String.IsNullOrEmpty(deployFolder) || !Directory.Exists(Startup.BlogFolder))
+            if (String.IsNullOrEmpty(deployFolder) || !Directory.Exists(HIHAPIUtility.BlogFolder))
             {
-                throw new Exception("Deploy Folder" + deployFolder + "; Blog Folder" + Startup.BlogFolder);
+                throw new Exception("Deploy Folder" + deployFolder + "; Blog Folder" + HIHAPIUtility.BlogFolder);
             }
 
-            string rootFolder = Path.Combine(Startup.BlogFolder, deployFolder);
+            string rootFolder = Path.Combine(HIHAPIUtility.BlogFolder, deployFolder);
             string postFolder = Path.Combine(rootFolder, PostsFolder);
             if (!Directory.Exists(rootFolder))
             {
@@ -157,12 +157,12 @@ namespace hihapi.Utilities
  
         public static void RevokePostDeliver(string deployFolder, int postid)
         {
-            if (String.IsNullOrEmpty(deployFolder) || !Directory.Exists(Startup.BlogFolder))
+            if (String.IsNullOrEmpty(deployFolder) || !Directory.Exists(HIHAPIUtility.BlogFolder))
             {
                 return;
             }
 
-            string rootFolder = Path.Combine(Startup.BlogFolder, deployFolder);
+            string rootFolder = Path.Combine(HIHAPIUtility.BlogFolder, deployFolder);
             if (!Directory.Exists(rootFolder))
             {
                 return;

@@ -10,8 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.Net.Http;

@@ -1,7 +1,6 @@
 using System;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using hihapi.Exceptions;
 
 public class ErrorHandlingMiddleware
@@ -34,7 +33,7 @@ public class ErrorHandlingMiddleware
             || ex is UnauthorizedAccessException) code = StatusCodes.Status401Unauthorized;
         else if (ex is BadRequestException)   code = StatusCodes.Status400BadRequest;
 
-        var result = JsonConvert.SerializeObject(new { error = ex.Message });
+        var result = System.Text.Json.JsonSerializer.Serialize(new { error = ex.Message });
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)code;
         return context.Response.WriteAsync(result);
