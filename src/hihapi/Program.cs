@@ -10,13 +10,9 @@ using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
-using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.OData;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using Microsoft.Extensions.FileProviders;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,7 +50,7 @@ builder.Host.UseSerilog((context, config) =>
     }
 });
 
-// Ensure 
+// Ensure
 HIHAPIUtility.UploadFolder = HIHAPIUtility.EnsureFolderExistence(builder.Environment.ContentRootPath, @"data/uploads");
 HIHAPIUtility.BlogFolder = HIHAPIUtility.EnsureFolderExistence(builder.Environment.ContentRootPath, @"data/blogs");
 
