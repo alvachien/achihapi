@@ -172,22 +172,22 @@ else
     app.UseHsts();
 }
 
-app.UseCors(MyAllowSpecificOrigins);
-
-app.UseHttpsRedirection();
+//app.UseCors(MyAllowSpecificOrigins);
+//app.UseHttpsRedirection();
 
 app.UseSerilogRequestLogging();
 
 app.UseODataBatching();
 
-app.UseRouting()
-    .UseEndpoints(endpoints =>
-    {
-        endpoints.MapControllers();
-    }); ;
-
 app.UseAuthentication();
-app.UseAuthorization();
+
+app.UseRouting()
+    .UseHttpsRedirection()
+    .UseAuthorization()
+    .UseCors(MyAllowSpecificOrigins)
+    .UseEndpoints(endpoints => {
+        endpoints.MapControllers();
+        });
 
 app.UseMiddleware(typeof(ErrorHandlingMiddleware));
 
