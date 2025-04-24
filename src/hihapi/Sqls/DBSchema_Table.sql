@@ -324,7 +324,7 @@ CREATE TABLE [dbo].[t_fin_account_ext_as] (
 );
 CREATE TABLE [dbo].[t_fin_account_ext_loan] (
     [ACCOUNTID]     INT             NOT NULL,
-    [STARTDATE]     DATET           NOT NULL,
+    [STARTDATE]     DATE            NOT NULL,
     [ANNUALRATE]    DECIMAL (17, 2) NULL,
     [INTERESTFREE]  BIT             NULL,
     [REPAYMETHOD]   TINYINT         NULL,

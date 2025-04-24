@@ -803,46 +803,46 @@ from
 GO
 
 -- Updated at 2017.10.02
-/****** Object:  View [dbo].[v_lrn_usrlrndate]    Script Date: 2017-10-02 10:35:46 AM ******/
-SET ANSI_NULLS ON
-GO
+--/****** Object:  View [dbo].[v_lrn_usrlrndate]    Script Date: 2017-10-02 10:35:46 AM ******/
+--SET ANSI_NULLS ON
+--GO
 
-SET QUOTED_IDENTIFIER ON
-GO
+--SET QUOTED_IDENTIFIER ON
+--GO
 
-DROP VIEW IF EXISTS [dbo].[v_lrn_usrlrndate];
-GO
+--DROP VIEW IF EXISTS [dbo].[v_lrn_usrlrndate];
+--GO
 
-create view [dbo].[v_lrn_usrlrndate]
-as
-select taba.HID, taba.USERID, tabb.[DISPLAYAS], taba.[LEARNDATE], taba.learncount
-from
-(select HID, USERID, [LEARNDATE], count(*) as learncount from t_learn_hist
-	group by hid, userid, [LEARNDATE] ) taba
-	left outer join t_homemem tabb
-	on taba.hid = tabb.HID AND taba.userid = tabb.[USER];
+--create view [dbo].[v_lrn_usrlrndate]
+--as
+--select taba.HID, taba.USERID, tabb.[DISPLAYAS], taba.[LEARNDATE], taba.learncount
+--from
+--(select HID, USERID, [LEARNDATE], count(*) as learncount from t_learn_hist
+--	group by hid, userid, [LEARNDATE] ) taba
+--	left outer join t_homemem tabb
+--	on taba.hid = tabb.HID AND taba.userid = tabb.[USER];
 	
-GO
+--GO
 
 
-/****** Object:  View [dbo].[v_lrn_ctgylrndate]    Script Date: 2017-10-02 10:44:17 AM ******/
-SET ANSI_NULLS ON
-GO
+--/****** Object:  View [dbo].[v_lrn_ctgylrndate]    Script Date: 2017-10-02 10:44:17 AM ******/
+--SET ANSI_NULLS ON
+--GO
 
-SET QUOTED_IDENTIFIER ON
-GO
+--SET QUOTED_IDENTIFIER ON
+--GO
 
-DROP VIEW IF EXISTS [dbo].[v_lrn_ctgylrndate];
-GO
+--DROP VIEW IF EXISTS [dbo].[v_lrn_ctgylrndate];
+--GO
 
-create view [dbo].[v_lrn_ctgylrndate]
-as
-select HID, CATEGORY, LEARNDATE, COUNT(*) as learncount
-from (
-select taba.HID, taba.USERID, tabb.CATEGORY, taba.LEARNDATE from t_learn_hist taba
-	left outer join t_learn_obj tabb on taba.objectid = tabb.ID ) tabc
-	group by HID, CATEGORY, LEARNDATE;
-GO
+--create view [dbo].[v_lrn_ctgylrndate]
+--as
+--select HID, CATEGORY, LEARNDATE, COUNT(*) as learncount
+--from (
+--select taba.HID, taba.USERID, tabb.CATEGORY, taba.LEARNDATE from t_learn_hist taba
+--	left outer join t_learn_obj tabb on taba.objectid = tabb.ID ) tabc
+--	group by HID, CATEGORY, LEARNDATE;
+--GO
 
 -- Updated at 2017.10.24
 /****** Object:  View [dbo].[v_fin_report_order]    Script Date: 2017-10-24 10:04:07 PM ******/
@@ -895,26 +895,26 @@ SELECT tab_a.[ORDERID],
 
 GO
 
--- Updated at 2017.10.29
-/****** Object:  View [dbo].[v_lrn_qtnbank]    Script Date: 2017-10-29 12:26:21 AM ******/
-SET ANSI_NULLS ON
-GO
+---- Updated at 2017.10.29
+--/****** Object:  View [dbo].[v_lrn_qtnbank]    Script Date: 2017-10-29 12:26:21 AM ******/
+--SET ANSI_NULLS ON
+--GO
 
-SET QUOTED_IDENTIFIER ON
-GO
+--SET QUOTED_IDENTIFIER ON
+--GO
 
-DROP VIEW IF EXISTS [dbo].[v_lrn_qtnbank]
-GO
+--DROP VIEW IF EXISTS [dbo].[v_lrn_qtnbank]
+--GO
 
-create view [dbo].[v_lrn_qtnbank]
-as
-select taba.ID, taba.HID, taba.[Type], taba.Question, tabb.SUBITEM, tabb.DETAIL,  
-	taba.BriefAnswer, taba.CREATEDBY, taba.CREATEDAT, taba.UPDATEDBY, taba.UPDATEDAT,
-	tabb.OTHERS
-	 from t_learn_qtn_bank taba
-	left outer join t_learn_qtn_bank_sub tabb
-		on taba.ID = tabb.QTNID
-GO
+--create view [dbo].[v_lrn_qtnbank]
+--as
+--select taba.ID, taba.HID, taba.[Type], taba.Question, tabb.SUBITEM, tabb.DETAIL,  
+--	taba.BriefAnswer, taba.CREATEDBY, taba.CREATEDAT, taba.UPDATEDBY, taba.UPDATEDAT,
+--	tabb.OTHERS
+--	 from t_learn_qtn_bank taba
+--	left outer join t_learn_qtn_bank_sub tabb
+--		on taba.ID = tabb.QTNID
+--GO
 
 -- Updated at 2018.3.14
 /****** Object:  View [dbo].[v_event_habitdetail]    Script Date: 2018-03-14 6:58:39 PM ******/
