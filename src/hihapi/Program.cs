@@ -56,14 +56,7 @@ HIHAPIUtility.BlogFolder = HIHAPIUtility.EnsureFolderExistence(builder.Environme
 
 // Connection string
 var connectionString = string.Empty;
-if (builder.Environment.IsDevelopment())
-{
-    connectionString = builder.Configuration.GetConnectionString("DefaultDB");
-}
-else if (builder.Environment.IsProduction())
-{
-    connectionString = builder.Configuration.GetConnectionString("DefaultDB");
-}
+connectionString = builder.Configuration.GetConnectionString("DefaultDB");
 if (connectionString.Length > 0)
 {
     if (connectionString.EndsWith(';'))
@@ -187,7 +180,7 @@ app.UseRouting()
     .UseCors(MyAllowSpecificOrigins)
     .UseEndpoints(endpoints => {
         endpoints.MapControllers();
-        });
+     });
 
 app.UseMiddleware(typeof(ErrorHandlingMiddleware));
 

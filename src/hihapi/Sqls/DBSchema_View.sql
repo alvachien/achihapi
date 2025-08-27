@@ -619,17 +619,17 @@ FROM
 
 GO
 
-/****** Object:  View [dbo].[V_FIN_GRP_ORD_TRANEXP]    Script Date: 2017-04-22 8:47:02 PM ******/
+/****** Object:  View [dbo].[v_fin_grp_ord_tranexp]    Script Date: 2017-04-22 8:47:02 PM ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
 
-DROP VIEW IF EXISTS [dbo].[V_FIN_GRP_ORD_TRANEXP]
+DROP VIEW IF EXISTS [dbo].[v_fin_grp_ord_tranexp]
 GO
 
-CREATE VIEW [dbo].[V_FIN_GRP_ORD_TRANEXP]
+CREATE VIEW [dbo].[v_fin_grp_ord_tranexp]
 AS
 with docitem_curr1_basecurr as 
 (
@@ -759,24 +759,24 @@ SELECT tab_a.[ORDERID],
 		[t_fin_order].[HID] AS [HID],
 		[t_fin_order].[NAME] AS [ORDERNAME],
 		(case
-            when ([v_fin_grp_order_tranexp].[balance_lc] is not null) then [v_fin_grp_order_tranexp].[balance_lc]
+            when ([v_fin_grp_ord_tranexp].[balance_lc] is not null) then [v_fin_grp_ord_tranexp].[balance_lc]
             else 0.0
         end) AS [balance_lc]
 	FROM [dbo].[t_fin_order]
-	LEFT OUTER JOIN [dbo].[v_fin_grp_order_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_order_tranexp].orderid
-		AND [v_fin_grp_order_tranexp].[trantype_exp] = 0 ) tab_a
+	LEFT OUTER JOIN [dbo].[v_fin_grp_ord_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_ord_tranexp].orderid
+		AND [v_fin_grp_ord_tranexp].[trantype_exp] = 0 ) tab_a
 
 	JOIN 
 
 	( SELECT [t_fin_order].[ID] AS [ORDERID],
 		[t_fin_order].[NAME] AS [ORDERNAME],
 		(case
-            when ([v_fin_grp_order_tranexp].[balance_lc] is not null) then [v_fin_grp_order_tranexp].[balance_lc] * -1
+            when ([v_fin_grp_ord_tranexp].[balance_lc] is not null) then [v_fin_grp_ord_tranexp].[balance_lc] * -1
             else 0.0
         end) AS [balance_lc]
 	FROM [dbo].[t_fin_order]
-	LEFT OUTER JOIN [dbo].[v_fin_grp_order_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_order_tranexp].orderid
-		AND [v_fin_grp_order_tranexp].[trantype_exp] = 1 ) tab_b
+	LEFT OUTER JOIN [dbo].[v_fin_grp_ord_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_ord_tranexp].orderid
+		AND [v_fin_grp_ord_tranexp].[trantype_exp] = 1 ) tab_b
 
 	ON tab_a.[ORDERID] = tab_b.[ORDERID]
 
@@ -872,24 +872,24 @@ SELECT tab_a.[ORDERID],
 		[t_fin_order].[VALID_FROM] AS [ORDERVALID_FROM],
 		[t_fin_order].[VALID_TO] AS [ORDERVALID_TO],
 		(case
-            when ([v_fin_grp_order_tranexp].[balance_lc] is not null) then [v_fin_grp_order_tranexp].[balance_lc]
+            when ([v_fin_grp_ord_tranexp].[balance_lc] is not null) then [v_fin_grp_ord_tranexp].[balance_lc]
             else 0.0
         end) AS [balance_lc]
 	FROM [dbo].[t_fin_order]
-	LEFT OUTER JOIN [dbo].[v_fin_grp_order_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_order_tranexp].orderid
-		AND [v_fin_grp_order_tranexp].[trantype_exp] = 0 ) tab_a
+	LEFT OUTER JOIN [dbo].[v_fin_grp_ord_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_ord_tranexp].orderid
+		AND [v_fin_grp_ord_tranexp].[trantype_exp] = 0 ) tab_a
 
 	JOIN 
 
 	( SELECT [t_fin_order].[ID] AS [ORDERID],
 		[t_fin_order].[NAME] AS [ORDERNAME],
 		(case
-            when ([v_fin_grp_order_tranexp].[balance_lc] is not null) then [v_fin_grp_order_tranexp].[balance_lc] * -1
+            when ([v_fin_grp_ord_tranexp].[balance_lc] is not null) then [v_fin_grp_ord_tranexp].[balance_lc] * -1
             else 0.0
         end) AS [balance_lc]
 	FROM [dbo].[t_fin_order]
-	LEFT OUTER JOIN [dbo].[v_fin_grp_order_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_order_tranexp].orderid
-		AND [v_fin_grp_order_tranexp].[trantype_exp] = 1 ) tab_b
+	LEFT OUTER JOIN [dbo].[v_fin_grp_ord_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_ord_tranexp].orderid
+		AND [v_fin_grp_ord_tranexp].[trantype_exp] = 1 ) tab_b
 
 	ON tab_a.[ORDERID] = tab_b.[ORDERID]
 
