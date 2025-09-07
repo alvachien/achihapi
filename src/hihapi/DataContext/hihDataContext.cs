@@ -146,7 +146,7 @@ namespace hihapi
                     .IsUnique();
 
                 entity.HasOne(d => d.HomeDefinition)
-                    .WithMany(p => p.HomeMembers)
+                    .WithMany(p => p.Members)
                     .HasForeignKey(d => d.HomeID)
                     .HasConstraintName("FK_t_homemem_HID");
             });
@@ -181,11 +181,11 @@ namespace hihapi
                     entity.Property(e => e.UpdatedAt)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceAccountCategories)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_account_ctgy_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceAccountCategories)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_account_ctgy_HID");
             });
             modelBuilder.Entity<FinanceAssetCategory>(entity =>
             {
@@ -211,11 +211,11 @@ namespace hihapi
                     entity.Property(e => e.UpdatedAt)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceAssetCategories)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_fin_asset_ctgy_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceAssetCategories)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_fin_asset_ctgy_HID");
             });
             modelBuilder.Entity<FinanceDocumentType>(entity =>
             {
@@ -242,11 +242,11 @@ namespace hihapi
                     entity.Property(e => e.UpdatedAt)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceDocumentTypes)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_fin_doctype_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceDocumentTypes)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_fin_doctype_HID");
             });
             modelBuilder.Entity<FinanceTransactionType>(entity =>
             {
@@ -271,11 +271,11 @@ namespace hihapi
                     entity.Property(e => e.UpdatedAt)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceTransactionTypes)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_fin_trantype_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceTransactionTypes)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_fin_trantype_HID");
             });
        
             modelBuilder.Entity<FinanceAccount> (entity => {
@@ -299,10 +299,10 @@ namespace hihapi
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
 
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceAccounts)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_account_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceAccounts)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .HasConstraintName("FK_t_account_HID");
             });
             modelBuilder.Entity<FinanceAccountExtraAS>(entity => {
                 if (TestingMode)
@@ -364,10 +364,10 @@ namespace hihapi
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
 
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceDocuments)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_fin_document_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceDocuments)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .HasConstraintName("FK_t_fin_document_HID");
             });
             modelBuilder.Entity<FinanceDocumentItem>(entity => {
                 entity.HasKey(p => new { p.DocID, p.ItemID });
@@ -440,10 +440,10 @@ namespace hihapi
                     entity.Property(e => e.UpdatedAt)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceControlCenters)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_fin_cc_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceControlCenters)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .HasConstraintName("FK_t_fin_cc_HID");
             });
             modelBuilder.Entity<FinanceOrder>(entity => {
                 if (!TestingMode)
@@ -466,10 +466,10 @@ namespace hihapi
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
 
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceOrders)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_fin_order_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinanceOrders)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .HasConstraintName("FK_t_fin_order_HID");
             });
             modelBuilder.Entity<FinanceOrderSRule>(entity => {
                 entity.HasKey(p => new { p.OrderID, p.RuleID });
@@ -500,10 +500,10 @@ namespace hihapi
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
 
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinancePlans)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_fin_plan_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.FinancePlans)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .HasConstraintName("FK_t_fin_plan_HID");
             });
             modelBuilder.Entity<FinanceDocumentItemView>(entity =>
             {
@@ -651,11 +651,11 @@ namespace hihapi
                     entity.Property(e => e.UpdatedAt)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.PersonRoles)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_personrole_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.PersonRoles)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_lib_personrole_HID");
             });
 
             modelBuilder.Entity<LibraryPerson>(entity =>
@@ -681,11 +681,11 @@ namespace hihapi
                     entity.Property(e => e.UpdatedAt)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.Persons)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_person_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.Persons)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_lib_person_HID");
                 
                 entity.HasMany(b => b.Roles)
                     .WithMany(c => c.Persons)
@@ -739,11 +739,11 @@ namespace hihapi
                     entity.Property(e => e.UpdatedAt)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.OrganizationTypes)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_orgtype_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.OrganizationTypes)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_lib_orgtype_HID");
             });
 
             modelBuilder.Entity<LibraryOrganization>(entity =>
@@ -769,11 +769,11 @@ namespace hihapi
                     entity.Property(e => e.UpdatedAt)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.Organizations)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_org_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.Organizations)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_lib_org_HID");
 
                 entity.HasMany(b => b.Types)
                     .WithMany(c => c.Organizations)
@@ -816,11 +816,11 @@ namespace hihapi
                     entity.Property(e => e.UpdatedAt)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.BookCategories)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_bookctgy_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.BookCategories)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_lib_bookctgy_HID");
             });
 
             modelBuilder.Entity<LibraryBookLocation>(entity =>
@@ -846,11 +846,11 @@ namespace hihapi
                     entity.Property(e => e.UpdatedAt)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.BookLocations)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_bookctgy_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.BookLocations)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_lib_bookctgy_HID");
             });
 
             modelBuilder.Entity<LibraryBook>(entity =>
@@ -877,11 +877,11 @@ namespace hihapi
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
 
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.Books)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_book_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.Books)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_lib_book_HID");
 
                 entity.HasMany(b => b.Categories)
                     .WithMany(c => c.Books)
@@ -996,11 +996,11 @@ namespace hihapi
                     entity.Property(e => e.StartDate)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.NormalEvents)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_event_hid");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.NormalEvents)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_event_hid");
                 entity.HasOne(d => d.CurrentRecurEvent)
                     .WithMany(p => p.RelatedEvents)
                     .HasForeignKey(d => d.RefRecurrID)
@@ -1032,11 +1032,11 @@ namespace hihapi
                     entity.Property(e => e.StartDate)
                         .HasDefaultValueSql("CURRENT_DATE");
                 }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.RecurEvents)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_event_recur_HID");
+                //entity.HasOne(d => d.CurrentHome)
+                //    .WithMany(p => p.RecurEvents)
+                //    .HasForeignKey(d => d.HomeID)
+                //    .OnDelete(DeleteBehavior.Cascade)
+                //    .HasConstraintName("FK_t_event_recur_HID");
             });
         }
     }

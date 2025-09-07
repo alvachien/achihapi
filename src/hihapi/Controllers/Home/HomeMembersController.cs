@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System;
+using System.Linq;
 using hihapi.Utilities;
+using hihapi.Models;
 
 namespace hihapi.Controllers
 {
@@ -45,7 +47,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            return Ok(_context.HomeMembers);
+            return Ok(from mem in _context.HomeMembers select mem);
         }
     }
 }
