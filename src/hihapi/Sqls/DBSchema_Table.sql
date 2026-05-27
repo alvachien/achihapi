@@ -48,7 +48,6 @@ CREATE TABLE [dbo].[t_homemem] (
     [UPDATEDBY] NVARCHAR (50) NULL,
     [UPDATEDAT] DATE          NULL,
     CONSTRAINT [PK_t_homemem] PRIMARY KEY CLUSTERED ([HID] ASC, [USER] ASC),
-    CONSTRAINT [UK_t_homemem_USER] UNIQUE NONCLUSTERED ([HID] ASC, [USER] ASC),
     CONSTRAINT [FK_t_homemem_HID] FOREIGN KEY ([HID]) REFERENCES [dbo].[t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -324,7 +323,7 @@ CREATE TABLE [dbo].[t_fin_account_ext_as] (
 );
 CREATE TABLE [dbo].[t_fin_account_ext_loan] (
     [ACCOUNTID]     INT             NOT NULL,
-    [STARTDATE]     DATET           NOT NULL,
+    [STARTDATE]     DATE            NOT NULL,
     [ANNUALRATE]    DECIMAL (17, 2) NULL,
     [INTERESTFREE]  BIT             NULL,
     [REPAYMETHOD]   TINYINT         NULL,
@@ -557,7 +556,7 @@ CREATE TABLE [t_lib_org_type](
 	[ORG_ID] [int] NOT NULL,
 	[TYPE_ID] [int] NOT NULL,
 	CONSTRAINT [PK_t_lib_org_type] PRIMARY KEY CLUSTERED ( [ORG_ID] ASC, [TYPE_ID] ASC ),
-	CONSTRAINT [FK_lib_org_type_org] FOREIGN KEY([ORG_ID]) REFERENCES [t_lib_org_def] ([ID]),
+	CONSTRAINT [FK_lib_org_type_org] FOREIGN KEY([ORG_ID]) REFERENCES [t_lib_org_def] ([ID]) ON DELETE CASCADE,
 	CONSTRAINT [FK_t_lib_org_type_type] FOREIGN KEY([TYPE_ID]) REFERENCES [t_lib_orgtype_def] ([ID])
 );
 

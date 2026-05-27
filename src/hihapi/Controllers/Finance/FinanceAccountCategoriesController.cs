@@ -87,7 +87,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             // Check
@@ -112,7 +112,7 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == ctgy.HomeID.Value && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == ctgy.HomeID.Value && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -134,7 +134,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             if (key != update.ID)
@@ -158,7 +158,7 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == update.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == update.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -214,7 +214,7 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == cc.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == cc.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();

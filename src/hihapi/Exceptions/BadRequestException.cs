@@ -3,10 +3,14 @@ using System.Diagnostics;
 
 namespace hihapi.Exceptions
 {
-    [Serializable, DebuggerDisplay("{Message}")]
-    public sealed class BadRequestException : InvalidOperationException 
+    [DebuggerDisplay("{Message}")]
+    public sealed class BadRequestException : ArgumentException
     {
-        public BadRequestException(string msg): base(msg, null)
+        public BadRequestException(string msg) : base(msg)
+        {
+        }
+
+        public BadRequestException(string msg, Exception innerException) : base(msg, innerException)
         {
         }
     }

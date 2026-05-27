@@ -28,21 +28,7 @@ namespace hihapi.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            // User
-            string usrName;
-            try
-            {
-                usrName = HIHAPIUtility.GetUserID(this);
-                if (String.IsNullOrEmpty(usrName))
-                {
-                    throw new UnauthorizedAccessException();
-                }
-            }
-            catch
-            {
-                throw new UnauthorizedAccessException();
-            }
-
+            var usrName = HIHAPIUtility.GetAuthenticatedUserName(this);
             return Ok(_context.BlogCollections.Where(p => p.Owner == usrName));
         }
 
@@ -50,7 +36,8 @@ namespace hihapi.Controllers
         [HttpGet]
         public BlogCollection Get([FromODataUri] int key)
         {
-            return _context.BlogCollections.Where(p => p.ID == key).SingleOrDefault();
+            var usrName = HIHAPIUtility.GetAuthenticatedUserName(this);
+            return _context.BlogCollections.Where(p => p.ID == key && p.Owner == usrName).SingleOrDefault();
         }
 
         // POST: /BlogCollections
@@ -62,7 +49,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             // User
@@ -113,7 +100,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             // User
@@ -221,7 +208,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState); 
+                HIHAPIUtility.HandleModelStateError(ModelState); 
             }
 
             var entity = await _context.BlogCollections.FindAsync(id);

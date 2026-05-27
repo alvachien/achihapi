@@ -17,10 +17,9 @@ namespace hihapi.unittest
             {
                 // Create the schema in the database
                 var context = GetCurrentDataContext();
-                if (!context.Database.IsSqlite()
-                    || context.Database.IsSqlServer())
+                if (!context.Database.IsSqlite())
                 {
-                    throw new Exception("Faield!");
+                    throw new Exception("Expected SQLite database!");
                 }
 
                 // Create tables and views
@@ -38,10 +37,7 @@ namespace hihapi.unittest
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex.Message);
-                // Error occurred
-            }
-            finally
-            {
+                throw;
             }
         }
 
@@ -65,7 +61,7 @@ namespace hihapi.unittest
                 .EnableSensitiveDataLogging()
                 .Options;
 
-            var context = new hihDataContext(options, true);
+            var context = new hihDataContext(options);
             return context;
         }
 
@@ -145,36 +141,43 @@ namespace hihapi.unittest
 
         public void DeleteFinanceAccount(hihDataContext context, int acntid)
         {
-            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = " + acntid.ToString());
+            var param = new SqliteParameter("@id", acntid);
+            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_account WHERE ID = @id", param);
         }
 
         public void DeleteFinanceControlCenter(hihDataContext context, int ccid)
         {
-            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_controlcenter WHERE ID = " + ccid.ToString());
+            var param = new SqliteParameter("@id", ccid);
+            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_controlcenter WHERE ID = @id", param);
         }
 
         public void DeleteFinanceOrder(hihDataContext context, int ordid)
         {
-            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_order WHERE ID = " + ordid.ToString());
+            var param = new SqliteParameter("@id", ordid);
+            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_order WHERE ID = @id", param);
         }
 
         public void DeleteFinancePlan(hihDataContext context, int planid)
         {
-            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_plan WHERE ID = " + planid.ToString());
+            var param = new SqliteParameter("@id", planid);
+            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_plan WHERE ID = @id", param);
         }
 
         public void DeleteFinanceDocument(hihDataContext context, int docid)
         {
-            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = " + docid.ToString());
+            var param = new SqliteParameter("@id", docid);
+            context.Database.ExecuteSqlRaw("DELETE FROM t_fin_document WHERE ID = @id", param);
         }
 
-        public void DeleteBlogCollection(hihDataContext context, int collid) 
+        public void DeleteBlogCollection(hihDataContext context, int collid)
         {
-            context.Database.ExecuteSqlRaw("DELETE FROM t_blog_coll WHERE ID = " + collid.ToString());
+            var param = new SqliteParameter("@id", collid);
+            context.Database.ExecuteSqlRaw("DELETE FROM t_blog_coll WHERE ID = @id", param);
         }
         public void DeleteBlogPost(hihDataContext context, int postid)
         {
-            context.Database.ExecuteSqlRaw("DELETE FROM t_blog_post WHERE ID = " + postid.ToString());
+            var param = new SqliteParameter("@id", postid);
+            context.Database.ExecuteSqlRaw("DELETE FROM t_blog_post WHERE ID = @id", param);
         }
 
         protected SqliteConnection DBConnection { get; private set; }

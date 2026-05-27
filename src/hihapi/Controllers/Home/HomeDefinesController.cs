@@ -1,23 +1,17 @@
-using System;
-using System.Linq;
-using System.IO;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
-using Microsoft.AspNetCore.OData.Formatter;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
-using Microsoft.Net.Http;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
-using hihapi.Exceptions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace hihapi.Controllers
 {
@@ -42,7 +36,7 @@ namespace hihapi.Controllers
         /// <remarks>
         [HttpGet]
         [EnableQuery]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
             String usrName = "";
             try
@@ -59,11 +53,13 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            var hids = await (from hmem in _context.HomeMembers
+                       where hmem.User == usrName
+                       select hmem.HomeID).ToListAsync();
+
             return Ok(from hd in _context.HomeDefines
-                        join hm in _context.HomeMembers
-                            on hd.ID equals hm.HomeID
-                        where hm.User == usrName
-                           select hd);
+                      where hids.Contains(hd.ID)
+                      select hd);
         }
 
         /// GET: /HomeDefines(:id)
@@ -76,7 +72,7 @@ namespace hihapi.Controllers
         /// <returns>The home define</returns>
         [HttpGet]
         [EnableQuery]
-        public HomeDefine Get(int key)
+        public async Task<HomeDefine> Get([FromODataUri] int key)
         {
             String usrName = "";
             try
@@ -93,10 +89,17 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            return (from hmem in _context.HomeMembers
-                           join hdef in _context.HomeDefines on hmem.HomeID equals hdef.ID
-                           where hmem.User == usrName && hmem.HomeID == key
-                           select hdef).FirstOrDefault();
+            var hids = await (from hmem in _context.HomeMembers
+                        where hmem.User == usrName && hmem.HomeID == key
+                        select hmem.HomeID).ToListAsync();
+            if (hids.Count == 0)
+            {
+                throw new NotFoundException("Not found");
+            }
+
+            return (from hdef in _context.HomeDefines
+                    where hdef.ID == key
+                    select hdef).FirstOrDefault();
         }
 
         [HttpPost]
@@ -104,7 +107,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             if (!homedef.IsValid(this._context))
@@ -127,7 +130,7 @@ namespace hihapi.Controllers
 
             homedef.Createdby = usrName;
             homedef.CreatedAt = DateTime.Now;
-            foreach(var hmem in homedef.HomeMembers)
+            foreach(var hmem in homedef.Members)
             {
                 hmem.CreatedAt = homedef.CreatedAt;
                 hmem.Createdby = usrName;
@@ -144,7 +147,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             if (key != update.ID)
@@ -168,8 +171,8 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == update.ID && p.User == usrName).Count();
-            if (hms <= 0)
+            var isMember = await _context.HomeMembers.AnyAsync(p => p.HomeID == update.ID && p.User == usrName);
+            if (!isMember)
             {
                 throw new UnauthorizedAccessException();
             }
@@ -193,7 +196,7 @@ namespace hihapi.Controllers
                 _context.Entry(existinghd).CurrentValues.SetValues(update);
 
                 var dbmems = _context.HomeMembers.Where(p => p.HomeID == key).ToList();
-                foreach (var mem in update.HomeMembers)
+                foreach (var mem in update.Members)
                 {
                     var memindb = dbmems.Find(p => p.HomeID == key && p.User == mem.User);
                     if (memindb == null)
@@ -211,7 +214,7 @@ namespace hihapi.Controllers
                 }
                 foreach (var mem in dbmems)
                 {
-                    var nmem = update.HomeMembers.FirstOrDefault(p => p.User == mem.User);
+                    var nmem = update.Members.FirstOrDefault(p => p.User == mem.User);
                     if (nmem == null)
                     {
                         _context.HomeMembers.Remove(mem);
@@ -257,8 +260,8 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == key && p.User == usrName).Count();
-            if (hms <= 0)
+            var isMember = await _context.HomeMembers.AnyAsync(p => p.HomeID == key && p.User == usrName);
+            if (!isMember)
             {
                 throw new UnauthorizedAccessException();
             }
@@ -269,12 +272,45 @@ namespace hihapi.Controllers
                 throw new NotFoundException("Inputted Object Not Found");
             }
 
-            // Perform the checks
             if (!cc.IsDeleteAllowed(this._context))
                 throw new BadRequestException("Inputted Object IsDeleteAllowed Failed");
 
-            _context.HomeDefines.Remove(cc);
-            await _context.SaveChangesAsync();
+            var hidParam = new Microsoft.Data.Sqlite.SqliteParameter("@hid", key);
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_FIN_DOCUMENT WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_FIN_TMPDOC_DP WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_FIN_TMPDOC_LOAN WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_FIN_ACCOUNT WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_FIN_CONTROLCENTER WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_FIN_ORDER WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_FIN_PLAN WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_FIN_ACCOUNT_CTGY WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_FIN_ASSET_CTGY WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_FIN_DOC_TYPE WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_FIN_TRAN_TYPE WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_EVENT WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_EVENT_RECUR WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_BOOK_BORROW_RECORD WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_BOOK_DEF WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_BOOKCTGY_DEF WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_BOOKLOC_DEF WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_ORG_DEF WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_ORGTYPE_DEF WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_PERSON_DEF WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_PERSONROLE_DEF WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_HOMEMEM WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_HOMEDEF WHERE ID=@hid", hidParam);
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
 
             return StatusCode(204); // HttpStatusCode.NoContent
         }

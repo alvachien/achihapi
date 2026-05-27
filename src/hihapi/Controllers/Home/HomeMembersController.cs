@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System;
+using System.Linq;
 using hihapi.Utilities;
+using hihapi.Models;
 
 namespace hihapi.Controllers
 {
@@ -30,22 +32,8 @@ namespace hihapi.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            String usrName = "";
-            try
-            {
-                usrName = HIHAPIUtility.GetUserID(this);
-
-                if (String.IsNullOrEmpty(usrName))
-                {
-                    throw new UnauthorizedAccessException();
-                }
-            }
-            catch
-            {
-                throw new UnauthorizedAccessException();
-            }
-
-            return Ok(_context.HomeMembers);
+            var usrName = HIHAPIUtility.GetAuthenticatedUserName(this);
+            return Ok(from mem in _context.HomeMembers where mem.User == usrName select mem);
         }
     }
 }

@@ -15,7 +15,7 @@ namespace hihapi.Models
 
         [Key]
         [Required]
-        [Column("ID", TypeName = "INT")]
+        [Column("ID", TypeName = "INTEGER")]
         public int ID { get; set; }
 
         [Required]

@@ -11,12 +11,12 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        [Column("BOOK_ID", TypeName = "INT")]
+        [Column("BOOK_ID", TypeName = "INTEGER")]
         public int BookId { get; set; }
 
         [Key]
         [Required]
-        [Column("AUTHOR_ID", TypeName = "INT")]
+        [Column("AUTHOR_ID", TypeName = "INTEGER")]
         public int AuthorId { get; set; }
 
         public LibraryBook Book { get; set; }
@@ -28,12 +28,12 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        [Column("BOOK_ID", TypeName = "INT")]
+        [Column("BOOK_ID", TypeName = "INTEGER")]
         public int BookId { get; set; }
 
         [Key]
         [Required]
-        [Column("TRANSLATOR_ID", TypeName = "INT")]
+        [Column("TRANSLATOR_ID", TypeName = "INTEGER")]
         public int TranslatorId { get; set; }
 
         public LibraryBook Book { get; set; }
@@ -45,12 +45,12 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        [Column("BOOK_ID", TypeName = "INT")]
+        [Column("BOOK_ID", TypeName = "INTEGER")]
         public int BookId { get; set; }
 
         [Key]
         [Required]
-        [Column("PRESS_ID", TypeName = "INT")]
+        [Column("PRESS_ID", TypeName = "INTEGER")]
         public int PressId { get; set; }
 
         public LibraryBook Book { get; set; }
@@ -62,12 +62,12 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        [Column("BOOK_ID", TypeName = "INT")]
+        [Column("BOOK_ID", TypeName = "INTEGER")]
         public int BookId { get; set; }
 
         [Key]
         [Required]
-        [Column("CTGY_ID", TypeName = "INT")]
+        [Column("CTGY_ID", TypeName = "INTEGER")]
         public int CategoryId { get; set; }
 
         public LibraryBook Book { get; set; }
@@ -79,12 +79,12 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        [Column("BOOK_ID", TypeName = "INT")]
+        [Column("BOOK_ID", TypeName = "INTEGER")]
         public int BookId { get; set; }
 
         [Key]
         [Required]
-        [Column("LOCATION_ID", TypeName = "INT")]
+        [Column("LOCATION_ID", TypeName = "INTEGER")]
         public int LocationId { get; set; }
 
         public LibraryBook Book { get; set; }
@@ -95,7 +95,7 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        //[Column("ID", TypeName = "INT")]
+        //[Column("ID", TypeName = "INTEGER")]
         public Int32 Id { get; set; }
 
         [Required]
@@ -112,10 +112,10 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        [Column("ID", TypeName = "INT")]
+        [Column("ID", TypeName = "INTEGER")]
         public Int32 Id { get; set; }
 
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
         [Required]
@@ -134,20 +134,21 @@ namespace hihapi.Models.Library
         [Column("ISBN", TypeName = "NVARCHAR(50)")]
         public String ISBN { get; set; }
 
-        [Column("PUB_YEAR", TypeName = "INT")]
+        [Column("PUB_YEAR", TypeName = "INTEGER")]
         public Int32? PublishedYear { get; set; }
 
         [Column("DETAIL", TypeName = "NVARCHAR(200)")]
         public string Detail { get; set; }
 
-        [Column("ORIGIN_LANG", TypeName = "INT")]
+        [Column("ORIGIN_LANG", TypeName = "INTEGER")]
         public Int32? OriginLangID { get; set; }
-        [Column("BOOK_LANG", TypeName = "INT")]
+        [Column("BOOK_LANG", TypeName = "INTEGER")]
         public Int32? BookLangID { get; set; }
 
-        [Column("PAGE_COUNT", TypeName = "INT")]
+        [Column("PAGE_COUNT", TypeName = "INTEGER")]
         public Int32? PageCount { get; set; }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
         public IList<LibraryBookCategory> Categories { get; set; }
         public IList<LibraryBookCategoryLinkage> BookCategories { get; set; }

@@ -35,7 +35,7 @@ namespace hihapi.unittest.Home
 
             try
             {
-                control.Get();
+                await control.Get();
             }
             catch (Exception exp)
             {
@@ -49,7 +49,7 @@ namespace hihapi.unittest.Home
                 HttpContext = new DefaultHttpContext() { User = userclaim }
             };
 
-            var result = control.Get();
+            var result = await control.Get();
             Assert.NotNull(result);
             // Assert.IsType<ActionResult<IEnumerable<HomeDefine>>>(result);
             var okresult = Assert.IsType<OkObjectResult>(result);
@@ -95,25 +95,25 @@ namespace hihapi.unittest.Home
                 HomeDefinition = hd1,
                 Createdby = user,
             };
-            hd1.HomeMembers.Add(hm1);
+            hd1.Members.Add(hm1);
             var rst = await control.Post(hd1);
             var nhdobj = Assert.IsType<CreatedODataResult<HomeDefine>>(rst);            
             Assert.True(nhdobj.Entity.ID > 0);
             hid = nhdobj.Entity.ID;
-            Assert.True(nhdobj.Entity.HomeMembers.Count == 1);
-            Assert.True(nhdobj.Entity.HomeMembers.ElementAt(0).HomeID == nhdobj.Entity.ID);
-            Assert.True(nhdobj.Entity.HomeMembers.ElementAt(0).Relation == HomeMemberRelationType.Self);
-            Assert.True(nhdobj.Entity.HomeMembers.ElementAt(0).User == nhdobj.Entity.Host);
+            Assert.True(nhdobj.Entity.Members.Count == 1);
+            Assert.True(nhdobj.Entity.Members.ElementAt(0).HomeID == nhdobj.Entity.ID);
+            Assert.True(nhdobj.Entity.Members.ElementAt(0).Relation == HomeMemberRelationType.Self);
+            Assert.True(nhdobj.Entity.Members.ElementAt(0).User == nhdobj.Entity.Host);
 
             // Read the single object
-            var rst2 = control.Get(nhdobj.Entity.ID);
+            var rst2 = await control.Get(nhdobj.Entity.ID);
             var nreadobj = Assert.IsType<HomeDefine>(rst2);
             Assert.Equal(nhdobj.Entity.Name, nreadobj.Name);
             Assert.Equal(nhdobj.Entity.Host, nreadobj.Host);
-            Assert.True(nreadobj.HomeMembers.Count == 1);
-            Assert.True(nreadobj.HomeMembers.ElementAt(0).HomeID == nreadobj.ID);
-            Assert.True(nreadobj.HomeMembers.ElementAt(0).Relation == HomeMemberRelationType.Self);
-            Assert.True(nreadobj.HomeMembers.ElementAt(0).User == nreadobj.Host);
+            Assert.True(nreadobj.Members.Count == 1);
+            Assert.True(nreadobj.Members.ElementAt(0).HomeID == nreadobj.ID);
+            Assert.True(nreadobj.Members.ElementAt(0).Relation == HomeMemberRelationType.Self);
+            Assert.True(nreadobj.Members.ElementAt(0).User == nreadobj.Host);
 
             // Read the related member
             var hmemcontrol = new HomeMembersController(context);
@@ -142,19 +142,19 @@ namespace hihapi.unittest.Home
                 HomeDefinition = nreadobj,
                 Createdby = user,
             };
-            nreadobj.HomeMembers.Add(hm2);
+            nreadobj.Members.Add(hm2);
             var rst3 = await control.Put(nreadobj.ID, nreadobj);
             var nupdobjectrst = Assert.IsType<UpdatedODataResult<HomeDefine>>(rst3);
             Assert.Equal(nreadobj.ID, nupdobjectrst.Entity.ID);
-            //var memcnt = context.HomeMembers.Where(p => p.HomeID == nreadobj.ID).Count();
+            //var memcnt = context.Members.Where(p => p.HomeID == nreadobj.ID).Count();
             //Assert.Equal(2, memcnt);
-            Assert.Equal(2, nupdobjectrst.Entity.HomeMembers.Count);
+            Assert.Equal(2, nupdobjectrst.Entity.Members.Count);
 
             // Change the home define - change the host
             nreadobj.Host = hm2.User;
             homehost = nreadobj.Host;
             // Need the relationship....
-            foreach (var mem in nreadobj.HomeMembers)
+            foreach (var mem in nreadobj.Members)
             {
                 if (mem.User == nreadobj.Host)
                     mem.Relation = HomeMemberRelationType.Self;
@@ -164,8 +164,8 @@ namespace hihapi.unittest.Home
             rst3 = await control.Put(nreadobj.ID, nreadobj);
             nupdobjectrst = Assert.IsType<UpdatedODataResult<HomeDefine>>(rst3);
             Assert.Equal(nreadobj.Host, nupdobjectrst.Entity.Host);
-            Assert.Equal(2, nupdobjectrst.Entity.HomeMembers.Count);
-            foreach(var mem in nupdobjectrst.Entity.HomeMembers)
+            Assert.Equal(2, nupdobjectrst.Entity.Members.Count);
+            foreach(var mem in nupdobjectrst.Entity.Members)
             {
                 if (mem.User == nupdobjectrst.Entity.Host)
                 {
@@ -178,13 +178,13 @@ namespace hihapi.unittest.Home
             }
 
             // Change the home define - remove one user
-            var memtoremove = nreadobj.HomeMembers.First(p => p.Relation != HomeMemberRelationType.Self);
-            nreadobj.HomeMembers.Remove(memtoremove);
-            Assert.Equal(1, nreadobj.HomeMembers.Count);
-            Assert.Equal(nreadobj.Host, nreadobj.HomeMembers.ElementAt(0).User);
+            var memtoremove = nreadobj.Members.First(p => p.Relation != HomeMemberRelationType.Self);
+            nreadobj.Members.Remove(memtoremove);
+            Assert.Equal(1, nreadobj.Members.Count);
+            Assert.Equal(nreadobj.Host, nreadobj.Members.ElementAt(0).User);
             rst3 = await control.Put(nreadobj.ID, nreadobj);
             nupdobjectrst = Assert.IsType<UpdatedODataResult<HomeDefine>>(rst3);
-            Assert.Equal(1, nupdobjectrst.Entity.HomeMembers.Count);
+            Assert.Equal(1, nupdobjectrst.Entity.Members.Count);
 
             // Delete the home define (failed case)
             try

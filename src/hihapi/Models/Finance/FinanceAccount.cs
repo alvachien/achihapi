@@ -17,7 +17,7 @@ namespace hihapi.Models
 
     public enum LoanRepaymentMethod
     {
-        EqualPrincipalAndInterset   = 1,    // Equal principal & interest
+        EqualPrincipalAndInterest   = 1,    // Equal principal & interest
         EqualPrincipal              = 2,    // Equal principal
         DueRepayment                = 3,    // Due repayment
         InformalPayment             = 4,    // Informal payment
@@ -51,7 +51,7 @@ namespace hihapi.Models
         [Column("OWNER", TypeName="NVARCHAR(40)")]
         public String Owner { get; set; }
 
-        [Column("STATUS", TypeName="TINYINT")]
+        [Column("STATUS", TypeName="INTEGER")]
         public FinanceAccountStatus Status { get; set; }
 
         public FinanceAccount(): base()
@@ -161,6 +161,7 @@ namespace hihapi.Models
             return true;
         }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
         public FinanceAccountExtraDP ExtraDP { get; set; }
         // public FinanceAccountExtraLoan ExtraLoan { get; set; }
@@ -184,7 +185,7 @@ namespace hihapi.Models
     public sealed class FinanceAccountExtraDP: FinanceAccountExtra
     {
         [Required]
-        [Column("DIRECT", TypeName="BIT")]
+        [Column("DIRECT", TypeName="INTEGER")]
         public Boolean Direct { get; set; }
         
         [Required]
@@ -198,7 +199,7 @@ namespace hihapi.Models
         public DateTime EndDate { get; set; }
         
         [Required]
-        [Column("RPTTYPE", TypeName="TINYINT")]
+        [Column("RPTTYPE", TypeName="INTEGER")]
         public RepeatFrequency RepeatType { get; set; }
         
         [Required]
@@ -328,7 +329,7 @@ namespace hihapi.Models
                         if (String.IsNullOrEmpty((string)diff.Value))
                             listHeaderSqls.Add("[" + dbfield + "] = NULL");
                         else
-                            listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                            listHeaderSqls.Add("[" + dbfield + "] = N'" + ((string)diff.Value).Replace("'", "''") + "'");
                     }
                     else if (diff.Value is Decimal)
                     {
@@ -350,7 +351,7 @@ namespace hihapi.Models
         }
     }
 
-    // Account extra: Assert
+    // Account extra: Asset
     [Table("T_FIN_ACCOUNT_EXT_AS")]
     public sealed class FinanceAccountExtraAS: FinanceAccountExtra
     {
@@ -363,7 +364,7 @@ namespace hihapi.Models
         [Column("NAME", TypeName="NVARCHAR(50)")]
         public String Name { get; set; }
 
-        [StringLength(50)]
+        [StringLength(100)]
         [Column("COMMENT", TypeName="NVARCHAR(100)")]
         public String Comment { get; set; }
 
@@ -520,7 +521,7 @@ namespace hihapi.Models
                         if (String.IsNullOrEmpty((string)diff.Value))
                             listHeaderSqls.Add("[" + dbfield + "] = NULL");
                         else
-                            listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                            listHeaderSqls.Add("[" + dbfield + "] = N'" + ((string)diff.Value).Replace("'", "''") + "'");
                     }
                     else if (diff.Value is Decimal)
                     {
@@ -554,16 +555,16 @@ namespace hihapi.Models
         [Column("ANNUALRATE", TypeName = "DECIMAL(17, 2)")]
         public Decimal? AnnualRate { get; set; }
 
-        [Column("INTERESTFREE", TypeName = "BIT")]
+        [Column("INTERESTFREE", TypeName = "INTEGER")]
         public Boolean? InterestFree { get; set; }
 
-        [Column("REPAYMETHOD", TypeName = "TINYINT")]
+        [Column("REPAYMETHOD", TypeName = "INTEGER")]
         public LoanRepaymentMethod? RepaymentMethod { get; set; }
 
-        [Column("TOTALMONTH", TypeName = "SMALLINT")]
+        [Column("TOTALMONTH", TypeName = "INTEGER")]
         public Int16? TotalMonths { get; set; }
 
-        [Column("REFDOCID", TypeName = "INT")]
+        [Column("REFDOCID", TypeName = "INTEGER")]
         public Int32 RefDocID { get; set; }
 
         [Column("OTHERS", TypeName = "NVARCHAR(100)")]
@@ -574,7 +575,7 @@ namespace hihapi.Models
         [DataType(DataType.Date)]
         public DateTime? EndDate { get; set; }
 
-        [Column("PAYINGACCOUNT", TypeName = "INT")]
+        [Column("PAYINGACCOUNT", TypeName = "INTEGER")]
         public Int32? PayingAccount { get; set; }
 
         [Column("PARTNER", TypeName = "NVARCHAR(50)")]
@@ -758,7 +759,7 @@ namespace hihapi.Models
                     if (String.IsNullOrEmpty((string)diff.Value))
                         listHeaderSqls.Add("[" + dbfield + "] = NULL");
                     else
-                        listHeaderSqls.Add("[" + dbfield + "] = N'" + diff.Value + "'");
+                        listHeaderSqls.Add("[" + dbfield + "] = N'" + ((string)diff.Value).Replace("'", "''") + "'");
                 }
                 else if (diff.Value is Decimal)
                 {
@@ -768,13 +769,6 @@ namespace hihapi.Models
                     }
                     else
                         listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
-                }
-                else if (diff.Value is Boolean)
-                {
-                    if ((bool)diff.Value)
-                        listHeaderSqls.Add("[" + dbfield + "] = 1");
-                    else
-                        listHeaderSqls.Add("[" + dbfield + "] = 0");
                 }
                 else
                 {

@@ -432,7 +432,7 @@ namespace hihapi.unittest.Finance
                 delta.TrySetPropertyValue("HomeID", 9999);
                 patchresult = await control.Patch(ndocid, delta);
                 Assert.NotNull(patchresult);
-                Assert.IsType<BadRequestObjectResult>(patchresult);
+                Assert.IsType<BadRequestODataResult>(patchresult);
             }
             else
             {
@@ -531,7 +531,7 @@ namespace hihapi.unittest.Finance
             delta.TrySetPropertyValue("HomeID", 9999);
             patchresult = await control.Patch(ndocid, delta);
             Assert.NotNull(patchresult);
-            Assert.IsType<BadRequestObjectResult>(patchresult);
+            Assert.IsType<BadRequestODataResult>(patchresult);
 
             await context.DisposeAsync();
         }
@@ -1111,7 +1111,7 @@ namespace hihapi.unittest.Finance
                     EndDate = new DateTime(2023, 2, 1),
                     InterestFree = false,
                     AnnualRate = 10,
-                    RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterset,
+                    RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterest,
                     TotalMonths = 12,
 
                     Frequency = RepeatFrequency.Month,
@@ -1461,7 +1461,7 @@ namespace hihapi.unittest.Finance
                 EndDate = new DateTime(2023, 2, 1),
                 InterestFree = false,
                 AnnualRate = 10,
-                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterset,
+                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterest,
                 TotalMonths = 12,
                 //Others = testdata.Others,
                 //PayingAccount = testdata.PayingAccount,
@@ -1604,7 +1604,7 @@ namespace hihapi.unittest.Finance
                 EndDate = new DateTime(2023, 2, 1),
                 InterestFree = false,
                 AnnualRate = 10,
-                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterset,
+                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterest,
                 TotalMonths = 12,
                 //Others = testdata.Others,
                 //PayingAccount = testdata.PayingAccount,

@@ -9,18 +9,9 @@ namespace hihapi
 {
     public class hihDataContext : DbContext
     {
-        public hihDataContext()
+        public hihDataContext(DbContextOptions<hihDataContext> options) : base(options)
         {
-            TestingMode = false;
         }
-        
-        public hihDataContext(DbContextOptions<hihDataContext> options, bool testingMode = false) : base(options)
-        {
-            TestingMode = testingMode;
-        }
-
-        // Testing mode
-        public Boolean TestingMode { get; private set; }
 
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Language> Languages { get; set; }
@@ -46,13 +37,10 @@ namespace hihapi
         public DbSet<FinanceDocumentItemView> FinanceDocumentItemView { get; set; }
         public DbSet<FinanceReporAccountGroupView> FinanceReporAccountGroupView { get; set; }
         public DbSet<FinanceReporAccountGroupAndExpenseView> FinanceReporAccountGroupAndExpenseView { get; set; }
-        //public DbSet<FinanceReportAccountBalanceView> FinanceReportAccountBalanceView { get; set; }
         public DbSet<FinanceReportControlCenterGroupView> FinanceReportControlCenterGroupView { get; set; }
         public DbSet<FinanceReportControlCenterGroupAndExpenseView> FinanceReportControlCenterGroupAndExpenseView { get; set; }
-        // public DbSet<FinanceReportControlCenterBalanceView> FinanceReportControlCenterBalanceView { get; set; }
         public DbSet<FinanceReportOrderGroupView> FinanceReportOrderGroupView { get; set; }
         public DbSet<FinanceReportOrderGroupAndExpenseView> FinanceReportOrderGroupAndExpenseView { get; set; }
-        // public DbSet<FinanceReportOrderBalanceView> FinanceReportOrderBalanceView { get; set; }
         public DbSet<BlogFormat> BlogFormats { get; set;  }
         public DbSet<BlogUserSetting> BlogUserSettings { get; set; }
         public DbSet<BlogCollection> BlogCollections { get; set; }
@@ -74,64 +62,30 @@ namespace hihapi
         {
             modelBuilder.Entity<Currency>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                // entity.Property(e => e.Curr)
-                //     .HasColumnName("CURR")
-                //     .ValueGeneratedNever();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
             modelBuilder.Entity<Language>(entity =>
             {
                 entity.Property(e => e.Lcid)
                     .HasColumnName("LCID")
                     .ValueGeneratedNever();
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.AppFlag)
-                        .HasDefaultValueSql("((0))");
-                }
             });
             modelBuilder.Entity<DBVersion>(entity =>
             {
                 entity.Property(e => e.VersionID)
                     .ValueGeneratedNever();
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.AppliedDate)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    entity.Property(e => e.AppliedDate)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
+                entity.Property(e => e.AppliedDate)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
 
             modelBuilder.Entity<HomeDefine>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-                        //.ValueGeneratedOnAdd();
-                }
-                else
-                {
-//                    entity.Property(e => e.ID).HasConversion(v => v, v => v);            
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                }
+                entity.Property(e => e.ID)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
 
                 entity.HasIndex(e => e.Name)
                     .HasDatabaseName("UK_t_homedef_NAME")
@@ -146,170 +100,67 @@ namespace hihapi
                     .IsUnique();
 
                 entity.HasOne(d => d.HomeDefinition)
-                    .WithMany(p => p.HomeMembers)
+                    .WithMany(p => p.Members)
                     .HasForeignKey(d => d.HomeID)
                     .HasConstraintName("FK_t_homemem_HID");
             });
-            // [t_homemsg]
 
             modelBuilder.Entity<FinanceAccountCategory>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-                        //.ValueGeneratedOnAdd();
-                    entity.Property(e => e.AssetFlag)
-                        .HasColumnType<Boolean>("BIT")
-                        .HasDefaultValueSql("((1))");
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.AssetFlag)
-                        .HasColumnType<Boolean>("INTEGER");
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceAccountCategories)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_account_ctgy_HID");
+                entity.Property(e => e.AssetFlag)
+                    .HasColumnType<Boolean>("INTEGER");
+                entity.Property(e => e.ID)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
             modelBuilder.Entity<FinanceAssetCategory>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-                        //.ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceAssetCategories)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_fin_asset_ctgy_HID");
+                entity.Property(e => e.ID)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
             modelBuilder.Entity<FinanceDocumentType>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .HasColumnType("SMALLINT")
-                        .UseIdentityColumn();
-                        //.ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceDocumentTypes)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_fin_doctype_HID");
+                entity.Property(e => e.ID)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
             modelBuilder.Entity<FinanceTransactionType>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceTransactionTypes)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_fin_trantype_HID");
+                entity.Property(e => e.ID)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
-       
-            modelBuilder.Entity<FinanceAccount> (entity => {
-                if (!TestingMode) 
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
 
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceAccounts)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_account_HID");
+            modelBuilder.Entity<FinanceAccount> (entity => {
+                entity.Property(e => e.ID)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+
+                entity.HasIndex(e => e.HomeID)
+                    .HasDatabaseName("IX_t_fin_account_HID");
             });
             modelBuilder.Entity<FinanceAccountExtraAS>(entity => {
-                if (TestingMode)
-                {
-                    entity.Property(e => e.AccountID).HasConversion(v => v, v => v);
-                }
-
                 entity.HasOne(d => d.AccountHeader)
                     .WithOne(p => p.ExtraAsset)
                     .HasForeignKey<FinanceAccountExtraAS>(p => p.AccountID)
@@ -321,10 +172,6 @@ namespace hihapi
                     .HasConstraintName("FK_t_fin_account_ext_as_CTGY");
             });
             modelBuilder.Entity<FinanceAccountExtraDP>(entity => {
-                if (TestingMode)
-                {
-                    entity.Property(e => e.AccountID).HasConversion(v => v, v => v);
-                }
                 entity.HasOne(d => d.AccountHeader)
                     .WithOne(p => p.ExtraDP)
                     .HasForeignKey<FinanceAccountExtraDP>(p => p.AccountID)
@@ -332,10 +179,6 @@ namespace hihapi
                     .HasConstraintName("FK_t_fin_account_ext_dp_ACNT");
             });
             modelBuilder.Entity<FinanceAccountExtraLoan>(entity => {
-                if (TestingMode)
-                {
-                    entity.Property(e => e.AccountID).HasConversion(v => v, v => v);
-                }
                 entity.HasOne(d => d.AccountHeader)
                     .WithOne(p => p.ExtraLoan)
                     .HasForeignKey<FinanceAccountExtraLoan>(p => p.AccountID)
@@ -344,30 +187,18 @@ namespace hihapi
             });
 
             modelBuilder.Entity<FinanceDocument>(entity => {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
+                entity.Property(e => e.ID)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
 
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceDocuments)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_fin_document_HID");
+                entity.HasIndex(e => e.HomeID)
+                    .HasDatabaseName("IX_t_fin_document_HID");
+                entity.HasIndex(e => e.TranDate)
+                    .HasDatabaseName("IX_t_fin_document_TRANDATE");
             });
             modelBuilder.Entity<FinanceDocumentItem>(entity => {
                 entity.HasKey(p => new { p.DocID, p.ItemID });
@@ -376,20 +207,12 @@ namespace hihapi
                     .WithMany(p => p.Items)
                     .HasForeignKey(d => d.DocID)
                     .HasConstraintName("FK_t_fin_document_header");
+
+                entity.HasIndex(e => e.AccountID)
+                    .HasDatabaseName("IX_t_fin_document_item_ACNTID");
             });
-            modelBuilder.Entity<FinanceTmpLoanDocument>(entity => 
+            modelBuilder.Entity<FinanceTmpLoanDocument>(entity =>
             {
-                //if (!TestingMode)
-                //{
-                //    entity.Property(e => e.DocumentID)
-                //        .UseIdentityColumn();
-                //}
-                //else
-                //{
-                //    entity.Property(e => e.DocumentID)
-                //        .HasColumnType("INTEGER")
-                //        .ValueGeneratedOnAdd();
-                //}
                 entity.HasKey(p => new { p.DocumentID, p.AccountID, p.HomeID });
 
                 entity.HasOne(d => d.AccountExtra)
@@ -398,19 +221,8 @@ namespace hihapi
                     .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("FK_t_fin_tmpdoc_loan_ACCOUNTEXT");
             });
-            modelBuilder.Entity<FinanceTmpDPDocument>(entity => 
+            modelBuilder.Entity<FinanceTmpDPDocument>(entity =>
             {
-                //if (!TestingMode)
-                //{
-                //    entity.Property(e => e.DocumentID)
-                //        .UseIdentityColumn();
-                //}
-                //else
-                //{
-                //    entity.Property(e => e.DocumentID)
-                //        .HasColumnType("INTEGER")
-                //        .ValueGeneratedOnAdd();
-                //}
                 entity.HasKey(p => new { p.DocumentID, p.AccountID, p.HomeID });
 
                 entity.HasOne(d => d.AccountExtra)
@@ -420,56 +232,22 @@ namespace hihapi
                     .HasConstraintName("FK_t_fin_tmpdocdp_ACCOUNTEXT");
             });
             modelBuilder.Entity<FinanceControlCenter>(entity => {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceControlCenters)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_fin_cc_HID");
+                entity.Property(e => e.ID)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
             modelBuilder.Entity<FinanceOrder>(entity => {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinanceOrders)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_fin_order_HID");
+                entity.Property(e => e.ID)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
             modelBuilder.Entity<FinanceOrderSRule>(entity => {
                 entity.HasKey(p => new { p.OrderID, p.RuleID });
@@ -480,30 +258,13 @@ namespace hihapi
                     .HasConstraintName("FK_t_fin_order_srule_order");
             });
             modelBuilder.Entity<FinancePlan>(entity => {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.FinancePlans)
-                    .HasForeignKey(d => d.HomeID)
-                    .HasConstraintName("FK_t_fin_plan_HID");
+                entity.Property(e => e.ID)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
             modelBuilder.Entity<FinanceDocumentItemView>(entity =>
             {
@@ -565,43 +326,19 @@ namespace hihapi
             });
             modelBuilder.Entity<BlogCollection>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                }
+                entity.Property(e => e.ID)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
             });
             modelBuilder.Entity<BlogPost>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.ID)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.ID)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
+                entity.Property(e => e.ID)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
 
             modelBuilder.Entity<BlogPostCollection>(entity =>
@@ -630,66 +367,27 @@ namespace hihapi
             // Library part
             modelBuilder.Entity<LibraryPersonRole>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.Id)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.Id)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.PersonRoles)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_personrole_HID");
+                entity.Property(e => e.Id)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
 
             modelBuilder.Entity<LibraryPerson>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.Id)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.Id)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.Persons)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_person_HID");
-                
+                entity.Property(e => e.Id)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+
                 entity.HasMany(b => b.Roles)
                     .WithMany(c => c.Persons)
-                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
                     .UsingEntity<LibraryPersonRoleLinkage>(
                         j => j
                             .HasOne(pt => pt.Role)
@@ -703,81 +401,31 @@ namespace hihapi
                         {
                             j.HasKey(t => new { t.PersonId, t.RoleId });
                         });
-                //.UsingEntity<Dictionary<int, object>>(
-                //    "PersonRole",
-                //    l => l.HasOne<LibraryPersonRole>().WithMany().HasForeignKey("RoleId"),
-                //    r => r.HasOne<LibraryPerson>().WithMany().HasForeignKey("PersonId"),
-                //    j =>
-                //    {
-                //        j.HasKey("PersonId", "RoleId");
-                //        j.ToTable("t_lib_person_role");
-                //        //j.HasIndex(new[] { "TagsId" }, "IX_PostTag_TagsId");
-                //    });
-
             });
 
             modelBuilder.Entity<LibraryOrganizationType>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.Id)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.Id)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.OrganizationTypes)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_orgtype_HID");
+                entity.Property(e => e.Id)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
 
             modelBuilder.Entity<LibraryOrganization>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.Id)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.Id)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.Organizations)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_org_HID");
+                entity.Property(e => e.Id)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
 
                 entity.HasMany(b => b.Types)
                     .WithMany(c => c.Organizations)
-                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
                     .UsingEntity<LibraryOrganizationTypeLinkage>(
                         j => j
                             .HasOne(pt => pt.OrganizationType)
@@ -795,97 +443,38 @@ namespace hihapi
 
             modelBuilder.Entity<LibraryBookCategory>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.Id)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.Id)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.BookCategories)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_bookctgy_HID");
+                entity.Property(e => e.Id)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
 
             modelBuilder.Entity<LibraryBookLocation>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.Id)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.Id)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.BookLocations)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_bookctgy_HID");
+                entity.Property(e => e.Id)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
 
             modelBuilder.Entity<LibraryBook>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.Id)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    // entity.Property(e => e.ID).HasConversion(v => v, v => v);
-                    entity.Property(e => e.Id)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.Books)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_lib_book_HID");
+                entity.Property(e => e.Id)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
 
                 entity.HasMany(b => b.Categories)
                     .WithMany(c => c.Books)
-                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
                     .UsingEntity<LibraryBookCategoryLinkage>(
                         j => j
                             .HasOne(pt => pt.Category)
@@ -902,7 +491,6 @@ namespace hihapi
 
                 entity.HasMany(b => b.Authors)
                     .WithMany(c => c.WritenBooks)
-                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
                     .UsingEntity<LibraryBookAuthorLinkage>(
                         j => j
                             .HasOne(pt => pt.Author)
@@ -919,7 +507,6 @@ namespace hihapi
 
                 entity.HasMany(b => b.Translators)
                     .WithMany(c => c.TranslatedBooks)
-                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
                     .UsingEntity<LibraryBookTranslatorLinkage>(
                         j => j
                             .HasOne(pt => pt.Translator)
@@ -936,7 +523,6 @@ namespace hihapi
 
                 entity.HasMany(b => b.Presses)
                     .WithMany(c => c.Books)
-                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
                     .UsingEntity<LibraryBookPressLinkage>(
                         j => j
                             .HasOne(pt => pt.Press)
@@ -953,7 +539,6 @@ namespace hihapi
 
                 entity.HasMany(b => b.Locations)
                     .WithMany(c => c.Books)
-                    // https://docs.microsoft.com/en-us/ef/core/modeling/relationships?tabs=fluent-api%2Cfluent-api-simple-key%2Csimple-key
                     .UsingEntity<LibraryBookLocationLinkage>(
                         j => j
                             .HasOne(pt => pt.Location)
@@ -972,35 +557,16 @@ namespace hihapi
             // Event part
             modelBuilder.Entity<NormalEvent>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.Id)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.StartDate)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    entity.Property(e => e.Id)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.StartDate)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.NormalEvents)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_event_hid");
+                entity.Property(e => e.Id)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.StartDate)
+                    .HasDefaultValueSql("CURRENT_DATE");
+
                 entity.HasOne(d => d.CurrentRecurEvent)
                     .WithMany(p => p.RelatedEvents)
                     .HasForeignKey(d => d.RefRecurrID)
@@ -1008,35 +574,15 @@ namespace hihapi
             });
             modelBuilder.Entity<RecurEvent>(entity =>
             {
-                if (!TestingMode)
-                {
-                    entity.Property(e => e.Id)
-                        .UseIdentityColumn();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("(getdate())");
-                    entity.Property(e => e.StartDate)
-                        .HasDefaultValueSql("(getdate())");
-                }
-                else
-                {
-                    // Workaround for Sqlite in testing mode
-                    entity.Property(e => e.Id)
-                        .HasColumnType("INTEGER")
-                        .ValueGeneratedOnAdd();
-                    entity.Property(e => e.CreatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.UpdatedAt)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                    entity.Property(e => e.StartDate)
-                        .HasDefaultValueSql("CURRENT_DATE");
-                }
-                entity.HasOne(d => d.CurrentHome)
-                    .WithMany(p => p.RecurEvents)
-                    .HasForeignKey(d => d.HomeID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_t_event_recur_HID");
+                entity.Property(e => e.Id)
+                    .HasColumnType("INTEGER")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_DATE");
+                entity.Property(e => e.StartDate)
+                    .HasDefaultValueSql("CURRENT_DATE");
             });
         }
     }

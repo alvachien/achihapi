@@ -11,15 +11,15 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        [Column("ID", TypeName = "INT")]
+        [Column("ID", TypeName = "INTEGER")]
         public Int32 Id { get; set; }
 
         [Required]
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
         [Required]
-        [Column("BOOK_ID", TypeName = "INT")]
+        [Column("BOOK_ID", TypeName = "INTEGER")]
         public int BookId { get; set; }
 
         [Required]
@@ -27,7 +27,7 @@ namespace hihapi.Models.Library
         [Column("USER", TypeName = "NVARCHAR(40)")]
         public String User { get; set; }
 
-        [Column("FROMORG", TypeName = "INT")]
+        [Column("FROMORG", TypeName = "INTEGER")]
         public int? FromOrganization { get; set; }
 
         [Column("FROMDATE", TypeName = "DATE")]

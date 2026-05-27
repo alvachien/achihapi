@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using hihapi.Models.Event;
 using hihapi.Models.Library;
 using Microsoft.OData.Edm;
@@ -74,7 +75,7 @@ namespace hihapi.Models
             modelBuilder.ComplexType<RepeatedDatesWithAmount>();
             modelBuilder.ComplexType<RepeatDatesWithAmountCalculationInput>();
             modelBuilder.ComplexType<RepeatedDatesWithAmountAndInterest>();
-            var dprerst = modelBuilder.EntityType<FinanceAssetDepreicationResult>();
+            var dprerst = modelBuilder.EntityType<FinanceAssetDepreciationResult>();
             dprerst.Property(c => c.TranDate).AsDate();
             modelBuilder.EntitySet<FinanceReport>("FinanceReports");
             modelBuilder.EntityType<FinanceReportByTransactionType>();
@@ -83,6 +84,7 @@ namespace hihapi.Models
             modelBuilder.EntityType<FinanceReportByControlCenterMOM>();
             modelBuilder.EntityType<FinanceReportMOM>();
             modelBuilder.EntityType<FinanceReportPerDate>();
+            modelBuilder.EntityType<FinanceAccountBalancePerDate>();
             var rptAcntExpense = modelBuilder.EntityType<FinanceReporAccountGroupAndExpenseView>();
             rptAcntExpense.HasKey(p => new {
                 p.HomeID,
@@ -150,7 +152,7 @@ namespace hihapi.Models
             actionGetDepreResult.Parameter<int>("HomeID");
             actionGetDepreResult.Parameter<int>("Year");
             actionGetDepreResult.Parameter<int?>("Month");
-            actionGetDepreResult.ReturnsFromEntitySet<FinanceAssetDepreicationResult>("FinanceAssetDepreicationResults");
+            actionGetDepreResult.ReturnsFromEntitySet<FinanceAssetDepreciationResult>("FinanceAssetDepreciationResults");
 
             // Function on DP template documents
             var tmpTpDocEntity = modelBuilder.EntityType<FinanceTmpDPDocument>();
@@ -173,6 +175,13 @@ namespace hihapi.Models
             actionGetBalance.Parameter<int>("HomeID");
             actionGetBalance.Parameter<int>("AccountID");
             actionGetBalance.Returns<double>();
+            // Action: GetAccountBalanceEx
+            var actionGetBalanceEx = reportEntity.Collection.Action("GetAccountBalanceEx");
+            actionGetBalanceEx.Parameter<int>("HomeID");
+            actionGetBalanceEx.Parameter<int>("AccountID");
+            actionGetBalanceEx.CollectionParameter<String>("SelectedDates");
+            //actionGetBalanceEx.Parameter<List<String>>("SelectedDates"); // Must be List<String> not String[] because there is constructor for String[] when parsing the JSON
+            actionGetBalanceEx.ReturnsFromEntitySet<FinanceAccountBalancePerDate>("FinanceAccountBalancePerDates");
             // Action: GetMonthlyReportByTranType
             var actionReportCurrentMonthByTT = reportEntity.Collection.Action("GetReportByTranType");
                 // .ReturnsCollection<FinanceReportByTransactionType>();

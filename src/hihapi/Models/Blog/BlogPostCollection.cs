@@ -10,12 +10,12 @@ namespace hihapi.Models
     {
         [Key]
         [Required]
-        [Column("PostID", TypeName = "INT")]
+        [Column("PostID", TypeName = "INTEGER")]
         public int PostID { get; set; }
 
         [Key]
         [Required]
-        [Column("CollID", TypeName = "INT")]
+        [Column("CollID", TypeName = "INTEGER")]
         public int CollectionID { get; set; }
 
         public BlogCollection BlogCollection { get; set; }

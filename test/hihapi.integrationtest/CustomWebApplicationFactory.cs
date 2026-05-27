@@ -1,19 +1,18 @@
 ﻿using hihapi.test;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using hihapi.test.common;
 
 namespace hihapi.integrationtest
 {
-    public class CustomWebApplicationFactory<TStartup>
-        : WebApplicationFactory<TStartup> where TStartup : class
+    public class CustomWebApplicationFactory<TProgram>
+        : WebApplicationFactory<TProgram> where TProgram : class
     {
         protected SqliteConnection DBConnection { get; private set; }
 
@@ -25,10 +24,9 @@ namespace hihapi.integrationtest
             {
                 // Create the schema in the database
                 var context = GetCurrentDataContext();
-                if (!context.Database.IsSqlite()
-                    || context.Database.IsSqlServer())
+                if (!context.Database.IsSqlite())
                 {
-                    throw new Exception("Failed!");
+                    throw new Exception("Expected SQLite database!");
                 }
 
                 // Create tables and views
@@ -46,15 +44,14 @@ namespace hihapi.integrationtest
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex.Message);
-                // Error occurred
-            }
-            finally
-            {
+                throw;
             }
         }
 
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             if (DBConnection != null)
             {
                 DBConnection.Close();
@@ -73,21 +70,24 @@ namespace hihapi.integrationtest
                 .EnableSensitiveDataLogging()
                 .Options;
 
-            var context = new hihDataContext(options, true);
+            var context = new hihDataContext(options);
             return context;
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            // builder.UseEnvironment("INTEGRATION_TEST");
-
+            builder.UseUrls("http://localhost");
+            builder.UseSetting("AllowedHosts", "*");
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<hihDataContext>));
-                services.Remove(descriptor);
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
 
                 services.AddDbContext<hihDataContext>(options =>
-                {                    
+                {
                     options.UseSqlite(DBConnection, action =>
                     {
                          action.UseRelationalNulls();
@@ -96,26 +96,14 @@ namespace hihapi.integrationtest
                     .EnableSensitiveDataLogging();
                 });
 
-                var sp = services.BuildServiceProvider();
-                using (var scope = sp.CreateScope())
+                // Replace authentication with test handler
+                services.AddAuthentication("TestScheme")
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("TestScheme", options => { });
+                services.PostConfigure<AuthenticationOptions>(options =>
                 {
-                    var scopedServices = scope.ServiceProvider;
-                    var db = scopedServices.GetRequiredService<hihDataContext>();
-                    //var logger = scopedServices
-                    //    .GetRequiredService<ILogger<CustomWebApplicationFactory<TStartup>>>();
-
-                    db.Database.EnsureCreated();
-
-                    try
-                    {
-                        // Utilities.InitializeDbForTests(db);
-                    }
-                    catch (Exception)
-                    {                        
-                        //logger.LogError(ex, "An error occurred seeding the " +
-                        //    "database with test messages. Error: {Message}", ex.Message);
-                    }
-                }
+                    options.DefaultAuthenticateScheme = "TestScheme";
+                    options.DefaultChallengeScheme = "TestScheme";
+                });
             });
         }
     }

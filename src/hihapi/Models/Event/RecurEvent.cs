@@ -11,11 +11,11 @@ namespace hihapi.Models.Event
     {
         [Key]
         [Required]
-        [Column("ID", TypeName = "INT")]
+        [Column("ID", TypeName = "INTEGER")]
         public Int32 Id { get; set; }
 
         [Required]
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
         [StringLength(50)]
@@ -33,19 +33,20 @@ namespace hihapi.Models.Event
         public DateTime EndDate { get; set; }
 
         [Required]
-        [Column("RPTTYPE", TypeName = "TINYINT")]
+        [Column("RPTTYPE", TypeName = "INTEGER")]
         public RepeatFrequency RecurType { get; set; }
 
-        [Column("CONTENT", TypeName = "NVARCHAR(MAX)")]
+        [Column("CONTENT", TypeName = "TEXT")]
         public String Content { get; set; }
 
-        [Column("ISPUBLIC", TypeName = "BIT")]
+        [Column("ISPUBLIC", TypeName = "INTEGER")]
         public Boolean IsPublic { get; set; }
 
         [StringLength(40)]
         [Column("ASSIGNEE", TypeName = "NVARCHAR(40)")]
         public String Assignee { get; set; }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
         public IList<NormalEvent> RelatedEvents { get; set; }
 

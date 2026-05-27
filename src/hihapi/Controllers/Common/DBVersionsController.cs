@@ -1,19 +1,19 @@
 using System;
 using System.Linq;
-using System.IO;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
-using System.Text;
 using hihapi.Models;
 using hihapi.Utilities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Formatter;
 
 namespace hihapi.Controllers
 {
+    [Authorize]
     public class DBVersionsController : ODataController
     {
         // Version 4 - 2018.07
@@ -34,7 +34,7 @@ namespace hihapi.Controllers
         // Version 19 - 2022.10.31
         // Version 20 - 2022.8.31
         // Version 21 - 2022.9.30
-        public static Int32 CurrentVersion = 21;
+        public const Int32 CurrentVersion = 21;
 
         private readonly hihDataContext _context;
 
@@ -68,60 +68,18 @@ namespace hihapi.Controllers
         [HttpPost]
         public async Task<IActionResult> Post()
         {
-            var lastestVersion = await _context.DBVersions.MaxAsync(p => p.VersionID);
-            if (lastestVersion++ < CurrentVersion)
+            var lastestVersion = await _context.DBVersions.AnyAsync()
+                ? await _context.DBVersions.MaxAsync(p => p.VersionID)
+                : 0;
+            if (lastestVersion < CurrentVersion)
             {
-                while (lastestVersion <= CurrentVersion)
+                var dbVersion = new DBVersion
                 {
-                    var sqlfile = $"hihapi.Sqls.Delta.v{lastestVersion}.sql";
-
-                    try
-                    {
-                        var asmy = typeof(DBVersionsController).GetTypeInfo().Assembly;
-                        //var resourceNames = asmy.GetManifestResourceNames();
-                        using var stream = asmy.GetManifestResourceStream(sqlfile);
-                        using var reader = new StreamReader(stream, Encoding.UTF8);
-                        
-                        var strcontent = reader.ReadToEnd();
-                        if (string.IsNullOrEmpty(strcontent))
-                        {
-                            throw new Exception("Empty file");
-                        }
-
-                        if (!_context.TestingMode)
-                        {
-                            using var dbContextTransaction = _context.Database.BeginTransaction();
-                            var subcontents = strcontent.Split("GO");
-                            foreach(var content in subcontents)
-                            {
-                                _context.Database.ExecuteSqlRaw(content);
-                            }
-                            dbContextTransaction.Commit();
-                        }
-                        else
-                        {
-                            _context.DBVersions.Add(new DBVersion
-                            {
-                                VersionID = lastestVersion,
-                                AppliedDate = DateTime.Today
-                            });
-                        }
-                    }
-                    catch (Exception exception)
-                    {
-                        System.Diagnostics.Debug.WriteLine(exception.Message);
-
-                        // ApplicationProvider.WriteToLog<EmbeddedResource>().Error(exception.Message);
-                        throw new Exception($"Failed to read Embedded Resource {sqlfile}, reason: {exception.Message}");
-                    }
-
-                    ++lastestVersion;
-                }
-
-                if (_context.TestingMode)
-                {
-                    await _context.SaveChangesAsync();
-                }
+                    VersionID = CurrentVersion,
+                    AppliedDate = DateTime.Today
+                };
+                _context.DBVersions.Add(dbVersion);
+                await _context.SaveChangesAsync();
             }
             var dbv = new CheckVersionResult
             {
@@ -149,7 +107,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             return Ok(CommonUtility.WorkoutRepeatedDates(input));
@@ -160,7 +118,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             return Ok(CommonUtility.WorkoutRepeatedDatesWithAmount(input));
@@ -171,7 +129,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             return Ok(CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(input));

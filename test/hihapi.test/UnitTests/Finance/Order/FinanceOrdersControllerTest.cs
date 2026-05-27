@@ -37,7 +37,7 @@ namespace hihapi.unittest.Finance
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
-                        Precent = 100
+                        Percent = 100
                     },
                 },
             },
@@ -51,12 +51,12 @@ namespace hihapi.unittest.Finance
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
-                        Precent = 20,
+                        Percent = 20,
                     },
                     new FinanceOrderSRule() {
                         RuleID = 2,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
-                        Precent = 80,
+                        Percent = 80,
                     },
                 },
             },
@@ -70,24 +70,24 @@ namespace hihapi.unittest.Finance
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
-                        Precent = 20,
+                        Percent = 20,
                     },
                     new FinanceOrderSRule() {
                         RuleID = 2,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
-                        Precent = 80,
+                        Percent = 80,
                     },
                 },
                 ChangedSRule = new List<FinanceOrderSRule> {
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
-                        Precent = 80,
+                        Percent = 80,
                     },
                     new FinanceOrderSRule() {
                         RuleID = 2,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
-                        Precent = 20,
+                        Percent = 20,
                     },
                 },
             },
@@ -101,29 +101,29 @@ namespace hihapi.unittest.Finance
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
-                        Precent = 20,
+                        Percent = 20,
                     },
                     new FinanceOrderSRule() {
                         RuleID = 2,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
-                        Precent = 80,
+                        Percent = 80,
                     },
                 },
                 ChangedSRule = new List<FinanceOrderSRule> {
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
-                        Precent = 20,
+                        Percent = 20,
                     },
                     new FinanceOrderSRule() {
                         RuleID = 2,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
-                        Precent = 50,
+                        Percent = 50,
                     },
                     new FinanceOrderSRule() {
                         RuleID = 3,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter3ID,
-                        Precent = 30,
+                        Percent = 30,
                     },
                 },
             },
@@ -137,19 +137,19 @@ namespace hihapi.unittest.Finance
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
-                        Precent = 20,
+                        Percent = 20,
                     },
                     new FinanceOrderSRule() {
                         RuleID = 2,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
-                        Precent = 80,
+                        Percent = 80,
                     },
                 },
                 ChangedSRule = new List<FinanceOrderSRule> {
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
-                        Precent = 100,
+                        Percent = 100,
                     }
                 },
             },

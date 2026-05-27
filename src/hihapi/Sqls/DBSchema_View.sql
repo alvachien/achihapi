@@ -49,7 +49,7 @@ SELECT  t_fin_order.ID, t_fin_order.HID, t_fin_order.NAME, t_fin_order.VALID_FRO
         t_fin_order.UPDATEDBY, t_fin_order.UPDATEDAT, t_fin_order_srule.RULEID, t_fin_order_srule.CONTROLCENTERID, t_fin_controlcenter.NAME AS CONTROLCENTERNAME, 
         t_fin_order_srule.PRECENT
 FROM    dbo.t_fin_order LEFT OUTER JOIN
-			dbo.t_fin_order_srule ON dbo.t_fin_order.ID = dbo.t_fin_order_srule.ORDID INNER JOIN
+			dbo.t_fin_order_srule ON dbo.t_fin_order.ID = dbo.t_fin_order_srule.ORDID LEFT OUTER JOIN
             dbo.t_fin_controlcenter ON dbo.t_fin_order_srule.CONTROLCENTERID = dbo.t_fin_controlcenter.ID
 
 GO
@@ -619,17 +619,17 @@ FROM
 
 GO
 
-/****** Object:  View [dbo].[V_FIN_GRP_ORD_TRANEXP]    Script Date: 2017-04-22 8:47:02 PM ******/
+/****** Object:  View [dbo].[v_fin_grp_ord_tranexp]    Script Date: 2017-04-22 8:47:02 PM ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
 
-DROP VIEW IF EXISTS [dbo].[V_FIN_GRP_ORD_TRANEXP]
+DROP VIEW IF EXISTS [dbo].[v_fin_grp_ord_tranexp]
 GO
 
-CREATE VIEW [dbo].[V_FIN_GRP_ORD_TRANEXP]
+CREATE VIEW [dbo].[v_fin_grp_ord_tranexp]
 AS
 with docitem_curr1_basecurr as 
 (
@@ -759,24 +759,24 @@ SELECT tab_a.[ORDERID],
 		[t_fin_order].[HID] AS [HID],
 		[t_fin_order].[NAME] AS [ORDERNAME],
 		(case
-            when ([v_fin_grp_order_tranexp].[balance_lc] is not null) then [v_fin_grp_order_tranexp].[balance_lc]
+            when ([v_fin_grp_ord_tranexp].[balance_lc] is not null) then [v_fin_grp_ord_tranexp].[balance_lc]
             else 0.0
         end) AS [balance_lc]
 	FROM [dbo].[t_fin_order]
-	LEFT OUTER JOIN [dbo].[v_fin_grp_order_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_order_tranexp].orderid
-		AND [v_fin_grp_order_tranexp].[trantype_exp] = 0 ) tab_a
+	LEFT OUTER JOIN [dbo].[v_fin_grp_ord_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_ord_tranexp].orderid
+		AND [v_fin_grp_ord_tranexp].[trantype_exp] = 0 ) tab_a
 
 	JOIN 
 
 	( SELECT [t_fin_order].[ID] AS [ORDERID],
 		[t_fin_order].[NAME] AS [ORDERNAME],
 		(case
-            when ([v_fin_grp_order_tranexp].[balance_lc] is not null) then [v_fin_grp_order_tranexp].[balance_lc] * -1
+            when ([v_fin_grp_ord_tranexp].[balance_lc] is not null) then [v_fin_grp_ord_tranexp].[balance_lc] * -1
             else 0.0
         end) AS [balance_lc]
 	FROM [dbo].[t_fin_order]
-	LEFT OUTER JOIN [dbo].[v_fin_grp_order_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_order_tranexp].orderid
-		AND [v_fin_grp_order_tranexp].[trantype_exp] = 1 ) tab_b
+	LEFT OUTER JOIN [dbo].[v_fin_grp_ord_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_ord_tranexp].orderid
+		AND [v_fin_grp_ord_tranexp].[trantype_exp] = 1 ) tab_b
 
 	ON tab_a.[ORDERID] = tab_b.[ORDERID]
 
@@ -803,46 +803,46 @@ from
 GO
 
 -- Updated at 2017.10.02
-/****** Object:  View [dbo].[v_lrn_usrlrndate]    Script Date: 2017-10-02 10:35:46 AM ******/
-SET ANSI_NULLS ON
-GO
+--/****** Object:  View [dbo].[v_lrn_usrlrndate]    Script Date: 2017-10-02 10:35:46 AM ******/
+--SET ANSI_NULLS ON
+--GO
 
-SET QUOTED_IDENTIFIER ON
-GO
+--SET QUOTED_IDENTIFIER ON
+--GO
 
-DROP VIEW IF EXISTS [dbo].[v_lrn_usrlrndate];
-GO
+--DROP VIEW IF EXISTS [dbo].[v_lrn_usrlrndate];
+--GO
 
-create view [dbo].[v_lrn_usrlrndate]
-as
-select taba.HID, taba.USERID, tabb.[DISPLAYAS], taba.[LEARNDATE], taba.learncount
-from
-(select HID, USERID, [LEARNDATE], count(*) as learncount from t_learn_hist
-	group by hid, userid, [LEARNDATE] ) taba
-	left outer join t_homemem tabb
-	on taba.hid = tabb.HID AND taba.userid = tabb.[USER];
+--create view [dbo].[v_lrn_usrlrndate]
+--as
+--select taba.HID, taba.USERID, tabb.[DISPLAYAS], taba.[LEARNDATE], taba.learncount
+--from
+--(select HID, USERID, [LEARNDATE], count(*) as learncount from t_learn_hist
+--	group by hid, userid, [LEARNDATE] ) taba
+--	left outer join t_homemem tabb
+--	on taba.hid = tabb.HID AND taba.userid = tabb.[USER];
 	
-GO
+--GO
 
 
-/****** Object:  View [dbo].[v_lrn_ctgylrndate]    Script Date: 2017-10-02 10:44:17 AM ******/
-SET ANSI_NULLS ON
-GO
+--/****** Object:  View [dbo].[v_lrn_ctgylrndate]    Script Date: 2017-10-02 10:44:17 AM ******/
+--SET ANSI_NULLS ON
+--GO
 
-SET QUOTED_IDENTIFIER ON
-GO
+--SET QUOTED_IDENTIFIER ON
+--GO
 
-DROP VIEW IF EXISTS [dbo].[v_lrn_ctgylrndate];
-GO
+--DROP VIEW IF EXISTS [dbo].[v_lrn_ctgylrndate];
+--GO
 
-create view [dbo].[v_lrn_ctgylrndate]
-as
-select HID, CATEGORY, LEARNDATE, COUNT(*) as learncount
-from (
-select taba.HID, taba.USERID, tabb.CATEGORY, taba.LEARNDATE from t_learn_hist taba
-	left outer join t_learn_obj tabb on taba.objectid = tabb.ID ) tabc
-	group by HID, CATEGORY, LEARNDATE;
-GO
+--create view [dbo].[v_lrn_ctgylrndate]
+--as
+--select HID, CATEGORY, LEARNDATE, COUNT(*) as learncount
+--from (
+--select taba.HID, taba.USERID, tabb.CATEGORY, taba.LEARNDATE from t_learn_hist taba
+--	left outer join t_learn_obj tabb on taba.objectid = tabb.ID ) tabc
+--	group by HID, CATEGORY, LEARNDATE;
+--GO
 
 -- Updated at 2017.10.24
 /****** Object:  View [dbo].[v_fin_report_order]    Script Date: 2017-10-24 10:04:07 PM ******/
@@ -872,49 +872,49 @@ SELECT tab_a.[ORDERID],
 		[t_fin_order].[VALID_FROM] AS [ORDERVALID_FROM],
 		[t_fin_order].[VALID_TO] AS [ORDERVALID_TO],
 		(case
-            when ([v_fin_grp_order_tranexp].[balance_lc] is not null) then [v_fin_grp_order_tranexp].[balance_lc]
+            when ([v_fin_grp_ord_tranexp].[balance_lc] is not null) then [v_fin_grp_ord_tranexp].[balance_lc]
             else 0.0
         end) AS [balance_lc]
 	FROM [dbo].[t_fin_order]
-	LEFT OUTER JOIN [dbo].[v_fin_grp_order_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_order_tranexp].orderid
-		AND [v_fin_grp_order_tranexp].[trantype_exp] = 0 ) tab_a
+	LEFT OUTER JOIN [dbo].[v_fin_grp_ord_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_ord_tranexp].orderid
+		AND [v_fin_grp_ord_tranexp].[trantype_exp] = 0 ) tab_a
 
 	JOIN 
 
 	( SELECT [t_fin_order].[ID] AS [ORDERID],
 		[t_fin_order].[NAME] AS [ORDERNAME],
 		(case
-            when ([v_fin_grp_order_tranexp].[balance_lc] is not null) then [v_fin_grp_order_tranexp].[balance_lc] * -1
+            when ([v_fin_grp_ord_tranexp].[balance_lc] is not null) then [v_fin_grp_ord_tranexp].[balance_lc] * -1
             else 0.0
         end) AS [balance_lc]
 	FROM [dbo].[t_fin_order]
-	LEFT OUTER JOIN [dbo].[v_fin_grp_order_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_order_tranexp].orderid
-		AND [v_fin_grp_order_tranexp].[trantype_exp] = 1 ) tab_b
+	LEFT OUTER JOIN [dbo].[v_fin_grp_ord_tranexp] ON [t_fin_order].[ID] = [v_fin_grp_ord_tranexp].orderid
+		AND [v_fin_grp_ord_tranexp].[trantype_exp] = 1 ) tab_b
 
 	ON tab_a.[ORDERID] = tab_b.[ORDERID]
 
 GO
 
--- Updated at 2017.10.29
-/****** Object:  View [dbo].[v_lrn_qtnbank]    Script Date: 2017-10-29 12:26:21 AM ******/
-SET ANSI_NULLS ON
-GO
+---- Updated at 2017.10.29
+--/****** Object:  View [dbo].[v_lrn_qtnbank]    Script Date: 2017-10-29 12:26:21 AM ******/
+--SET ANSI_NULLS ON
+--GO
 
-SET QUOTED_IDENTIFIER ON
-GO
+--SET QUOTED_IDENTIFIER ON
+--GO
 
-DROP VIEW IF EXISTS [dbo].[v_lrn_qtnbank]
-GO
+--DROP VIEW IF EXISTS [dbo].[v_lrn_qtnbank]
+--GO
 
-create view [dbo].[v_lrn_qtnbank]
-as
-select taba.ID, taba.HID, taba.[Type], taba.Question, tabb.SUBITEM, tabb.DETAIL,  
-	taba.BriefAnswer, taba.CREATEDBY, taba.CREATEDAT, taba.UPDATEDBY, taba.UPDATEDAT,
-	tabb.OTHERS
-	 from t_learn_qtn_bank taba
-	left outer join t_learn_qtn_bank_sub tabb
-		on taba.ID = tabb.QTNID
-GO
+--create view [dbo].[v_lrn_qtnbank]
+--as
+--select taba.ID, taba.HID, taba.[Type], taba.Question, tabb.SUBITEM, tabb.DETAIL,  
+--	taba.BriefAnswer, taba.CREATEDBY, taba.CREATEDAT, taba.UPDATEDBY, taba.UPDATEDAT,
+--	tabb.OTHERS
+--	 from t_learn_qtn_bank taba
+--	left outer join t_learn_qtn_bank_sub tabb
+--		on taba.ID = tabb.QTNID
+--GO
 
 -- Updated at 2018.3.14
 /****** Object:  View [dbo].[v_event_habitdetail]    Script Date: 2018-03-14 6:58:39 PM ******/

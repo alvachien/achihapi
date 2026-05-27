@@ -97,7 +97,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             // Check document type, DP, Asset, loan document is not allowed
@@ -128,7 +128,7 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == document.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == document.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -150,7 +150,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             if (key != update.ID)
@@ -174,7 +174,7 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == update.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == update.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -255,7 +255,7 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == cc.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == cc.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
@@ -365,7 +365,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             var entity = await _context.FinanceDocument.FindAsync(key);
@@ -427,7 +427,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             if (createContext == null
@@ -472,7 +472,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.AccountInfo.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == createContext.AccountInfo.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -519,7 +519,7 @@ namespace hihapi.Controllers
             var origdocid = 0;
             var dpaccountid = 0;
 
-            using (var transaction = _context.Database.BeginTransaction())
+            await using var transaction = await _context.Database.BeginTransactionAsync();
             {
                 try
                 {
@@ -564,13 +564,13 @@ namespace hihapi.Controllers
                 {
                     errorOccur = true;
                     errorString = exp.Message;
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                 }
             }
 
             if (errorOccur)
             {
-                throw new BadRequestException(errorString);
+                throw new BadRequestException("Transaction failed. Please check your input data.");
             }
 
             return Ok(createContext.DocumentInfo);
@@ -581,7 +581,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             Boolean isLegacyLoan = createContext.IsLegacy.GetValueOrDefault() ? true : false;
@@ -646,7 +646,7 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.AccountInfo.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == createContext.AccountInfo.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -685,7 +685,7 @@ namespace hihapi.Controllers
             var origdocid = 0;
             var dpaccountid = 0;
 
-            using (var transaction = _context.Database.BeginTransaction())
+            await using var transaction = await _context.Database.BeginTransactionAsync();
             {
                 try
                 {
@@ -751,13 +751,13 @@ namespace hihapi.Controllers
                 {
                     errorOccur = true;
                     errorString = exp.Message;
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                 }
             }
 
             if (errorOccur)
             {
-                throw new BadRequestException(errorString);
+                throw new BadRequestException("Transaction failed. Please check your input data.");
             }
 
             return Ok(createContext.DocumentInfo);
@@ -768,7 +768,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             if (createContext == null || createContext.ExtraAsset == null)
@@ -791,7 +791,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.HID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == createContext.HID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -878,7 +878,7 @@ namespace hihapi.Controllers
             var origdocid = 0;
             var assetaccountid = 0;
 
-            using (var transaction = _context.Database.BeginTransaction())
+            await using var transaction = await _context.Database.BeginTransactionAsync();
             {
                 try
                 {
@@ -923,13 +923,13 @@ namespace hihapi.Controllers
                 {
                     errorOccur = true;
                     errorString = exp.Message;
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                 }
             }
 
             if (errorOccur)
             {
-                throw new BadRequestException(errorString);
+                throw new BadRequestException("Transaction failed. Please check your input data.");
             }
 
             return Ok(vmFIDoc);
@@ -940,7 +940,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             if (createContext == null)
@@ -967,7 +967,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.HID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == createContext.HID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -1025,6 +1025,8 @@ namespace hihapi.Controllers
                          join assetaccount in this._context.FinanceAccountExtraAS on account.ID equals assetaccount.AccountID
                          where account.ID == createContext.AssetAccountID
                          select new { Status = account.Status, RefSellDoc = assetaccount.RefenceSoldDocumentID }).FirstOrDefault();
+            if (query == null)
+                throw new NotFoundException("Asset account not found");
             if (query.Status != (Byte)FinanceAccountStatus.Normal)
             {
                 throw new BadRequestException("Account status is not normal");
@@ -1039,12 +1041,12 @@ namespace hihapi.Controllers
                           where docitem.AccountID == createContext.AssetAccountID
                           orderby docheader.TranDate descending
                           select new { TranDate = docheader.TranDate }).FirstOrDefault();
-            if (createContext.TranDate < query2.TranDate)
+            if (query2 != null && createContext.TranDate < query2.TranDate)
                 throw new BadRequestException("Tran. data is invalid");
             // Additional check 3. Fetch current balance
             var query3 = (from acntbal in this._context.FinanceReporAccountGroupView
                           where acntbal.AccountID == createContext.AssetAccountID
-                          select acntbal.Balance).First();
+                          select acntbal.Balance).FirstOrDefault();
             if (query3 <= 0)
                 throw new BadRequestException("Balance is less than zero");
             // Additional check 4: the balance with the inputted value
@@ -1073,7 +1075,7 @@ namespace hihapi.Controllers
             var errorOccur = false;
             var origdocid = 0;
 
-            using (var transaction = _context.Database.BeginTransaction())
+            await using var transaction = await _context.Database.BeginTransactionAsync();
             {
                 try
                 {
@@ -1092,13 +1094,13 @@ namespace hihapi.Controllers
                 {
                     errorOccur = true;
                     errorString = exp.Message;
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                 }
             }
 
             if (errorOccur)
             {
-                throw new BadRequestException(errorString);
+                throw new BadRequestException("Transaction failed. Please check your input data.");
             }
 
             return Ok(vmFIDoc);
@@ -1109,7 +1111,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             if (createContext.HID <= 0)
@@ -1136,7 +1138,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.HID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == createContext.HID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -1172,6 +1174,8 @@ namespace hihapi.Controllers
                          join assetaccount in this._context.FinanceAccountExtraAS on account.ID equals assetaccount.AccountID
                          where account.ID == createContext.AssetAccountID
                          select new { Status = account.Status, RefSellDoc = assetaccount.RefenceSoldDocumentID }).FirstOrDefault();
+            if (query == null)
+                throw new NotFoundException("Asset account not found");
             if (query.Status != (Byte)FinanceAccountStatus.Normal)
             {
                 throw new BadRequestException("Account status is not normal");
@@ -1187,13 +1191,13 @@ namespace hihapi.Controllers
                           where docitem.AccountID == createContext.AssetAccountID
                           orderby docheader.TranDate descending
                           select new { TranDate = docheader.TranDate }).FirstOrDefault();
-            if (createContext.TranDate < query2.TranDate)
+            if (query2 != null && createContext.TranDate < query2.TranDate)
                 throw new BadRequestException("Tran. data is invalid");
 
             // Check 3. Fetch current balance
             var query3 = (from acntbal in this._context.FinanceReporAccountGroupView
                           where acntbal.AccountID == createContext.AssetAccountID
-                          select acntbal.Balance).First();
+                          select acntbal.Balance).FirstOrDefault();
             if (query3 <= 0)
                 throw new BadRequestException("Balance is less than zero");
 
@@ -1247,7 +1251,7 @@ namespace hihapi.Controllers
             var errorOccur = false;
             var origdocid = 0;
 
-            using (var transaction = _context.Database.BeginTransaction())
+            await using var transaction = await _context.Database.BeginTransactionAsync();
             {
                 try
                 {
@@ -1266,13 +1270,13 @@ namespace hihapi.Controllers
                 {
                     errorOccur = true;
                     errorString = exp.Message;
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                 }
             }
 
             if (errorOccur)
             {
-                throw new BadRequestException(errorString);
+                throw new BadRequestException("Transaction failed. Please check your input data.");
             }
 
             return Ok(vmFIDoc);
@@ -1283,7 +1287,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             if (depContext.HID <= 0)
@@ -1306,7 +1310,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == depContext.HID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == depContext.HID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -1334,7 +1338,7 @@ namespace hihapi.Controllers
             var errorOccur = false;
             var origdocid = 0;
 
-            using (var transaction = _context.Database.BeginTransaction())
+            await using var transaction = await _context.Database.BeginTransactionAsync();
             {
                 try
                 {
@@ -1354,13 +1358,13 @@ namespace hihapi.Controllers
                 {
                     errorOccur = true;
                     errorString = exp.Message;
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                 }
             }
 
             if (errorOccur)
             {
-                throw new BadRequestException(errorString);
+                throw new BadRequestException("Transaction failed. Please check your input data.");
             }
 
             return Ok(vmFIDoc);
@@ -1400,7 +1404,7 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            List<FinanceAssetDepreicationResult> rsts = new List<FinanceAssetDepreicationResult>();
+            List<FinanceAssetDepreciationResult> rsts = new List<FinanceAssetDepreciationResult>();
             // Find out the date
             DateTime dtMonthFirstday = new DateTime(year, month, 1);
             DateTime dtMonthLastday = dtMonthFirstday.AddMonths(1).AddDays(-1);
@@ -1418,7 +1422,10 @@ namespace hihapi.Controllers
                             accountext.BoughtDate,
                             accountext.ResidualValue
                           };
-            var lc = _context.HomeDefines.First(prop => prop.ID == hid).BaseCurrency;
+            var homeDefine = _context.HomeDefines.FirstOrDefault(prop => prop.ID == hid);
+            if (homeDefine == null)
+                throw new NotFoundException("Home not found");
+            var lc = homeDefine.BaseCurrency;
 
             // Get the balance
             var dbresults = (
@@ -1496,7 +1503,7 @@ namespace hihapi.Controllers
                 var leftMonth = (acnt.ExpiredDate.Value - dtMonthLastday).TotalDays / 30;
                 if (leftMonth > 0)
                 {
-                    FinanceAssetDepreicationResult result = new FinanceAssetDepreicationResult();
+                    FinanceAssetDepreciationResult result = new FinanceAssetDepreciationResult();
                     result.TranCurr = lc;
                     result.TranDate = dtMonthLastday;
                     result.TranAmount = Math.Round((Decimal)(doubleAmount / leftMonth), 2);

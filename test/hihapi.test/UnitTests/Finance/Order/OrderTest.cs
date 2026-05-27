@@ -53,7 +53,7 @@ namespace hihapi.unittest.Finance
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
-                        Precent = 100
+                        Percent = 100
                     },
                 },
                 ExpectedValidResult = false,
@@ -67,7 +67,7 @@ namespace hihapi.unittest.Finance
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
-                        Precent = 100
+                        Percent = 100
                     },
                 },
                 ExpectedValidResult = true,
@@ -81,7 +81,7 @@ namespace hihapi.unittest.Finance
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
-                        Precent = 10
+                        Percent = 10
                     },
                 },
                 ExpectedValidResult = false,
@@ -95,12 +95,12 @@ namespace hihapi.unittest.Finance
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
-                        Precent = 10
+                        Percent = 10
                     },
                     new FinanceOrderSRule() {
                         RuleID = 1,
                         ControlCenterID = DataSetupUtility.Home1ControlCenter2ID,
-                        Precent = 95
+                        Percent = 95
                     },
                 },
                 ExpectedValidResult = false,

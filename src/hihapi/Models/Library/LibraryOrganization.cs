@@ -11,11 +11,11 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        [Column("ID", TypeName = "INT")]
+        [Column("ID", TypeName = "INTEGER")]
         public int Id { get; set; }
 
         [Required]
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
         [Column("NATIVE_NAME", TypeName = "NVARCHAR(100)")]
@@ -29,6 +29,7 @@ namespace hihapi.Models.Library
         [Column("DETAIL", TypeName = "NVARCHAR(200)")]
         public string Detail { get; set; }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
 
         public IList<LibraryOrganizationType> Types{ get; set; }

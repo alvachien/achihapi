@@ -33,6 +33,7 @@ namespace hihapi.Models
         [Column("OWNER", TypeName="NVARCHAR(40)")]
         public String Owner { get; set; }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
 
         public FinanceControlCenter(): base()

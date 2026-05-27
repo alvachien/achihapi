@@ -39,9 +39,26 @@ namespace hihapi.Utilities
         const string SettingFile = @"blog_setting.json";
         const string PostsFolder = @"posts";
 
-        public static void UpdatePostSetting(BlogUserSetting setting)
+        private static string SanitizeDeployFolder(string deployFolder)
         {
-            string rootFolder = Path.Combine(Startup.BlogFolder, setting.DeployFolder);
+            if (string.IsNullOrWhiteSpace(deployFolder))
+                throw new ArgumentException("Deploy folder cannot be empty");
+
+            // Reject path traversal sequences
+            if (deployFolder.Contains("..") || deployFolder.Contains('/') || deployFolder.Contains('\\'))
+                throw new ArgumentException("Deploy folder contains invalid characters");
+
+            var fullPath = Path.GetFullPath(Path.Combine(HIHAPIUtility.BlogFolder, deployFolder));
+            var blogDir = Path.GetFullPath(HIHAPIUtility.BlogFolder);
+            if (!fullPath.StartsWith(blogDir, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Deploy folder is outside the blog directory");
+
+            return fullPath;
+        }
+
+        public static async Task UpdatePostSettingAsync(BlogUserSetting setting)
+        {
+            string rootFolder = SanitizeDeployFolder(setting.DeployFolder);
             if (!Directory.Exists(rootFolder))
             {
                 Directory.CreateDirectory(rootFolder);
@@ -52,28 +69,18 @@ namespace hihapi.Utilities
             sjon.title = setting.Name;
             sjon.footer = setting.Comment;
 
-            try
-            {
-                var jsonString = JsonSerializer.Serialize(sjon);
-                File.WriteAllText(fileName, jsonString);
-            }
-            catch(Exception exp)
-            {
-#if DEBUG
-                System.Diagnostics.Debug.WriteLine(exp.Message);
-#endif
-                throw;
-            }
+            var jsonString = JsonSerializer.Serialize(sjon);
+            await File.WriteAllTextAsync(fileName, jsonString);
         }
 
-        public static void DeployPost(string deployFolder, BlogPost post, List<BlogCollection> blogCollections)
+        public static async Task DeployPost(string deployFolder, BlogPost post, List<BlogCollection> blogCollections)
         {
-            if (String.IsNullOrEmpty(deployFolder) || !Directory.Exists(Startup.BlogFolder))
+            if (String.IsNullOrEmpty(deployFolder) || !Directory.Exists(HIHAPIUtility.BlogFolder))
             {
-                throw new Exception("Deploy Folder" + deployFolder + "; Blog Folder" + Startup.BlogFolder);
+                throw new ArgumentException("Deploy Folder " + deployFolder + "; Blog Folder " + HIHAPIUtility.BlogFolder);
             }
 
-            string rootFolder = Path.Combine(Startup.BlogFolder, deployFolder);
+            string rootFolder = SanitizeDeployFolder(deployFolder);
             string postFolder = Path.Combine(rootFolder, PostsFolder);
             if (!Directory.Exists(rootFolder))
             {
@@ -90,7 +97,7 @@ namespace hihapi.Utilities
             String fileName = Path.Combine(rootFolder, PostDefineFile);
             if (File.Exists(fileName))
             {
-                jsonstr = File.ReadAllText(fileName);
+                jsonstr = await File.ReadAllTextAsync(fileName);
                 listposts = JsonSerializer.Deserialize<List<BlogPostDefJson>>(jsonstr);
             }
 
@@ -100,6 +107,13 @@ namespace hihapi.Utilities
                 title = post.Title,
                 brief = post.Brief,
             };
+            // Tags
+            foreach(var tagterm in post.BlogPostTags)
+            {
+                newpost.tag.Add(tagterm.Tag);
+            }
+
+            // Post itself
             if (post.CreatedAt.HasValue)
             {
                 newpost.createdat = post.CreatedAt.Value.ToString("s");
@@ -134,22 +148,29 @@ namespace hihapi.Utilities
             {
                 listposts[postidx] = newpost;
             }
-            jsonstr = JsonSerializer.Serialize(listposts);
-            File.WriteAllText(fileName, jsonstr);
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            {
+                using FileStream createStream = File.Create(fileName);
+                await JsonSerializer.SerializeAsync(createStream, listposts, options);
+            }
+            //File.WriteAllText(fileName, jsonstr);
 
             // MD file
             fileName = Path.Combine(postFolder, post.ID.ToString() + ".md");
-            File.WriteAllText(fileName, post.Content);
+            using (StreamWriter writer = File.CreateText(fileName))
+            {
+                await writer.WriteAsync(post.Content);
+            }
         }
  
         public static void RevokePostDeliver(string deployFolder, int postid)
         {
-            if (String.IsNullOrEmpty(deployFolder) || !Directory.Exists(Startup.BlogFolder))
+            if (String.IsNullOrEmpty(deployFolder) || !Directory.Exists(HIHAPIUtility.BlogFolder))
             {
                 return;
             }
 
-            string rootFolder = Path.Combine(Startup.BlogFolder, deployFolder);
+            string rootFolder = SanitizeDeployFolder(deployFolder);
             if (!Directory.Exists(rootFolder))
             {
                 return;
@@ -174,14 +195,13 @@ namespace hihapi.Utilities
 
             // MD file
             string postFolder = Path.Combine(rootFolder, PostsFolder);
-            if (!Directory.Exists(postFolder))
+            if (Directory.Exists(postFolder))
             {
-                return;
-            }
-            fileName = Path.Combine(postFolder, postid.ToString() + ".md");
-            if (File.Exists(fileName))
-            {
-                File.Delete(fileName);
+                fileName = Path.Combine(postFolder, postid.ToString() + ".md");
+                if (File.Exists(fileName))
+                {
+                    File.Delete(fileName);
+                }
             }
         }
     }

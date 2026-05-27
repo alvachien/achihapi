@@ -345,4 +345,6 @@ uploads/
 blogs/
 src/achihapi/uploads/
 src/achihapi/blogs/
+*.db
+data/
 

@@ -1,9 +1,10 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-	  <TargetFramework>net6.0</TargetFramework>
+	  <TargetFramework>net10.0</TargetFramework>
 	  <UserSecretsId>cf80adf9-ce70-4ce9-bb4e-a73887a492a6</UserSecretsId>
-    <Version>1.6.330</Version>
+	  <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
+    <Version>1.6.355</Version>
     <Authors>Alva Chien</Authors>
     <Product>H.I.H.</Product>
     <Copyright>© Alva Chien, 2019 - Present</Copyright>
@@ -14,65 +15,16 @@
     <RepositoryUrl>https://github.com/alvachien/achihapi</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>USE_ALIYUN</DefineConstants>
-  </PropertyGroup>
   <ItemGroup>
-    <None Remove="Sqls\Delta\v1.sql" />
-    <None Remove="Sqls\Delta\v10.sql" />
-    <None Remove="Sqls\Delta\v11.sql" />
-    <None Remove="Sqls\Delta\v12.sql" />
-    <None Remove="Sqls\Delta\v13.sql" />
-    <None Remove="Sqls\Delta\v14.sql" />
-    <None Remove="Sqls\Delta\v15.sql" />
-    <None Remove="Sqls\Delta\v16.sql" />
-    <None Remove="Sqls\Delta\v17.sql" />
-    <None Remove="Sqls\Delta\v18.sql" />
-    <None Remove="Sqls\Delta\v19.sql" />
-    <None Remove="Sqls\Delta\v2.sql" />
-    <None Remove="Sqls\Delta\v21.sql" />
-    <None Remove="Sqls\Delta\v3.sql" />
-    <None Remove="Sqls\Delta\v4.sql" />
-    <None Remove="Sqls\Delta\v5.sql" />
-    <None Remove="Sqls\Delta\v6.sql" />
-    <None Remove="Sqls\Delta\v7.sql" />
-    <None Remove="Sqls\Delta\v8.sql" />
-    <None Remove="Sqls\Delta\v9.sql" />
-    <None Remove="Sqls\Delta\v20.sql" />
+    <InternalsVisibleTo Include="hihapi.unittest" />
+    <InternalsVisibleTo Include="hihapi.integrationtest" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.3" />
-    <PackageReference Include="Microsoft.AspNetCore.OData" Version="8.0.10" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="4.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.2" />
-    <PackageReference Include="Serilog.AspNetCore" Version="5.0.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Sqls\Delta\v1.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v10.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v11.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v12.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v13.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v14.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v15.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v16.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v17.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v18.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v19.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v2.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v21.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v3.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v4.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v5.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v6.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v7.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v8.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v9.sql" />
-    <EmbeddedResource Include="Sqls\Delta\v20.sql" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\PublishProfiles\" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.OData" Version="9.4.1" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.7" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
 </Project>

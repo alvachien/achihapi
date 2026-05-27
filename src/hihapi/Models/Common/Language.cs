@@ -9,7 +9,7 @@ namespace hihapi.Models
     public partial class Language
     {        
         [Key]
-        [Column("LCID", TypeName = "INT")]
+        [Column("LCID", TypeName = "INTEGER")]
         public int Lcid { get; set; }
 
         [Required]

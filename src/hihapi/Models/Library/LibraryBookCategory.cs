@@ -17,10 +17,10 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        [Column("ID", TypeName = "INT")]
+        [Column("ID", TypeName = "INTEGER")]
         public int Id { get; set; }
 
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32? HomeID { get; set; }
 
         [Required]
@@ -32,13 +32,14 @@ namespace hihapi.Models.Library
         [Column("COMMENT", TypeName = "NVARCHAR(100)")]
         public String Comment { get; set; }
 
-        [Column("PARID", TypeName = "INT")]
+        [Column("PARID", TypeName = "INTEGER")]
         public Int32? ParentID { get; set; }
 
         //[StringLength(45)]
-        //[Column("VALUE", TypeName = "INT")]
+        //[Column("VALUE", TypeName = "INTEGER")]
         //public LibraryBookCategoryEnum CategoryValue { get; set; }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
 
         public IList<LibraryBook> Books { get; set; }

@@ -16,10 +16,10 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        [Column("ID", TypeName = "INT")]
+        [Column("ID", TypeName = "INTEGER")]
         public int Id { get; set; }
 
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32? HomeID { get; set; }
 
         [Required]
@@ -32,9 +32,10 @@ namespace hihapi.Models.Library
         public String Comment { get; set; }
 
         //[StringLength(45)]
-        //[Column("VALUE", TypeName = "INT")]
+        //[Column("VALUE", TypeName = "INTEGER")]
         //public LibraryOrganizationTypeEnum CategoryValue { get; set; }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
 
         public IList<LibraryOrganization> Organizations { get; set; }
@@ -47,12 +48,12 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        [Column("ORG_ID", TypeName = "INT")]
+        [Column("ORG_ID", TypeName = "INTEGER")]
         public int OrganizationId { get; set; }
 
         [Key]
         [Required]
-        [Column("TYPE_ID", TypeName = "INT")]
+        [Column("TYPE_ID", TypeName = "INTEGER")]
         public int TypeId { get; set; }
 
         public LibraryOrganization Organization { get; set; }

@@ -29,6 +29,7 @@ namespace hihapi.Models
         [Column("COMMENT", TypeName="NVARCHAR(45)")]
         public String Comment { get; set; }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
 
         public FinanceAccountCategory(): base()

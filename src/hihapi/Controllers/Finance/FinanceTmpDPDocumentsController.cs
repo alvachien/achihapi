@@ -148,7 +148,7 @@ namespace hihapi.Controllers
                     findoc.CreatedAt = DateTime.Now;
                     findoc.Createdby = usrName;
                     var docEntity = _context.FinanceDocument.Add(findoc);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
                     origdocid = docEntity.Entity.ID;
 
                     // 2. Update the tmp doc
@@ -156,7 +156,7 @@ namespace hihapi.Controllers
                     tpdoc.UpdatedAt = DateTime.Now;
                     tpdoc.Updatedby = usrName;
                     _context.FinanceTmpDPDocument.Update(tpdoc);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     // 3. Close DP account
                     if (leftItemsCnt == 0)
@@ -165,7 +165,7 @@ namespace hihapi.Controllers
                         dpAccount.Updatedby = usrName;
                         dpAccount.UpdatedAt = DateTime.Now;
                         _context.FinanceAccount.Update(dpAccount);
-                        _context.SaveChanges();
+                        await _context.SaveChangesAsync();
                     }
 
                     findoc = docEntity.Entity;

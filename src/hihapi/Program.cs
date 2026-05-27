@@ -1,70 +1,181 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
+using hihapi.Models;
+using hihapi;
+using hihapi.Utilities;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using Microsoft.OData.Edm;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.OData;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
 
-namespace hihapi
+var builder = WebApplication.CreateBuilder(args);
+
+// Config the log
+builder.Host.UseSerilog((context, config) =>
 {
-    public class Program
+    var environment = context.HostingEnvironment;
+    var outputTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{Exception}";
+
+    if (environment.IsDevelopment())
     {
-        public static int Main(string[] args)
-        {
-            Log.Logger = new LoggerConfiguration()
-#if DEBUG
-            .MinimumLevel.Information()            
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Information)
-#else
-            .MinimumLevel.Warning()
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-#endif
-            .Enrich.FromLogContext()
-#if DEBUG
-            .WriteTo.Console(theme: SystemConsoleTheme.Colored)
-#else
-            .WriteTo.File(
-                    @"C:\WebApps\Logs\HIHAPI\log.txt",
-                    fileSizeLimitBytes: 1_000_000,
-                    rollOnFileSizeLimit: true,
-                    shared: true,
-                    flushToDiskInterval: TimeSpan.FromSeconds(30))
-#endif
-            .CreateLogger();
-
-            try
-            {
-                var host = CreateHostBuilder(args).Build();
-                Log.Information("Starting host...");
-                host.Run();
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                Log.Fatal(ex, "Host terminated unexpectedly.");
-                return 1;
-            }
-            finally
-            {
-               Log.CloseAndFlush();
-            }
-        }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .UseSerilog()
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+        config.MinimumLevel.Is(LogEventLevel.Information)
+             .Enrich.FromLogContext()
+             .WriteTo.Console(theme: SystemConsoleTheme.Colored);
     }
+    else if (environment.IsProduction())
+    {
+        config.MinimumLevel.Is(LogEventLevel.Warning)
+             .Enrich.FromLogContext()
+             .WriteTo.File(
+                 path: "../Logs/hihapi/log-.txt",
+                 rollingInterval: RollingInterval.Day,
+                 outputTemplate: outputTemplate,
+                 retainedFileCountLimit: 14
+             );
+    }
+});
+
+// Ensure folders exist
+HIHAPIUtility.UploadFolder = HIHAPIUtility.EnsureFolderExistence(builder.Environment.ContentRootPath, @"data/uploads");
+HIHAPIUtility.BlogFolder = HIHAPIUtility.EnsureFolderExistence(builder.Environment.ContentRootPath, @"data/blogs");
+
+// Connection string
+var connectionString = builder.Configuration.GetConnectionString("DefaultDB");
+if (!string.IsNullOrEmpty(connectionString))
+{
+    builder.Services.AddDbContext<hihDataContext>(options => options.UseSqlite(connectionString));
 }
+
+builder.Services.AddHttpContextAccessor();
+
+// OData Edm Model
+IEdmModel model = EdmModelBuilder.GetEdmModel();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(x =>
+    {
+        x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    })
+    .AddOData(opt => opt.Count().Filter().Expand().Select().OrderBy().SetMaxTop(100)
+    .AddRouteComponents(model)
+    .AddRouteComponents("v1", model)
+    );
+
+// Read auth/CORS config from appsettings
+var identityServerUrl = builder.Configuration["Auth:IdentityServerUrl"] ?? "https://localhost:44353";
+var jwtAudience = builder.Configuration["Auth:JwtAudience"] ?? "api.hih";
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? new[] { "https://localhost:29521", "https://localhost:29528", "https://localhost:29525" };
+
+const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddAuthentication("Bearer")
+        .AddJwtBearer("Bearer", options =>
+        {
+            options.Authority = identityServerUrl;
+            options.RequireHttpsMetadata = false;
+
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false
+            };
+        });
+}
+else if (builder.Environment.IsProduction())
+{
+    builder.Services.AddAuthentication("Bearer")
+        .AddJwtBearer("Bearer", options =>
+        {
+            options.Authority = identityServerUrl;
+            options.RequireHttpsMetadata = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = true,
+                ValidAudience = jwtAudience
+            };
+        });
+}
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(MyAllowSpecificOrigins, builder =>
+    {
+        builder.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE")
+            .AllowCredentials();
+    });
+});
+
+// Fallback authorization policy — all endpoints require auth by default
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
+// Response Caching
+builder.Services.AddResponseCaching();
+// Memory cache
+builder.Services.AddMemoryCache();
+// Health checks
+builder.Services.AddHealthChecks();
+
+var app = builder.Build();
+
+// Seed reference data on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<hihDataContext>();
+    await DatabaseSeeder.SeedAsync(db);
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseHsts();
+}
+
+app.UseSerilogRequestLogging();
+
+// Security headers middleware
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+    await next();
+});
+
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
+app.UseHttpsRedirection();
+
+app.UseODataBatching();
+
+app.UseResponseCaching();
+
+app.UseRouting();
+
+app.UseCors(MyAllowSpecificOrigins);
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+app.MapHealthChecks("/health");
+
+app.Run();

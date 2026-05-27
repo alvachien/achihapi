@@ -1900,19 +1900,19 @@ namespace hihapi.test.common
                     {
                         RuleID = 1,
                         ControlCenterID = 3,
-                        Precent = 25
+                        Percent = 25
                     },
                     new FinanceOrderSRule
                     {
                         RuleID = 2,
                         ControlCenterID = 4,
-                        Precent = 25
+                        Percent = 25
                     },
                     new FinanceOrderSRule
                     {
                         RuleID = 3,
                         ControlCenterID = 8,
-                        Precent = 50
+                        Percent = 50
                     },
                 }
             });
@@ -1929,19 +1929,19 @@ namespace hihapi.test.common
                     {
                         RuleID = 1,
                         ControlCenterID = 3,
-                        Precent = 25
+                        Percent = 25
                     },
                     new FinanceOrderSRule
                     {
                         RuleID = 2,
                         ControlCenterID = 4,
-                        Precent = 25
+                        Percent = 25
                     },
                     new FinanceOrderSRule
                     {
                         RuleID = 3,
                         ControlCenterID = 5,
-                        Precent = 50
+                        Percent = 50
                     },
                 }
             });
@@ -1958,13 +1958,13 @@ namespace hihapi.test.common
                     {
                         RuleID = 1,
                         ControlCenterID = 6,
-                        Precent = 50
+                        Percent = 50
                     },
                     new FinanceOrderSRule
                     {
                         RuleID = 2,
                         ControlCenterID = 7,
-                        Precent = 50
+                        Percent = 50
                     },
                 }
             });
@@ -2357,7 +2357,7 @@ namespace hihapi.test.common
                     {
                         RuleID = 1,
                         ControlCenterID = 101,
-                        Precent = 100
+                        Percent = 100
                     },
                 }
             });
@@ -2374,7 +2374,7 @@ namespace hihapi.test.common
                     {
                         RuleID = 1,
                         ControlCenterID = 101,
-                        Precent = 100
+                        Percent = 100
                     },
                 }
             });
@@ -2714,7 +2714,7 @@ namespace hihapi.test.common
                     {
                         RuleID = 1,
                         ControlCenterID = 201,
-                        Precent = 100
+                        Percent = 100
                     },
                 }
             });
@@ -2731,13 +2731,13 @@ namespace hihapi.test.common
                     {
                         RuleID = 1,
                         ControlCenterID = 202,
-                        Precent = 80
+                        Percent = 80
                     },
                     new FinanceOrderSRule
                     {
                         RuleID = 2,
                         ControlCenterID = 203,
-                        Precent = 20
+                        Percent = 20
                     },
                 }
             });
@@ -2908,7 +2908,7 @@ namespace hihapi.test.common
                     {
                         RuleID = 1,
                         ControlCenterID = 301,
-                        Precent = 100
+                        Percent = 100
                     },
                 }
             });
@@ -3069,7 +3069,7 @@ namespace hihapi.test.common
                     {
                         RuleID = 1,
                         ControlCenterID = 401,
-                        Precent = 100
+                        Percent = 100
                     },
                 }
             });
@@ -3290,7 +3290,7 @@ namespace hihapi.test.common
             {
                 RuleID = 1,
                 ControlCenterID = ccid,
-                Precent = 100
+                Percent = 100
             });
 
             context.FinanceOrder.Add(order);

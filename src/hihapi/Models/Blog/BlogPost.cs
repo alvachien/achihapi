@@ -21,7 +21,7 @@ namespace hihapi.Models
 
         [Key]
         [Required]
-        [Column("ID", TypeName = "INT")]
+        [Column("ID", TypeName = "INTEGER")]
         public int ID { get; set; }
 
         [Required]
@@ -29,7 +29,7 @@ namespace hihapi.Models
         public string Owner { get; set; }
 
         [Required]
-        [Column("FORMAT", TypeName = "INT")]
+        [Column("FORMAT", TypeName = "INTEGER")]
         public int Format { get; set; }
 
         [Required]
@@ -37,15 +37,16 @@ namespace hihapi.Models
         public string Title { get; set; }
 
         [Required]
-        [Column("Brief", TypeName = "NVARCHAR(100)")]
+        [StringLength(200)]
+        [Column("Brief", TypeName = "NVARCHAR(200)")]
         public string Brief { get; set; }
 
         [Required]
-        [Column("Content", TypeName = "NVARCHAR(MAX)")]
+        [Column("Content", TypeName = "TEXT")]
         public string Content { get; set; }
 
         [Required]
-        [Column("Status", TypeName = "INT")]
+        [Column("Status", TypeName = "INTEGER")]
         public int Status { get; set; }
 
         [Column("CREATEDAT")]

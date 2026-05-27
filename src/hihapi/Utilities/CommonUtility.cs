@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using hihapi.Exceptions;
@@ -10,7 +11,7 @@ namespace hihapi.Utilities
 {
     internal class HIHAPIConstants
     {
-        public const String OnlyOwnerAndDispaly = "OnlyOwnerAndDisplay";
+        public const String OnlyOwnerAndDisplay = "OnlyOwnerAndDisplay";
         public const String OnlyOwnerFullControl = "OnlyOwnerFullControl";
         public const String OnlyOwner = "OnlyOwner";
         public const String Display = "Display";
@@ -27,21 +28,18 @@ namespace hihapi.Utilities
 
     internal static class HIHAPIUtility
     {
-        internal static void HandleModalStateError(ModelStateDictionary modelState)
+        internal static void HandleModelStateError(ModelStateDictionary modelState)
         {
-            string strModalError = "";
+            var errors = new List<string>();
             foreach (var value in modelState.Values)
             {
                 foreach (var err in value.Errors)
                 {
-                    strModalError = err.Exception != null ? err.Exception.Message : err.ErrorMessage;
-#if DEBUG
-                    System.Diagnostics.Debug.WriteLine("Modal State Failed: " + strModalError);
-#endif
+                    errors.Add(err.Exception != null ? err.Exception.Message : err.ErrorMessage);
                 }
             }
 
-            throw new BadRequestException("Modal State Failed: " + strModalError);
+            throw new BadRequestException("Model State Failed: " + string.Join("; ", errors));
         }
 
         internal static String GetUserID(Microsoft.AspNetCore.Mvc.ControllerBase ctrl)
@@ -50,6 +48,29 @@ namespace hihapi.Utilities
                 return ctrl.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return String.Empty;
         }
+
+        internal static String GetAuthenticatedUserName(Microsoft.AspNetCore.Mvc.ControllerBase ctrl)
+        {
+            var userName = GetUserID(ctrl);
+            if (String.IsNullOrEmpty(userName))
+                throw new UnauthorizedAccessException();
+            return userName;
+        }
+
+        internal static string EnsureFolderExistence(String rootPath, String subFolders)
+        {
+            var fullPath = Path.GetFullPath(Path.Combine(rootPath, subFolders));
+            if (!fullPath.StartsWith(Path.GetFullPath(rootPath), StringComparison.Ordinal))
+                throw new ArgumentException("Path traversal detected in subfolder path");
+            if (!Directory.Exists(fullPath))
+            {
+                Directory.CreateDirectory(fullPath);
+            }
+            return fullPath;
+        }
+
+        internal static string UploadFolder { get; set; }
+        internal static string BlogFolder { get; set; }
     }
 
     public class CommonUtility
@@ -60,11 +81,11 @@ namespace hihapi.Utilities
 
             // Input checks
             if (datInput == null)
-                throw new Exception("Input the data!");
+                throw new ArgumentException("Input the data!");
             var dtEnd = new DateTime(datInput.EndDate.Year, datInput.EndDate.Month, datInput.EndDate.Day);
             var dtStart = new DateTime(datInput.StartDate.Year, datInput.StartDate.Month, datInput.StartDate.Day);
             if (dtEnd < dtStart)
-                throw new Exception("Invalid data range");
+                throw new ArgumentException("Invalid data range");
 
             switch (datInput.RepeatType)
             {
@@ -274,8 +295,7 @@ namespace hihapi.Utilities
                     break;
 
                 default:
-                    System.Diagnostics.Debug.Assert(false);
-                    break;
+                    throw new ArgumentOutOfRangeException(nameof(datInput.RepeatType));
             }
 
             return listResults;
@@ -287,15 +307,15 @@ namespace hihapi.Utilities
 
             // Input checks
             if (datInput == null)
-                throw new Exception("Input the data!");
+                throw new ArgumentException("Input the data!");
             var dtEnd = new DateTime(datInput.EndDate.Year, datInput.EndDate.Month, datInput.EndDate.Day);
             var dtStart = new DateTime(datInput.StartDate.Year, datInput.StartDate.Month, datInput.StartDate.Day);
             if (dtEnd < dtStart)
-                throw new Exception("Invalid data range");
+                throw new ArgumentException("Invalid data range");
             if (datInput.TotalAmount <= 0)
-                throw new Exception("Invalid total amount");
+                throw new ArgumentException("Invalid total amount");
             if (String.IsNullOrEmpty(datInput.Desp))
-                throw new Exception("Invalid desp");
+                throw new ArgumentException("Invalid desp");
 
             switch (datInput.RepeatType)
             {
@@ -303,6 +323,8 @@ namespace hihapi.Utilities
                     {
                         var tspans = dtEnd - dtStart;
                         var tdays = (Int32)tspans.Days;
+                        if (tdays <= 0)
+                            throw new ArgumentException("Date range must be at least 1 day for daily repeat");
 
                         var tamt = Math.Round(datInput.TotalAmount / tdays, 2);
                         for (int i = 0; i < tdays; i++)
@@ -323,6 +345,8 @@ namespace hihapi.Utilities
                         var tdays = (Int32)tspans.Days;
 
                         var tfortnights = tdays / 14;
+                        if (tfortnights <= 0)
+                            throw new ArgumentException("Date range must be at least 14 days for fortnightly repeat");
                         var tamt = Math.Round(datInput.TotalAmount / tfortnights, 2);
 
                         for (int i = 0; i < tfortnights; i++)
@@ -342,6 +366,8 @@ namespace hihapi.Utilities
                         var tspans = dtEnd - dtStart;
                         var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
                         var nhalfyear = nmonths / 6;
+                        if (nhalfyear <= 0)
+                            throw new ArgumentException("Date range must be at least 6 months for half-yearly repeat");
                         var tamt = Math.Round(datInput.TotalAmount / nhalfyear, 2);
 
                         for (int i = 0; i < nhalfyear; i++)
@@ -359,6 +385,8 @@ namespace hihapi.Utilities
                 case RepeatFrequency.Month:
                     {
                         var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
+                        if (nmonths <= 0)
+                            throw new ArgumentException("Date range must be at least 1 month for monthly repeat");
 
                         var tamt = Math.Round(datInput.TotalAmount / nmonths, 2);
 
@@ -378,6 +406,8 @@ namespace hihapi.Utilities
                     {
                         var nmonths = (datInput.EndDate.Year - datInput.StartDate.Year) * 12 + (datInput.EndDate.Month - datInput.StartDate.Month);
                         var nquarters = nmonths / 3;
+                        if (nquarters <= 0)
+                            throw new ArgumentException("Date range must be at least 3 months for quarterly repeat");
                         var tamt = Math.Round(datInput.TotalAmount / nquarters, 2);
 
                         for (int i = 0; i < nquarters; i++)
@@ -398,6 +428,8 @@ namespace hihapi.Utilities
                         var tdays = (Int32)tspans.Days;
 
                         var tweeks = tdays / 7;
+                        if (tweeks <= 0)
+                            throw new ArgumentException("Date range must be at least 7 days for weekly repeat");
                         var tamt = Math.Round(datInput.TotalAmount / tweeks, 2);
 
                         for (int i = 0; i < tweeks; i++)
@@ -415,6 +447,8 @@ namespace hihapi.Utilities
                 case RepeatFrequency.Year:
                     {
                         var nyears = datInput.EndDate.Year - datInput.StartDate.Year;
+                        if (nyears <= 0)
+                            throw new ArgumentException("Date range must be at least 1 year for yearly repeat");
 
                         var tamt = Math.Round(datInput.TotalAmount / nyears, 2);
 
@@ -466,7 +500,7 @@ namespace hihapi.Utilities
 
             // Input checks
             if (datInput == null)
-                throw new Exception("Input the data!");
+                throw new ArgumentException("Input the data!");
             datInput.doVerify();
 
             var realStartDate = datInput.StartDate;
@@ -491,7 +525,7 @@ namespace hihapi.Utilities
                 switch (datInput.RepaymentMethod)
                 {
                     case LoanRepaymentMethod.EqualPrincipal:
-                    case LoanRepaymentMethod.EqualPrincipalAndInterset:
+                    case LoanRepaymentMethod.EqualPrincipalAndInterest:
                         {
 
                             for (int i = 0; i < datInput.TotalMonths; i++)
@@ -536,7 +570,7 @@ namespace hihapi.Utilities
                 // Have interest rate inputted
                 switch (datInput.RepaymentMethod)
                 {
-                    case LoanRepaymentMethod.EqualPrincipalAndInterset:
+                    case LoanRepaymentMethod.EqualPrincipalAndInterest:
                         {
                             // Decimal dInitMonthIntere = 0;
                             Decimal monthRate = datInput.InterestRate / 12;

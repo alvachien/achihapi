@@ -17,7 +17,7 @@ namespace hihapi.Models
     public partial class HomeMember : BaseModel
     {
         [Key]
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
         [Key]
@@ -31,10 +31,10 @@ namespace hihapi.Models
         public String DisplayAs { get; set; }
 
         [Required]
-        [Column("RELT", TypeName = "SMALLINT")]
+        [Column("RELT", TypeName = "INTEGER")]
         public HomeMemberRelationType Relation { get; set; }
 
-        [Column("ISCHILD", TypeName = "BIT")]
+        [Column("ISCHILD", TypeName = "INTEGER")]
         public bool? IsChild { get; set; }
 
         public HomeDefine HomeDefinition { get; set; }

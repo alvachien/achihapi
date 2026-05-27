@@ -349,7 +349,7 @@ namespace hihapi.unittest.Utility
             // Act
             Action act = () => CommonUtility.WorkoutRepeatedDatesWithAmount(null);
             // Assert
-            var exception = Assert.Throws<Exception>(act);
+            var exception = Assert.Throws<ArgumentException>(act);
             Assert.Null(results);
             Assert.Equal("Input the data!", exception.Message);
 
@@ -362,7 +362,7 @@ namespace hihapi.unittest.Utility
             // Act
             act = () => CommonUtility.WorkoutRepeatedDatesWithAmount(vm);
             // Assert
-            exception = Assert.Throws<Exception>(act);
+            exception = Assert.Throws<ArgumentException>(act);
             Assert.Null(results);
             Assert.Equal("Invalid data range", exception.Message);
 
@@ -376,7 +376,7 @@ namespace hihapi.unittest.Utility
             // Act
             act = () => CommonUtility.WorkoutRepeatedDatesWithAmount(vm);
             // Assert
-            exception = Assert.Throws<Exception>(act);
+            exception = Assert.Throws<ArgumentException>(act);
             Assert.Null(results);
             Assert.Equal("Invalid total amount", exception.Message);
 
@@ -391,7 +391,7 @@ namespace hihapi.unittest.Utility
             // Act
             act = () => CommonUtility.WorkoutRepeatedDatesWithAmount(vm);
             // Assert
-            exception = Assert.Throws<Exception>(act);
+            exception = Assert.Throws<ArgumentException>(act);
             Assert.Null(results);
             Assert.Equal("Invalid desp", exception.Message);
         }
@@ -841,7 +841,7 @@ namespace hihapi.unittest.Utility
             // Act
             Action act = () => CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(null);
             // Assert
-            var exception = Assert.Throws<Exception>(act);
+            var exception = Assert.Throws<ArgumentException>(act);
             Assert.Null(results);
             Assert.Equal("Input the data!", exception.Message);
 
@@ -854,7 +854,7 @@ namespace hihapi.unittest.Utility
                 InterestRate = 3
             };
             act = () => CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(vm);
-            exception = Assert.Throws<Exception>(act);
+            exception = Assert.Throws<ArgumentException>(act);
             Assert.Null(results);
             Assert.Equal("Cannot input interest rate for Interest-Free loan", exception.Message);
 
@@ -867,7 +867,7 @@ namespace hihapi.unittest.Utility
                 InterestRate = -3
             };
             act = () => CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(vm);
-            exception = Assert.Throws<Exception>(act);
+            exception = Assert.Throws<ArgumentException>(act);
             Assert.Null(results);
             Assert.Equal("Interest rate can not be negative", exception.Message);
 
@@ -880,7 +880,7 @@ namespace hihapi.unittest.Utility
                 InterestRate = 3
             };
             act = () => CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(vm);
-            exception = Assert.Throws<Exception>(act);
+            exception = Assert.Throws<ArgumentException>(act);
             Assert.Null(results);
             Assert.Equal("Total amount must large than zero!", exception.Message);
 
@@ -893,7 +893,7 @@ namespace hihapi.unittest.Utility
                 InterestRate = 3
             };
             act = () => CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(vm);
-            exception = Assert.Throws<Exception>(act);
+            exception = Assert.Throws<ArgumentException>(act);
             Assert.Null(results);
             Assert.Equal("Not supported method", exception.Message);
 
@@ -907,7 +907,7 @@ namespace hihapi.unittest.Utility
             //    RepaymentMethod = LoanRepaymentMethod.EqualPrincipal,
             //};
             //act = () => CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(vm);
-            //exception = Assert.Throws<Exception>(act);
+            //exception = Assert.Throws<ArgumentException>(act);
             //Assert.Null(results);
             //Assert.Equal("Start date is must", exception.Message);
 
@@ -925,7 +925,7 @@ namespace hihapi.unittest.Utility
                 FirstRepayDate = new DateTime(2020, 2, 13)
             };
             act = () => CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(vm);
-            exception = Assert.Throws<Exception>(act);
+            exception = Assert.Throws<ArgumentException>(act);
             Assert.Null(results);
             Assert.Equal("Inconsistency in first payment data and repay day", exception.Message);
 
@@ -942,7 +942,7 @@ namespace hihapi.unittest.Utility
                 RepaymentMethod = LoanRepaymentMethod.EqualPrincipal,
             };
             act = () => CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(vm);
-            exception = Assert.Throws<Exception>(act);
+            exception = Assert.Throws<ArgumentException>(act);
             Assert.Null(results);
             Assert.Equal("Invalid repay. date", exception.Message);
 
@@ -959,7 +959,7 @@ namespace hihapi.unittest.Utility
                 TotalAmount = 2680000,
                 TotalMonths = 360,
                 InterestRate = 0.0441M,
-                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterset,
+                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterest,
                 FirstRepayDate = new DateTime(2020, 10, 1)
             };
             List<RepeatedDatesWithAmountAndInterest> results = CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(vm);
@@ -983,7 +983,7 @@ namespace hihapi.unittest.Utility
                 TotalAmount = 100000,
                 TotalMonths = 12,
                 InterestRate = 0.0435M,
-                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterset
+                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterest
             };
             List<RepeatedDatesWithAmountAndInterest> results = CommonUtility.WorkoutRepeatedDatesWithAmountAndInterest(vm);
 

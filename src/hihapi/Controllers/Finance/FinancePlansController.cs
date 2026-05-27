@@ -81,7 +81,7 @@ namespace hihapi.Controllers
         public async Task<IActionResult> Post([FromBody] FinancePlan plan)
         {
             if (!ModelState.IsValid)
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
 
             // User
             String usrName = String.Empty;
@@ -103,7 +103,7 @@ namespace hihapi.Controllers
                 throw new BadRequestException("Check IsValid failed");
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == plan.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == plan.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
@@ -119,7 +119,7 @@ namespace hihapi.Controllers
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinancePlan update)
         {
             if (!ModelState.IsValid)
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
 
             if (key != update.ID)
                 throw new BadRequestException("Inputted ID mismatched");
@@ -138,7 +138,7 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == update.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == update.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -192,7 +192,7 @@ namespace hihapi.Controllers
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == cc.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == cc.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();

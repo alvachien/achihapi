@@ -11,11 +11,11 @@ namespace hihapi.Models.Event
     {
         [Key]
         [Required]
-        [Column("ID", TypeName = "INT")]
+        [Column("ID", TypeName = "INTEGER")]
         public int Id { get; set; }
 
         [Required]
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
         [Required]
@@ -36,7 +36,7 @@ namespace hihapi.Models.Event
         [DataType(DataType.Date)]
         public DateTime? CompleteDate { get; set; }
 
-        [Column("Content", TypeName = "NVARCHAR(MAX)")]
+        [Column("Content", TypeName = "TEXT")]
         public String Content { get; set; }
 
         [Column("IsPublic", TypeName = "BIT")]
@@ -46,9 +46,10 @@ namespace hihapi.Models.Event
         [Column("Assignee", TypeName = "NVARCHAR(40)")]
         public String Assignee { get; set; }
 
-        [Column("RefRecurID", TypeName = "INT")]
+        [Column("RefRecurID", TypeName = "INTEGER")]
         public Int32? RefRecurrID { get; set; }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
         public RecurEvent CurrentRecurEvent { get; set; }
 

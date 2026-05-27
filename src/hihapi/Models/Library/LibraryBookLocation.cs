@@ -16,10 +16,10 @@ namespace hihapi.Models.Library
     {
         [Key]
         [Required]
-        [Column("ID", TypeName = "INT")]
+        [Column("ID", TypeName = "INTEGER")]
         public int Id { get; set; }
 
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32? HomeID { get; set; }
 
         [Required]
@@ -28,13 +28,14 @@ namespace hihapi.Models.Library
         public String Name { get; set; }
 
         [Required]
-        [Column("LOCTYPE", TypeName = "INT")]
+        [Column("LOCTYPE", TypeName = "INTEGER")]
         public int LocationType { get; set; }
 
         [StringLength(100)]
         [Column("COMMENT", TypeName = "NVARCHAR(100)")]
         public String Comment { get; set; }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
 
         public IList<LibraryBook> Books { get; set; }

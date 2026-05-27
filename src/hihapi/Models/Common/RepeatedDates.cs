@@ -68,52 +68,52 @@ namespace hihapi.Models
         public void doVerify(Boolean checkAmount = true)
         {
             if (checkAmount && TotalAmount <= 0)
-                throw new Exception("Total amount must large than zero!");
+                throw new ArgumentException("Total amount must large than zero!");
             if (InterestFreeLoan && InterestRate != 0)
-                throw new Exception("Cannot input interest rate for Interest-Free loan");
+                throw new ArgumentException("Cannot input interest rate for Interest-Free loan");
             if (InterestRate < 0)
-                throw new Exception("Interest rate can not be negative");
+                throw new ArgumentException("Interest rate can not be negative");
             if (RepaymentMethod == LoanRepaymentMethod.EqualPrincipal
-                || RepaymentMethod == LoanRepaymentMethod.EqualPrincipalAndInterset)
+                || RepaymentMethod == LoanRepaymentMethod.EqualPrincipalAndInterest)
             {
                 if (TotalMonths <= 0)
-                    throw new Exception("Total months must large than zero");
-                if (RepaymentMethod == LoanRepaymentMethod.EqualPrincipalAndInterset && InterestFreeLoan)
-                    throw new Exception("Payment method need interest");
+                    throw new ArgumentException("Total months must large than zero");
+                if (RepaymentMethod == LoanRepaymentMethod.EqualPrincipalAndInterest && InterestFreeLoan)
+                    throw new ArgumentException("Payment method need interest");
             }
             else if (RepaymentMethod == LoanRepaymentMethod.DueRepayment)
             {
                 if (!EndDate.HasValue)
-                    throw new Exception("End date is mandatory");
+                    throw new ArgumentException("End date is mandatory");
                 else
                 {
                     if (EndDate.Value <= StartDate)
-                        throw new Exception("End date must later than start date");
+                        throw new ArgumentException("End date must later than start date");
                 }
             }
             else if (RepaymentMethod == LoanRepaymentMethod.InformalPayment)
             {
                 if (EndDate.HasValue)
-                    throw new Exception("End date is not input");
+                    throw new ArgumentException("End date is not input");
             }
             else
-                throw new Exception("Not supported method");
+                throw new ArgumentException("Not supported method");
             if (FirstRepayDate.HasValue && RepayDayInMonth.HasValue)
             {
                 if (FirstRepayDate.Value.Day != RepayDayInMonth.Value)
-                    throw new Exception("Inconsistency in first payment data and repay day");
+                    throw new ArgumentException("Inconsistency in first payment data and repay day");
             }
             if (RepayDayInMonth.HasValue)
             {
                 if (RepayDayInMonth.Value <= 0 || RepayDayInMonth.Value >= 29)
-                    throw new Exception("Invalid repay. date");
+                    throw new ArgumentException("Invalid repay. date");
             }
             if (FirstRepayDate.HasValue)
             {
                 var nInitDays = (int)((DateTime)FirstRepayDate.Value - (DateTime)StartDate).TotalDays;
                 // Check the dates
                 if (nInitDays < 30 || nInitDays > 60)
-                    throw new Exception("First repayment day is invalid");
+                    throw new ArgumentException("First repayment day is invalid");
             }
         }
     }

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.OData.Routing;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace hihapi.Extensions
@@ -15,6 +16,7 @@ namespace hihapi.Extensions
     /// <summary>
     /// A debug controller to show the OData endpoint.
     /// </summary>
+    [Authorize]
     public class ODataEndpointController : ControllerBase
     {
         private EndpointDataSource _dataSource;
@@ -68,16 +70,16 @@ namespace hihapi.Extensions
                 string actionName = controllerActionDescriptor.MethodInfo.Name;
 
                 sb.Append("<tr>");
-                sb.Append($"<td>{GetActionDesciption(controllerActionDescriptor)}</td>");
+                sb.Append("<td>").Append(System.Net.WebUtility.HtmlEncode(GetActionDesciption(controllerActionDescriptor))).Append("</td>");
 
                 // http methods
-                sb.Append($"<td>{string.Join(",", GetHttpMethods(endpoint))}</td>");
+                sb.Append("<td>").Append(System.Net.WebUtility.HtmlEncode(string.Join(",", GetHttpMethods(endpoint)))).Append("</td>");
 
                 // template name
                 RouteEndpoint routeEndpoint = endpoint as RouteEndpoint;
                 if (routeEndpoint != null)
                 {
-                    sb.Append("<td>~/").Append(routeEndpoint.RoutePattern.RawText).Append("</td></tr>");
+                    sb.Append("<td>~/").Append(System.Net.WebUtility.HtmlEncode(routeEndpoint.RoutePattern.RawText)).Append("</td></tr>");
                 }
                 else
                 {
@@ -131,20 +133,20 @@ namespace hihapi.Extensions
         private static void AppendNonODataRoute(StringBuilder sb, Endpoint endpoint)
         {
             sb.Append("<tr>");
-            sb.Append($"<td>{endpoint.DisplayName}</td>");
+            sb.Append("<td>").Append(System.Net.WebUtility.HtmlEncode(endpoint.DisplayName)).Append("</td>");
 
-            sb.Append($"<td>{string.Join(",", GetHttpMethods(endpoint))}</td>");
+            sb.Append("<td>").Append(System.Net.WebUtility.HtmlEncode(string.Join(",", GetHttpMethods(endpoint)))).Append("</td>");
 
             RouteEndpoint routeEndpoint = endpoint as RouteEndpoint;
             if (routeEndpoint != null)
             {
                 if (routeEndpoint.RoutePattern.RawText.StartsWith("/", StringComparison.OrdinalIgnoreCase))
                 {
-                    sb.Append("<td>~").Append(routeEndpoint.RoutePattern.RawText).Append("</td>");
+                    sb.Append("<td>~").Append(System.Net.WebUtility.HtmlEncode(routeEndpoint.RoutePattern.RawText)).Append("</td>");
                 }
                 else
                 {
-                    sb.Append("<td>~/").Append(routeEndpoint.RoutePattern.RawText).Append("</td>");
+                    sb.Append("<td>~/").Append(System.Net.WebUtility.HtmlEncode(routeEndpoint.RoutePattern.RawText)).Append("</td>");
                 }
             }
             else

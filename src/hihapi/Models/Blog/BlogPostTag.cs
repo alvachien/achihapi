@@ -10,7 +10,7 @@ namespace hihapi.Models
     {
         [Key]
         [Required]
-        [Column("PostID", TypeName = "INT")]
+        [Column("PostID", TypeName = "INTEGER")]
         public int PostID { get; set; }
 
         [Key]

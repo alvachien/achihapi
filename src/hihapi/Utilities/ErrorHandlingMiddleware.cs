@@ -1,19 +1,21 @@
 using System;
-using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using hihapi.Exceptions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 public class ErrorHandlingMiddleware
 {
     private readonly RequestDelegate next;
+    private readonly ILogger<ErrorHandlingMiddleware> logger;
 
-    public ErrorHandlingMiddleware(RequestDelegate next)
+    public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
     {
         this.next = next;
+        this.logger = logger;
     }
 
-    public async Task Invoke(HttpContext context /* other dependencies */)
+    public async Task Invoke(HttpContext context)
     {
         try
         {
@@ -25,16 +27,26 @@ public class ErrorHandlingMiddleware
         }
     }
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception ex)
+    private Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
-        var code = StatusCodes.Status500InternalServerError; // 500 if unexpected
+        var code = StatusCodes.Status500InternalServerError;
 
         if      (ex is NotFoundException)     code = StatusCodes.Status404NotFound;
         else if (ex is UnauthorizedException
             || ex is UnauthorizedAccessException) code = StatusCodes.Status401Unauthorized;
         else if (ex is BadRequestException)   code = StatusCodes.Status400BadRequest;
+        else if (ex is DBOperationException)  code = StatusCodes.Status400BadRequest;
 
-        var result = JsonConvert.SerializeObject(new { error = ex.Message });
+        if (code == StatusCodes.Status500InternalServerError)
+        {
+            logger.LogError(ex, "Unhandled exception occurred");
+        }
+        else
+        {
+            logger.LogWarning(ex, "Handled exception: {ExceptionType}", ex.GetType().Name);
+        }
+
+        var result = System.Text.Json.JsonSerializer.Serialize(new { error = "An error occurred processing your request." });
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)code;
         return context.Response.WriteAsync(result);

@@ -25,7 +25,7 @@ namespace hihapi.Models
         public Int32 HomeID { get; set; }
 
         [Required]
-        [Column("DOCTYPE", TypeName="SMALLINT")]
+        [Column("DOCTYPE", TypeName="INTEGER")]
         public Int16 DocType { get; set; }
         
         [Required]
@@ -62,6 +62,7 @@ namespace hihapi.Models
         [NotMapped]
         public Decimal? TranAmount { get; set; }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
         public ICollection<FinanceDocumentItem> Items { get; set; }
 
@@ -333,7 +334,7 @@ namespace hihapi.Models
         [Column("CONTROLCENTERID", TypeName="INT")]
         public Int32? ControlCenterID { get; set; }
 
-        [Column("ORDERID", TypeName = "INT")]
+        [Column("ORDERID", TypeName = "INTEGER")]
         public Int32? OrderID { get; set; }
 
         [StringLength(45)]
@@ -481,7 +482,7 @@ namespace hihapi.Models
         public String Desp { get; set; }
         public String TranCurr { get; set; }
     }
-    public sealed class FinanceAssetDepreicationResult
+    public sealed class FinanceAssetDepreciationResult
     {
         [Key]
         public Int32 HID { get; set; }

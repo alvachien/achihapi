@@ -66,7 +66,7 @@ namespace hihapi.Models
                 if (!rule.IsValid())
                     return false;
 
-                total += rule.Precent;
+                total += rule.Percent;
             }
             if (total != 100)
                 return false;
@@ -86,6 +86,7 @@ namespace hihapi.Models
         }
 
         public ICollection<FinanceOrderSRule> SRule { get; set; }
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
     }
 
@@ -106,7 +107,7 @@ namespace hihapi.Models
 
         [Required]
         [Column("PRECENT", TypeName="INT")]
-        public Int32 Precent { get; set; }
+        public Int32 Percent { get; set; }
 
         [StringLength(45)]
         [Column("COMMENT", TypeName="NVARCHAR(45)")]
@@ -114,7 +115,7 @@ namespace hihapi.Models
 
         public Boolean IsValid()
         {
-            if (this.Precent <= 0)
+            if (this.Percent <= 0)
                 return false;
 
             return true;

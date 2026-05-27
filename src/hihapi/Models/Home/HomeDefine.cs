@@ -13,29 +13,29 @@ namespace hihapi.Models
     {
         public HomeDefine(): base()
         {
-            HomeMembers = new List<HomeMember>();
-            FinanceAccountCategories = new List<FinanceAccountCategory>();
-            FinanceAssetCategories = new List<FinanceAssetCategory>();
-            FinanceDocumentTypes = new List<FinanceDocumentType>();
-            FinanceTransactionTypes = new List<FinanceTransactionType>();
-            FinanceAccounts = new List<FinanceAccount>();
-            FinanceControlCenters = new List<FinanceControlCenter>();
-            FinanceOrders = new List<FinanceOrder>();
-            FinancePlans = new List<FinancePlan>();
-            FinanceDocuments = new List<FinanceDocument>();
-            PersonRoles = new List<LibraryPersonRole>();
-            Persons = new List<LibraryPerson>();
-            OrganizationTypes = new List<LibraryOrganizationType>();
-            Organizations = new List<LibraryOrganization>();
-            BookCategories = new List<LibraryBookCategory>();
-            BookLocations = new List<LibraryBookLocation>();
-            Books = new List<LibraryBook>();
-            NormalEvents = new List<NormalEvent>();
-            RecurEvents = new List<RecurEvent>();
+            Members = new List<HomeMember>();
+            //FinanceAccountCategories = new List<FinanceAccountCategory>();
+            //FinanceAssetCategories = new List<FinanceAssetCategory>();
+            //FinanceDocumentTypes = new List<FinanceDocumentType>();
+            //FinanceTransactionTypes = new List<FinanceTransactionType>();
+            //FinanceAccounts = new List<FinanceAccount>();
+            //FinanceControlCenters = new List<FinanceControlCenter>();
+            //FinanceOrders = new List<FinanceOrder>();
+            //FinancePlans = new List<FinancePlan>();
+            //FinanceDocuments = new List<FinanceDocument>();
+            //PersonRoles = new List<LibraryPersonRole>();
+            //Persons = new List<LibraryPerson>();
+            //OrganizationTypes = new List<LibraryOrganizationType>();
+            //Organizations = new List<LibraryOrganization>();
+            //BookCategories = new List<LibraryBookCategory>();
+            //BookLocations = new List<LibraryBookLocation>();
+            //Books = new List<LibraryBook>();
+            //NormalEvents = new List<NormalEvent>();
+            //RecurEvents = new List<RecurEvent>();
         }
 
         [Key]
-        [Column("ID", TypeName = "INT")]
+        [Column("ID", TypeName = "INTEGER")]
         public Int32 ID { get; set; }
 
         [Required]
@@ -57,26 +57,26 @@ namespace hihapi.Models
         [Column("BASECURR", TypeName = "NVARCHAR(5)")]
         public String BaseCurrency { get; set; }
 
-        public ICollection<HomeMember> HomeMembers { get; set; }
+        public ICollection<HomeMember> Members { get; set; }
         // Finance
-        public ICollection<FinanceAccountCategory> FinanceAccountCategories { get; set; }
-        public ICollection<FinanceAssetCategory> FinanceAssetCategories { get; set; }
-        public ICollection<FinanceDocumentType> FinanceDocumentTypes { get; set; }
-        public ICollection<FinanceTransactionType> FinanceTransactionTypes { get; set; }
-        public ICollection<FinanceAccount> FinanceAccounts { get; set; }
-        public ICollection<FinanceControlCenter> FinanceControlCenters { get; set; }        
-        public ICollection<FinanceOrder> FinanceOrders { get; set; }
-        public ICollection<FinancePlan> FinancePlans { get; set; }
-        public ICollection<FinanceDocument> FinanceDocuments { get; set; }
-        public IList<LibraryPersonRole> PersonRoles { get; set; }
-        public IList<LibraryPerson> Persons { get; set; }
-        public IList<LibraryOrganizationType> OrganizationTypes { get; set; }
-        public IList<LibraryOrganization> Organizations { get; set; }
-        public IList<LibraryBookCategory> BookCategories { get; set; }
-        public IList<LibraryBookLocation> BookLocations { get; set; }
-        public IList<LibraryBook> Books { get; set; }
-        public IList<NormalEvent> NormalEvents { get; set; }
-        public IList<RecurEvent> RecurEvents { get; set; }
+        //public ICollection<FinanceAccountCategory> FinanceAccountCategories { get; set; }
+        //public ICollection<FinanceAssetCategory> FinanceAssetCategories { get; set; }
+        //public ICollection<FinanceDocumentType> FinanceDocumentTypes { get; set; }
+        //public ICollection<FinanceTransactionType> FinanceTransactionTypes { get; set; }
+        //public ICollection<FinanceAccount> FinanceAccounts { get; set; }
+        //public ICollection<FinanceControlCenter> FinanceControlCenters { get; set; }        
+        //public ICollection<FinanceOrder> FinanceOrders { get; set; }
+        //public ICollection<FinancePlan> FinancePlans { get; set; }
+        //public ICollection<FinanceDocument> FinanceDocuments { get; set; }
+        //public IList<LibraryPersonRole> PersonRoles { get; set; }
+        //public IList<LibraryPerson> Persons { get; set; }
+        //public IList<LibraryOrganizationType> OrganizationTypes { get; set; }
+        //public IList<LibraryOrganization> Organizations { get; set; }
+        //public IList<LibraryBookCategory> BookCategories { get; set; }
+        //public IList<LibraryBookLocation> BookLocations { get; set; }
+        //public IList<LibraryBook> Books { get; set; }
+        //public IList<NormalEvent> NormalEvents { get; set; }
+        //public IList<RecurEvent> RecurEvents { get; set; }
 
         public override bool IsValid(hihDataContext context)
         {
@@ -89,9 +89,9 @@ namespace hihapi.Models
                 return false;
             if (String.IsNullOrEmpty(BaseCurrency))
                 return false;
-            if (HomeMembers.Count <= 0)
+            if (Members.Count <= 0)
                 return false;
-            var self = HomeMembers.First(p => p.Relation == HomeMemberRelationType.Self);
+            var self = Members.First(p => p.Relation == HomeMemberRelationType.Self);
             if (self == null)
                 return false;
             else
@@ -134,8 +134,15 @@ namespace hihapi.Models
             // Documents
             refcnt = context.FinanceDocument.Where(p => p.HomeID == this.ID).Count();
             if (refcnt > 0) return false;
-
-            // TBD: library part
+            // Library books
+            refcnt = context.Books.Where(p => p.HomeID == this.ID).Count();
+            if (refcnt > 0) return false;
+            // Library persons
+            refcnt = context.Persons.Where(p => p.HomeID == this.ID).Count();
+            if (refcnt > 0) return false;
+            // Library organizations
+            refcnt = context.Organizations.Where(p => p.HomeID == this.ID).Count();
+            if (refcnt > 0) return false;
 
             return true;
         }

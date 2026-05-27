@@ -85,7 +85,7 @@ namespace hihapi.Controllers.Event
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             // User
@@ -104,7 +104,7 @@ namespace hihapi.Controllers.Event
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == tbc.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == tbc.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -142,7 +142,7 @@ namespace hihapi.Controllers.Event
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == tbd.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == tbd.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -160,7 +160,7 @@ namespace hihapi.Controllers.Event
         }
 
         [HttpPost]
-        public bool MarkAsCompleted([FromBody] ODataActionParameters parameters)
+        public async Task<bool> MarkAsCompleted([FromBody] ODataActionParameters parameters)
         {
             String usrName = String.Empty;
             try
@@ -178,21 +178,21 @@ namespace hihapi.Controllers.Event
             Int32 hid = (Int32)parameters["HomeID"];
             Int32 key = (Int32)parameters["EventID"];
 
-            var tbo = _context.NormalEvents.Find(key);
+            var tbo = await _context.NormalEvents.FindAsync(key);
             if (tbo == null)
             {
                 throw new NotFoundException("Cannot find the object with key");
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == tbo.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == tbo.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
             }
 
-            tbo.CompleteDate = DateTime.Today;            
-            _context.SaveChanges();
+            tbo.CompleteDate = DateTime.Today;
+            await _context.SaveChangesAsync();
 
             return true;
         }

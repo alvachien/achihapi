@@ -19,7 +19,7 @@ namespace hihapi.unittest.UnitTests.Models
             };
             Action act = () => vm.doVerify();
             // assert
-            Exception exception = Assert.Throws<Exception>(act);
+            ArgumentException exception = Assert.Throws<ArgumentException>(act);
             Assert.Contains("Total amount", exception.Message);
         }
 
@@ -34,7 +34,7 @@ namespace hihapi.unittest.UnitTests.Models
             };
             Action act = () => vm.doVerify();
             // assert
-            Exception exception = Assert.Throws<Exception>(act);
+            ArgumentException exception = Assert.Throws<ArgumentException>(act);
             Assert.Contains("Interest-Free", exception.Message);
         }
 
@@ -49,7 +49,7 @@ namespace hihapi.unittest.UnitTests.Models
             };
             Action act = () => vm.doVerify();
             // assert
-            Exception exception = Assert.Throws<Exception>(act);
+            ArgumentException exception = Assert.Throws<ArgumentException>(act);
             Assert.Contains("Interest rate", exception.Message);
         }
 
@@ -66,40 +66,40 @@ namespace hihapi.unittest.UnitTests.Models
             };
             Action act = () => vm.doVerify();
             // assert
-            Exception exception = Assert.Throws<Exception>(act);
+            ArgumentException exception = Assert.Throws<ArgumentException>(act);
             Assert.Contains("Total months", exception.Message);
         }
 
         [Fact]
-        public void Invalid_TotalMonthIsMustForEqualPrincipalAndInterset()
+        public void Invalid_TotalMonthIsMustForEqualPrincipalAndInterest()
         {
             var vm = new RepeatDatesWithAmountAndInterestCalInput
             {
                 TotalAmount = 10000,
                 InterestFreeLoan = false,
                 InterestRate = 1,
-                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterset,
+                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterest,
                 TotalMonths = 0
             };
             Action act = () => vm.doVerify();
             // assert
-            Exception exception = Assert.Throws<Exception>(act);
+            ArgumentException exception = Assert.Throws<ArgumentException>(act);
             Assert.Contains("Total months", exception.Message);
         }
 
         [Fact]
-        public void Invalid_InterestRateIsMustForEqualPrincipalAndInterset()
+        public void Invalid_InterestRateIsMustForEqualPrincipalAndInterest()
         {
             var vm = new RepeatDatesWithAmountAndInterestCalInput
             {
                 TotalAmount = 10000,
-                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterset,
+                RepaymentMethod = LoanRepaymentMethod.EqualPrincipalAndInterest,
                 InterestFreeLoan = true,
                 TotalMonths = 10,
             };
             Action act = () => vm.doVerify();
             // assert
-            Exception exception = Assert.Throws<Exception>(act);
+            ArgumentException exception = Assert.Throws<ArgumentException>(act);
             Assert.Contains("Payment method need interest", exception.Message);
         }
 
@@ -115,7 +115,7 @@ namespace hihapi.unittest.UnitTests.Models
             };
             Action act = () => vm.doVerify();
             // assert
-            Exception exception = Assert.Throws<Exception>(act);
+            ArgumentException exception = Assert.Throws<ArgumentException>(act);
             Assert.Contains("End date is mandatory", exception.Message);
         }
 
@@ -132,7 +132,7 @@ namespace hihapi.unittest.UnitTests.Models
             };
             Action act = () => vm.doVerify();
             // assert
-            Exception exception = Assert.Throws<Exception>(act);
+            ArgumentException exception = Assert.Throws<ArgumentException>(act);
             Assert.Contains("End date", exception.Message);
         }
     }

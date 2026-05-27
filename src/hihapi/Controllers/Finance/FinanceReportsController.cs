@@ -9,6 +9,7 @@ using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.OData.Formatter;
 using System.Threading.Tasks;
+using System.Collections.Immutable;
 
 namespace hihapi.Controllers
 {
@@ -209,6 +210,134 @@ namespace hihapi.Controllers
             }
 
             return Ok(doubleAmount);
+        }
+
+        /// <summary>
+        /// Account Balance Extend
+        /// </summary>
+        /// <param name="parameters">
+        ///     HomeID: Home ID
+        ///     AccountID: Account ID
+        ///     SelectedDate: Array of Date
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
+        [HttpPost]
+        public IActionResult GetAccountBalanceEx([FromBody] ODataActionParameters parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                foreach (var value in ModelState.Values)
+                {
+                    foreach (var err in value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine(err.Exception?.Message);
+                    }
+                }
+
+                return BadRequest();
+            }
+
+            // 0. Get inputted parameter
+            Int32 hid = (Int32)parameters["HomeID"];
+            Int32 accountid = (Int32)parameters["AccountID"];
+            IEnumerable<String> arDateStrs = parameters["SelectedDates"] as IEnumerable<String>;
+
+            // 1. Check User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // 2. Check the Home ID
+            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            if (hms <= 0)
+                throw new UnauthorizedAccessException();
+
+            List<DateTime> listDates = new List<DateTime>();
+            foreach (var dstr in arDateStrs)
+                listDates.Add(DateTime.Parse(dstr));
+            listDates.Sort();
+            var lastDate = DateTime.MinValue;
+            Double doubleAmount = 0;
+            List<FinanceAccountBalancePerDate> listResults = new List<FinanceAccountBalancePerDate>();
+
+            foreach (var curdate in listDates)
+            {
+                var results = (
+                    from docitem in _context.FinanceDocumentItem
+                    join docheader in _context.FinanceDocument
+                        on docitem.DocID equals docheader.ID
+                    join trantype in _context.FinTransactionType
+                        on docitem.TranType equals trantype.ID
+                    where docheader.HomeID == hid && docitem.AccountID == accountid && docheader.TranDate >= lastDate && docheader.TranDate <= curdate
+                    select new
+                    {
+                        TranDate = docheader.TranDate,
+                        IsExpense = trantype.Expense,
+                        TranCurr = docheader.TranCurr,
+                        TranCurr2 = docheader.TranCurr2,
+                        UseCurr2 = docitem.UseCurr2,
+                        TranAmount = docitem.TranAmount,
+                        docheader.ExgRate,
+                        docheader.ExgRate2,
+                    }
+                    into docitem2
+                    group docitem2 by new { docitem2.TranDate, docitem2.IsExpense, docitem2.TranCurr, docitem2.TranCurr2, docitem2.UseCurr2, docitem2.ExgRate, docitem2.ExgRate2 } into docitem3
+                    select new
+                    {
+                        TranDate = docitem3.Key.TranDate,
+                        IsExpense = docitem3.Key.IsExpense,
+                        TranCurr = docitem3.Key.TranCurr,
+                        TranCurr2 = docitem3.Key.TranCurr2,
+                        UseCurr2 = docitem3.Key.UseCurr2,
+                        ExgRate = docitem3.Key.ExgRate,
+                        ExgRate2 = docitem3.Key.ExgRate2,
+                        TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
+                    }).ToList();
+                lastDate = curdate;
+
+                doubleAmount = 0;
+                foreach (var rst in results)
+                {
+                    var amountLC = rst.TranAmount;
+                    // Calculte the amount
+                    if (rst.IsExpense)
+                        amountLC = -1 * rst.TranAmount;
+                    if (rst.UseCurr2 != null)
+                    {
+                        if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
+                        {
+                            amountLC *= (Double)rst.ExgRate2.GetValueOrDefault();
+                        }
+                    }
+                    else
+                    {
+                        if (rst.ExgRate != null && rst.ExgRate.GetValueOrDefault() > 0)
+                        {
+                            amountLC *= (Double)rst.ExgRate.GetValueOrDefault();
+                        }
+                    }
+
+                    doubleAmount += amountLC;
+                }
+                listResults.Add(new FinanceAccountBalancePerDate
+                {
+                    HomeID = hid,
+                    AccountID = accountid,
+                    BalanceDate = curdate,
+                    Balance = (decimal)doubleAmount,                    
+                });
+            }
+
+            return Ok(listResults);
         }
 
         /// <summary>
@@ -751,6 +880,8 @@ namespace hihapi.Controllers
                                  && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
                                  && item.TransactionType != FinanceTransactionType.TranType_AdvancePaymentOut
                                  && item.TransactionType != FinanceTransactionType.TranType_AdvanceReceiveIn
+                                 && item.TransactionType != FinanceTransactionType.TranType_AssetValueDecrease
+                                 && item.TransactionType != FinanceTransactionType.TranType_AssetValueIncrease
                                group item by new { item.IsExpense } into newresult
                                select new
                                {
@@ -797,6 +928,12 @@ namespace hihapi.Controllers
                                  && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                                  && item.TransactionType != FinanceTransactionType.TranType_TransferIn
                                  && item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                                 && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                                 && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                                 && item.TransactionType != FinanceTransactionType.TranType_AdvancePaymentOut
+                                 && item.TransactionType != FinanceTransactionType.TranType_AdvanceReceiveIn
+                                 && item.TransactionType != FinanceTransactionType.TranType_AssetValueDecrease
+                                 && item.TransactionType != FinanceTransactionType.TranType_AssetValueIncrease
                                group item by new { item.IsExpense } into newresult
                                select new
                                {
@@ -843,7 +980,13 @@ namespace hihapi.Controllers
                              && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                              && item.TransactionType != FinanceTransactionType.TranType_TransferIn
                              && item.TransactionType != FinanceTransactionType.TranType_TransferOut
-                           group item by new { item.IsExpense } into newresult
+                             && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                             && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                             && item.TransactionType != FinanceTransactionType.TranType_AdvancePaymentOut
+                             && item.TransactionType != FinanceTransactionType.TranType_AdvanceReceiveIn
+                             && item.TransactionType != FinanceTransactionType.TranType_AssetValueDecrease
+                             && item.TransactionType != FinanceTransactionType.TranType_AssetValueIncrease
+                             group item by new { item.IsExpense } into newresult
                            select new
                            {
                                HomeID = hid,
@@ -886,9 +1029,9 @@ namespace hihapi.Controllers
 
             // 7. Calculate the precentage
             if (keyfigure.LastMonthIncome != 0)
-                keyfigure.CurrentMonthIncomePrecentage = 100 * (keyfigure.CurrentMonthIncome - keyfigure.LastMonthIncome) / keyfigure.LastMonthIncome;
+                keyfigure.CurrentMonthIncomePercentage = 100 * (keyfigure.CurrentMonthIncome - keyfigure.LastMonthIncome) / keyfigure.LastMonthIncome;
             if (keyfigure.LastMonthOutgo != 0)
-                keyfigure.CurrentMonthOutgoPrecentage = 100 * (keyfigure.CurrentMonthOutgo - keyfigure.LastMonthOutgo) / keyfigure.LastMonthOutgo;
+                keyfigure.CurrentMonthOutgoPercentage = 100 * (keyfigure.CurrentMonthOutgo - keyfigure.LastMonthOutgo) / keyfigure.LastMonthOutgo;
 
             List<FinanceOverviewKeyFigure> listResult = new List<FinanceOverviewKeyFigure>();
             listResult.Add(keyfigure);

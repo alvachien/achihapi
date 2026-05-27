@@ -11,14 +11,14 @@ namespace hihapi.Models
     public class FinanceDocumentItemView
     {
         [Key]
-        [Column("DOCID", TypeName = "INT")]
+        [Column("DOCID", TypeName = "INTEGER")]
         public Int32 DocumentID { get; set; }
 
         [Key]
-        [Column("ITEMID", TypeName = "INT")]
+        [Column("ITEMID", TypeName = "INTEGER")]
         public Int32 ItemID { get; set; }
 
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
         [Column("TRANDATE", TypeName = "date")]
@@ -28,10 +28,10 @@ namespace hihapi.Models
         [Column("DOCDESP", TypeName = "nvarchar(50)")]
         public string DocumentDesp { get; set; }
 
-        [Column("ACCOUNTID", TypeName = "INT")]
+        [Column("ACCOUNTID", TypeName = "INTEGER")]
         public Int32 AccountID { get; set; }
 
-        [Column("TRANTYPE", TypeName = "INT")]
+        [Column("TRANTYPE", TypeName = "INTEGER")]
         public Int32 TransactionType { get; set; }
 
         [Column("TRANTYPENAME", TypeName = "nvarchar(50)")]
@@ -52,9 +52,9 @@ namespace hihapi.Models
         [Column("TRANAMOUNT_LC", TypeName = "Decimal(17, 2)")]
         public Decimal AmountInLocalCurrency { get; set; }
 
-        [Column("CONTROLCENTERID", TypeName = "INT")]
+        [Column("CONTROLCENTERID", TypeName = "INTEGER")]
         public Int32? ControlCenterID { get; set; }
-        [Column("ORDERID", TypeName = "INT")]
+        [Column("ORDERID", TypeName = "INTEGER")]
         public Int32? OrderID { get; set; }
 
         [Column("DESP", TypeName = "nvarchar(50)")]
@@ -64,10 +64,10 @@ namespace hihapi.Models
     #region Account report
     public class FinanceReporAccountGroupView
     {
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
-        [Column("ACCOUNTID", TypeName = "INT")]
+        [Column("ACCOUNTID", TypeName = "INTEGER")]
         public Int32 AccountID { get; set; }
 
         [Column("BALANCE_LC", TypeName = "Decimal(17, 2)")]
@@ -76,10 +76,10 @@ namespace hihapi.Models
 
     public class FinanceReporAccountGroupAndExpenseView
     {
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
-        [Column("ACCOUNTID", TypeName = "INT")]
+        [Column("ACCOUNTID", TypeName = "INTEGER")]
         public Int32 AccountID { get; set; }
 
         [Column("TRANTYPE_EXP", TypeName = "BIT")]
@@ -91,10 +91,10 @@ namespace hihapi.Models
 
     public class FinanceReportAccountBalanceView
     {
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
-        [Column("ACCOUNTID", TypeName = "INT")]
+        [Column("ACCOUNTID", TypeName = "INTEGER")]
         public Int32 AccountID { get; set; }
 
         [Column("DEBIT_BALANCE", TypeName = "Decimal(17, 2)")]
@@ -116,6 +116,18 @@ namespace hihapi.Models
         public Int32 Month { get; set; }
     }
 
+    public sealed class FinanceAccountBalancePerDate
+    {
+        [Key]
+        public Int32 HomeID { get; set; }
+        [Key]
+        public Int32 AccountID { get; set; }
+        [Key]
+        public DateTime BalanceDate { get; set; }
+        public Decimal Balance { get; set; }
+        public String BalanceCurrency { get; set; }
+    }
+
     //public sealed class FinanceReportByAccountMOMResult
     //{
     //    public List<FinanceReportByAccountMOM> ReportData { get; set; }
@@ -126,10 +138,10 @@ namespace hihapi.Models
     #region Control center report
     public class FinanceReportControlCenterGroupView
     {
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
-        [Column("CONTROLCENTERID", TypeName = "INT")]
+        [Column("CONTROLCENTERID", TypeName = "INTEGER")]
         public Int32 ControlCenterID { get; set; }
 
         [Column("BALANCE_LC", TypeName = "Decimal(17, 2)")]
@@ -138,10 +150,10 @@ namespace hihapi.Models
 
     public class FinanceReportControlCenterGroupAndExpenseView
     {
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
-        [Column("CONTROLCENTERID", TypeName = "INT")]
+        [Column("CONTROLCENTERID", TypeName = "INTEGER")]
         public Int32 ControlCenterID { get; set; }
 
         [Column("TRANTYPE_EXP", TypeName = "BIT")]
@@ -153,10 +165,10 @@ namespace hihapi.Models
 
     public class FinanceReportControlCenterBalanceView
     {
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
-        [Column("CONTROLCENTERID", TypeName = "INT")]
+        [Column("CONTROLCENTERID", TypeName = "INTEGER")]
         public Int32 ControlCenterID { get; set; }
 
         [Column("DEBIT_BALANCE", TypeName = "Decimal(17, 2)")]
@@ -182,10 +194,10 @@ namespace hihapi.Models
     #region Order report
     public class FinanceReportOrderGroupView
     {
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
-        [Column("ORDERID", TypeName = "INT")]
+        [Column("ORDERID", TypeName = "INTEGER")]
         public Int32 OrderID { get; set; }
 
         [Column("BALANCE_LC", TypeName = "Decimal(17, 2)")]
@@ -194,10 +206,10 @@ namespace hihapi.Models
 
     public class FinanceReportOrderGroupAndExpenseView
     {
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
-        [Column("ORDERID", TypeName = "INT")]
+        [Column("ORDERID", TypeName = "INTEGER")]
         public Int32 OrderID { get; set; }
 
         [Column("TRANTYPE_EXP", TypeName = "BIT")]
@@ -209,10 +221,10 @@ namespace hihapi.Models
 
     public class FinanceReportOrderBalanceView
     {
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
-        [Column("ORDERID", TypeName = "INT")]
+        [Column("ORDERID", TypeName = "INTEGER")]
         public Int32 OrderID { get; set; }
 
         [Column("DEBIT_BALANCE", TypeName = "Decimal(17, 2)")]
@@ -283,8 +295,8 @@ namespace hihapi.Models
         public Decimal IncomeYTD { get; set; }
         public Decimal OutgoYTD { get; set; }
 
-        public Decimal CurrentMonthIncomePrecentage { get; set; }
-        public Decimal CurrentMonthOutgoPrecentage { get; set; }
+        public Decimal CurrentMonthIncomePercentage { get; set; }
+        public Decimal CurrentMonthOutgoPercentage { get; set; }
     }
     #endregion
 }

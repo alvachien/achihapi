@@ -5,8 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.Authorization;
@@ -33,20 +31,7 @@ namespace hihapi.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            string usrName = "";
-            try
-            {
-                usrName = HIHAPIUtility.GetUserID(this);
-                if (String.IsNullOrEmpty(usrName))
-                {
-                    throw new UnauthorizedAccessException();
-                }
-            }
-            catch
-            {
-                throw new UnauthorizedAccessException();
-            }
-
+            var usrName = HIHAPIUtility.GetAuthenticatedUserName(this);
             return Ok(_context.BlogUserSettings.Where(p => p.Owner == usrName));
         }
 
@@ -54,21 +39,8 @@ namespace hihapi.Controllers
         [HttpGet]
         public BlogUserSetting Get([FromODataUri] string key)
         {
-            string usrName;
-            try
-            {
-                usrName = HIHAPIUtility.GetUserID(this);
-                if (String.IsNullOrEmpty(usrName))
-                {
-                    throw new UnauthorizedAccessException();
-                }
-            }
-            catch
-            {
-                throw new UnauthorizedAccessException();
-            }
-
-            return _context.BlogUserSettings.Where(p => p.Owner == key).SingleOrDefault();
+            var usrName = HIHAPIUtility.GetAuthenticatedUserName(this);
+            return _context.BlogUserSettings.Where(p => p.Owner == usrName).SingleOrDefault();
         }
 
         [HttpPost]
@@ -83,7 +55,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             // User
@@ -133,7 +105,7 @@ namespace hihapi.Controllers
         }
 
         [HttpGet]
-        public IActionResult Deploy([FromODataUri]string owner)
+        public async Task<IActionResult> Deploy(string key)
         {
             // User
             string usrName = "";
@@ -150,15 +122,15 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            if (!string.IsNullOrEmpty(owner))
+            if (!string.IsNullOrEmpty(key))
             {                
-                if (String.CompareOrdinal(owner, usrName) != 0)
+                if (String.CompareOrdinal(key, usrName) != 0)
                 {
                     throw new UnauthorizedAccessException();
                 }
             }
 
-            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
+            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == key);
             if (setting == null)
             {
                 throw new NotFoundException("Owner not found");
@@ -167,7 +139,7 @@ namespace hihapi.Controllers
             var errstr = "";
             try
             {
-                BlogDeployUtility.UpdatePostSetting(setting);
+                await BlogDeployUtility.UpdatePostSettingAsync(setting);
             }
             catch(Exception exp)
             {

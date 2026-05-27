@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.EntityFrameworkCore;
 using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
@@ -43,7 +44,7 @@ namespace hihapi.Controllers
         public async Task<IActionResult> PostRepayDocument([FromBody]FinanceLoanRepayDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
 
             // Checks
             // Check 0: Input data check
@@ -69,7 +70,7 @@ namespace hihapi.Controllers
             }
 
             // Check 1: Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == createContext.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
@@ -193,7 +194,7 @@ namespace hihapi.Controllers
                     createContext.DocumentInfo.Createdby = usrName;
                     createContext.DocumentInfo.CreatedAt = DateTime.Now;
                     var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
                     origdocid = docEntity.Entity.ID;
 
                     // 2. Update the tmp doc
@@ -201,7 +202,7 @@ namespace hihapi.Controllers
                     docLoanTmp.UpdatedAt = DateTime.Now;
                     docLoanTmp.Updatedby = usrName;
                     _context.FinanceTmpLoanDocument.Update(docLoanTmp);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     // 3. In case balance is zero, update the account status
                     if (Decimal.Compare(acntBalance, 0) == 0)
@@ -210,7 +211,7 @@ namespace hihapi.Controllers
                         loanAccountHeader.Updatedby = usrName;
                         loanAccountHeader.UpdatedAt = DateTime.Now;
                         _context.FinanceAccount.Update(loanAccountHeader);
-                        _context.SaveChanges();
+                        await _context.SaveChangesAsync();
                     }
 
                     findoc = docEntity.Entity;
@@ -237,7 +238,7 @@ namespace hihapi.Controllers
         public async Task<IActionResult> PostPrepaymentDocument([FromBody]FinanceLoanPrepayDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
 
             // Checks
             // Check 0: Input data check
@@ -265,7 +266,7 @@ namespace hihapi.Controllers
             }
 
             // Check 2: Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == createContext.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == createContext.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -373,9 +374,9 @@ namespace hihapi.Controllers
                     createContext.DocumentInfo.Createdby = usrName;
                     createContext.DocumentInfo.CreatedAt = DateTime.Now;
                     var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
                     origdocid = docEntity.Entity.ID;
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     // 2. In case balance is zero, update the account status
                     if (Decimal.Compare(acntBalance, 0) == 0)
@@ -384,7 +385,7 @@ namespace hihapi.Controllers
                         loanAccountHeader.Updatedby = usrName;
                         loanAccountHeader.UpdatedAt = DateTime.Now;
                         _context.FinanceAccount.Update(loanAccountHeader);
-                        _context.SaveChanges();
+                        await _context.SaveChangesAsync();
                     }
 
                     findoc = docEntity.Entity;

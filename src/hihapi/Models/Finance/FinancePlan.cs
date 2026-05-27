@@ -19,27 +19,27 @@ namespace hihapi.Models
     public sealed class FinancePlan : BaseModel
     {
         [Key]
-        [Column("ID", TypeName = "INT")]
+        [Column("ID", TypeName = "INTEGER")]
         public Int32 ID { get; set; }
 
         [Required]
-        [Column("HID", TypeName = "INT")]
+        [Column("HID", TypeName = "INTEGER")]
         public Int32 HomeID { get; set; }
 
         [Required]
-        [Column("PTYPE", TypeName = "TINYINT")]
+        [Column("PTYPE", TypeName = "INTEGER")]
         public FinancePlanTypeEnum PlanType { get; set; }
 
-        [Column("ACCOUNTID", TypeName = "INT")]
+        [Column("ACCOUNTID", TypeName = "INTEGER")]
         public Int32? AccountID { get; set; }
 
-        [Column("ACNTCTGYID", TypeName = "INT")]
+        [Column("ACNTCTGYID", TypeName = "INTEGER")]
         public Int32? AccountCategoryID { get; set; }
 
-        [Column("CCID", TypeName = "INT")]
+        [Column("CCID", TypeName = "INTEGER")]
         public Int32? ControlCenterID { get; set; }
 
-        [Column("TTID", TypeName = "INT")]
+        [Column("TTID", TypeName = "INTEGER")]
         public Int32? TranTypeID { get; set; }
 
         [Required]
@@ -155,6 +155,7 @@ namespace hihapi.Models
             return isValid;
         }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
     }
 }

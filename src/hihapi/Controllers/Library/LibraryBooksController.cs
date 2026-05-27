@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -85,7 +86,7 @@ namespace hihapi.Controllers.Library
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             // User
@@ -104,7 +105,7 @@ namespace hihapi.Controllers.Library
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == tbc.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == tbc.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -144,7 +145,7 @@ namespace hihapi.Controllers.Library
             }
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == tbd.HomeID && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == tbd.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -153,18 +154,20 @@ namespace hihapi.Controllers.Library
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_author WHERE BOOK_ID = " + key.ToString());
-                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_ctgy WHERE BOOK_ID = " + key.ToString());
-                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_location WHERE BOOK_ID = " + key.ToString());
-                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_press WHERE BOOK_ID = " + key.ToString());
-                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_translator WHERE BOOK_ID = " + key.ToString());
-                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_def WHERE ID = " + key.ToString());
+                var param = new SqliteParameter("@id", key);
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_author WHERE BOOK_ID = @id", param);
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_ctgy WHERE BOOK_ID = @id", param);
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_location WHERE BOOK_ID = @id", param);
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_press WHERE BOOK_ID = @id", param);
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_translator WHERE BOOK_ID = @id", param);
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_def WHERE ID = @id", param);
 
                 await transaction.CommitAsync();
             }
-            catch (Exception exp)
+            catch (Exception)
             {
-                transaction.Rollback();
+                await transaction.RollbackAsync();
+                throw;
             }
             //_context.Books.Remove(tbd);
             //await _context.SaveChangesAsync();

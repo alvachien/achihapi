@@ -25,6 +25,7 @@ namespace hihapi.Models
         [Column("DESP", TypeName="NVARCHAR(50)")]
         public String Desp { get; set; }
 
+        [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
         public ICollection<FinanceAccountExtraAS> AccountExtraAsset { get; set; }
 

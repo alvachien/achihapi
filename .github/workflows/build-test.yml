@@ -3,14 +3,14 @@ name: build and test
 on:
   push:
   pull_request:
-    branches: 
+    branches:
         - master
     paths:
         - '**.cs'
         - '**.csproj'
 
 env:
-  DOTNET_VERSION: '6.0.201' # The .NET SDK version to use
+  DOTNET_VERSION: '10.0.x'
 
 jobs:
   build:
@@ -21,24 +21,24 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Install dependencies
       run: dotnet restore
-      
+
     - name: Build
       run: dotnet build --configuration Release --no-restore
-      
-    - name: Test on unit test 
+
+    - name: Test on unit test
       run: dotnet test --no-build --configuration Release test/hihapi.test/hihapi.unittest.csproj /p:CollectCoverage=true /p:CoverletOutput=../../coverage/
 
     - name: Test on integration test
       run: dotnet test --no-build --configuration Release test/hihapi.integrationtest/hihapi.integrationtest.csproj /p:CollectCoverage=true /p:CoverletOutput=../../coverage/ /p:MergeWith="../../coverage/coverage.json" /p:CoverletOutputFormat="cobertura"
-    
+
     - name: Copy Coverage To Predictable Location
       run: cp coverage/coverage.cobertura.xml coverage.cobertura.xml
 

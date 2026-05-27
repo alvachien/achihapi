@@ -70,7 +70,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             // User
@@ -113,7 +113,7 @@ namespace hihapi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                HIHAPIUtility.HandleModalStateError(ModelState);
+                HIHAPIUtility.HandleModelStateError(ModelState);
             }
 
             if (key != update.ID)
@@ -194,7 +194,7 @@ namespace hihapi.Controllers
             }
             catch (DbUpdateConcurrencyException exp)
             {
-                if (!_context.FinanceAccount.Any(p => p.ID == key))
+                if (!_context.BlogPosts.Any(p => p.ID == key))
                 {
                     return NotFound();
                 }
@@ -252,9 +252,9 @@ namespace hihapi.Controllers
         }
 
         [HttpGet]
-        public IActionResult Deploy(int key)
+        public async Task<IActionResult> Deploy(int key)
         {
-            var cc = _context.BlogPosts.Find(key);
+            var cc = await _context.BlogPosts.FindAsync(key);
             if (cc == null)
             {
                 throw new NotFoundException("HIHAPI: Record not found");
@@ -296,7 +296,7 @@ namespace hihapi.Controllers
             {
                 if (cc.Status == BlogPost.BlogPostStatus_PublishAsPublic)
                 {
-                    BlogDeployUtility.DeployPost(setting.DeployFolder, cc, _context.BlogCollections.Where(p => p.Owner == usrName).ToList());
+                    await BlogDeployUtility.DeployPost(setting.DeployFolder, cc, _context.BlogCollections.Where(p => p.Owner == usrName).ToList());
                 }
                 else
                 {
@@ -313,14 +313,7 @@ namespace hihapi.Controllers
                 throw new Exception(errstr);
             }
 
-            return Ok("");
-
-            //if (string.IsNullOrEmpty(errstr))
-            //{
-            //    return Ok();
-            //}
-
-            //throw new Exception(errstr);
+            return Ok("done");
         }
 
         [HttpGet]
