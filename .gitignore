@@ -348,3 +348,6 @@ src/achihapi/blogs/
 *.db
 data/
 
+# Environment-specific config with secrets
+src/hihapi/appsettings.Production.json
+

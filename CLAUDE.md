@@ -57,12 +57,12 @@ achihapi.sln
 │   ├── hihapi.test/               # Unit tests (xUnit + Moq, uses in-memory SQLite via SqliteDatabaseFixture)
 │   ├── hihapi.integrationtest/    # Integration tests (xUnit + WebApplicationFactory)
 │   └── hihapi.test.common/        # Shared test data setup (DataSetupUtility.cs)
-└── oldsrc/                        # Archived legacy code (not in solution)
 ```
 
 ## Architecture Notes
 
 - **OData-centric**: All controllers expose OData endpoints. The EDM model is built in `EdmModelBuilder`. Two route prefixes exist: default and `/v1`.
+- **Home ID convention**: Most domain entities have a `HomeID` property for multi-tenant isolation. `HomeDefines` uses `{key}` as the Home ID. `HomeMembers` is scoped to the authenticated user's home memberships. Reference controllers (Currencies, Languages, DBVersions) and some category controllers allow `HomeID = null` for shared reference data. `FinanceReports` requires HomeID in the request body.
 - **Single DbContext**: `hihDataContext` is the sole EF Core context, using SQLite (`Data Source=hih.db`).
 - **Authentication**: JWT Bearer tokens. Authority is `https://localhost:44353` in development, `https://www.alvachien.com/idserver` in production.
 - **CORS**: Different allowed origins per environment (dev: localhost ports 29521/29528/29525; prod: alvachien.com paths).

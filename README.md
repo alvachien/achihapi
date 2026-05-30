@@ -1,19 +1,17 @@
 [![build and test](https://github.com/alvachien/achihapi/actions/workflows/build-test.yml/badge.svg)](https://github.com/alvachien/achihapi/actions/workflows/build-test.yml)
-[![Build Status](https://travis-ci.com/alvachien/achihapi.svg?branch=master)](https://travis-ci.com/alvachien/achihapi)
-![Code Coverage](https://img.shields.io/badge/Code%20Coverage-66%25-yellow?style=flat)
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 
 
 
 # achihapi
-Web API for [HIH](https://github.com/alvachien/achihui.git), built on ASP.NET Core.
+H.I.H. (Home Info. Hub) — an OData v4 Web API for [HIH](https://github.com/alvachien/achihui.git), built on ASP.NET Core 10.0 with EF Core + SQLite.
+
+Reference projects:
+- [HIH UI](https://github.com/alvachien/achihui.git)   
+- [AC ID Server](https://github.com/alvachien/acidserver.git)
 
 
-## Live example
-This Web API was deployed on Microsoft Azure for testing purpose: https://achihapi.azurewebsites.net
-
-
-## Install
+## Installation    
 To install this Web API to your own server, please follow the steps below.
 
 
@@ -21,60 +19,185 @@ To install this Web API to your own server, please follow the steps below.
 You can clone this [repository](https://github.com/alvachien/achihapi.git) or download it.
 
 
-### Step 2. Setup your own database.
-You need setup your own database (SQL Server based), and run three sqls under folder 'sql':
-1. DBSchema_Table.sql
-2. DBSchema_View.sql
-3. Predliver_Content.sql
+### Step 2. Database
+The API uses SQLite with EF Core. On first run, the database is created automatically and seeded with reference data via `DatabaseSeeder.Seed()`. No manual SQL script execution is required.
+
+For custom schema changes, SQL scripts are available under `src/hihapi/Sqls/`:
+1. `DBSchema_Table.sql`
+2. `DBSchema_View.sql`
+3. `Predeliver_Content.sql`
 
 
-### Step 3. Change the appsettings.json by adding the connection string:
-The appsettings.json has been removed because it defines the connection strings to the database. This file is manadatory to make the API works. 
+### Step 3. Configuration
 
-An example file look like following:
+Configure the API via `appsettings.json`:
+
 ```javascript
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Data Source=XXX;Initial Catalog=XXX;Persist Security Info=True;User ID=XXX;Password=XXX;",
-    "DebugConnection": "Server=XXX;Database=XXX;Integrated Security=SSPI;MultipleActiveResultSets=true"
+    "DefaultConnection": "Data Source=hih.db"
   },
-  "Logging": {
-    "IncludeScopes": false,
-    "LogLevel": {
-      "Default": "Debug",
-      "System": "Information",
-      "Microsoft": "Information"
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "System": "Warning"
+      }
     }
+  },
+  "JwtSettings": {
+    "Authority": "https://localhost:44353"
   }
 }
 ```
 
-### Step 4. Deployment
+**Authentication**: JWT Bearer tokens. The default authority is `https://localhost:44353` in development environment coming from another project named [**acidserver**](https://github.com/alvachien/acidserver.git).
 
-Deploy this Web API to IIS or other HTTP server.
+
+### Step 4. CORS
+
+CORS is configured per environment:
+- **Development**: `localhost` ports 29521, 29528, 29525
+
+### Step 5. Deployment
+
+Deploy this Web API to IIS, Kestrel, or other HTTP servers. To run locally:
+
+```bash
+dotnet run --project src/hihapi/hihapi.csproj
+```
+
+The API starts at `http://localhost:25688`.
 
 ## Development Tools
 
-Though the whole project developed and tested with Visual Studio 2019 Community Version and Visual Studio Code, the project can be processed by other IDE which supports ASP.NET Core.
+This project targets .NET 10.0 and can be developed with Visual Studio 2022, Visual Studio Code, JetBrains Rider, or any IDE that supports ASP.NET Core and .NET 10.0.
 
-## Test
+## CI/CD
 
-Test project ```hihapi.test``` has been added to solution. And the Travis CI has been integrated with this repo.
-Test project ```hihapi.test``` contains both Unit Test and Integration Test, you have to run Unit Test and Integration Test separately. The Travis CI also coverages the unit tests part due to the VM setting is not suit for Identity Server setup.
+GitHub Actions is used for continuous integration (`.github/workflows/build-test.yml`). The workflow builds the solution, runs all unit and integration tests, and reports code coverage on every push.
 
 ### Unit Tests
 
-To run the unit test via command line:
-```powershell
+```bash
 dotnet test --filter DisplayName~hihapi.test.UnitTests
 ```
 
 ### Integration Tests
 
-To run the integration test via command line:
-```powershell
+```bash
 dotnet test --filter DisplayName~hihapi.test.integrationtests
 ```
+
+### Tests with Code Coverage
+
+```bash
+dotnet test test/hihapi.test/hihapi.unittest.csproj /p:CollectCoverage=true
+```
+
+## Solution Structure
+
+```
+achihapi.sln
+├── src/hihapi/                    # Main ASP.NET Core Web API
+│   ├── Program.cs                 # Entry point (minimal hosting model)
+│   ├── Controllers/               # Domain-organized OData controllers
+│   │   ├── Finance/               # Accounts, documents, orders, plans, reports...
+│   │   ├── Home/                  # HomeDefines, HomeMembers
+│   │   ├── Library/               # Books, categories, locations, persons, organizations
+│   │   ├── Blog/                  # Posts, collections, formats, tags, settings
+│   │   ├── Event/                 # NormalEvents, RecurEvents
+│   │   └── Common/                # Currencies, Languages, DBVersions
+│   ├── Models/                    # Domain models (mirrors Controllers structure)
+│   ├── DataContext/               # EF Core DbContext (hihDataContext)
+│   ├── Utilities/                 # DatabaseSeeder, CommonUtility, middleware, OData validators
+│   └── Exceptions/                # Custom exception types
+├── test/
+│   ├── hihapi.test/               # Unit tests (xUnit + Moq, in-memory SQLite)
+│   ├── hihapi.integrationtest/    # Integration tests (xUnit + WebApplicationFactory)
+│   └── hihapi.test.common/        # Shared test data setup
+```
+
+## API Endpoints
+
+The API exposes OData v4 endpoints accessible via two route prefixes: the default (`/`) and versioned (`/v1`).
+All controllers follow the OData convention: `GET /{Controller}`, `GET /{Controller}({key})`, `POST /{Controller}`, `PUT /{Controller}({key})`, `PATCH /{Controller}({key})`, `DELETE /{Controller}({key})`.
+
+> **Authentication**: Endpoints marked with 🔒 require a valid JWT Bearer token in the `Authorization` header.
+
+### Blog
+
+| Controller | Methods | Auth | Home ID |
+|---|---|---|---|
+| `BlogCollections` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `PATCH({key})`, `DELETE({key})` | 🔒 | Query / Body |
+| `BlogFormats` | `GET`, `GET({key})` | — | — |
+| `BlogPostCollections` | `GET` | — | — |
+| `BlogPosts` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `DELETE({key})`, `GET Deploy({key})`, `GET ClearDeploy({key})` | 🔒 | Query / Body |
+| `BlogPostTags` | `GET`, `GET({key})` | 🔒 | Query / Body |
+| `BlogUserSettings` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `GET Deploy({key})` | 🔒 | Body |
+
+### Common
+
+| Controller | Methods | Auth | Home ID |
+|---|---|---|---|
+| `Currencies` | `GET`, `GET({key})` | 🔒 | — |
+| `DBVersions` | `GET`, `GET({key})`, `POST`, `GET GetRepeatedDates2(...)`, `POST GetRepeatedDates`, `POST GetRepeatedDatesWithAmount`, `POST GetRepeatedDatesWithAmountAndInterest` | 🔒 | — |
+| `Languages` | `GET`, `GET({key})` | — | — |
+
+### Event
+
+| Controller | Methods | Auth | Home ID |
+|---|---|---|---|
+| `NormalEvents` | `GET`, `GET({key})`, `POST`, `DELETE({key})`, `POST Recalculate` | 🔒 | Query / Body |
+| `RecurEvents` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
+
+### Finance
+
+| Controller | Methods | Auth | Home ID |
+|---|---|---|---|
+| `FinanceAccounts` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `PATCH({key})`, `DELETE({key})`, `POST CreateLegacyLoanAccount`, `POST CloseAccount`, `POST SettleAccount` | 🔒 | Query / Body |
+| `FinanceAccountCategories` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `DELETE({key})` | 🔒 | Query / Body |
+| `FinanceAssetCategories` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `DELETE({key})` | 🔒 | Query / Body |
+| `FinanceControlCenters` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `PATCH({key})`, `DELETE({key})` | 🔒 | Query / Body |
+| `FinanceDocumentItems` | `GET` | 🔒 | Query |
+| `FinanceDocumentItemViews` | `GET` | 🔒 | Query |
+| `FinanceDocuments` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `PATCH({key})`, `DELETE({key})`, `POST PostDPDocument`, `POST PostLoanDocument`, `POST PostAssetBuyDocument`, `POST PostAssetValueChangeDocument` | 🔒 | Query / Body |
+| `FinanceDocumentTypes` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `DELETE({key})` | 🔒 | Query / Body |
+| `FinanceOrders` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `PATCH({key})`, `DELETE({key})` | 🔒 | Query / Body |
+| `FinanceOrderSRules` | `GET` | 🔒 | Query |
+| `FinancePlans` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `DELETE({key})` | 🔒 | Query / Body |
+| `FinanceReports` | `POST GetReportByTranType`, `POST GetAccountBalance`, `POST GetAccountBalanceEx`, `POST GetReportByAccount`, `POST GetReportByControlCenter`, `POST GetReportByOrder`, `POST GetFinanceOverviewKeyFigure`, `POST GetReportByTranTypeMOM`, `POST GetReportByAccountMOM`, `POST GetReportByControlCenterMOM` | 🔒 | Body (required) |
+| `FinanceTmpDPDocuments` | `GET`, `POST PostDocument` | 🔒 | Body |
+| `FinanceTmpLoanDocuments` | `GET`, `POST PostRepayDocument`, `POST PostPrepaymentDocument` | 🔒 | Body |
+| `FinanceTransactionTypes` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `DELETE({key})` | 🔒 | Query / Body |
+
+### Home
+
+| Controller | Methods | Auth | Home ID |
+|---|---|---|---|
+| `HomeDefines` | `GET`, `GET({key})`, `POST`, `PUT({key})`, `DELETE({key})` | 🔒 | Key |
+| `HomeMembers` | `GET`, `GET({key})` | 🔒 | Implicit (user's homes) |
+
+### Library
+
+| Controller | Methods | Auth | Home ID |
+|---|---|---|---|
+| `LibraryBooks` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
+| `LibraryBookBorrowRecords` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
+| `LibraryBookCategories` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
+| `LibraryBookLocations` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
+| `LibraryOrganizations` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
+| `LibraryOrganizationTypes` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
+| `LibraryPersons` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
+| `LibraryPersonRoles` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
+
+### Other
+
+| Controller | Methods | Auth | Home ID |
+|---|---|---|---|
+| `PhotoFile` | `GET`, `POST Upload`, `DELETE({key})` | 🔒 | — |
+| `WeatherForecast` | `GET` | — | — |
 
 # Author
 **Alva Chien (Hongjun Qian) | 钱红俊**
@@ -84,7 +207,7 @@ A programmer, and a certificated Advanced Photographer.
 Contact me:
 
 1. Via mail: alvachien@163.com. Or,
-2. [Check my flickr](http://www.flickr.com/photos/alvachien). 
+2. [Check my website](http://www.alvachien.com). 
 
 
 # Licence
