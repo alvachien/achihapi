@@ -1,17 +1,15 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace hihapi.Controllers
 {
@@ -54,8 +52,8 @@ namespace hihapi.Controllers
             }
 
             var hids = await (from hmem in _context.HomeMembers
-                       where hmem.User == usrName
-                       select hmem.HomeID).ToListAsync();
+                              where hmem.User == usrName
+                              select hmem.HomeID).ToListAsync();
 
             return Ok(from hd in _context.HomeDefines
                       where hids.Contains(hd.ID)
@@ -90,8 +88,8 @@ namespace hihapi.Controllers
             }
 
             var hids = await (from hmem in _context.HomeMembers
-                        where hmem.User == usrName && hmem.HomeID == key
-                        select hmem.HomeID).ToListAsync();
+                              where hmem.User == usrName && hmem.HomeID == key
+                              select hmem.HomeID).ToListAsync();
             if (hids.Count == 0)
             {
                 throw new NotFoundException("Not found");
@@ -103,7 +101,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody]HomeDefine homedef)
+        public async Task<IActionResult> Post([FromBody] HomeDefine homedef)
         {
             if (!ModelState.IsValid)
             {
@@ -130,7 +128,7 @@ namespace hihapi.Controllers
 
             homedef.Createdby = usrName;
             homedef.CreatedAt = DateTime.Now;
-            foreach(var hmem in homedef.Members)
+            foreach (var hmem in homedef.Members)
             {
                 hmem.CreatedAt = homedef.CreatedAt;
                 hmem.Createdby = usrName;

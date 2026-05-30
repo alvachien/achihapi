@@ -1,17 +1,15 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using hihapi.Models.Library;
-using hihapi.Models.Event;
+using System.Linq;
 
 namespace hihapi.Models
 {
     [Table("T_HOMEDEF")]
     public partial class HomeDefine : BaseModel
     {
-        public HomeDefine(): base()
+        public HomeDefine() : base()
         {
             Members = new List<HomeMember>();
             //FinanceAccountCategories = new List<FinanceAccountCategory>();
@@ -51,7 +49,7 @@ namespace hihapi.Models
         [MaxLength(50)]
         [Column("HOST", TypeName = "NVARCHAR(50)")]
         public String Host { get; set; }
-        
+
         [Required]
         [MaxLength(5)]
         [Column("BASECURR", TypeName = "NVARCHAR(5)")]

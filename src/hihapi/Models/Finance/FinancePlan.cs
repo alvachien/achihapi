@@ -1,18 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.OData.Edm;
+using System.Linq;
 
 namespace hihapi.Models
 {
     public enum FinancePlanTypeEnum : Byte
     {
-        Account         = 0,
+        Account = 0,
         AccountCategory = 1,
-        ControlCenter   = 2,
-        TranType        = 3,
+        ControlCenter = 2,
+        TranType = 3,
     }
 
     [Table("T_FIN_PLAN")]
@@ -64,7 +62,7 @@ namespace hihapi.Models
         [Column("DESP", TypeName = "NVARCHAR(50)")]
         public String Description { get; set; }
 
-        public FinancePlan(): base()
+        public FinancePlan() : base()
         {
             this.PlanType = FinancePlanTypeEnum.Account;
         }

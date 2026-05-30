@@ -1,42 +1,41 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace hihapi.Models
 {
     [Table("T_FIN_CONTROLCENTER")]
-    public sealed class FinanceControlCenter: BaseModel
+    public sealed class FinanceControlCenter : BaseModel
     {
         [Key]
-        [Column("ID", TypeName="INT")]
+        [Column("ID", TypeName = "INT")]
         public Int32 ID { get; set; }
 
         [Required]
-        [Column("HID", TypeName="INT")]
+        [Column("HID", TypeName = "INT")]
         public Int32 HomeID { get; set; }
 
         [Required]
         [StringLength(30)]
-        [Column("NAME", TypeName="NVARCHAR(30)")]
+        [Column("NAME", TypeName = "NVARCHAR(30)")]
         public String Name { get; set; }
 
-        [Column("PARID", TypeName="INT")]
+        [Column("PARID", TypeName = "INT")]
         public Int32? ParentID { get; set; }
 
         [StringLength(45)]
-        [Column("COMMENT", TypeName="NVARCHAR(45)")]
+        [Column("COMMENT", TypeName = "NVARCHAR(45)")]
         public String Comment { get; set; }
 
         [StringLength(40)]
-        [Column("OWNER", TypeName="NVARCHAR(40)")]
+        [Column("OWNER", TypeName = "NVARCHAR(40)")]
         public String Owner { get; set; }
 
         [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
 
-        public FinanceControlCenter(): base()
+        public FinanceControlCenter() : base()
         {
         }
 

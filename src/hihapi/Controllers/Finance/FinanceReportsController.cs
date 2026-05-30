@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using hihapi.Models;
 using hihapi.Utilities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
-using System.Threading.Tasks;
-using System.Collections.Immutable;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace hihapi.Controllers
 {
@@ -72,26 +69,26 @@ namespace hihapi.Controllers
             DateTime dtlow = new DateTime(year, month == null ? 1 : month.Value, 1);
             DateTime dthigh = month == null ? dtlow.AddYears(1) : dtlow.AddMonths(1);
             var results = (from item in _context.FinanceDocumentItemView
-                          where item.HomeID == hid
-                            && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
-                            //&& item.TransactionType != FinanceTransactionType.TranType_TransferIn
-                            //&& item.TransactionType != FinanceTransactionType.TranType_TransferOut
-                            //&& item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
-                            //&& item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                           where item.HomeID == hid
+                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                           //&& item.TransactionType != FinanceTransactionType.TranType_TransferIn
+                           //&& item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                           //&& item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                           //&& item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
                            group item by new { item.TransactionType, item.TransactionTypeName, item.IsExpense } into newresult
-                          select new
-                          {
-                              HomeID = hid,
-                              TransactionType = newresult.Key.TransactionType,
-                              TransactionTypeName = newresult.Key.TransactionTypeName,
-                              IsExpense = newresult.Key.IsExpense,
-                              Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency)
-                          }).ToList();
+                           select new
+                           {
+                               HomeID = hid,
+                               TransactionType = newresult.Key.TransactionType,
+                               TransactionTypeName = newresult.Key.TransactionTypeName,
+                               IsExpense = newresult.Key.IsExpense,
+                               Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency)
+                           }).ToList();
 
             List<FinanceReportByTransactionType> listResult = new List<FinanceReportByTransactionType>();
-            foreach(var result in results)
+            foreach (var result in results)
             {
-                FinanceReportByTransactionType financeReportByTransactionType = new FinanceReportByTransactionType(); 
+                FinanceReportByTransactionType financeReportByTransactionType = new FinanceReportByTransactionType();
                 financeReportByTransactionType.HomeID = result.HomeID;
                 financeReportByTransactionType.TransactionTypeName = result.TransactionTypeName;
                 financeReportByTransactionType.TransactionType = result.TransactionType;
@@ -333,7 +330,7 @@ namespace hihapi.Controllers
                     HomeID = hid,
                     AccountID = accountid,
                     BalanceDate = curdate,
-                    Balance = (decimal)doubleAmount,                    
+                    Balance = (decimal)doubleAmount,
                 });
             }
 
@@ -349,7 +346,7 @@ namespace hihapi.Controllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetReportByAccount([FromBody]ODataActionParameters parameters)
+        public IActionResult GetReportByAccount([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -388,13 +385,13 @@ namespace hihapi.Controllers
             // 3. Calculate the amount
             var results = (
                 from docitem in _context.FinanceDocumentItem
-                    join docheader in _context.FinanceDocument
-                        on docitem.DocID equals docheader.ID
-                    join trantype in _context.FinTransactionType
-                        on docitem.TranType equals trantype.ID
-                    join account in _context.FinanceAccount
-                        on new { docitem.AccountID, IsNormal = true } equals new { AccountID = account.ID, IsNormal = account.Status == FinanceAccountStatus.Normal }
-                    where docheader.HomeID == hid
+                join docheader in _context.FinanceDocument
+                    on docitem.DocID equals docheader.ID
+                join trantype in _context.FinTransactionType
+                    on docitem.TranType equals trantype.ID
+                join account in _context.FinanceAccount
+                    on new { docitem.AccountID, IsNormal = true } equals new { AccountID = account.ID, IsNormal = account.Status == FinanceAccountStatus.Normal }
+                where docheader.HomeID == hid
                 select new
                 {
                     AccountID = docitem.AccountID,
@@ -421,13 +418,13 @@ namespace hihapi.Controllers
                 }).ToList();
 
             List<FinanceReportByAccount> listResults = new List<FinanceReportByAccount>();
-            foreach(var rst in results)
+            foreach (var rst in results)
             {
                 var amountLC = rst.TranAmount;
                 // Calculte the amount
                 if (rst.IsExpense)
                     amountLC = -1 * rst.TranAmount;
-                if (rst.UseCurr2 != null) 
+                if (rst.UseCurr2 != null)
                 {
                     if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
                     {
@@ -900,15 +897,15 @@ namespace hihapi.Controllers
             else
             {
                 var results = (from item in _context.FinanceDocumentItemView
-                           where item.HomeID == hid
-                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
-                           group item by new { item.IsExpense } into newresult
-                           select new
-                           {
-                               HomeID = hid,
-                               IsExpense = newresult.Key.IsExpense,
-                               Amount = newresult.Sum(c => c.AmountInLocalCurrency)
-                           }).ToList();
+                               where item.HomeID == hid
+                                 && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                               group item by new { item.IsExpense } into newresult
+                               select new
+                               {
+                                   HomeID = hid,
+                                   IsExpense = newresult.Key.IsExpense,
+                                   Amount = newresult.Sum(c => c.AmountInLocalCurrency)
+                               }).ToList();
                 results.ForEach(rst =>
                 {
                     if (rst.IsExpense)
@@ -952,15 +949,15 @@ namespace hihapi.Controllers
             else
             {
                 var results = (from item in _context.FinanceDocumentItemView
-                           where item.HomeID == hid
-                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
-                           group item by new { item.IsExpense } into newresult
-                           select new
-                           {
-                               HomeID = hid,
-                               IsExpense = newresult.Key.IsExpense,
-                               Amount = newresult.Sum(c => c.AmountInLocalCurrency)
-                           }).ToList();
+                               where item.HomeID == hid
+                                 && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                               group item by new { item.IsExpense } into newresult
+                               select new
+                               {
+                                   HomeID = hid,
+                                   IsExpense = newresult.Key.IsExpense,
+                                   Amount = newresult.Sum(c => c.AmountInLocalCurrency)
+                               }).ToList();
                 results.ForEach(rst =>
                 {
                     if (rst.IsExpense)
@@ -976,23 +973,23 @@ namespace hihapi.Controllers
             if (excludeTransfer)
             {
                 var results = (from item in _context.FinanceDocumentItemView
-                           where item.HomeID == hid
-                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
-                             && item.TransactionType != FinanceTransactionType.TranType_TransferIn
-                             && item.TransactionType != FinanceTransactionType.TranType_TransferOut
-                             && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
-                             && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
-                             && item.TransactionType != FinanceTransactionType.TranType_AdvancePaymentOut
-                             && item.TransactionType != FinanceTransactionType.TranType_AdvanceReceiveIn
-                             && item.TransactionType != FinanceTransactionType.TranType_AssetValueDecrease
-                             && item.TransactionType != FinanceTransactionType.TranType_AssetValueIncrease
-                             group item by new { item.IsExpense } into newresult
-                           select new
-                           {
-                               HomeID = hid,
-                               IsExpense = newresult.Key.IsExpense,
-                               Amount = newresult.Sum(c => c.AmountInLocalCurrency)
-                           }).ToList();
+                               where item.HomeID == hid
+                                 && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                                 && item.TransactionType != FinanceTransactionType.TranType_TransferIn
+                                 && item.TransactionType != FinanceTransactionType.TranType_TransferOut
+                                 && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
+                                 && item.TransactionType != FinanceTransactionType.TranType_OpeningLiability
+                                 && item.TransactionType != FinanceTransactionType.TranType_AdvancePaymentOut
+                                 && item.TransactionType != FinanceTransactionType.TranType_AdvanceReceiveIn
+                                 && item.TransactionType != FinanceTransactionType.TranType_AssetValueDecrease
+                                 && item.TransactionType != FinanceTransactionType.TranType_AssetValueIncrease
+                               group item by new { item.IsExpense } into newresult
+                               select new
+                               {
+                                   HomeID = hid,
+                                   IsExpense = newresult.Key.IsExpense,
+                                   Amount = newresult.Sum(c => c.AmountInLocalCurrency)
+                               }).ToList();
                 results.ForEach(rst =>
                 {
                     if (rst.IsExpense)
@@ -1004,15 +1001,15 @@ namespace hihapi.Controllers
             else
             {
                 var results = (from item in _context.FinanceDocumentItemView
-                           where item.HomeID == hid
-                             && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
-                           group item by new { item.IsExpense } into newresult
-                           select new
-                           {
-                               HomeID = hid,
-                               IsExpense = newresult.Key.IsExpense,
-                               Amount = newresult.Sum(c => c.AmountInLocalCurrency)
-                           }).ToList();
+                               where item.HomeID == hid
+                                 && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                               group item by new { item.IsExpense } into newresult
+                               select new
+                               {
+                                   HomeID = hid,
+                                   IsExpense = newresult.Key.IsExpense,
+                                   Amount = newresult.Sum(c => c.AmountInLocalCurrency)
+                               }).ToList();
                 results.ForEach(rst =>
                 {
                     if (rst.IsExpense)
@@ -1103,12 +1100,12 @@ namespace hihapi.Controllers
             if (includeChildren)
             {
                 var lvl = (from fintt in _context.FinTransactionType
-                          where fintt.ParID != null
-                          && ttids.Contains(fintt.ParID.GetValueOrDefault())
-                          select fintt.ID).ToList();
+                           where fintt.ParID != null
+                           && ttids.Contains(fintt.ParID.GetValueOrDefault())
+                           select fintt.ID).ToList();
                 ttids.AddRange(lvl);
             }
-            
+
             if (String.CompareOrdinal(period, MoMPeriod_Last12Month) == 0)
             {
                 dtbgn = dtNextMonthFirstDay.AddYears(-1);
@@ -1264,7 +1261,7 @@ namespace hihapi.Controllers
                     else
                         finReportByAccountMOM.DebitBalance = (Decimal)dbresult.Amount;
                     finReportByAccountMOM.Month = dbresult.Month;
-                    
+
                     result.Add(finReportByAccountMOM);
                 }
                 else
@@ -1483,9 +1480,9 @@ namespace hihapi.Controllers
 
             // Account
             List<int> acntids = (from finacc in _context.FinanceAccount
-                       where finacc.CategoryID == FinanceAccountCategory.AccountCategory_AccountReceivable
-                            || finacc.CategoryID == FinanceAccountCategory.AccountCategory_AdvancePayment
-                        select finacc.ID).ToList();
+                                 where finacc.CategoryID == FinanceAccountCategory.AccountCategory_AccountReceivable
+                                      || finacc.CategoryID == FinanceAccountCategory.AccountCategory_AdvancePayment
+                                 select finacc.ID).ToList();
 
             var results = (from item in _context.FinanceDocumentItemView
                            where item.HomeID == hid
@@ -1496,7 +1493,7 @@ namespace hihapi.Controllers
                            select new
                            {
                                IsExpense = newresult.Key.IsExpense,
-                               Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency )
+                               Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency)
                            }).ToList();
 
             List<FinanceReport> listResult = new List<FinanceReport>();
@@ -1602,7 +1599,7 @@ namespace hihapi.Controllers
                            {
                                IsExpense = newresult.Key.IsExpense,
                                Month = newresult.Key.Month,
-                               Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency)                               
+                               Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency)
                            }).ToList();
 
             List<FinanceReportMOM> listResult = new List<FinanceReportMOM>();
@@ -1844,7 +1841,7 @@ namespace hihapi.Controllers
                         finrecord.InAmount = (Decimal)dbresult.Amount;
 
                     listResult.Add(finrecord);
-                } 
+                }
                 else
                 {
                     if (dbresult.IsExpense)

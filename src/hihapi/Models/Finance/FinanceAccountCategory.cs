@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace hihapi.Models
 {
@@ -10,29 +9,29 @@ namespace hihapi.Models
     public sealed class FinanceAccountCategory : BaseModel
     {
         [Key]
-        [Column("ID", TypeName="INT")]
+        [Column("ID", TypeName = "INT")]
         public Int32 ID { get; set; }
 
-        [Column("HID", TypeName="INT")]
+        [Column("HID", TypeName = "INT")]
         public Int32? HomeID { get; set; }
 
         [Required]
         [StringLength(30)]
-        [Column("NAME", TypeName="NVARCHAR(30)")]
+        [Column("NAME", TypeName = "NVARCHAR(30)")]
         public String Name { get; set; }
 
         [Required]
-        [Column("ASSETFLAG", TypeName="BIT")]
+        [Column("ASSETFLAG", TypeName = "BIT")]
         public Boolean AssetFlag { get; set; }
 
         [StringLength(45)]
-        [Column("COMMENT", TypeName="NVARCHAR(45)")]
+        [Column("COMMENT", TypeName = "NVARCHAR(45)")]
         public String Comment { get; set; }
 
         [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
 
-        public FinanceAccountCategory(): base()
+        public FinanceAccountCategory() : base()
         {
         }
 

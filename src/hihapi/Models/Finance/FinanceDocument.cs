@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace hihapi.Models
 {
     [Table("T_FIN_DOCUMENT")]
-    public sealed class FinanceDocument: BaseModel
+    public sealed class FinanceDocument : BaseModel
     {
-        public FinanceDocument(): base()
+        public FinanceDocument() : base()
         {
             TranDate = DateTime.Today;
 
@@ -17,48 +17,48 @@ namespace hihapi.Models
         }
 
         [Key]
-        [Column("ID", TypeName="INT")]
+        [Column("ID", TypeName = "INT")]
         public Int32 ID { get; set; }
 
         [Required]
-        [Column("HID", TypeName="INT")]
+        [Column("HID", TypeName = "INT")]
         public Int32 HomeID { get; set; }
 
         [Required]
-        [Column("DOCTYPE", TypeName="INTEGER")]
+        [Column("DOCTYPE", TypeName = "INTEGER")]
         public Int16 DocType { get; set; }
-        
+
         [Required]
         [Column("TRANDATE", TypeName = "DATE")]
         [DataType(DataType.Date)]
         public DateTime TranDate { get; set; }
-        
+
         [Required]
         [StringLength(5)]
-        [Column("TRANCURR", TypeName="NVARCHAR(5)")]
+        [Column("TRANCURR", TypeName = "NVARCHAR(5)")]
         public String TranCurr { get; set; }
-        
+
         [Required]
         [StringLength(45)]
-        [Column("DESP", TypeName="NVARCHAR(45)")]
+        [Column("DESP", TypeName = "NVARCHAR(45)")]
         public String Desp { get; set; }
-        
-        [Column("EXGRATE", TypeName= "DECIMAL(17, 4)")]
+
+        [Column("EXGRATE", TypeName = "DECIMAL(17, 4)")]
         public Decimal? ExgRate { get; set; }
-        
-        [Column("EXGRATE_PLAN", TypeName="BIT")]
+
+        [Column("EXGRATE_PLAN", TypeName = "BIT")]
         public Boolean? ExgRate_Plan { get; set; }
-        
+
         [StringLength(5)]
-        [Column("TRANCURR2", TypeName="NVARCHAR(5)")]
+        [Column("TRANCURR2", TypeName = "NVARCHAR(5)")]
         public String TranCurr2 { get; set; }
-        
+
         [Column("EXGRATE2", TypeName = "DECIMAL(17, 4)")]
         public Decimal? ExgRate2 { get; set; }
-        
-        [Column("EXGRATE_PLAN2", TypeName="BIT")]
+
+        [Column("EXGRATE_PLAN2", TypeName = "BIT")]
         public Boolean? ExgRate_Plan2 { get; set; }
-        
+
         [NotMapped]
         public Decimal? TranAmount { get; set; }
 
@@ -99,7 +99,7 @@ namespace hihapi.Models
                 Decimal inamt = 0;
                 Decimal outamt = 0;
                 // On Item level
-                foreach(var item in Items)
+                foreach (var item in Items)
                 {
                     if (item.TranType == FinanceTransactionType.TranType_TransferIn)
                         inamt += item.TranAmount;
@@ -244,7 +244,7 @@ namespace hihapi.Models
             // 4. Used in Loan template document
             //    Not allowed(exclude the description)
             var loantmpdoc = getLoanTmpDocForCurrentDocIfExist(context);
-            if(loantmpdoc != null) return false;
+            if (loantmpdoc != null) return false;
 
             // 5. Used in Asset buy Doc
             //    Not allowed(exclude description)
@@ -309,29 +309,29 @@ namespace hihapi.Models
         }
 
         [Key]
-        [Column("DOCID", TypeName="INT")]
+        [Column("DOCID", TypeName = "INT")]
         public Int32 DocID { get; set; }
-     
+
         [Key]
-        [Column("ITEMID", TypeName="INT")]
+        [Column("ITEMID", TypeName = "INT")]
         public Int32 ItemID { get; set; }
-        
+
         [Required]
-        [Column("ACCOUNTID", TypeName="INT")]
+        [Column("ACCOUNTID", TypeName = "INT")]
         public Int32 AccountID { get; set; }
-        
+
         [Required]
-        [Column("TRANTYPE", TypeName="INT")]
+        [Column("TRANTYPE", TypeName = "INT")]
         public Int32 TranType { get; set; }
-        
+
         [Required]
-        [Column("TRANAMOUNT", TypeName="DECIMAL(17, 2)")]
+        [Column("TRANAMOUNT", TypeName = "DECIMAL(17, 2)")]
         public Decimal TranAmount { get; set; }
-        
+
         [Column("USECURR2", TypeName = "BIT")]
         public Boolean? UseCurr2 { get; set; }
 
-        [Column("CONTROLCENTERID", TypeName="INT")]
+        [Column("CONTROLCENTERID", TypeName = "INT")]
         public Int32? ControlCenterID { get; set; }
 
         [Column("ORDERID", TypeName = "INTEGER")]

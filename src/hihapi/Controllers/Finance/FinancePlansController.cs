@@ -1,17 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
-using Microsoft.AspNetCore.OData.Formatter;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 namespace hihapi.Controllers
 {
@@ -44,10 +43,10 @@ namespace hihapi.Controllers
 
             // Check whether User assigned with specified Home ID
             return Ok(from hmem in _context.HomeMembers
-                        where hmem.User == usrName
-                        select new { HomeID = hmem.HomeID } into hids
-                        join ords in _context.FinancePlan on hids.HomeID equals ords.HomeID
-                        select ords);
+                      where hmem.User == usrName
+                      select new { HomeID = hmem.HomeID } into hids
+                      join ords in _context.FinancePlan on hids.HomeID equals ords.HomeID
+                      select ords);
 
             //return Ok(option.ApplyTo(query));
         }
@@ -70,11 +69,11 @@ namespace hihapi.Controllers
 
             // Check whether User assigned with specified Home ID
             return SingleResult.Create(from hmem in _context.HomeMembers
-                      where hmem.User == usrName
-                      select new { HomeID = hmem.HomeID } into hids
-                      join ords in _context.FinancePlan on hids.HomeID equals ords.HomeID
-                      where ords.ID == key
-                      select ords);
+                                       where hmem.User == usrName
+                                       select new { HomeID = hmem.HomeID } into hids
+                                       join ords in _context.FinancePlan on hids.HomeID equals ords.HomeID
+                                       where ords.ID == key
+                                       select ords);
         }
 
         [HttpPost]

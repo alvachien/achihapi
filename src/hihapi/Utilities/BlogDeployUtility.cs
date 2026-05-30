@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.IO;
-using hihapi.Models;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using hihapi.Models;
 
 namespace hihapi.Utilities
 {
@@ -108,7 +106,7 @@ namespace hihapi.Utilities
                 brief = post.Brief,
             };
             // Tags
-            foreach(var tagterm in post.BlogPostTags)
+            foreach (var tagterm in post.BlogPostTags)
             {
                 newpost.tag.Add(tagterm.Tag);
             }
@@ -162,7 +160,7 @@ namespace hihapi.Utilities
                 await writer.WriteAsync(post.Content);
             }
         }
- 
+
         public static void RevokePostDeliver(string deployFolder, int postid)
         {
             if (String.IsNullOrEmpty(deployFolder) || !Directory.Exists(HIHAPIUtility.BlogFolder))

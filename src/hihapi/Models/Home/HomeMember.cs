@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -7,10 +6,10 @@ namespace hihapi.Models
 {
     public enum HomeMemberRelationType : Int16
     {
-        Self    = 0,
-        Couple  = 1,
-        Child   = 2,
-        Parent  = 3,
+        Self = 0,
+        Couple = 1,
+        Child = 2,
+        Parent = 3,
     }
 
     [Table("T_HOMEMEM")]

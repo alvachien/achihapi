@@ -74,6 +74,35 @@ The API starts at `http://localhost:25688`.
 
 This project targets .NET 10.0 and can be developed with Visual Studio 2022, Visual Studio Code, JetBrains Rider, or any IDE that supports ASP.NET Core and .NET 10.0.
 
+## Code Quality & Linting
+
+The project is configured with layered code analysis:
+
+| Layer | Tool | Coverage |
+|---|---|---|
+| Built-in | Roslyn analyzers (CA rules) | Correctness, design, performance |
+| Built-in | IDE analyzers (IDE rules) | Unnecessary usings, unused members, formatting |
+| Third-party | [Meziantou.Analyzer](https://github.com/meziantou/Meziantou.Analyzer) | Async misuse, nullability, EF Core anti-patterns, naming |
+| Formatting | `dotnet format` | Whitespace, style consistency |
+
+### Running the linter
+
+```bash
+# Auto-fix style issues
+dotnet format style
+
+# Auto-fix analyzer issues
+dotnet format analyzers
+
+# Verify no formatting changes are needed (for CI)
+dotnet format --verify-no-changes
+```
+
+### Configuration files
+
+- `.editorconfig` — defines diagnostic severity rules
+- `*.csproj` — `<EnableNETAnalyzers>`, `<EnforceCodeStyleInBuild>`, `<GenerateDocumentationFile>`, and `Meziantou.Analyzer` package reference
+
 ## CI/CD
 
 GitHub Actions is used for continuous integration (`.github/workflows/build-test.yml`). The workflow builds the solution, runs all unit and integration tests, and reports code coverage on every push.

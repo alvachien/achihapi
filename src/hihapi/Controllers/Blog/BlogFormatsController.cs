@@ -1,9 +1,9 @@
 ﻿using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using hihapi.Models;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace hihapi.Controllers
 {

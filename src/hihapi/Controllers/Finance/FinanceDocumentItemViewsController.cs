@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using hihapi.Models;
 using hihapi.Utilities;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace hihapi.Controllers
 {
@@ -38,10 +36,10 @@ namespace hihapi.Controllers
             }
 
             return Ok(from hmem in _context.HomeMembers
-                where hmem.User == usrName
-                select new { hmem.HomeID } into hids
-                join items in _context.FinanceDocumentItemView on hids.HomeID equals items.HomeID
-                select items);
+                      where hmem.User == usrName
+                      select new { hmem.HomeID } into hids
+                      join items in _context.FinanceDocumentItemView on hids.HomeID equals items.HomeID
+                      select items);
 
             //return Ok(option.ApplyTo(rst));
         }

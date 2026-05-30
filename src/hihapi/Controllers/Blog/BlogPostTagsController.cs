@@ -1,11 +1,10 @@
-﻿using System.Linq;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Linq;
 using hihapi.Utilities;
-using System;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace hihapi.Controllers
 {
@@ -39,11 +38,11 @@ namespace hihapi.Controllers
             }
 
             return Ok(from post in _context.BlogPosts
-                       where post.Owner == usrName
-                       select new { PostID = post.ID } into postids
-                       join posttags in _context.BlogPostTags
-                        on postids.PostID equals posttags.PostID
-                       select posttags);
+                      where post.Owner == usrName
+                      select new { PostID = post.ID } into postids
+                      join posttags in _context.BlogPostTags
+                       on postids.PostID equals posttags.PostID
+                      select posttags);
         }
     }
 }

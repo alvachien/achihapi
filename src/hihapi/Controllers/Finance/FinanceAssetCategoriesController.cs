@@ -1,29 +1,28 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
-using hihapi.Exceptions;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 namespace hihapi.Controllers
 {
     [Authorize]
-    public class FinanceAssetCategoriesController: ODataController
-    {        
+    public class FinanceAssetCategoriesController : ODataController
+    {
         private readonly hihDataContext _context;
-        
+
         public FinanceAssetCategoriesController(hihDataContext context)
         {
             _context = context;
         }
-        
+
         /// GET: /FinanceAssertCategories
         [EnableQuery]
         [HttpGet]

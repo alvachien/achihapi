@@ -1,16 +1,15 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
-using hihapi.Exceptions;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 namespace hihapi.Controllers
 {
@@ -47,10 +46,10 @@ namespace hihapi.Controllers
                        where acntctgy.HomeID == null
                        select acntctgy;
             var rst1 = from hmem in _context.HomeMembers
-                      where hmem.User == usrName
-                      select new { HomeID = hmem.HomeID } into hids
-                      join acntctgy in _context.FinAccountCategories on hids.HomeID equals acntctgy.HomeID
-                      select acntctgy;
+                       where hmem.User == usrName
+                       select new { HomeID = hmem.HomeID } into hids
+                       join acntctgy in _context.FinAccountCategories on hids.HomeID equals acntctgy.HomeID
+                       select acntctgy;
 
             return Ok(rst0.Union(rst1));
         }
@@ -128,7 +127,7 @@ namespace hihapi.Controllers
 
             return Created(ctgy);
         }
-    
+
         [HttpPut]
         public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceAccountCategory update)
         {

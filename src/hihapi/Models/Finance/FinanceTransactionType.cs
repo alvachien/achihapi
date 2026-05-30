@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace hihapi.Models
 {
@@ -16,7 +15,7 @@ namespace hihapi.Models
         public const Int32 TranType_TransferIn = 37;
         public const Int32 TranType_TransferOut = 60;
 
-        public const Int32 TranType_BorrowFrom = 80;        
+        public const Int32 TranType_BorrowFrom = 80;
         public const Int32 TranType_LendTo = 81;
         public const Int32 TranType_RepaymentOut = 86;
         public const Int32 TranType_RepaymentIn = 87;
@@ -36,32 +35,32 @@ namespace hihapi.Models
         public const Int32 TranType_InsurancePaymentOut = 34;
 
         [Key]
-        [Column("ID", TypeName="INT")]
+        [Column("ID", TypeName = "INT")]
         public Int32 ID { get; set; }
 
-        [Column("HID", TypeName="INT")]
+        [Column("HID", TypeName = "INT")]
         public Int32? HomeID { get; set; }
 
         [Required]
         [StringLength(30)]
-        [Column("NAME", TypeName="NVARCHAR(30)")]
+        [Column("NAME", TypeName = "NVARCHAR(30)")]
         public String Name { get; set; }
 
         [Required]
-        [Column("EXPENSE", TypeName="BIT")]
+        [Column("EXPENSE", TypeName = "BIT")]
         public Boolean Expense { get; set; }
 
-        [Column("PARID", TypeName="INT")]
+        [Column("PARID", TypeName = "INT")]
         public Int32? ParID { get; set; }
 
         [StringLength(45)]
-        [Column("COMMENT", TypeName="NVARCHAR(45)")]
+        [Column("COMMENT", TypeName = "NVARCHAR(45)")]
         public String Comment { get; set; }
 
         [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
 
-        public FinanceTransactionType(): base()
+        public FinanceTransactionType() : base()
         {
         }
 

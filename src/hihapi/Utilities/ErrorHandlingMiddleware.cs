@@ -31,11 +31,11 @@ public class ErrorHandlingMiddleware
     {
         var code = StatusCodes.Status500InternalServerError;
 
-        if      (ex is NotFoundException)     code = StatusCodes.Status404NotFound;
+        if (ex is NotFoundException) code = StatusCodes.Status404NotFound;
         else if (ex is UnauthorizedException
             || ex is UnauthorizedAccessException) code = StatusCodes.Status401Unauthorized;
-        else if (ex is BadRequestException)   code = StatusCodes.Status400BadRequest;
-        else if (ex is DBOperationException)  code = StatusCodes.Status400BadRequest;
+        else if (ex is BadRequestException) code = StatusCodes.Status400BadRequest;
+        else if (ex is DBOperationException) code = StatusCodes.Status400BadRequest;
 
         if (code == StatusCodes.Status500InternalServerError)
         {

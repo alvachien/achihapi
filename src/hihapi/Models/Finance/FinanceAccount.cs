@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Reflection;
 using System.Linq;
-using System.Text.Json.Serialization;
+using System.Reflection;
 
 namespace hihapi.Models
 {
@@ -17,44 +16,44 @@ namespace hihapi.Models
 
     public enum LoanRepaymentMethod
     {
-        EqualPrincipalAndInterest   = 1,    // Equal principal & interest
-        EqualPrincipal              = 2,    // Equal principal
-        DueRepayment                = 3,    // Due repayment
-        InformalPayment             = 4,    // Informal payment
+        EqualPrincipalAndInterest = 1,    // Equal principal & interest
+        EqualPrincipal = 2,    // Equal principal
+        DueRepayment = 3,    // Due repayment
+        InformalPayment = 4,    // Informal payment
     }
 
     [Table("T_FIN_ACCOUNT")]
     public sealed class FinanceAccount : BaseModel
     {
         [Key]
-        [Column("ID", TypeName="INT")]
+        [Column("ID", TypeName = "INT")]
         public Int32 ID { get; set; }
 
         [Required]
-        [Column("HID", TypeName="INT")]
+        [Column("HID", TypeName = "INT")]
         public Int32 HomeID { get; set; }
 
         [Required]
-        [Column("CTGYID", TypeName="INT")]
+        [Column("CTGYID", TypeName = "INT")]
         public Int32 CategoryID { get; set; }
 
         [Required]
         [StringLength(30)]
-        [Column("NAME", TypeName="NVARCHAR(30)")]
+        [Column("NAME", TypeName = "NVARCHAR(30)")]
         public String Name { get; set; }
 
         [StringLength(45)]
-        [Column("COMMENT", TypeName="NVARCHAR(45)")]
+        [Column("COMMENT", TypeName = "NVARCHAR(45)")]
         public String Comment { get; set; }
-        
+
         [StringLength(40)]
-        [Column("OWNER", TypeName="NVARCHAR(40)")]
+        [Column("OWNER", TypeName = "NVARCHAR(40)")]
         public String Owner { get; set; }
 
-        [Column("STATUS", TypeName="INTEGER")]
+        [Column("STATUS", TypeName = "INTEGER")]
         public FinanceAccountStatus Status { get; set; }
 
-        public FinanceAccount(): base()
+        public FinanceAccount() : base()
         {
         }
 
@@ -68,7 +67,7 @@ namespace hihapi.Models
             if (String.IsNullOrEmpty(Name))
                 return false;
 
-            switch(CategoryID)
+            switch (CategoryID)
             {
                 case FinanceAccountCategory.AccountCategory_AdvancePayment:
                     if (ExtraDP == null)
@@ -136,10 +135,10 @@ namespace hihapi.Models
                 //    break;
 
                 case FinanceAccountCategory.AccountCategory_Asset:
-                    {
-                        // Can be closed directly
-                    }
-                    break;
+                {
+                    // Can be closed directly
+                }
+                break;
 
                 //case FinanceAccountCategory.AccountCategory_AdvancePayment:
                 //    break;
@@ -155,7 +154,7 @@ namespace hihapi.Models
             }
 
             // Status
-            if (Status != FinanceAccountStatus.Normal) 
+            if (Status != FinanceAccountStatus.Normal)
                 return false;
 
             return true;
@@ -172,46 +171,46 @@ namespace hihapi.Models
     public abstract class FinanceAccountExtra
     {
         [Key]
-        [Column("ACCOUNTID", TypeName="INT")]
+        [Column("ACCOUNTID", TypeName = "INT")]
         public Int32 AccountID { get; set; }
 
         public abstract bool IsValid();
-        
+
         public abstract string GetDBFieldName(string field);
     }
 
     // Account extra: advance payment
     [Table("T_FIN_ACCOUNT_EXT_DP")]
-    public sealed class FinanceAccountExtraDP: FinanceAccountExtra
+    public sealed class FinanceAccountExtraDP : FinanceAccountExtra
     {
         [Required]
-        [Column("DIRECT", TypeName="INTEGER")]
+        [Column("DIRECT", TypeName = "INTEGER")]
         public Boolean Direct { get; set; }
-        
+
         [Required]
         [Column("STARTDATE")]
         [DataType(DataType.Date)]
         public DateTime StartDate { get; set; }
-        
+
         [Required]
         [Column("ENDDATE")]
         [DataType(DataType.Date)]
         public DateTime EndDate { get; set; }
-        
+
         [Required]
-        [Column("RPTTYPE", TypeName="INTEGER")]
+        [Column("RPTTYPE", TypeName = "INTEGER")]
         public RepeatFrequency RepeatType { get; set; }
-        
+
         [Required]
-        [Column("REFDOCID", TypeName="INT")]
+        [Column("REFDOCID", TypeName = "INT")]
         public Int32 RefenceDocumentID { get; set; }
 
         [StringLength(100)]
-        [Column("DEFRRDAYS", TypeName="NVARCHAR(100)")]
+        [Column("DEFRRDAYS", TypeName = "NVARCHAR(100)")]
         public String DefrrDays { get; set; }
 
         [StringLength(45)]
-        [Column("COMMENT", TypeName="NVARCHAR(45)")]
+        [Column("COMMENT", TypeName = "NVARCHAR(45)")]
         public String Comment { get; set; }
 
         // Tmp. docs
@@ -219,7 +218,7 @@ namespace hihapi.Models
         public FinanceAccount AccountHeader { get; set; }
 
         public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
-        public FinanceAccountExtraDP(): base()
+        public FinanceAccountExtraDP() : base()
         {
             this.DPTmpDocs = new List<FinanceTmpDPDocument>();
         }
@@ -291,7 +290,7 @@ namespace hihapi.Models
                 {
                     if (DateTime.Compare(((DateTime)oldValue).Date, ((DateTime)newValue).Date) != 0) dictDelta.Add(item.Name, newValue);
                 }
-                else if(item.PropertyType == typeof(RepeatFrequency))
+                else if (item.PropertyType == typeof(RepeatFrequency))
                 {
                     if ((RepeatFrequency)oldValue != (RepeatFrequency)newValue) dictDelta.Add(item.Name, (Byte)newValue);
                 }
@@ -353,26 +352,26 @@ namespace hihapi.Models
 
     // Account extra: Asset
     [Table("T_FIN_ACCOUNT_EXT_AS")]
-    public sealed class FinanceAccountExtraAS: FinanceAccountExtra
+    public sealed class FinanceAccountExtraAS : FinanceAccountExtra
     {
         [Required]
-        [Column("CTGYID", TypeName="INT")]
+        [Column("CTGYID", TypeName = "INT")]
         public Int32 CategoryID { get; set; }
 
         [Required]
         [StringLength(50)]
-        [Column("NAME", TypeName="NVARCHAR(50)")]
+        [Column("NAME", TypeName = "NVARCHAR(50)")]
         public String Name { get; set; }
 
         [StringLength(100)]
-        [Column("COMMENT", TypeName="NVARCHAR(100)")]
+        [Column("COMMENT", TypeName = "NVARCHAR(100)")]
         public String Comment { get; set; }
 
         [Required]
-        [Column("REFDOC_BUY", TypeName="INT")]
+        [Column("REFDOC_BUY", TypeName = "INT")]
         public Int32 RefenceBuyDocumentID { get; set; }
 
-        [Column("REFDOC_SOLD", TypeName="INT")]
+        [Column("REFDOC_SOLD", TypeName = "INT")]
         public Int32? RefenceSoldDocumentID { get; set; }
 
         [Column("BOUGHT_DATE", TypeName = "DATE")]
@@ -390,8 +389,8 @@ namespace hihapi.Models
         public FinanceAssetCategory AssetCategory { get; set; }
 
         public FinanceAccount AccountHeader { get; set; }
-        
-        public FinanceAccountExtraAS(): base()
+
+        public FinanceAccountExtraAS() : base()
         {
         }
         public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();

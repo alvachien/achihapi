@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.OData.Edm;
 
 namespace hihapi.Models
 {
@@ -252,12 +248,12 @@ namespace hihapi.Models
         public Decimal OutAmount { get; set; }
     }
 
-    public class FinanceReportMOM: FinanceReport
+    public class FinanceReportMOM : FinanceReport
     {
         public Int32 Month { get; set; }
     }
 
-    public class FinanceReportPerDate: FinanceReport
+    public class FinanceReportPerDate : FinanceReport
     {
         public DateTime TransactionDate { get; set; }
     }

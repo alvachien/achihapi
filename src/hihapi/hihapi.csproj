@@ -14,6 +14,10 @@
     <NeutralLanguage>en</NeutralLanguage>
     <RepositoryUrl>https://github.com/alvachien/achihapi</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>USE_ALIYUN</DefineConstants>
@@ -69,6 +73,10 @@
     <InternalsVisibleTo Include="hihapi.integrationtest" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer" Version="2.0.214">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.OData" Version="9.4.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.7" />

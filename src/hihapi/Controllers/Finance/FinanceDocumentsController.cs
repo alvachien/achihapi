@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
-using hihapi.Exceptions;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace hihapi.Controllers
@@ -1410,18 +1410,19 @@ namespace hihapi.Controllers
             DateTime dtMonthLastday = dtMonthFirstday.AddMonths(1).AddDays(-1);
             // Fetch all asset account
             var acnts = from account in _context.FinanceAccount
-                          join accountext in _context.FinanceAccountExtraAS
-                            on account.ID equals accountext.AccountID
-                          where account.HomeID == hid && account.CategoryID == FinanceAccountCategory.AccountCategory_Asset
-                            && account.Status == FinanceAccountStatus.Normal
-                            && accountext.BoughtDate != null && accountext.BoughtDate < dtMonthFirstday
-                            && accountext.ExpiredDate != null && accountext.ExpiredDate > dtMonthFirstday
-                        select new {
+                        join accountext in _context.FinanceAccountExtraAS
+                          on account.ID equals accountext.AccountID
+                        where account.HomeID == hid && account.CategoryID == FinanceAccountCategory.AccountCategory_Asset
+                          && account.Status == FinanceAccountStatus.Normal
+                          && accountext.BoughtDate != null && accountext.BoughtDate < dtMonthFirstday
+                          && accountext.ExpiredDate != null && accountext.ExpiredDate > dtMonthFirstday
+                        select new
+                        {
                             account.ID,
                             accountext.ExpiredDate,
                             accountext.BoughtDate,
                             accountext.ResidualValue
-                          };
+                        };
             var homeDefine = _context.HomeDefines.FirstOrDefault(prop => prop.ID == hid);
             if (homeDefine == null)
                 throw new NotFoundException("Home not found");
@@ -1449,21 +1450,21 @@ namespace hihapi.Controllers
                     docheader.ExgRate,
                     docheader.ExgRate2,
                 }).ToList();
-                //into docitem2
-                //group docitem2 by new { docitem2.AccountID, docitem2.IsExpense, docitem2.TranCurr, docitem2.TranCurr2, docitem2.UseCurr2, docitem2.ExgRate, docitem2.ExgRate2 } into docitem3
-                //select new
-                //{
-                //    AccountID = docitem3.Key.AccountID,
-                //    IsExpense = docitem3.Key.IsExpense,
-                //    TranCurr = docitem3.Key.TranCurr,
-                //    TranCurr2 = docitem3.Key.TranCurr2,
-                //    UseCurr2 = docitem3.Key.UseCurr2,
-                //    ExgRate = docitem3.Key.ExgRate,
-                //    ExgRate2 = docitem3.Key.ExgRate2,
-                //    TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
-                //}).ToList();
+            //into docitem2
+            //group docitem2 by new { docitem2.AccountID, docitem2.IsExpense, docitem2.TranCurr, docitem2.TranCurr2, docitem2.UseCurr2, docitem2.ExgRate, docitem2.ExgRate2 } into docitem3
+            //select new
+            //{
+            //    AccountID = docitem3.Key.AccountID,
+            //    IsExpense = docitem3.Key.IsExpense,
+            //    TranCurr = docitem3.Key.TranCurr,
+            //    TranCurr2 = docitem3.Key.TranCurr2,
+            //    UseCurr2 = docitem3.Key.UseCurr2,
+            //    ExgRate = docitem3.Key.ExgRate,
+            //    ExgRate2 = docitem3.Key.ExgRate2,
+            //    TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
+            //}).ToList();
 
-            foreach(var acnt in acnts)
+            foreach (var acnt in acnts)
             {
                 Double doubleAmount = 0;
                 if (dbresults.FindIndex(p => p.TranDate >= dtMonthFirstday && p.TranDate <= dtMonthLastday && p.DocType == FinanceDocumentType.DocType_AssetDepreciation) != -1)

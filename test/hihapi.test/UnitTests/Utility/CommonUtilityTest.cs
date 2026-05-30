@@ -253,7 +253,7 @@ namespace hihapi.unittest.Utility
         public void WorkoutRepeatedDates_Quarter2()
         {
             var startdate = new DateTime(2022, 10, 8);
-            var enddate = new DateTime(2023, 10, 7); ;
+            var enddate = new DateTime(2023, 10, 7);
             RepeatDatesCalculationInput vm = new RepeatDatesCalculationInput
             {
                 StartDate = startdate,

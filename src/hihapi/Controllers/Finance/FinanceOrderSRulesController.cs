@@ -1,17 +1,15 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using hihapi.Models;
 using hihapi.Utilities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace hihapi.Controllers
 {
     [Authorize]
-    public sealed class FinanceOrderSRulesController: ODataController
+    public sealed class FinanceOrderSRulesController : ODataController
     {
         private readonly hihDataContext _context;
 
@@ -39,12 +37,12 @@ namespace hihapi.Controllers
             }
 
             return Ok(from hmem in _context.HomeMembers
-                where hmem.User == usrName
-                select new { HomeID = hmem.HomeID } into hids
-                join orders in _context.FinanceOrder on hids.HomeID equals orders.HomeID
-                select new { HomeID = orders.HomeID, ID = orders.ID } into orderids
-                join srules in _context.FinanceOrderSRule on orderids.ID equals srules.OrderID
-                select srules);
+                      where hmem.User == usrName
+                      select new { HomeID = hmem.HomeID } into hids
+                      join orders in _context.FinanceOrder on hids.HomeID equals orders.HomeID
+                      select new { HomeID = orders.HomeID, ID = orders.ID } into orderids
+                      join srules in _context.FinanceOrderSRule on orderids.ID equals srules.OrderID
+                      select srules);
 
             //return Ok(option.ApplyTo(rst));
         }

@@ -1,22 +1,21 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
-using hihapi.Exceptions;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 namespace hihapi.Controllers
 {
     [Authorize]
-    public sealed class FinanceControlCentersController: ODataController
+    public sealed class FinanceControlCentersController : ODataController
     {
         private readonly hihDataContext _context;
 
@@ -51,14 +50,14 @@ namespace hihapi.Controllers
 
             // Check whether User assigned with specified Home ID
             return Ok(from hmem in _context.HomeMembers
-                        where hmem.User == usrName
-                        select new { hmem.HomeID, hmem.User, hmem.IsChild } into hmems
-                        join ccs in _context.FinanceControlCenter
-                          on hmems.HomeID equals ccs.HomeID
-                        where (hmems.IsChild == true && hmems.User == ccs.Owner)
-                            || !hmems.IsChild.HasValue
-                            || hmems.IsChild == false
-                        select ccs);
+                      where hmem.User == usrName
+                      select new { hmem.HomeID, hmem.User, hmem.IsChild } into hmems
+                      join ccs in _context.FinanceControlCenter
+                        on hmems.HomeID equals ccs.HomeID
+                      where (hmems.IsChild == true && hmems.User == ccs.Owner)
+                          || !hmems.IsChild.HasValue
+                          || hmems.IsChild == false
+                      select ccs);
             //return Ok(option.ApplyTo(query));
         }
 
@@ -91,7 +90,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody]FinanceControlCenter controlCenter)
+        public async Task<IActionResult> Post([FromBody] FinanceControlCenter controlCenter)
         {
             if (!ModelState.IsValid)
             {
@@ -117,7 +116,7 @@ namespace hihapi.Controllers
             var hms = await _context.HomeMembers.Where(p => p.HomeID == controlCenter.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
-                throw new UnauthorizedAccessException();        
+                throw new UnauthorizedAccessException();
             }
 
             if (!controlCenter.IsValid(this._context))
@@ -132,7 +131,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody]FinanceControlCenter update)
+        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] FinanceControlCenter update)
         {
             if (!ModelState.IsValid)
             {
@@ -163,7 +162,7 @@ namespace hihapi.Controllers
             var hms = await _context.HomeMembers.Where(p => p.HomeID == update.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
-                throw new UnauthorizedAccessException();        
+                throw new UnauthorizedAccessException();
             }
 
             if (!update.IsValid(this._context))

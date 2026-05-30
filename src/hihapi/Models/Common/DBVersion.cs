@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -9,9 +8,9 @@ namespace hihapi.Models
     public class DBVersion
     {
         [Key]
-        [Column("VERSIONID", TypeName="INT")]
+        [Column("VERSIONID", TypeName = "INT")]
         public Int32 VersionID { get; set; }
-        
+
         [Required]
         [Column("RELEASEDDATE")]
         [DataType(DataType.Date)]

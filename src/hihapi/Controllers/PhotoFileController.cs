@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using hihapi.Models;
 using hihapi.Utilities;
@@ -153,7 +152,7 @@ namespace hihapi.Controllers
 
         // PUT: api/PhotoFile/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody] string value)
         {
             return Forbid();
         }

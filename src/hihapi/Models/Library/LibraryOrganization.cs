@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -32,7 +31,7 @@ namespace hihapi.Models.Library
         [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
 
-        public IList<LibraryOrganizationType> Types{ get; set; }
+        public IList<LibraryOrganizationType> Types { get; set; }
         public IList<LibraryOrganizationTypeLinkage> OrganizationTypes { get; set; }
         public IList<LibraryBook> Books { get; set; }
         public IList<LibraryBookPressLinkage> PressedBooks { get; set; }

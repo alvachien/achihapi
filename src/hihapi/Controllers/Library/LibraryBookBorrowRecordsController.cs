@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using hihapi.Models;
-using hihapi.Utilities;
 using hihapi.Exceptions;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Formatter;
-using Microsoft.AspNetCore.OData.Deltas;
 using hihapi.Models.Library;
+using hihapi.Utilities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 namespace hihapi.Controllers.Library
 {
@@ -64,8 +61,8 @@ namespace hihapi.Controllers.Library
             }
 
             return (from record in _context.BookBorrowRecords
-                      where record.User == usrName && record.Id == key
-                      select record).SingleOrDefault();
+                    where record.User == usrName && record.Id == key
+                    select record).SingleOrDefault();
         }
 
         [HttpPost]

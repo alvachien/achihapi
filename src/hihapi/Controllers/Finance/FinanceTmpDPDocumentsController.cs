@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
-using hihapi.Exceptions;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace hihapi.Controllers
 {
@@ -39,13 +38,13 @@ namespace hihapi.Controllers
             }
 
             return Ok(from homemem in _context.HomeMembers
-                    join fintdpd in _context.FinanceTmpDPDocument
-                    on new { homemem.HomeID, homemem.User } equals new { fintdpd.HomeID, User = usrName }
-                    select fintdpd);
+                      join fintdpd in _context.FinanceTmpDPDocument
+                      on new { homemem.HomeID, homemem.User } equals new { fintdpd.HomeID, User = usrName }
+                      select fintdpd);
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostDocument([FromBody]FinanceTmpDPDocumentPostContext context)
+        public async Task<IActionResult> PostDocument([FromBody] FinanceTmpDPDocumentPostContext context)
         {
             // User
             String usrName = String.Empty;
@@ -72,11 +71,11 @@ namespace hihapi.Controllers
 
             // Check 1: Home ID
             var hms = from hmem in _context.HomeMembers
-                                where hmem.User == usrName && hmem.HomeID == tpdoc.HomeID
-                           select new { HomeID = hmem.HomeID } into hids
-                           join homedefs in _context.HomeDefines 
-                           on hids.HomeID equals homedefs.ID
-                           select new { HomeID = homedefs.ID, BaseCurrency = homedefs.BaseCurrency };
+                      where hmem.User == usrName && hmem.HomeID == tpdoc.HomeID
+                      select new { HomeID = hmem.HomeID } into hids
+                      join homedefs in _context.HomeDefines
+                      on hids.HomeID equals homedefs.ID
+                      select new { HomeID = homedefs.ID, BaseCurrency = homedefs.BaseCurrency };
             if (hms.Count() != 1)
             {
                 throw new UnauthorizedAccessException();

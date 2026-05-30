@@ -1,15 +1,15 @@
-﻿using System.Linq;
-using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.Authorization;
-using System;
-using hihapi.Exceptions;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 namespace hihapi.Controllers
 {
@@ -66,7 +66,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody]BlogPost post)
+        public async Task<IActionResult> Post([FromBody] BlogPost post)
         {
             if (!ModelState.IsValid)
             {
@@ -109,7 +109,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody]BlogPost update)
+        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] BlogPost update)
         {
             if (!ModelState.IsValid)
             {

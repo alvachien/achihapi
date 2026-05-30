@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using hihapi.Models.Event;
 using hihapi.Models.Library;
 using Microsoft.OData.Edm;
@@ -46,7 +45,8 @@ namespace hihapi.Models
             //    p.HomeID,
             //    p.AccountID,
             //});
-            modelBuilder.EntityType<FinanceReportByAccount>().HasKey(p => new {
+            modelBuilder.EntityType<FinanceReportByAccount>().HasKey(p => new
+            {
                 p.HomeID,
                 p.AccountID,
             });
@@ -56,7 +56,8 @@ namespace hihapi.Models
             //    p.HomeID,
             //    p.ControlCenterID,
             //});
-            modelBuilder.EntityType<FinanceReportByControlCenter>().HasKey(p => new {
+            modelBuilder.EntityType<FinanceReportByControlCenter>().HasKey(p => new
+            {
                 p.HomeID,
                 p.ControlCenterID,
             });
@@ -66,7 +67,8 @@ namespace hihapi.Models
             //    p.HomeID,
             //    p.OrderID,
             //});
-            modelBuilder.EntityType<FinanceReportByOrder>().HasKey(p => new {
+            modelBuilder.EntityType<FinanceReportByOrder>().HasKey(p => new
+            {
                 p.HomeID,
                 p.OrderID,
             });
@@ -86,7 +88,8 @@ namespace hihapi.Models
             modelBuilder.EntityType<FinanceReportPerDate>();
             modelBuilder.EntityType<FinanceAccountBalancePerDate>();
             var rptAcntExpense = modelBuilder.EntityType<FinanceReporAccountGroupAndExpenseView>();
-            rptAcntExpense.HasKey(p => new {
+            rptAcntExpense.HasKey(p => new
+            {
                 p.HomeID,
                 p.AccountID,
             });
@@ -184,7 +187,7 @@ namespace hihapi.Models
             actionGetBalanceEx.ReturnsFromEntitySet<FinanceAccountBalancePerDate>("FinanceAccountBalancePerDates");
             // Action: GetMonthlyReportByTranType
             var actionReportCurrentMonthByTT = reportEntity.Collection.Action("GetReportByTranType");
-                // .ReturnsCollection<FinanceReportByTransactionType>();
+            // .ReturnsCollection<FinanceReportByTransactionType>();
             actionReportCurrentMonthByTT.Parameter<int>("HomeID");
             actionReportCurrentMonthByTT.Parameter<int>("Year");
             actionReportCurrentMonthByTT.Parameter<int?>("Month");
@@ -256,7 +259,8 @@ namespace hihapi.Models
             actionDailyIEStatement.ReturnsFromEntitySet<FinanceReportPerDate>("FinanceReportPerDates");
             // Action: Overview key figures
             var entityFinOverviewKeyfigure = modelBuilder.EntityType<FinanceOverviewKeyFigure>();
-            entityFinOverviewKeyfigure.HasKey(p => new {
+            entityFinOverviewKeyfigure.HasKey(p => new
+            {
                 p.HomeID,
             });
             var actionFinanceOverviewKeyfigure = reportEntity.Collection.Action("GetFinanceOverviewKeyFigure");

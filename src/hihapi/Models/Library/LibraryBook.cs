@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -108,7 +107,7 @@ namespace hihapi.Models.Library
     }
 
     [Table("T_LIB_BOOK_DEF")]
-    public class LibraryBook: BaseModel
+    public class LibraryBook : BaseModel
     {
         [Key]
         [Required]

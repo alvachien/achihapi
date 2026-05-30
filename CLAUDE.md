@@ -32,7 +32,21 @@ dotnet test --filter DisplayName~hihapi.test.integrationtests
 
 # Run tests with code coverage
 dotnet test test/hihapi.test/hihapi.unittest.csproj /p:CollectCoverage=true
+
+# Run linting
+dotnet format style
+dotnet format analyzers
 ```
+
+## Code Quality & Linting
+
+The project uses a layered analysis setup:
+
+- **Roslyn analyzers** (`<EnableNETAnalyzers>`) — CA rules for correctness, design, performance
+- **IDE analyzers** (`<EnforceCodeStyleInBuild>` + `<GenerateDocumentationFile>`) — IDE0005 (unnecessary usings), unused members, formatting
+- **Meziantou.Analyzer** — async misuse, nullability, EF Core anti-patterns, naming, empty statements
+- **`.editorconfig`** — defines diagnostic severity levels per rule
+- **XML doc warnings suppressed** — CS1591, CS1570, CS1572, CS1573, CS1574, CS1587 set to `none`
 
 ## Solution Structure
 

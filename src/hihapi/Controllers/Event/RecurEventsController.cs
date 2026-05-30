@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using hihapi.Models;
-using hihapi.Utilities;
-using hihapi.Exceptions;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Formatter;
-using Microsoft.AspNetCore.OData.Deltas;
 using hihapi.Models.Event;
+using hihapi.Utilities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 namespace hihapi.Controllers.Event
 {
@@ -119,7 +116,7 @@ namespace hihapi.Controllers.Event
             });
 
             var dateidx = 1;
-            foreach(var edate in eventdates)
+            foreach (var edate in eventdates)
             {
                 var gevent = new NormalEvent();
                 gevent.StartDate = edate.StartDate;

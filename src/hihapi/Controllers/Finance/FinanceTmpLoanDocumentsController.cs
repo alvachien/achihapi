@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.EntityFrameworkCore;
 using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 namespace hihapi.Controllers
 {
@@ -41,7 +41,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostRepayDocument([FromBody]FinanceLoanRepayDocumentCreateContext createContext)
+        public async Task<IActionResult> PostRepayDocument([FromBody] FinanceLoanRepayDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
                 HIHAPIUtility.HandleModelStateError(ModelState);
@@ -222,7 +222,8 @@ namespace hihapi.Controllers
                 {
                     errorOccur = true;
                     errorString = exp.Message;
-                    await transaction.RollbackAsync();                }
+                    await transaction.RollbackAsync();
+                }
             }
 
             if (errorOccur)
@@ -232,9 +233,9 @@ namespace hihapi.Controllers
 
             return Ok(findoc);
         }
-        
+
         [HttpPost]
-        public async Task<IActionResult> PostPrepaymentDocument([FromBody]FinanceLoanPrepayDocumentCreateContext createContext)
+        public async Task<IActionResult> PostPrepaymentDocument([FromBody] FinanceLoanPrepayDocumentCreateContext createContext)
         {
             if (!ModelState.IsValid)
                 HIHAPIUtility.HandleModelStateError(ModelState);
@@ -395,7 +396,8 @@ namespace hihapi.Controllers
                 {
                     errorOccur = true;
                     errorString = exp.Message;
-                    await transaction.RollbackAsync();                }
+                    await transaction.RollbackAsync();
+                }
             }
 
             if (errorOccur)

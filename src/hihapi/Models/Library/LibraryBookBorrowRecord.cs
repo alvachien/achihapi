@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace hihapi.Models.Library
 {
     [Table("T_LIB_BOOK_BORROW_RECORD")]
-    public class LibraryBookBorrowRecord: BaseModel
+    public class LibraryBookBorrowRecord : BaseModel
     {
         [Key]
         [Required]

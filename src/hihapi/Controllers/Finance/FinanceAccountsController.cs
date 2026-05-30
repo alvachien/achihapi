@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
-using hihapi.Exceptions;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 namespace hihapi.Controllers
 {
@@ -158,7 +157,7 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
-            
+
             var account = await _context.FinanceAccount.FindAsync(key);
             if (account == null)
                 return NotFound();
@@ -410,7 +409,7 @@ namespace hihapi.Controllers
                     var extraEntry = _context.FinanceAccountExtraLoan.Find(loanAccountID);
                     if (extraEntry != null)
                     {
-                        extraEntry.RefDocID = origdocid;                        
+                        extraEntry.RefDocID = origdocid;
                     }
 
                     await _context.SaveChangesAsync();
@@ -556,12 +555,12 @@ namespace hihapi.Controllers
                 if (ret)
                 {
                     docCounts = (from docitem in _context.FinanceDocumentItem
-                                     join docheader in _context.FinanceDocument
-                                         on docitem.DocID equals docheader.ID
-                                     where docitem.AccountID == accountID
-                                         && docheader.TranDate < dateSettle
-                                         && docheader.HomeID == hid
-                                     select docheader.ID).Count();
+                                 join docheader in _context.FinanceDocument
+                                     on docitem.DocID equals docheader.ID
+                                 where docitem.AccountID == accountID
+                                     && docheader.TranDate < dateSettle
+                                     && docheader.HomeID == hid
+                                 select docheader.ID).Count();
                     if (docCounts > 0)
                         ret = false;
                 }
@@ -574,8 +573,8 @@ namespace hihapi.Controllers
                                      on docitem.DocID equals docheader.ID
                                  where docitem.AccountID == accountID
                                     && docheader.HomeID == hid
-                                    && ( docitem.TranType == FinanceTransactionType.TranType_OpeningAsset
-                                    || docitem.TranType == FinanceTransactionType.TranType_OpeningLiability )
+                                    && (docitem.TranType == FinanceTransactionType.TranType_OpeningAsset
+                                    || docitem.TranType == FinanceTransactionType.TranType_OpeningLiability)
                                  select docheader.ID).Count();
                     if (docCounts > 0)
                         ret = false;

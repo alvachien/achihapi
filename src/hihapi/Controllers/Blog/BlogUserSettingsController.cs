@@ -1,19 +1,15 @@
-﻿using System.Linq;
-using System.IO;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+using hihapi.Exceptions;
 using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.Authorization;
-using System;
-using hihapi.Exceptions;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
-using Microsoft.AspNetCore.OData.Query;
-using Microsoft.AspNetCore.OData.Results;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 namespace hihapi.Controllers
 {
@@ -51,7 +47,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Put([FromODataUri]string key, [FromBody] BlogUserSetting update)
+        public async Task<IActionResult> Put([FromODataUri] string key, [FromBody] BlogUserSetting update)
         {
             if (!ModelState.IsValid)
             {
@@ -123,7 +119,7 @@ namespace hihapi.Controllers
             }
 
             if (!string.IsNullOrEmpty(key))
-            {                
+            {
                 if (String.CompareOrdinal(key, usrName) != 0)
                 {
                     throw new UnauthorizedAccessException();
@@ -141,7 +137,7 @@ namespace hihapi.Controllers
             {
                 await BlogDeployUtility.UpdatePostSettingAsync(setting);
             }
-            catch(Exception exp)
+            catch (Exception exp)
             {
                 errstr = exp.Message;
             }

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace hihapi.Models
 {
@@ -10,26 +10,26 @@ namespace hihapi.Models
     public sealed class FinanceAssetCategory : BaseModel
     {
         [Key]
-        [Column("ID", TypeName="INT")]
+        [Column("ID", TypeName = "INT")]
         public Int32 ID { get; set; }
 
-        [Column("HID", TypeName="INT")]
+        [Column("HID", TypeName = "INT")]
         public Int32? HomeID { get; set; }
 
         [Required]
         [StringLength(50)]
-        [Column("NAME", TypeName="NVARCHAR(50)")]
+        [Column("NAME", TypeName = "NVARCHAR(50)")]
         public String Name { get; set; }
 
         [StringLength(50)]
-        [Column("DESP", TypeName="NVARCHAR(50)")]
+        [Column("DESP", TypeName = "NVARCHAR(50)")]
         public String Desp { get; set; }
 
         [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
         public ICollection<FinanceAccountExtraAS> AccountExtraAsset { get; set; }
 
-        public FinanceAssetCategory(): base()
+        public FinanceAssetCategory() : base()
         {
             AccountExtraAsset = new List<FinanceAccountExtraAS>();
         }

@@ -1,48 +1,47 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.OData.Edm;
+using System.Linq;
 
 namespace hihapi.Models
 {
     [Table("T_FIN_ORDER")]
-    public sealed class FinanceOrder: BaseModel
+    public sealed class FinanceOrder : BaseModel
     {
-        public FinanceOrder(): base()
+        public FinanceOrder() : base()
         {
             ValidFrom = DateTime.Today;
             ValidTo = DateTime.Today;
 
             SRule = new List<FinanceOrderSRule>();
         }
-        
+
         [Key]
-        [Column("ID", TypeName="INT")]
+        [Column("ID", TypeName = "INT")]
         public Int32 ID { get; set; }
 
         [Required]
-        [Column("HID", TypeName="INT")]
+        [Column("HID", TypeName = "INT")]
         public Int32 HomeID { get; set; }
 
         [Required]
         [StringLength(30)]
-        [Column("NAME", TypeName="NVARCHAR(30)")]
+        [Column("NAME", TypeName = "NVARCHAR(30)")]
         public String Name { get; set; }
 
         [Required]
         [Column("VALID_FROM")]
         [DataType(DataType.Date)]
         public DateTime ValidFrom { get; set; }
-        
+
         [Required]
         [Column("VALID_TO")]
         [DataType(DataType.Date)]
         public DateTime ValidTo { get; set; }
-        
+
         [StringLength(45)]
-        [Column("COMMENT", TypeName="NVARCHAR(45)")]
+        [Column("COMMENT", TypeName = "NVARCHAR(45)")]
         public String Comment { get; set; }
 
         public override bool IsValid(hihDataContext context)
@@ -94,23 +93,23 @@ namespace hihapi.Models
     public sealed class FinanceOrderSRule
     {
         [Key]
-        [Column("ORDID", TypeName="INT")]
+        [Column("ORDID", TypeName = "INT")]
         public Int32 OrderID { get; set; }
 
         [Key]
-        [Column("RULEID", TypeName="INT")]
+        [Column("RULEID", TypeName = "INT")]
         public Int32 RuleID { get; set; }
 
         [Required]
-        [Column("CONTROLCENTERID", TypeName="INT")]
+        [Column("CONTROLCENTERID", TypeName = "INT")]
         public Int32 ControlCenterID { get; set; }
 
         [Required]
-        [Column("PRECENT", TypeName="INT")]
+        [Column("PRECENT", TypeName = "INT")]
         public Int32 Percent { get; set; }
 
         [StringLength(45)]
-        [Column("COMMENT", TypeName="NVARCHAR(45)")]
+        [Column("COMMENT", TypeName = "NVARCHAR(45)")]
         public String Comment { get; set; }
 
         public Boolean IsValid()

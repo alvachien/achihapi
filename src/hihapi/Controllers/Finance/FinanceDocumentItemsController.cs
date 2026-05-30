@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using hihapi.Models;
 using hihapi.Utilities;
-using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace hihapi.Controllers
 {
     [Authorize]
-    public class FinanceDocumentItemsController: ODataController
+    public class FinanceDocumentItemsController : ODataController
     {
         private readonly hihDataContext _context;
 
@@ -39,12 +37,12 @@ namespace hihapi.Controllers
             }
 
             return Ok(from hmem in _context.HomeMembers
-                where hmem.User == usrName
-                select new { hmem.HomeID } into hids
-                join docs in _context.FinanceDocument on hids.HomeID equals docs.HomeID
-                select new { docs.HomeID, docs.ID } into docids
-                join items in _context.FinanceDocumentItem on docids.ID equals items.DocID
-                select items);
+                      where hmem.User == usrName
+                      select new { hmem.HomeID } into hids
+                      join docs in _context.FinanceDocument on hids.HomeID equals docs.HomeID
+                      select new { docs.HomeID, docs.ID } into docids
+                      join items in _context.FinanceDocumentItem on docids.ID equals items.DocID
+                      select items);
 
             //return Ok(option.ApplyTo(rst));
         }

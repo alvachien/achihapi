@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -26,11 +24,11 @@ namespace hihapi.Models.Event
         [Required]
         [Column("StartTime", TypeName = "DATE")]
         [DataType(DataType.Date)]
-        public DateTime StartDate{ get; set; }
-        
+        public DateTime StartDate { get; set; }
+
         [Column("EndTime", TypeName = "DATE")]
         [DataType(DataType.Date)]
-        public DateTime? EndDate{ get; set; }
+        public DateTime? EndDate { get; set; }
 
         [Column("CompleteTime", TypeName = "DATE")]
         [DataType(DataType.Date)]

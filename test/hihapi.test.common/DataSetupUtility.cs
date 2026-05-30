@@ -2015,7 +2015,7 @@ namespace hihapi.test.common
                             while (NotAllowedTranTypes.Exists(p => p == ttid))
                             {
                                 ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
-                            };
+                            }
                             ndocitem.TranType = ttid;
                             if (new Random().NextDouble() > 0.7)
                             {
@@ -2069,7 +2069,7 @@ namespace hihapi.test.common
                             while (NotAllowedTranTypes.Exists(p => p == ttid))
                             {
                                 ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
-                            };
+                            }
                             ndocitem.TranType = ttid;
                             if (new Random().NextDouble() > 0.7)
                             {
@@ -2122,7 +2122,7 @@ namespace hihapi.test.common
                             while (NotAllowedTranTypes.Exists(p => p == ttid))
                             {
                                 ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
-                            };
+                            }
                             ndocitem.TranType = ttid;
                             if (new Random().NextDouble() > 0.7)
                             {
@@ -2175,7 +2175,7 @@ namespace hihapi.test.common
                             while (NotAllowedTranTypes.Exists(p => p == ttid))
                             {
                                 ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
-                            };
+                            }
                             ndocitem.TranType = ttid;
                             if (new Random().NextDouble() > 0.7)
                             {
@@ -2227,7 +2227,7 @@ namespace hihapi.test.common
                             while (NotAllowedTranTypes.Exists(p => p == ttid))
                             {
                                 ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
-                            };
+                            }
                             ndocitem.TranType = ttid;
                             if (new Random().NextDouble() > 0.7)
                             {
@@ -2417,7 +2417,7 @@ namespace hihapi.test.common
                             while (NotAllowedTranTypes.Exists(p => p == ttid))
                             {
                                 ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
-                            };
+                            }
                             ndocitem.TranType = ttid;
                             if (new Random().NextDouble() > 0.7)
                             {
@@ -2471,7 +2471,7 @@ namespace hihapi.test.common
                             while (NotAllowedTranTypes.Exists(p => p == ttid))
                             {
                                 ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
-                            };
+                            }
                             ndocitem.TranType = ttid;
                             if (new Random().NextDouble() > 0.7)
                             {
@@ -2524,7 +2524,7 @@ namespace hihapi.test.common
                             while (NotAllowedTranTypes.Exists(p => p == ttid))
                             {
                                 ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
-                            };
+                            }
                             ndocitem.TranType = ttid;
                             if (new Random().NextDouble() > 0.7)
                             {
@@ -2790,15 +2790,15 @@ namespace hihapi.test.common
                             while (NotAllowedTranTypes.Exists(p => p == ttid))
                             {
                                 ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
-                            };
+                            }
                             ndocitem.TranType = ttid;
                             if (new Random().NextDouble() > 0.7)
                             {
-                                ndocitem.OrderID = ords[new Random().Next(0, ords.Length - 1)]; ;
+                                ndocitem.OrderID = ords[new Random().Next(0, ords.Length - 1)];
                             }
                             else
                             {
-                                ndocitem.ControlCenterID = ccs[new Random().Next(0, ccs.Length - 1)]; ;
+                                ndocitem.ControlCenterID = ccs[new Random().Next(0, ccs.Length - 1)];
                             }
                             ndoc.Items.Add(ndocitem);
                         }
@@ -2952,7 +2952,7 @@ namespace hihapi.test.common
                             while (NotAllowedTranTypes.Exists(p => p == ttid))
                             {
                                 ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
-                            };
+                            }
                             ndocitem.TranType = ttid;
                             if (new Random().NextDouble() > 0.7)
                             {
@@ -3113,7 +3113,7 @@ namespace hihapi.test.common
                             while (NotAllowedTranTypes.Exists(p => p == ttid))
                             {
                                 ttid = new Random().Next(2, FinanceTransactionTypes.Count - 1);
-                            };
+                            }
                             ndocitem.TranType = ttid;
                             if (new Random().NextDouble() > 0.7)
                             {

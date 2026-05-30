@@ -1,9 +1,8 @@
 using System;
-using Microsoft.EntityFrameworkCore;
 using hihapi.Models;
-using hihapi.Models.Library;
-using System.Collections.Generic;
 using hihapi.Models.Event;
+using hihapi.Models.Library;
+using Microsoft.EntityFrameworkCore;
 
 namespace hihapi
 {
@@ -49,7 +48,7 @@ namespace hihapi
         public DbSet<FinanceReportControlCenterGroupAndExpenseView> FinanceReportControlCenterGroupAndExpenseView { get; set; }
         public DbSet<FinanceReportOrderGroupView> FinanceReportOrderGroupView { get; set; }
         public DbSet<FinanceReportOrderGroupAndExpenseView> FinanceReportOrderGroupAndExpenseView { get; set; }
-        public DbSet<BlogFormat> BlogFormats { get; set;  }
+        public DbSet<BlogFormat> BlogFormats { get; set; }
         public DbSet<BlogUserSetting> BlogUserSettings { get; set; }
         public DbSet<BlogCollection> BlogCollections { get; set; }
         public DbSet<BlogPost> BlogPosts { get; set; }
@@ -156,7 +155,8 @@ namespace hihapi
                     .HasDefaultValueSql("CURRENT_DATE");
             });
 
-            modelBuilder.Entity<FinanceAccount> (entity => {
+            modelBuilder.Entity<FinanceAccount>(entity =>
+            {
                 entity.Property(e => e.ID)
                     .HasColumnType("INTEGER")
                     .ValueGeneratedOnAdd();
@@ -168,7 +168,8 @@ namespace hihapi
                 entity.HasIndex(e => e.HomeID)
                     .HasDatabaseName("IX_t_fin_account_HID");
             });
-            modelBuilder.Entity<FinanceAccountExtraAS>(entity => {
+            modelBuilder.Entity<FinanceAccountExtraAS>(entity =>
+            {
                 entity.HasOne(d => d.AccountHeader)
                     .WithOne(p => p.ExtraAsset)
                     .HasForeignKey<FinanceAccountExtraAS>(p => p.AccountID)
@@ -179,14 +180,16 @@ namespace hihapi
                     .HasForeignKey(p => p.CategoryID)
                     .HasConstraintName("FK_t_fin_account_ext_as_CTGY");
             });
-            modelBuilder.Entity<FinanceAccountExtraDP>(entity => {
+            modelBuilder.Entity<FinanceAccountExtraDP>(entity =>
+            {
                 entity.HasOne(d => d.AccountHeader)
                     .WithOne(p => p.ExtraDP)
                     .HasForeignKey<FinanceAccountExtraDP>(p => p.AccountID)
                     .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("FK_t_fin_account_ext_dp_ACNT");
             });
-            modelBuilder.Entity<FinanceAccountExtraLoan>(entity => {
+            modelBuilder.Entity<FinanceAccountExtraLoan>(entity =>
+            {
                 entity.HasOne(d => d.AccountHeader)
                     .WithOne(p => p.ExtraLoan)
                     .HasForeignKey<FinanceAccountExtraLoan>(p => p.AccountID)
@@ -194,7 +197,8 @@ namespace hihapi
                     .HasConstraintName("FK_t_fin_account_ext_loan_ACNT");
             });
 
-            modelBuilder.Entity<FinanceDocument>(entity => {
+            modelBuilder.Entity<FinanceDocument>(entity =>
+            {
                 entity.Property(e => e.ID)
                     .HasColumnType("INTEGER")
                     .ValueGeneratedOnAdd();
@@ -208,7 +212,8 @@ namespace hihapi
                 entity.HasIndex(e => e.TranDate)
                     .HasDatabaseName("IX_t_fin_document_TRANDATE");
             });
-            modelBuilder.Entity<FinanceDocumentItem>(entity => {
+            modelBuilder.Entity<FinanceDocumentItem>(entity =>
+            {
                 entity.HasKey(p => new { p.DocID, p.ItemID });
 
                 entity.HasOne(d => d.DocumentHeader)
@@ -239,7 +244,8 @@ namespace hihapi
                     .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("FK_t_fin_tmpdocdp_ACCOUNTEXT");
             });
-            modelBuilder.Entity<FinanceControlCenter>(entity => {
+            modelBuilder.Entity<FinanceControlCenter>(entity =>
+            {
                 entity.Property(e => e.ID)
                     .HasColumnType("INTEGER")
                     .ValueGeneratedOnAdd();
@@ -248,7 +254,8 @@ namespace hihapi
                 entity.Property(e => e.UpdatedAt)
                     .HasDefaultValueSql("CURRENT_DATE");
             });
-            modelBuilder.Entity<FinanceOrder>(entity => {
+            modelBuilder.Entity<FinanceOrder>(entity =>
+            {
                 entity.Property(e => e.ID)
                     .HasColumnType("INTEGER")
                     .ValueGeneratedOnAdd();
@@ -257,7 +264,8 @@ namespace hihapi
                 entity.Property(e => e.UpdatedAt)
                     .HasDefaultValueSql("CURRENT_DATE");
             });
-            modelBuilder.Entity<FinanceOrderSRule>(entity => {
+            modelBuilder.Entity<FinanceOrderSRule>(entity =>
+            {
                 entity.HasKey(p => new { p.OrderID, p.RuleID });
 
                 entity.HasOne(d => d.Order)
@@ -265,7 +273,8 @@ namespace hihapi
                     .HasForeignKey(d => d.OrderID)
                     .HasConstraintName("FK_t_fin_order_srule_order");
             });
-            modelBuilder.Entity<FinancePlan>(entity => {
+            modelBuilder.Entity<FinancePlan>(entity =>
+            {
                 entity.Property(e => e.ID)
                     .HasColumnType("INTEGER")
                     .ValueGeneratedOnAdd();

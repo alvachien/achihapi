@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -7,7 +5,7 @@ namespace hihapi.Models
 {
     [Table("T_LANGUAGE")]
     public partial class Language
-    {        
+    {
         [Key]
         [Column("LCID", TypeName = "INTEGER")]
         public int Lcid { get; set; }
