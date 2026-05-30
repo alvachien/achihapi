@@ -13,6 +13,14 @@ namespace hihapi
         {
         }
 
+        public hihDataContext(DbContextOptions<hihDataContext> options, bool testingMode) : base(options)
+        {
+            TestingMode = testingMode;
+        }
+
+        // Testing mode: skip actual SQL execution in migrations
+        public Boolean TestingMode { get; private set; }
+
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Language> Languages { get; set; }
         public DbSet<HomeDefine> HomeDefines { get; set; }

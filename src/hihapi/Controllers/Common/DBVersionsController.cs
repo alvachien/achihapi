@@ -1,9 +1,11 @@
 using System;
+using System.IO;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
+using System.Text;
 using hihapi.Models;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.Authorization;
@@ -71,15 +73,63 @@ namespace hihapi.Controllers
             var lastestVersion = await _context.DBVersions.AnyAsync()
                 ? await _context.DBVersions.MaxAsync(p => p.VersionID)
                 : 0;
-            if (lastestVersion < CurrentVersion)
+            if (lastestVersion++ < CurrentVersion)
             {
-                var dbVersion = new DBVersion
+                while (lastestVersion <= CurrentVersion)
                 {
-                    VersionID = CurrentVersion,
-                    AppliedDate = DateTime.Today
-                };
-                _context.DBVersions.Add(dbVersion);
-                await _context.SaveChangesAsync();
+                    var sqlfile = $"hihapi.Sqls.Delta.v{lastestVersion}.sql";
+
+                    try
+                    {
+                        var asmy = typeof(DBVersionsController).GetTypeInfo().Assembly;
+                        using var stream = asmy.GetManifestResourceStream(sqlfile);
+                        if (stream == null)
+                        {
+                            throw new Exception($"Embedded resource {sqlfile} not found");
+                        }
+                        using var reader = new StreamReader(stream, Encoding.UTF8);
+
+                        var strcontent = reader.ReadToEnd();
+                        if (string.IsNullOrEmpty(strcontent))
+                        {
+                            throw new Exception("Empty file");
+                        }
+
+                        if (!_context.TestingMode)
+                        {
+                            using var dbContextTransaction = _context.Database.BeginTransaction();
+                            var subcontents = strcontent.Split("GO");
+                            foreach (var content in subcontents)
+                            {
+                                if (!string.IsNullOrWhiteSpace(content))
+                                {
+                                    _context.Database.ExecuteSqlRaw(content);
+                                }
+                            }
+                            dbContextTransaction.Commit();
+                        }
+                        else
+                        {
+                            _context.DBVersions.Add(new DBVersion
+                            {
+                                VersionID = lastestVersion,
+                                AppliedDate = DateTime.Today
+                            });
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        System.Diagnostics.Debug.WriteLine(exception.Message);
+                        throw new Exception($"Failed to read Embedded Resource {sqlfile}, reason: {exception.Message}");
+                    }
+
+                    ++lastestVersion;
+                }
+
+                if (_context.TestingMode)
+                {
+                    await _context.SaveChangesAsync();
+                }
             }
             var dbv = new CheckVersionResult
             {

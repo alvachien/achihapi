@@ -60,7 +60,8 @@ namespace hihapi.Utilities
         internal static string EnsureFolderExistence(String rootPath, String subFolders)
         {
             var fullPath = Path.GetFullPath(Path.Combine(rootPath, subFolders));
-            if (!fullPath.StartsWith(Path.GetFullPath(rootPath), StringComparison.Ordinal))
+            if (!fullPath.StartsWith(Path.GetFullPath(rootPath) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+                && !fullPath.Equals(Path.GetFullPath(rootPath), StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("Path traversal detected in subfolder path");
             if (!Directory.Exists(fullPath))
             {

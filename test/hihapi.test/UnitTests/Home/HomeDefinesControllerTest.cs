@@ -180,11 +180,11 @@ namespace hihapi.unittest.Home
             // Change the home define - remove one user
             var memtoremove = nreadobj.Members.First(p => p.Relation != HomeMemberRelationType.Self);
             nreadobj.Members.Remove(memtoremove);
-            Assert.Equal(1, nreadobj.Members.Count);
+            Assert.Single(nreadobj.Members);
             Assert.Equal(nreadobj.Host, nreadobj.Members.ElementAt(0).User);
             rst3 = await control.Put(nreadobj.ID, nreadobj);
             nupdobjectrst = Assert.IsType<UpdatedODataResult<HomeDefine>>(rst3);
-            Assert.Equal(1, nupdobjectrst.Entity.Members.Count);
+            Assert.Single(nupdobjectrst.Entity.Members);
 
             // Delete the home define (failed case)
             try

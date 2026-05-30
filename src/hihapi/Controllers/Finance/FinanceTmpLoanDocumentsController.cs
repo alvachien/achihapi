@@ -222,8 +222,7 @@ namespace hihapi.Controllers
                 {
                     errorOccur = true;
                     errorString = exp.Message;
-                    transaction.Rollback();
-                }
+                    await transaction.RollbackAsync();                }
             }
 
             if (errorOccur)
@@ -396,8 +395,7 @@ namespace hihapi.Controllers
                 {
                     errorOccur = true;
                     errorString = exp.Message;
-                    transaction.Rollback();
-                }
+                    await transaction.RollbackAsync();                }
             }
 
             if (errorOccur)

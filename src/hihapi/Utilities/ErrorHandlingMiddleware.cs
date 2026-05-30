@@ -46,7 +46,7 @@ public class ErrorHandlingMiddleware
             logger.LogWarning(ex, "Handled exception: {ExceptionType}", ex.GetType().Name);
         }
 
-        var result = System.Text.Json.JsonSerializer.Serialize(new { error = "An error occurred processing your request." });
+        var result = System.Text.Json.JsonSerializer.Serialize(new { error = ex.Message });
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)code;
         return context.Response.WriteAsync(result);

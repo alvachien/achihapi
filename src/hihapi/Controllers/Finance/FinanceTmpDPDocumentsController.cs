@@ -176,7 +176,7 @@ namespace hihapi.Controllers
                 {
                     errorOccur = true;
                     errorString = exp.Message;
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                 }
             }
 

@@ -2,9 +2,6 @@
 using Xunit;
 using System.Linq;
 using hihapi.Models;
-using Xunit;
-using System.Linq;
-using hihapi.Models;
 using hihapi.Controllers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;

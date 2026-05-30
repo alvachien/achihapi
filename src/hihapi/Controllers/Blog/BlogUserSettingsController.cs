@@ -130,7 +130,7 @@ namespace hihapi.Controllers
                 }
             }
 
-            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == key);
+            var setting = _context.BlogUserSettings.SingleOrDefault(p => p.Owner == usrName);
             if (setting == null)
             {
                 throw new NotFoundException("Owner not found");

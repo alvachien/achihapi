@@ -15,6 +15,55 @@
     <RepositoryUrl>https://github.com/alvachien/achihapi</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>USE_ALIYUN</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Sqls\Delta\v1.sql" />
+    <None Remove="Sqls\Delta\v10.sql" />
+    <None Remove="Sqls\Delta\v11.sql" />
+    <None Remove="Sqls\Delta\v12.sql" />
+    <None Remove="Sqls\Delta\v13.sql" />
+    <None Remove="Sqls\Delta\v14.sql" />
+    <None Remove="Sqls\Delta\v15.sql" />
+    <None Remove="Sqls\Delta\v16.sql" />
+    <None Remove="Sqls\Delta\v17.sql" />
+    <None Remove="Sqls\Delta\v18.sql" />
+    <None Remove="Sqls\Delta\v19.sql" />
+    <None Remove="Sqls\Delta\v2.sql" />
+    <None Remove="Sqls\Delta\v21.sql" />
+    <None Remove="Sqls\Delta\v3.sql" />
+    <None Remove="Sqls\Delta\v4.sql" />
+    <None Remove="Sqls\Delta\v5.sql" />
+    <None Remove="Sqls\Delta\v6.sql" />
+    <None Remove="Sqls\Delta\v7.sql" />
+    <None Remove="Sqls\Delta\v8.sql" />
+    <None Remove="Sqls\Delta\v9.sql" />
+    <None Remove="Sqls\Delta\v20.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Sqls\Delta\v1.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v10.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v11.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v12.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v13.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v14.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v15.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v16.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v17.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v18.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v19.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v2.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v21.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v3.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v4.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v5.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v6.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v7.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v8.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v9.sql" />
+    <EmbeddedResource Include="Sqls\Delta\v20.sql" />
+  </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="hihapi.unittest" />
     <InternalsVisibleTo Include="hihapi.integrationtest" />
