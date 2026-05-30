@@ -1,7 +1,7 @@
 ﻿using hihapi.Models;
 using System;
 using System.Text.Json;
-using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace hihapi.unittest.Finance
 {

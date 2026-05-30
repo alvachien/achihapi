@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Xunit.Abstractions;
+using Xunit.Sdk;
 using System.Text.Json;
 using hihapi.Models;
 

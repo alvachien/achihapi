@@ -1,5 +1,5 @@
 ﻿using System;
-using Xunit.Abstractions;
+using Xunit.Sdk;
 using System.Text.Json;
 using hihapi.Models;
 
