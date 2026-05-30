@@ -23,17 +23,20 @@ namespace hihapi.unittest.Finance
                 new FinanceDocumentTestData
                 {
                     ExpectedIsValidResult = false,
+                    TestCaseIndex = 1,
                 },
                 new FinanceDocumentTestData
                 {
                     HomeID = DataSetupUtility.Home1ID,
                     ExpectedIsValidResult = false,
+                    TestCaseIndex = 2,
                 },
                 new FinanceDocumentTestData
                 {
                     HomeID = DataSetupUtility.Home1ID,
                     DocType = FinanceDocumentType.DocType_Normal,
                     ExpectedIsValidResult = false,
+                    TestCaseIndex = 3,
                 },
                 new FinanceDocumentTestData
                 {
@@ -41,6 +44,7 @@ namespace hihapi.unittest.Finance
                     DocType = FinanceDocumentType.DocType_Normal,
                     Desp = "Test",
                     ExpectedIsValidResult = false,
+                    TestCaseIndex = 4,
                 },
                 new FinanceDocumentTestData
                 {
@@ -49,6 +53,7 @@ namespace hihapi.unittest.Finance
                     Desp = "Test",
                     TranCurr = "CNY",
                     ExpectedIsValidResult = false,
+                    TestCaseIndex = 5,
                 },
                 new FinanceDocumentTestData
                 {
@@ -57,7 +62,8 @@ namespace hihapi.unittest.Finance
                     Desp = "Test",
                     TranCurr = "CNY",
                     TranDate = DateTime.Today,
-                    ExpectedIsValidResult = false,                    
+                    ExpectedIsValidResult = false,
+                    TestCaseIndex = 6,
                 },
                 new FinanceDocumentTestData
                 {
@@ -75,6 +81,7 @@ namespace hihapi.unittest.Finance
                         },
                     },
                     ExpectedIsValidResult = false,
+                    TestCaseIndex = 7,
                 },
                 new FinanceDocumentTestData
                 {
@@ -92,6 +99,7 @@ namespace hihapi.unittest.Finance
                         },
                     },
                     ExpectedIsValidResult = false,
+                    TestCaseIndex = 8,
                 },
                 new FinanceDocumentTestData
                 {
@@ -110,6 +118,7 @@ namespace hihapi.unittest.Finance
                         },
                     },
                     ExpectedIsValidResult = false,
+                    TestCaseIndex = 9,
                 },
                 new FinanceDocumentTestData
                 {
@@ -128,6 +137,7 @@ namespace hihapi.unittest.Finance
                         },
                     },
                     ExpectedIsValidResult = false,
+                    TestCaseIndex = 10,
                 },
                 new FinanceDocumentTestData
                 {
@@ -147,6 +157,7 @@ namespace hihapi.unittest.Finance
                         },
                     },
                     ExpectedIsValidResult = true,
+                    TestCaseIndex = 11,
                 },
                 new FinanceDocumentTestData
                 {
@@ -166,6 +177,7 @@ namespace hihapi.unittest.Finance
                         },
                     },
                     ExpectedIsValidResult = false,
+                    TestCaseIndex = 12,
                 },
                 new FinanceDocumentTestData
                 {
@@ -192,6 +204,7 @@ namespace hihapi.unittest.Finance
                         },
                     },
                     ExpectedIsValidResult = false,
+                    TestCaseIndex = 13,
                 },
                 new FinanceDocumentTestData
                 {
@@ -218,6 +231,7 @@ namespace hihapi.unittest.Finance
                         },
                     },
                     ExpectedIsValidResult = true,
+                    TestCaseIndex = 14,
                 },
                 new FinanceDocumentTestData
                 {
@@ -244,6 +258,7 @@ namespace hihapi.unittest.Finance
                         },
                     },
                     ExpectedIsValidResult = false,
+                    TestCaseIndex = 15,
                 },
             };
 

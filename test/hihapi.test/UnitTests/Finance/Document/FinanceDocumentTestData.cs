@@ -26,6 +26,10 @@ namespace hihapi.unittest.Finance
         public Boolean? ExgRate_Plan2 { get; set; }
         public List<FinanceDocumentItem> Items { get; set; }
         public bool ExpectedIsValidResult { get; set; }
+        /// <summary>
+        /// Index to differentiate test cases with otherwise identical serialization.
+        /// </summary>
+        public int TestCaseIndex { get; set; }
 
         public void Deserialize(IXunitSerializationInfo info)
         {

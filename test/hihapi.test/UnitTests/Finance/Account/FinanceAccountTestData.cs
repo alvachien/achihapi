@@ -20,6 +20,10 @@ namespace hihapi.unittest.Finance
         public Boolean ExpectedValidResult { get; set; }
         public Boolean ExpectedIsDeleteAllowedResult { get; set; }
         public Boolean ExpectedIsCloseAllowedResult { get; set; }
+        /// <summary>
+        /// Index to differentiate test cases with otherwise identical serialization.
+        /// </summary>
+        public int TestCaseIndex { get; set; }
 
         public FinanceAccountTestData()
         {

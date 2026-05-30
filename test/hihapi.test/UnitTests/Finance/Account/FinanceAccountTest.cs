@@ -22,17 +22,20 @@ namespace hihapi.unittest.Finance
                 new FinanceAccountTestData()
                 {
                     ExpectedValidResult = false,
+                    TestCaseIndex = 1,
                 },
                 new FinanceAccountTestData()
                 {
                     HomeID = DataSetupUtility.Home1ID,
                     ExpectedValidResult = false,
+                    TestCaseIndex = 2,
                 },
                 new FinanceAccountTestData()
                 {
                     HomeID = DataSetupUtility.Home1ID,
                     CategoryID = FinanceAccountCategory.AccountCategory_Cash,
                     ExpectedValidResult= false,
+                    TestCaseIndex = 3,
                 },
                 new FinanceAccountTestData()
                 {
@@ -40,6 +43,7 @@ namespace hihapi.unittest.Finance
                     CategoryID = FinanceAccountCategory.AccountCategory_Cash,
                     Name = "Test 1",
                     ExpectedValidResult= true,
+                    TestCaseIndex = 4,
                 },
                 new FinanceAccountTestData()
                 {
@@ -48,6 +52,7 @@ namespace hihapi.unittest.Finance
                     Name = "Test 1",
                     Comment = "Comment 1",
                     ExpectedValidResult= true,
+                    TestCaseIndex = 5,
                 },
                 new FinanceAccountTestData()
                 {
@@ -56,6 +61,7 @@ namespace hihapi.unittest.Finance
                     Name = "Test 1",
                     Comment = "Comment 1",
                     ExpectedValidResult= false,
+                    TestCaseIndex = 6,
                 },
                 new FinanceAccountTestData()
                 {
@@ -64,14 +70,7 @@ namespace hihapi.unittest.Finance
                     Name = "Test 1",
                     Comment = "Comment 1",
                     ExpectedValidResult= false,
-                },
-                new FinanceAccountTestData()
-                {
-                    HomeID = DataSetupUtility.Home1ID,
-                    CategoryID = FinanceAccountCategory.AccountCategory_Asset,
-                    Name = "Test 1",
-                    Comment = "Comment 1",
-                    ExpectedValidResult= false,
+                    TestCaseIndex = 7,
                 },
             };
 

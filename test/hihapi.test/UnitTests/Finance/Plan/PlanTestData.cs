@@ -20,6 +20,10 @@ namespace hihapi.unittest.Finance
         public String TranCurr { get; set; }
         public String Description { get; set; }
         public Boolean ExpectedValidResult { get; set; }
+        /// <summary>
+        /// Index to differentiate test cases with otherwise identical serialization.
+        /// </summary>
+        public int TestCaseIndex { get; set; }
 
         public void Deserialize(IXunitSerializationInfo info)
         {

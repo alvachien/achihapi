@@ -20,25 +20,29 @@ namespace hihapi.unittest.Finance
         {
             new PlanTestData()
             {
-                ExpectedValidResult = false
+                ExpectedValidResult = false,
+                TestCaseIndex = 1,
             },
             new PlanTestData()
             {
                 HomeID = DataSetupUtility.Home1ID,
-                ExpectedValidResult = false
+                ExpectedValidResult = false,
+                TestCaseIndex = 2,
             },
             new PlanTestData()
             {
                 HomeID = DataSetupUtility.Home1ID,
                 TranCurr = DataSetupUtility.Home1BaseCurrency,
-                ExpectedValidResult = false
+                ExpectedValidResult = false,
+                TestCaseIndex = 3,
             },
             new PlanTestData()
             {
                 HomeID = DataSetupUtility.Home1ID,
                 TranCurr = DataSetupUtility.Home1BaseCurrency,
                 Description = "Desp",
-                ExpectedValidResult = false
+                ExpectedValidResult = false,
+                TestCaseIndex = 4,
             },
             new PlanTestData()
             {
@@ -47,7 +51,8 @@ namespace hihapi.unittest.Finance
                 Description = "Desp",
                 TargetDate = new DateTime(2021, 1, 1),
                 StartDate = new DateTime(2022, 1, 1),
-                ExpectedValidResult = false
+                ExpectedValidResult = false,
+                TestCaseIndex = 5,
             },
             new PlanTestData()
             {
@@ -56,7 +61,8 @@ namespace hihapi.unittest.Finance
                 Description = "Desp",
                 StartDate = new DateTime(2021, 1, 1),
                 TargetDate = new DateTime(2022, 1, 1),
-                ExpectedValidResult = false
+                ExpectedValidResult = false,
+                TestCaseIndex = 6,
             },
             new PlanTestData()
             {
@@ -65,8 +71,9 @@ namespace hihapi.unittest.Finance
                 Description = "Desp",
                 StartDate = new DateTime(2021, 1, 1),
                 TargetDate = new DateTime(2022, 1, 1),
-                PlanType = FinancePlanTypeEnum.Account,                
-                ExpectedValidResult = false
+                PlanType = FinancePlanTypeEnum.Account,
+                ExpectedValidResult = false,
+                TestCaseIndex = 7,
             },
             new PlanTestData()
             {
@@ -78,7 +85,8 @@ namespace hihapi.unittest.Finance
                 PlanType = FinancePlanTypeEnum.Account,
                 AccountID = DataSetupUtility.Home1CashAccount1ID,
                 TargetBalance = 10000,
-                ExpectedValidResult = true
+                ExpectedValidResult = true,
+                TestCaseIndex = 8,
             },
             new PlanTestData()
             {
@@ -87,9 +95,10 @@ namespace hihapi.unittest.Finance
                 Description = "Desp",
                 StartDate = new DateTime(2021, 1, 1),
                 TargetDate = new DateTime(2022, 1, 1),
-                PlanType = FinancePlanTypeEnum.AccountCategory,                
+                PlanType = FinancePlanTypeEnum.AccountCategory,
                 TargetBalance = 10000,
-                ExpectedValidResult = false
+                ExpectedValidResult = false,
+                TestCaseIndex = 9,
             },
             new PlanTestData()
             {
@@ -100,7 +109,8 @@ namespace hihapi.unittest.Finance
                 TargetDate = new DateTime(2022, 1, 1),
                 PlanType = FinancePlanTypeEnum.TranType,
                 TargetBalance = 10000,
-                ExpectedValidResult = false
+                ExpectedValidResult = false,
+                TestCaseIndex = 10,
             },
             new PlanTestData()
             {
@@ -111,7 +121,8 @@ namespace hihapi.unittest.Finance
                 TargetDate = new DateTime(2022, 1, 1),
                 PlanType = FinancePlanTypeEnum.ControlCenter,
                 TargetBalance = 10000,
-                ExpectedValidResult = false
+                ExpectedValidResult = false,
+                TestCaseIndex = 11,
             },
             new PlanTestData()
             {
@@ -124,6 +135,7 @@ namespace hihapi.unittest.Finance
                 AccountCategoryID = FinanceAccountCategory.AccountCategory_Cash,
                 TargetBalance = 10000,
                 ExpectedValidResult = true,
+                TestCaseIndex = 12,
             },
             new PlanTestData()
             {
@@ -136,6 +148,7 @@ namespace hihapi.unittest.Finance
                 AccountCategoryID = FinanceAccountCategory.AccountCategory_Cash,
                 TargetBalance = 10000,
                 ExpectedValidResult = true,
+                TestCaseIndex = 13,
             },
             new PlanTestData()
             {
@@ -148,6 +161,7 @@ namespace hihapi.unittest.Finance
                 TranTypeID = FinanceTransactionType.TranType_AssetValueIncrease,
                 TargetBalance = 10000,
                 ExpectedValidResult = true,
+                TestCaseIndex = 14,
             },
             new PlanTestData()
             {
@@ -160,6 +174,7 @@ namespace hihapi.unittest.Finance
                 ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
                 TargetBalance = 10000,
                 ExpectedValidResult = true,
+                TestCaseIndex = 15,
             },
             new PlanTestData()
             {
@@ -172,6 +187,7 @@ namespace hihapi.unittest.Finance
                 ControlCenterID = DataSetupUtility.Home2ControlCenter1ID,
                 TargetBalance = 10000,
                 ExpectedValidResult = true,
+                TestCaseIndex = 16,
             },
         };
 
