@@ -1,5 +1,6 @@
 using System.Linq;
 using hihapi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query;
@@ -19,12 +20,13 @@ namespace hihapi.Controllers
         /// GET: /Languages
         /// <summary>
         /// Adds support for getting languages, for example:
-        /// 
+        ///
         /// GET /Languages
         /// GET /Languages?$filter=NativeName eq 'English'
         /// GET /Languages?
-        /// 
+        ///
         /// <remarks>
+        [AllowAnonymous]
         [EnableQuery]
         [HttpGet]
         [ResponseCache(Duration = 86400)]
@@ -34,6 +36,7 @@ namespace hihapi.Controllers
             return Ok(_context.Languages);
         }
 
+        [AllowAnonymous]
         [EnableQuery]
         [HttpGet]
         public Language Get([FromODataUri] int key)
