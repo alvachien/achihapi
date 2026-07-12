@@ -50,7 +50,7 @@ namespace hihapi.unittest.Common
             Assert.NotNull(getsingleresult);
 
             // 3. Check current version
-            var postresult = await control.Post();
+            var postresult = control.Post();
             Assert.NotNull(postresult);
             var createdrst = Assert.IsType<CreatedODataResult<CheckVersionResult>>(postresult);
             Assert.NotNull(createdrst);

@@ -836,7 +836,13 @@ namespace hihapi.Controllers
                 return BadRequest();
             }
 
-            // 0. Get inputted parameter
+            // 0. Get inputted parameter - validate required parameters
+            if (!parameters.ContainsKey("HomeID") || !parameters.ContainsKey("Year") ||
+                !parameters.ContainsKey("Month") || !parameters.ContainsKey("ExcludeTransfer"))
+            {
+                return BadRequest("Missing required parameters: HomeID, Year, Month, ExcludeTransfer");
+            }
+
             Int32 hid = (Int32)parameters["HomeID"];
             Int32 year = (Int32)parameters["Year"];
             Int32 month = (Int32)parameters["Month"];

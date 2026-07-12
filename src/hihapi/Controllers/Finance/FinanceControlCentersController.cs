@@ -213,12 +213,18 @@ namespace hihapi.Controllers
                 {
                     throw new UnauthorizedAccessException();
                 }
-                if (String.CompareOrdinal(entity.Owner, usrName) != 0)
-                {
-                    throw new UnauthorizedAccessException();
-                }
             }
             catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check whether User assigned with specified Home ID.
+            // This mirrors Put/Post/Delete: any home member may edit, not only the Owner.
+            // The previous Owner == usrName check rejected control centers that were
+            // created without an Owner (Owner is null) and blocked other home members.
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == entity.HomeID && p.User == usrName).CountAsync();
+            if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
             }

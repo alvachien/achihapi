@@ -128,13 +128,20 @@ namespace hihapi.Controllers
 
             homedef.Createdby = usrName;
             homedef.CreatedAt = DateTime.Now;
+
+            // Check for duplicate name — T_HOMEDEF.NAME has a UNIQUE constraint
+            var nameExists = await _context.HomeDefines.AnyAsync(h => h.Name == homedef.Name);
+            if (nameExists)
+            {
+                throw new BadRequestException($"A Home Define with name '{homedef.Name}' already exists");
+            }
+
             foreach (var hmem in homedef.Members)
             {
                 hmem.CreatedAt = homedef.CreatedAt;
                 hmem.Createdby = usrName;
             }
             _context.HomeDefines.Add(homedef);
-
             await _context.SaveChangesAsync();
 
             return Created(homedef);
@@ -187,6 +194,14 @@ namespace hihapi.Controllers
             }
             else
             {
+                // Check for duplicate name — T_HOMEDEF.NAME has a UNIQUE constraint.
+                // Exclude the current record (renaming to the same name is a no-op).
+                var nameConflict = await _context.HomeDefines.AnyAsync(h => h.Name == update.Name && h.ID != key);
+                if (nameConflict)
+                {
+                    throw new BadRequestException($"A Home Define with name '{update.Name}' already exists");
+                }
+
                 update.Updatedby = usrName;
                 update.UpdatedAt = DateTime.Now;
                 update.CreatedAt = existinghd.CreatedAt;

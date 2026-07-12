@@ -12,6 +12,7 @@ namespace hihapi.Utilities
         {
             await context.Database.EnsureCreatedAsync();
 
+            SeedViews(context);
             SeedCurrencies(context);
             SeedLanguages(context);
             SeedFinanceAccountCategories(context);
@@ -23,6 +24,116 @@ namespace hihapi.Utilities
             SeedLibraryBookCategories(context);
 
             await context.SaveChangesAsync();
+        }
+
+        private static void SeedViews(hihDataContext context)
+        {
+            // Views must be created after EnsureCreated (which only creates tables).
+            // Each view is dropped then recreated for idempotency.
+            var db = context.Database;
+
+            db.ExecuteSqlRaw("DROP VIEW IF EXISTS V_FIN_DOCUMENT_ITEM");
+            db.ExecuteSqlRaw(@"CREATE VIEW V_FIN_DOCUMENT_ITEM AS
+                SELECT DI.DOCID, DI.ITEMID, D.HID, D.TRANDATE, D.DESP AS DOCDESP,
+                    DI.ACCOUNTID, DI.TRANTYPE, TT.NAME AS TRANTYPENAME, TT.EXPENSE AS TRANTYPE_EXP,
+                    DI.USECURR2,
+                    CASE WHEN (DI.USECURR2 IS NULL OR DI.USECURR2 = '') THEN D.TRANCURR ELSE D.TRANCURR2 END AS TRANCURR,
+                    DI.TRANAMOUNT AS TRANAMOUNT_ORG,
+                    CASE WHEN TT.EXPENSE = 1 THEN DI.TRANAMOUNT * -1 ELSE DI.TRANAMOUNT END AS TRANAMOUNT,
+                    CASE WHEN (DI.USECURR2 IS NULL OR DI.USECURR2 = '')
+                        THEN CASE WHEN D.EXGRATE IS NOT NULL
+                            THEN CASE WHEN TT.EXPENSE = 1 THEN DI.TRANAMOUNT * D.EXGRATE / 100 * -1 ELSE DI.TRANAMOUNT * D.EXGRATE / 100 END
+                            ELSE CASE WHEN TT.EXPENSE = 1 THEN DI.TRANAMOUNT * -1 ELSE DI.TRANAMOUNT END END
+                        ELSE CASE WHEN D.EXGRATE2 IS NOT NULL
+                            THEN CASE WHEN TT.EXPENSE = 1 THEN DI.TRANAMOUNT * D.EXGRATE2 / 100 * -1 ELSE DI.TRANAMOUNT * D.EXGRATE2 / 100 END
+                            ELSE CASE WHEN TT.EXPENSE = 1 THEN DI.TRANAMOUNT * -1 ELSE DI.TRANAMOUNT END END
+                    END AS TRANAMOUNT_LC,
+                    DI.CONTROLCENTERID, DI.ORDERID, DI.DESP
+                FROM T_FIN_DOCUMENT_ITEM DI
+                JOIN T_FIN_TRAN_TYPE TT ON DI.TRANTYPE = TT.ID
+                LEFT OUTER JOIN T_FIN_DOCUMENT D ON DI.DOCID = D.ID");
+
+            db.ExecuteSqlRaw("DROP VIEW IF EXISTS V_FIN_GRP_ACNT");
+            db.ExecuteSqlRaw(@"CREATE VIEW V_FIN_GRP_ACNT AS
+                SELECT V.HID, V.ACCOUNTID, A.NAME AS ACCOUNTNAME,
+                    CASE WHEN V.TRANTYPE_EXP = 1 THEN SUM(V.TRANAMOUNT_LC) ELSE 0 END AS OUTAMOUNT,
+                    CASE WHEN V.TRANTYPE_EXP = 0 THEN SUM(V.TRANAMOUNT_LC) ELSE 0 END AS INAMOUNT
+                FROM V_FIN_DOCUMENT_ITEM V
+                JOIN T_FIN_ACCOUNT A ON V.ACCOUNTID = A.ID
+                GROUP BY V.HID, V.ACCOUNTID, A.NAME");
+
+            db.ExecuteSqlRaw("DROP VIEW IF EXISTS V_FIN_GRP_ACNT_TRANEXP");
+            db.ExecuteSqlRaw(@"CREATE VIEW V_FIN_GRP_ACNT_TRANEXP AS
+                SELECT V.HID, V.ACCOUNTID, A.NAME AS ACCOUNTNAME, V.TRANTYPE, V.TRANTYPENAME,
+                    CASE WHEN V.TRANTYPE_EXP = 1 THEN SUM(V.TRANAMOUNT_LC) ELSE 0 END AS OUTAMOUNT,
+                    CASE WHEN V.TRANTYPE_EXP = 0 THEN SUM(V.TRANAMOUNT_LC) ELSE 0 END AS INAMOUNT
+                FROM V_FIN_DOCUMENT_ITEM V
+                JOIN T_FIN_ACCOUNT A ON V.ACCOUNTID = A.ID
+                GROUP BY V.HID, V.ACCOUNTID, A.NAME, V.TRANTYPE, V.TRANTYPENAME");
+
+            db.ExecuteSqlRaw("DROP VIEW IF EXISTS V_FIN_REPORT_BS");
+            db.ExecuteSqlRaw(@"CREATE VIEW V_FIN_REPORT_BS AS
+                SELECT HID, ACCOUNTID, ACCOUNTNAME,
+                    SUM(INAMOUNT) AS DEBITBALANCE, SUM(OUTAMOUNT) AS CREDITBALANCE,
+                    SUM(INAMOUNT) + SUM(OUTAMOUNT) AS BALANCE
+                FROM V_FIN_GRP_ACNT
+                GROUP BY HID, ACCOUNTID, ACCOUNTNAME");
+
+            db.ExecuteSqlRaw("DROP VIEW IF EXISTS V_FIN_GRP_CC");
+            db.ExecuteSqlRaw(@"CREATE VIEW V_FIN_GRP_CC AS
+                SELECT V.HID, V.CONTROLCENTERID, CC.NAME AS CCNAME,
+                    CASE WHEN V.TRANTYPE_EXP = 1 THEN SUM(V.TRANAMOUNT_LC) ELSE 0 END AS OUTAMOUNT,
+                    CASE WHEN V.TRANTYPE_EXP = 0 THEN SUM(V.TRANAMOUNT_LC) ELSE 0 END AS INAMOUNT
+                FROM V_FIN_DOCUMENT_ITEM V
+                JOIN T_FIN_CONTROLCENTER CC ON V.CONTROLCENTERID = CC.ID
+                WHERE V.CONTROLCENTERID IS NOT NULL
+                GROUP BY V.HID, V.CONTROLCENTERID, CC.NAME");
+
+            db.ExecuteSqlRaw("DROP VIEW IF EXISTS V_FIN_GRP_CC_TRANEXP");
+            db.ExecuteSqlRaw(@"CREATE VIEW V_FIN_GRP_CC_TRANEXP AS
+                SELECT V.HID, V.CONTROLCENTERID, CC.NAME AS CCNAME, V.TRANTYPE, V.TRANTYPENAME,
+                    CASE WHEN V.TRANTYPE_EXP = 1 THEN SUM(V.TRANAMOUNT_LC) ELSE 0 END AS OUTAMOUNT,
+                    CASE WHEN V.TRANTYPE_EXP = 0 THEN SUM(V.TRANAMOUNT_LC) ELSE 0 END AS INAMOUNT
+                FROM V_FIN_DOCUMENT_ITEM V
+                JOIN T_FIN_CONTROLCENTER CC ON V.CONTROLCENTERID = CC.ID
+                WHERE V.CONTROLCENTERID IS NOT NULL
+                GROUP BY V.HID, V.CONTROLCENTERID, CC.NAME, V.TRANTYPE, V.TRANTYPENAME");
+
+            db.ExecuteSqlRaw("DROP VIEW IF EXISTS V_FIN_REPORT_CC");
+            db.ExecuteSqlRaw(@"CREATE VIEW V_FIN_REPORT_CC AS
+                SELECT HID, CONTROLCENTERID, CCNAME,
+                    SUM(INAMOUNT) AS DEBITBALANCE, SUM(OUTAMOUNT) AS CREDITBALANCE,
+                    SUM(INAMOUNT) + SUM(OUTAMOUNT) AS BALANCE
+                FROM V_FIN_GRP_CC
+                GROUP BY HID, CONTROLCENTERID, CCNAME");
+
+            db.ExecuteSqlRaw("DROP VIEW IF EXISTS V_FIN_GRP_ORD");
+            db.ExecuteSqlRaw(@"CREATE VIEW V_FIN_GRP_ORD AS
+                SELECT V.HID, V.ORDERID, O.NAME AS ORDERNAME,
+                    CASE WHEN V.TRANTYPE_EXP = 1 THEN SUM(V.TRANAMOUNT_LC) ELSE 0 END AS OUTAMOUNT,
+                    CASE WHEN V.TRANTYPE_EXP = 0 THEN SUM(V.TRANAMOUNT_LC) ELSE 0 END AS INAMOUNT
+                FROM V_FIN_DOCUMENT_ITEM V
+                JOIN T_FIN_ORDER O ON V.ORDERID = O.ID
+                WHERE V.ORDERID IS NOT NULL
+                GROUP BY V.HID, V.ORDERID, O.NAME");
+
+            db.ExecuteSqlRaw("DROP VIEW IF EXISTS V_FIN_GRP_ORD_TRANEXP");
+            db.ExecuteSqlRaw(@"CREATE VIEW V_FIN_GRP_ORD_TRANEXP AS
+                SELECT V.HID, V.ORDERID, O.NAME AS ORDERNAME, V.TRANTYPE, V.TRANTYPENAME,
+                    CASE WHEN V.TRANTYPE_EXP = 1 THEN SUM(V.TRANAMOUNT_LC) ELSE 0 END AS OUTAMOUNT,
+                    CASE WHEN V.TRANTYPE_EXP = 0 THEN SUM(V.TRANAMOUNT_LC) ELSE 0 END AS INAMOUNT
+                FROM V_FIN_DOCUMENT_ITEM V
+                JOIN T_FIN_ORDER O ON V.ORDERID = O.ID
+                WHERE V.ORDERID IS NOT NULL
+                GROUP BY V.HID, V.ORDERID, O.NAME, V.TRANTYPE, V.TRANTYPENAME");
+
+            db.ExecuteSqlRaw("DROP VIEW IF EXISTS V_FIN_REPORT_ORDER");
+            db.ExecuteSqlRaw(@"CREATE VIEW V_FIN_REPORT_ORDER AS
+                SELECT HID, ORDERID, ORDERNAME,
+                    SUM(INAMOUNT) AS DEBITBALANCE, SUM(OUTAMOUNT) AS CREDITBALANCE,
+                    SUM(INAMOUNT) + SUM(OUTAMOUNT) AS BALANCE
+                FROM V_FIN_GRP_ORD
+                GROUP BY HID, ORDERID, ORDERNAME");
         }
 
         private static void SeedCurrencies(hihDataContext context)

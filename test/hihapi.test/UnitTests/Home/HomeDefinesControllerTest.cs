@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using hihapi.Exceptions;
 using Microsoft.AspNetCore.OData.Results;
 using hihapi.test.common;
+using Microsoft.EntityFrameworkCore;
 
 namespace hihapi.unittest.Home
 {
@@ -132,6 +133,10 @@ namespace hihapi.unittest.Home
             var hmemgetrst = hmemcontrol.Get();
             Assert.NotNull(hmemgetrst);
 
+            // Verify members are actually persisted to the database
+            var memberCount = await context.HomeMembers.CountAsync(m => m.HomeID == nhdobj.Entity.ID);
+            Assert.Equal(1, memberCount);
+
             // Change the home define - Add new user
             var hm2 = new HomeMember()
             {
@@ -230,6 +235,135 @@ namespace hihapi.unittest.Home
             Assert.Equal(204, rst9rst.StatusCode);
 
             Assert.Equal(0, context.HomeDefines.Where(p => p.ID == hid).Count());
+
+            await context.DisposeAsync();
+        }
+
+        [Theory]
+        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1BaseCurrency)]
+        public async Task TestCase_CreateHomeDefine_DuplicateNameThrowsBadRequest(string user, string curr)
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            var control = new HomeDefinesController(context);
+            var userclaim = DataSetupUtility.GetClaimForUser(user);
+            var duplicateName = "HomeDef.DupName." + user;
+
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            // First create — should succeed
+            var hd1 = new HomeDefine()
+            {
+                Name = duplicateName,
+                Host = user,
+                BaseCurrency = curr,
+                Createdby = user,
+            };
+            var hm1 = new HomeMember()
+            {
+                Relation = HomeMemberRelationType.Self,
+                DisplayAs = "Myself",
+                User = user,
+                HomeDefinition = hd1,
+                Createdby = user,
+            };
+            hd1.Members.Add(hm1);
+
+            var rst1 = await control.Post(hd1);
+            var created = Assert.IsType<CreatedODataResult<HomeDefine>>(rst1);
+            Assert.True(created.Entity.ID > 0);
+
+            // Second create with the same name — should throw BadRequestException
+            var hd2 = new HomeDefine()
+            {
+                Name = duplicateName,
+                Host = user,
+                BaseCurrency = curr,
+                Createdby = user,
+            };
+            var hm2 = new HomeMember()
+            {
+                Relation = HomeMemberRelationType.Self,
+                DisplayAs = "Myself",
+                User = user,
+                HomeDefinition = hd2,
+                Createdby = user,
+            };
+            hd2.Members.Add(hm2);
+
+            var ex = await Assert.ThrowsAsync<BadRequestException>(() => control.Post(hd2));
+            Assert.Contains(duplicateName, ex.Message);
+
+            // Cleanup
+            await control.Delete(created.Entity.ID);
+
+            await context.DisposeAsync();
+        }
+
+        [Theory]
+        [InlineData(DataSetupUtility.UserA, DataSetupUtility.Home1BaseCurrency)]
+        public async Task TestCase_UpdateHomeDefine_DuplicateNameThrowsBadRequest(string user, string curr)
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            var control = new HomeDefinesController(context);
+            var userclaim = DataSetupUtility.GetClaimForUser(user);
+
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = userclaim }
+            };
+
+            // Create first home
+            var nameA = "HomeDef.UpdA." + user;
+            var hdA = new HomeDefine()
+            {
+                Name = nameA,
+                Host = user,
+                BaseCurrency = curr,
+                Createdby = user,
+            };
+            hdA.Members.Add(new HomeMember()
+            {
+                Relation = HomeMemberRelationType.Self,
+                DisplayAs = "Myself",
+                User = user,
+                HomeDefinition = hdA,
+                Createdby = user,
+            });
+            var rstA = await control.Post(hdA);
+            var createdA = Assert.IsType<CreatedODataResult<HomeDefine>>(rstA);
+
+            // Create second home
+            var nameB = "HomeDef.UpdB." + user;
+            var hdB = new HomeDefine()
+            {
+                Name = nameB,
+                Host = user,
+                BaseCurrency = curr,
+                Createdby = user,
+            };
+            hdB.Members.Add(new HomeMember()
+            {
+                Relation = HomeMemberRelationType.Self,
+                DisplayAs = "Myself",
+                User = user,
+                HomeDefinition = hdB,
+                Createdby = user,
+            });
+            var rstB = await control.Post(hdB);
+            var createdB = Assert.IsType<CreatedODataResult<HomeDefine>>(rstB);
+
+            // Try to rename B to A's name — should throw BadRequestException
+            createdB.Entity.Name = nameA;
+            var ex = await Assert.ThrowsAsync<BadRequestException>(
+                () => control.Put(createdB.Entity.ID, createdB.Entity));
+            Assert.Contains(nameA, ex.Message);
+
+            // Cleanup
+            await control.Delete(createdA.Entity.ID);
+            await control.Delete(createdB.Entity.ID);
 
             await context.DisposeAsync();
         }
