@@ -115,18 +115,9 @@ namespace hihapi.Controllers
             var acntBalInfo = _context.FinanceReporAccountGroupAndExpenseView.Where(p => p.AccountID == loanAccountHeader.ID).ToList();
             if (acntBalInfo.Count > 0)
             {
-                acntBalance = 0;
-                acntBalInfo.ForEach(action =>
-                {
-                    if (action.IsExpense)
-                    {
-                        acntBalance += action.Balance;
-                    }
-                    else
-                    {
-                        acntBalance += action.Balance;
-                    }
-                });
+                // Balance is already signed by V_FIN_GRP_ACNT_TRANEXP (expenses are
+                // negated in the SQL view), so the net account balance is the sum of all rows.
+                acntBalance = acntBalInfo.Sum(action => action.Balance);
             }
             else
             {
@@ -295,18 +286,9 @@ namespace hihapi.Controllers
             var acntBalInfo = _context.FinanceReporAccountGroupAndExpenseView.Where(p => p.AccountID == loanAccountHeader.ID).ToList();
             if (acntBalInfo.Count > 0)
             {
-                acntBalance = 0;
-                acntBalInfo.ForEach(action =>
-                {
-                    if (action.IsExpense)
-                    {
-                        acntBalance += action.Balance;
-                    }
-                    else
-                    {
-                        acntBalance += action.Balance;
-                    }
-                });
+                // Balance is already signed by V_FIN_GRP_ACNT_TRANEXP (expenses are
+                // negated in the SQL view), so the net account balance is the sum of all rows.
+                acntBalance = acntBalInfo.Sum(action => action.Balance);
             }
             else
             {
