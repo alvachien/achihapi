@@ -8,6 +8,10 @@ on:
     paths:
         - '**.cs'
         - '**.csproj'
+        - '**.json'
+        - '**.sql'
+        - '.editorconfig'
+        - '.github/workflows/**'
 
 env:
   DOTNET_VERSION: '10.0.x'
