@@ -346,6 +346,9 @@ blogs/
 src/achihapi/uploads/
 src/achihapi/blogs/
 *.db
+*.db-shm
+*.db-wal
+*.db-journal
 data/
 
 # Environment-specific config with secrets
