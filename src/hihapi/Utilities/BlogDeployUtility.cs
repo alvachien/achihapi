@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -154,7 +155,7 @@ namespace hihapi.Utilities
             //File.WriteAllText(fileName, jsonstr);
 
             // MD file
-            fileName = Path.Combine(postFolder, post.ID.ToString() + ".md");
+            fileName = Path.Combine(postFolder, post.ID.ToString(CultureInfo.InvariantCulture) + ".md");
             using (StreamWriter writer = File.CreateText(fileName))
             {
                 await writer.WriteAsync(post.Content);
@@ -195,7 +196,7 @@ namespace hihapi.Utilities
             string postFolder = Path.Combine(rootFolder, PostsFolder);
             if (Directory.Exists(postFolder))
             {
-                fileName = Path.Combine(postFolder, postid.ToString() + ".md");
+                fileName = Path.Combine(postFolder, postid.ToString(CultureInfo.InvariantCulture) + ".md");
                 if (File.Exists(fileName))
                 {
                     File.Delete(fileName);

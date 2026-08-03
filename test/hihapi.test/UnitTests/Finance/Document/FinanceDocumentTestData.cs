@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using Xunit.Sdk;
 using System.Text.Json;
 using hihapi.Models;
+using Xunit.Sdk;
 
 namespace hihapi.unittest.Finance
 {

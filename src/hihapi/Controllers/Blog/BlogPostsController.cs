@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using hihapi.Exceptions;
@@ -154,7 +154,7 @@ namespace hihapi.Controllers
             var tagInDBs = _context.BlogPostTags.Where(p => p.PostID == update.ID).ToList();
             foreach (var tag in update.BlogPostTags)
             {
-                var tagindb = tagInDBs.Find(p => p.PostID == update.ID && p.Tag == tag.Tag);
+                var tagindb = tagInDBs.Find(p => p.PostID == update.ID && string.Equals(p.Tag, tag.Tag, StringComparison.Ordinal));
                 if (tagindb == null)
                 {
                     _context.BlogPostTags.Add(tag);
@@ -162,7 +162,7 @@ namespace hihapi.Controllers
             }
             foreach (var tag in tagInDBs)
             {
-                var ntag = update.BlogPostTags.FirstOrDefault(p => p.PostID == update.ID && p.Tag == tag.Tag);
+                var ntag = update.BlogPostTags.FirstOrDefault(p => p.PostID == update.ID && string.Equals(p.Tag, tag.Tag, StringComparison.Ordinal));
                 if (ntag == null)
                 {
                     _context.BlogPostTags.Remove(tag);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Security.Claims;
 using hihapi.Exceptions;
@@ -375,7 +376,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddDays(i),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + tdays.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + tdays.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }
@@ -397,7 +398,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddDays(i * 14),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + tfortnights.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + tfortnights.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }
@@ -418,7 +419,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddMonths(i * 6),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nhalfyear.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + nhalfyear.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }
@@ -438,7 +439,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddMonths(i),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nmonths.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + nmonths.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }
@@ -458,7 +459,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddMonths(i * 3),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nquarters.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + nquarters.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }
@@ -480,7 +481,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddDays(i * 7),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + tweeks.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + tweeks.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }
@@ -500,7 +501,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddYears(i),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nyears.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + nyears.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }

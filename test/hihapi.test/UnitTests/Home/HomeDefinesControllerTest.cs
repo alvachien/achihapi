@@ -1,16 +1,16 @@
-﻿using System;
-using Xunit;
-using System.Linq;
-using hihapi.Models;
-using hihapi.Controllers;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using hihapi.Controllers;
 using hihapi.Exceptions;
-using Microsoft.AspNetCore.OData.Results;
+using hihapi.Models;
 using hihapi.test.common;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Results;
 using Microsoft.EntityFrameworkCore;
+using Xunit;
 
 namespace hihapi.unittest.Home
 {
@@ -98,13 +98,13 @@ namespace hihapi.unittest.Home
             };
             hd1.Members.Add(hm1);
             var rst = await control.Post(hd1);
-            var nhdobj = Assert.IsType<CreatedODataResult<HomeDefine>>(rst);            
+            var nhdobj = Assert.IsType<CreatedODataResult<HomeDefine>>(rst);
             Assert.True(nhdobj.Entity.ID > 0);
             hid = nhdobj.Entity.ID;
             Assert.True(nhdobj.Entity.Members.Count == 1);
             Assert.True(nhdobj.Entity.Members.ElementAt(0).HomeID == nhdobj.Entity.ID);
             Assert.True(nhdobj.Entity.Members.ElementAt(0).Relation == HomeMemberRelationType.Self);
-            Assert.True(nhdobj.Entity.Members.ElementAt(0).User == nhdobj.Entity.Host);
+            Assert.Equal(nhdobj.Entity.Host, nhdobj.Entity.Members.ElementAt(0).User);
 
             // Read the single object
             var rst2 = await control.Get(nhdobj.Entity.ID);
@@ -114,7 +114,7 @@ namespace hihapi.unittest.Home
             Assert.True(nreadobj.Members.Count == 1);
             Assert.True(nreadobj.Members.ElementAt(0).HomeID == nreadobj.ID);
             Assert.True(nreadobj.Members.ElementAt(0).Relation == HomeMemberRelationType.Self);
-            Assert.True(nreadobj.Members.ElementAt(0).User == nreadobj.Host);
+            Assert.Equal(nreadobj.Host, nreadobj.Members.ElementAt(0).User);
 
             // Read the related member
             var hmemcontrol = new HomeMembersController(context);
@@ -143,7 +143,7 @@ namespace hihapi.unittest.Home
                 HomeID = nreadobj.ID,
                 Relation = HomeMemberRelationType.Couple,
                 DisplayAs = "New Test",
-                User = (user == DataSetupUtility.UserA) ? DataSetupUtility.UserB : DataSetupUtility.UserA,
+                User = (string.Equals(user, DataSetupUtility.UserA, StringComparison.Ordinal)) ? DataSetupUtility.UserB : DataSetupUtility.UserA,
                 HomeDefinition = nreadobj,
                 Createdby = user,
             };
@@ -161,7 +161,7 @@ namespace hihapi.unittest.Home
             // Need the relationship....
             foreach (var mem in nreadobj.Members)
             {
-                if (mem.User == nreadobj.Host)
+                if (string.Equals(mem.User, nreadobj.Host, StringComparison.Ordinal))
                     mem.Relation = HomeMemberRelationType.Self;
                 else
                     mem.Relation = HomeMemberRelationType.Couple;
@@ -170,9 +170,9 @@ namespace hihapi.unittest.Home
             nupdobjectrst = Assert.IsType<UpdatedODataResult<HomeDefine>>(rst3);
             Assert.Equal(nreadobj.Host, nupdobjectrst.Entity.Host);
             Assert.Equal(2, nupdobjectrst.Entity.Members.Count);
-            foreach(var mem in nupdobjectrst.Entity.Members)
+            foreach (var mem in nupdobjectrst.Entity.Members)
             {
-                if (mem.User == nupdobjectrst.Entity.Host)
+                if (string.Equals(mem.User, nupdobjectrst.Entity.Host, StringComparison.Ordinal))
                 {
                     Assert.Equal(HomeMemberRelationType.Self, mem.Relation);
                 }
@@ -294,7 +294,7 @@ namespace hihapi.unittest.Home
             hd2.Members.Add(hm2);
 
             var ex = await Assert.ThrowsAsync<BadRequestException>(() => control.Post(hd2));
-            Assert.Contains(duplicateName, ex.Message);
+            Assert.Contains(duplicateName, ex.Message, StringComparison.Ordinal);
 
             // Cleanup
             await control.Delete(created.Entity.ID);
@@ -359,7 +359,7 @@ namespace hihapi.unittest.Home
             createdB.Entity.Name = nameA;
             var ex = await Assert.ThrowsAsync<BadRequestException>(
                 () => control.Put(createdB.Entity.ID, createdB.Entity));
-            Assert.Contains(nameA, ex.Message);
+            Assert.Contains(nameA, ex.Message, StringComparison.Ordinal);
 
             // Cleanup
             await control.Delete(createdA.Entity.ID);

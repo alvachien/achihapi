@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using hihapi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;

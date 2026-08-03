@@ -211,7 +211,7 @@ namespace hihapi.Controllers
                 var dbmems = _context.HomeMembers.Where(p => p.HomeID == key).ToList();
                 foreach (var mem in update.Members)
                 {
-                    var memindb = dbmems.Find(p => p.HomeID == key && p.User == mem.User);
+                    var memindb = dbmems.Find(p => p.HomeID == key && string.Equals(p.User, mem.User, StringComparison.Ordinal));
                     if (memindb == null)
                     {
                         mem.Createdby = usrName;
@@ -227,7 +227,7 @@ namespace hihapi.Controllers
                 }
                 foreach (var mem in dbmems)
                 {
-                    var nmem = update.Members.FirstOrDefault(p => p.User == mem.User);
+                    var nmem = update.Members.FirstOrDefault(p => string.Equals(p.User, mem.User, StringComparison.Ordinal));
                     if (nmem == null)
                     {
                         _context.HomeMembers.Remove(mem);

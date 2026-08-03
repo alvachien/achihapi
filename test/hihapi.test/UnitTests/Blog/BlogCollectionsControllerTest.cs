@@ -1,14 +1,14 @@
-﻿using System;
-using Xunit;
-using hihapi.Controllers;
-using System.Threading.Tasks;
-using hihapi.test.common;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+using System;
 using System.Linq;
-using hihapi.Models;
+using System.Threading.Tasks;
+using hihapi.Controllers;
 using hihapi.Exceptions;
+using hihapi.Models;
+using hihapi.test.common;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Results;
+using Xunit;
 
 namespace hihapi.unittest.Blog
 {
@@ -78,7 +78,7 @@ namespace hihapi.unittest.Blog
             {
                 await control.Post(ncoll);
             }
-            catch(Exception exp)
+            catch (Exception exp)
             {
                 Assert.IsType<UnauthorizedAccessException>(exp);
             }

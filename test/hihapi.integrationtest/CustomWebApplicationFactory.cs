@@ -1,13 +1,12 @@
-﻿using hihapi.test;
+using System;
+using System.Linq;
+using hihapi.test.common;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Linq;
-using hihapi.test.common;
 
 namespace hihapi.integrationtest
 {
@@ -16,7 +15,8 @@ namespace hihapi.integrationtest
     {
         protected SqliteConnection DBConnection { get; private set; }
 
-        public CustomWebApplicationFactory() {
+        public CustomWebApplicationFactory()
+        {
             DBConnection = new SqliteConnection("DataSource=:memory:");
             DBConnection.Open();
 
@@ -90,7 +90,7 @@ namespace hihapi.integrationtest
                 {
                     options.UseSqlite(DBConnection, action =>
                     {
-                         action.UseRelationalNulls();
+                        action.UseRelationalNulls();
                     })
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll)
                     .EnableSensitiveDataLogging();

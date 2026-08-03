@@ -1,9 +1,9 @@
-﻿using Xunit;
 using System.Linq;
-using hihapi.Models;
-using hihapi.Controllers;
 using System.Threading.Tasks;
+using hihapi.Controllers;
+using hihapi.Models;
 using Microsoft.AspNetCore.Mvc;
+using Xunit;
 
 namespace hihapi.unittest.Common
 {
@@ -32,9 +32,9 @@ namespace hihapi.unittest.Common
             var objvalues = Assert.IsAssignableFrom<IQueryable<Currency>>(okgetresult.Value);
 
             var currexist = false;
-            foreach(var item in objvalues)
+            foreach (var item in objvalues)
             {
-                if (item.Curr == strcurr)
+                if (string.Equals(item.Curr, strcurr, System.StringComparison.Ordinal))
                     currexist = true;
             }
             Assert.True(currexist);

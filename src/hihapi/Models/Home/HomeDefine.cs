@@ -94,7 +94,7 @@ namespace hihapi.Models
                 return false;
             else
             {
-                if (self.User != this.Host)
+                if (!string.Equals(self.User, this.Host, StringComparison.Ordinal))
                     return false;
             }
 

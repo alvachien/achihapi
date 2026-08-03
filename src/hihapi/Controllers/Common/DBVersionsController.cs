@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using hihapi.Models;
@@ -85,8 +86,8 @@ namespace hihapi.Controllers
         {
             var input = new RepeatDatesCalculationInput
             {
-                StartDate = DateTime.Parse(StartDate),
-                EndDate = DateTime.Parse(EndDate),
+                StartDate = DateTime.Parse(StartDate, CultureInfo.InvariantCulture),
+                EndDate = DateTime.Parse(EndDate, CultureInfo.InvariantCulture),
                 RepeatType = (RepeatFrequency)RepeatType,
             };
             return Ok(CommonUtility.WorkoutRepeatedDates(input));

@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
 namespace hihapi.integrationtest
@@ -27,7 +27,7 @@ namespace hihapi.integrationtest
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
             var body = await response.Content.ReadAsStringAsync();
-            Assert.Contains("OData Endpoint Mapping", body);
+            Assert.Contains("OData Endpoint Mapping", body, System.StringComparison.Ordinal);
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿using hihapi.Models;
 using System;
 using System.Text.Json;
+using hihapi.Models;
 using Xunit.Sdk;
 
 namespace hihapi.unittest.Finance

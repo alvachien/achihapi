@@ -1,9 +1,9 @@
-﻿using System;
-using Xunit;
-using hihapi.Models;
-using System.Threading.Tasks;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using hihapi.Models;
 using hihapi.test.common;
+using Xunit;
 
 namespace hihapi.unittest.Finance
 {
@@ -118,14 +118,14 @@ namespace hihapi.unittest.Finance
             order.HomeID = testdata.HomeID;
             order.Comment = testdata.Comment;
             order.ID = testdata.ID;
-            foreach(var rule in testdata.SRule)
+            foreach (var rule in testdata.SRule)
                 order.SRule.Add(rule);
             order.ValidFrom = testdata.ValidFrom;
             order.ValidTo = testdata.ValidTo;
-            
+
             var isValid = order.IsValid(context);
 
-            Assert.Equal(testdata.ExpectedValidResult , isValid);
+            Assert.Equal(testdata.ExpectedValidResult, isValid);
 
             await context.DisposeAsync();
         }

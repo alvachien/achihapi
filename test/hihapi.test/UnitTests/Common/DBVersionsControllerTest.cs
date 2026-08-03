@@ -1,12 +1,12 @@
-﻿using System;
-using Xunit;
-using System.Linq;
-using hihapi.Models;
-using hihapi.Controllers;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using hihapi.Controllers;
+using hihapi.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Results;
+using Xunit;
 
 namespace hihapi.unittest.Common
 {
@@ -38,7 +38,7 @@ namespace hihapi.unittest.Common
             var objvalues = Assert.IsAssignableFrom<IQueryable<DBVersion>>(okobjresult.Value);
             // DBVersionsController.CurrentVersion
             var verexist = false;
-            foreach(var version in objvalues)
+            foreach (var version in objvalues)
             {
                 if (version.VersionID == DBVersionsController.CurrentVersion)
                     verexist = true;
@@ -84,7 +84,7 @@ namespace hihapi.unittest.Common
             input2.StartDate = new DateTime(2021, 1, 1);
             input2.TotalAmount = 10000;
             input2.EndDate = new DateTime(2022, 1, 1);
-            input2.Desp = "Test";            
+            input2.Desp = "Test";
             var rst3 = control.GetRepeatedDatesWithAmount(input2);
             Assert.NotNull(rst3);
 

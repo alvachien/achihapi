@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using Xunit.Sdk;
 using System.Text.Json;
 using hihapi.Models;
+using Xunit.Sdk;
 
 namespace hihapi.unittest.Finance
 {
@@ -320,7 +320,7 @@ namespace hihapi.unittest.Finance
     {
         public Decimal NewAmount { get; set; }
 
-        public FinanceDocumentsControllerTestData_AssetChangeDoc(): base()
+        public FinanceDocumentsControllerTestData_AssetChangeDoc() : base()
         {
         }
 

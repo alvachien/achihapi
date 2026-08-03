@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using hihapi.Models;
 using hihapi.Utilities;
@@ -260,7 +261,7 @@ namespace hihapi.Controllers
 
             List<DateTime> listDates = new List<DateTime>();
             foreach (var dstr in arDateStrs)
-                listDates.Add(DateTime.Parse(dstr));
+                listDates.Add(DateTime.Parse(dstr, CultureInfo.InvariantCulture));
             listDates.Sort();
             var lastDate = DateTime.MinValue;
             Double doubleAmount = 0;

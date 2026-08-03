@@ -1,7 +1,7 @@
-﻿using Xunit;
-using hihapi.Models;
 using System.Threading.Tasks;
+using hihapi.Models;
 using hihapi.test.common;
+using Xunit;
 
 namespace hihapi.unittest.Finance
 {
@@ -48,7 +48,7 @@ namespace hihapi.unittest.Finance
         public async Task TestCase_CheckValid(ControlCenterTestData testdata)
         {
             var context = this.fixture.GetCurrentDataContext();
-            
+
             FinanceControlCenter obj = new FinanceControlCenter();
             obj.ID = testdata.ID;
             obj.HomeID = testdata.HomeID;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using hihapi.Models;
@@ -1242,7 +1242,7 @@ namespace hihapi.test.common
                 Createdby = UserD
             });
         }
-        
+
         private static void SetupTable_DBVersion()
         {
             // Versions
@@ -1544,7 +1544,7 @@ namespace hihapi.test.common
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 77, Name = "医药费", Expense = true, ParID = 75, Comment = "医药费" });
             FinanceTransactionTypes.Add(new FinanceTransactionType() { ID = 78, Name = "保健品费", Expense = true, ParID = 75, Comment = "保健品费" });
         }
-        
+
         private static void SetupTable_LibraryPersonRole()
         {
             LibraryPersonRoles.Add(new LibraryPersonRole() { Id = 1, Name = "Library.Author", Comment = "Author" });
@@ -1571,10 +1571,10 @@ namespace hihapi.test.common
 
         #region Setup testing data
         private static List<int> NotAllowedTranTypes
+        {
+            get
             {
-                get
-                {
-                    return new List<int>
+                return new List<int>
                     {
                         1,
                         37,
@@ -1591,8 +1591,8 @@ namespace hihapi.test.common
                         92,
                         93,
                     };
-                }
             }
+        }
         /// <summary>
         /// Home 1
         ///     [Host] User A
@@ -1984,11 +1984,11 @@ namespace hihapi.test.common
             {
                 1
             };
-            for(int i = -12; i < -7; i ++)
+            for (int i = -12; i < -7; i++)
             {
                 var dt1 = DateTime.Today.AddMonths(i);
                 var dt2 = DateTime.Today.AddMonths(i + 1);
-                while(dt1 <= dt2)
+                while (dt1 <= dt2)
                 {
                     dt1 = dt1.AddDays(1);
                     var docamt = new Random().Next(0, 3);
@@ -2249,7 +2249,7 @@ namespace hihapi.test.common
             // Save it
             db.SaveChanges();
         }
-        
+
         /// <summary>
         /// Home 2
         ///     [Host] User B
@@ -2546,7 +2546,7 @@ namespace hihapi.test.common
             // Save it
             db.SaveChanges();
         }
-        
+
         /// <summary>
         /// Home 3
         ///     [Host] User A
@@ -2778,7 +2778,7 @@ namespace hihapi.test.common
                             TranCurr = Home3BaseCurrency,
                         };
                         var docitemcnt = new Random().Next(1, 3);
-                        while(docitemcnt -- >= 0)
+                        while (docitemcnt-- >= 0)
                         {
                             var ndocitem = new FinanceDocumentItem
                             {
@@ -2940,7 +2940,7 @@ namespace hihapi.test.common
                             TranCurr = Home4BaseCurrency,
                         };
                         var docitemcnt = new Random().Next(1, 3);
-                        while(docitemcnt-- >= 0)
+                        while (docitemcnt-- >= 0)
                         {
                             var ndocitem = new FinanceDocumentItem
                             {
@@ -3134,7 +3134,7 @@ namespace hihapi.test.common
             // Save it
             db.SaveChanges();
         }
-        
+
         public static void CreateTestingData_Blog(hihDataContext db)
         {
             // User setting
@@ -3260,6 +3260,7 @@ namespace hihapi.test.common
         #region Common used methods
         public static int CreateNormalDoc(hihDataContext context, int hid, string tcur, int acntid, int trantype, int ccid)
         {
+            _ = acntid;
             FinanceDocument doc = new FinanceDocument();
             doc.HomeID = hid;
             doc.DocType = FinanceDocumentType.DocType_Normal;
