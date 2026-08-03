@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using hihapi.Exceptions;
@@ -26,9 +26,10 @@ namespace hihapi.Controllers
         [HttpGet]
         public IActionResult Get()
         {
+            String usrName = String.Empty;
             try
             {
-                String usrName = HIHAPIUtility.GetUserID(this);
+                usrName = HIHAPIUtility.GetUserID(this);
                 if (String.IsNullOrEmpty(usrName))
                     throw new UnauthorizedAccessException();
             }
@@ -37,7 +38,12 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            return Ok(_context.FinanceTmpLoanDocument);
+            // Scope to the homes the current user is a member of (prevents cross-tenant
+            // exposure of other homes' temporary loan documents).
+            return Ok(from homemem in _context.HomeMembers
+                      join tmpldoc in _context.FinanceTmpLoanDocument
+                      on new { homemem.HomeID, homemem.User } equals new { tmpldoc.HomeID, User = usrName }
+                      select tmpldoc);
         }
 
         [HttpPost]
@@ -74,9 +80,10 @@ namespace hihapi.Controllers
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
-            // Check 2: Template doc
+            // Check 2: Template doc - scoped to the verified home so a caller cannot
+            // operate on another home's loan template by guessing its DocumentID.
             var docLoanTmp = _context.FinanceTmpLoanDocument
-                .Where(p => p.DocumentID == createContext.LoanTemplateDocumentID)
+                .Where(p => p.DocumentID == createContext.LoanTemplateDocumentID && p.HomeID == createContext.HomeID)
                 .FirstOrDefault();
             if (docLoanTmp == null
                 || docLoanTmp.ReferenceDocumentID > 0)
@@ -92,10 +99,10 @@ namespace hihapi.Controllers
                 throw new BadRequestException("Tmp doc lack of amount");
             }
 
-            // Check 3: Account
-            var loanAccountHeader = _context.FinanceAccount.Where(p => p.ID == docLoanTmp.AccountID).FirstOrDefault();
+            // Check 3: Account - must belong to the verified home as well.
+            var loanAccountHeader = _context.FinanceAccount.Where(p => p.ID == docLoanTmp.AccountID && p.HomeID == createContext.HomeID).FirstOrDefault();
             if (loanAccountHeader == null
-                || loanAccountHeader.Status != (Byte)FinanceAccountStatus.Normal
+                || (FinanceAccountStatus)loanAccountHeader.Status != FinanceAccountStatus.Normal
                 || !(loanAccountHeader.CategoryID == FinanceAccountCategory.AccountCategory_BorrowFrom
                     || loanAccountHeader.CategoryID == FinanceAccountCategory.AccountCategory_LendTo)
                     )
@@ -181,7 +188,9 @@ namespace hihapi.Controllers
             {
                 try
                 {
-                    // 1. Create the document
+                    // 1. Create the document - force it into the verified home
+                    // (the client-supplied DocumentInfo.HomeID must not be trusted).
+                    createContext.DocumentInfo.HomeID = createContext.HomeID;
                     createContext.DocumentInfo.Createdby = usrName;
                     createContext.DocumentInfo.CreatedAt = DateTime.Now;
                     var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);
@@ -263,10 +272,11 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            // Check 2: Account
-            var loanAccountHeader = _context.FinanceAccount.Where(p => p.ID == createContext.LoanAccountID).FirstOrDefault();
+            // Check 2: Account - must belong to the verified home (prevents operating on
+            // another home's loan account via a guessed LoanAccountID).
+            var loanAccountHeader = _context.FinanceAccount.Where(p => p.ID == createContext.LoanAccountID && p.HomeID == createContext.HomeID).FirstOrDefault();
             if (loanAccountHeader == null
-                || loanAccountHeader.Status != (Byte)FinanceAccountStatus.Normal
+                || (FinanceAccountStatus)loanAccountHeader.Status != FinanceAccountStatus.Normal
                 || !(loanAccountHeader.CategoryID == FinanceAccountCategory.AccountCategory_BorrowFrom
                     || loanAccountHeader.CategoryID == FinanceAccountCategory.AccountCategory_LendTo)
                     )
@@ -352,7 +362,9 @@ namespace hihapi.Controllers
             {
                 try
                 {
-                    // 1. Create the document
+                    // 1. Create the document - force it into the verified home
+                    // (the client-supplied DocumentInfo.HomeID must not be trusted).
+                    createContext.DocumentInfo.HomeID = createContext.HomeID;
                     createContext.DocumentInfo.Createdby = usrName;
                     createContext.DocumentInfo.CreatedAt = DateTime.Now;
                     var docEntity = _context.FinanceDocument.Add(createContext.DocumentInfo);

@@ -153,19 +153,35 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            // Check whether User assigned with specified Home ID
-            var hms = await _context.HomeMembers.Where(p => p.HomeID == update.HomeID && p.User == usrName).CountAsync();
+            // Find the existing record first - membership is checked against the EXISTING home,
+            // not the HomeID in the request body (prevents cross-tenant mass-assignment).
+            var existing = await _context.FinanceOrder.FindAsync(key);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            // Check whether User assigned with the existing Home ID
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == existing.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
             }
 
+            // Reject HomeID changes via PUT
+            if (update.HomeID != existing.HomeID)
+            {
+                return BadRequest("HomeID cannot be changed via PUT.");
+            }
+
             if (!update.IsValid(this._context))
                 return BadRequest();
 
+            update.CreatedAt = existing.CreatedAt;
+            update.Createdby = existing.Createdby;
             update.Updatedby = usrName;
             update.UpdatedAt = DateTime.Now;
-            _context.Entry(update).State = EntityState.Modified;
+            _context.Entry(existing).CurrentValues.SetValues(update);
 
             // SRules.
             var rulesInDB = _context.FinanceOrderSRule.Where(p => p.OrderID == update.ID).ToList();
@@ -235,6 +251,13 @@ namespace hihapi.Controllers
                 }
             }
             catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check whether User assigned with the order's Home ID
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == entity.HomeID && p.User == usrName).CountAsync();
+            if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
             }

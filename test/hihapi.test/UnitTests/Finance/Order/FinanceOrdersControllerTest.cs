@@ -1,16 +1,16 @@
-﻿using System;
-using Xunit;
-using System.Linq;
-using hihapi.Models;
-using hihapi.Controllers;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.OData.Results;
-using hihapi.test.common;
-using Microsoft.AspNetCore.OData.Deltas;
+using System.Linq;
+using System.Threading.Tasks;
+using hihapi.Controllers;
 using hihapi.Exceptions;
+using hihapi.Models;
+using hihapi.test.common;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Deltas;
+using Microsoft.AspNetCore.OData.Results;
+using Xunit;
 
 namespace hihapi.unittest.Finance
 {
@@ -305,7 +305,7 @@ namespace hihapi.unittest.Finance
         public async Task TestCase_DeleteNonExistOrder(int hid, int norder)
         {
             var context = this.fixture.GetCurrentDataContext();
-            
+
             // Arrange
             this.fixture.InitHomeTestData(hid, context);
 
@@ -316,7 +316,7 @@ namespace hihapi.unittest.Finance
                 var rst = control.Delete(norder);
                 Assert.IsType<BadRequestResult>(rst);
             }
-            catch(Exception)
+            catch (Exception)
             {
             }
 
@@ -379,6 +379,118 @@ namespace hihapi.unittest.Finance
             {
                 Assert.IsType<BadRequestException>(exp);
             }
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task Put_RejectsHomeIDChange()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home1ID, context);
+
+            var control = new FinanceOrdersController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+
+            var order = new FinanceOrder();
+            order.Name = "HomeIDChangeTest";
+            order.HomeID = DataSetupUtility.Home1ID;
+            order.Comment = "HomeIDChangeTest";
+            order.ValidFrom = new DateTime(2021, 1, 1);
+            order.ValidTo = new DateTime(2023, 1, 1);
+            order.SRule.Add(new FinanceOrderSRule { RuleID = 1, ControlCenterID = DataSetupUtility.Home1ControlCenter1ID, Percent = 100 });
+            var createdId = Assert.IsType<CreatedODataResult<FinanceOrder>>(await control.Post(order)).Entity.ID;
+            this.listCreatedID.Add(createdId);
+
+            // Attempt to move it to Home 2 via PUT (must be rejected)
+            var update = new FinanceOrder
+            {
+                ID = createdId,
+                HomeID = DataSetupUtility.Home2ID,
+                Name = "HomeIDChangeTest",
+                Comment = "Changed",
+                ValidFrom = new DateTime(2021, 1, 1),
+                ValidTo = new DateTime(2023, 1, 1),
+            };
+            var rst = await control.Put(createdId, update);
+            Assert.IsType<BadRequestODataResult>(rst);
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task Put_RejectsCrossTenantWriteByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home2ID, context);
+
+            var control = new FinanceOrdersController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+            };
+            var order = new FinanceOrder();
+            order.Name = "CrossTenantTarget";
+            order.HomeID = DataSetupUtility.Home2ID;
+            order.Comment = "CrossTenantTarget";
+            order.ValidFrom = new DateTime(2021, 1, 1);
+            order.ValidTo = new DateTime(2023, 1, 1);
+            order.SRule.Add(new FinanceOrderSRule { RuleID = 1, ControlCenterID = DataSetupUtility.Home2ControlCenter1ID, Percent = 100 });
+            var createdId = Assert.IsType<CreatedODataResult<FinanceOrder>>(await control.Post(order)).Entity.ID;
+            this.listCreatedID.Add(createdId);
+
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+            var attack = new FinanceOrder
+            {
+                ID = createdId,
+                HomeID = DataSetupUtility.Home1ID,
+                Name = "Stolen",
+                Comment = "Stolen",
+                ValidFrom = new DateTime(2021, 1, 1),
+                ValidTo = new DateTime(2023, 1, 1),
+            };
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => control.Put(createdId, attack));
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task Patch_RejectsCrossTenantByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home2ID, context);
+
+            var control = new FinanceOrdersController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+            };
+            var order = new FinanceOrder();
+            order.Name = "PatchCrossTenantTarget";
+            order.HomeID = DataSetupUtility.Home2ID;
+            order.Comment = "PatchCrossTenantTarget";
+            order.ValidFrom = new DateTime(2021, 1, 1);
+            order.ValidTo = new DateTime(2023, 1, 1);
+            order.SRule.Add(new FinanceOrderSRule { RuleID = 1, ControlCenterID = DataSetupUtility.Home2ControlCenter1ID, Percent = 100 });
+            var createdId = Assert.IsType<CreatedODataResult<FinanceOrder>>(await control.Post(order)).Entity.ID;
+            this.listCreatedID.Add(createdId);
+
+            // UserA (NOT a member of Home 2) attempts to PATCH it
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+            Delta<FinanceOrder> delta = new Delta<FinanceOrder>();
+            delta.TrySetPropertyValue("Comment", "attacker");
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => control.Patch(createdId, delta));
 
             await context.DisposeAsync();
         }

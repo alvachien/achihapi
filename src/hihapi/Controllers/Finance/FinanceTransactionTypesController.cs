@@ -144,19 +144,35 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            // Check whether User assigned with specified Home ID
-            var hms = await _context.HomeMembers.Where(p => p.HomeID == update.HomeID && p.User == usrName).CountAsync();
+            // Find the existing record first - membership is checked against the EXISTING home,
+            // not the HomeID in the request body (prevents cross-tenant mass-assignment).
+            var existing = await _context.FinTransactionType.FindAsync(key);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            // Check whether User assigned with the existing Home ID
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == existing.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
             }
 
+            // Reject HomeID changes via PUT (incl. null <-> non-null)
+            if (update.HomeID != existing.HomeID)
+            {
+                return BadRequest("HomeID cannot be changed via PUT.");
+            }
+
             if (!update.IsValid(this._context))
                 throw new BadRequestException("Inputted Object IsValid failed");
 
-            update.UpdatedAt = DateTime.Now;
+            update.CreatedAt = existing.CreatedAt;
+            update.Createdby = existing.Createdby;
             update.Updatedby = usrName;
-            _context.Entry(update).State = EntityState.Modified;
+            update.UpdatedAt = DateTime.Now;
+            _context.Entry(existing).CurrentValues.SetValues(update);
             try
             {
                 await _context.SaveChangesAsync();

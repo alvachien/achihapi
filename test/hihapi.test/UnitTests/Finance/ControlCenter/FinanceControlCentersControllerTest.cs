@@ -1,14 +1,14 @@
-﻿using System;
-using Xunit;
-using System.Linq;
-using hihapi.Models;
-using hihapi.Controllers;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.OData.Results;
+using System.Linq;
+using System.Threading.Tasks;
+using hihapi.Controllers;
+using hihapi.Models;
 using hihapi.test.common;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Results;
+using Xunit;
 
 namespace hihapi.unittest.Finance
 {
@@ -21,6 +21,86 @@ namespace hihapi.unittest.Finance
         public FinanceControlCentersControllerTest(SqliteDatabaseFixture fixture)
         {
             this.fixture = fixture;
+        }
+
+        [Fact]
+        public async Task Put_RejectsHomeIDChange()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home1ID, context);
+
+            var control = new FinanceControlCentersController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+
+            var cc = new FinanceControlCenter
+            {
+                HomeID = DataSetupUtility.Home1ID,
+                Name = "HomeIDChangeTest",
+                Comment = "HomeIDChangeTest",
+                Owner = DataSetupUtility.UserA,
+                ParentID = null,
+            };
+            var createdId = Assert.IsType<CreatedODataResult<FinanceControlCenter>>(await control.Post(cc)).Entity.ID;
+            this.listCreatedID.Add(createdId);
+
+            // Attempt to move it to Home 2 via PUT (must be rejected)
+            var update = new FinanceControlCenter
+            {
+                ID = createdId,
+                HomeID = DataSetupUtility.Home2ID,
+                Name = "HomeIDChangeTest",
+                Comment = "Changed",
+                Owner = DataSetupUtility.UserA,
+                ParentID = null,
+            };
+            var rst = await control.Put(createdId, update);
+            Assert.IsType<BadRequestODataResult>(rst);
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task Put_RejectsCrossTenantWriteByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home2ID, context);
+
+            var control = new FinanceControlCentersController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+            };
+            var cc = new FinanceControlCenter
+            {
+                HomeID = DataSetupUtility.Home2ID,
+                Name = "CrossTenantTarget",
+                Comment = "CrossTenantTarget",
+                Owner = DataSetupUtility.UserB,
+                ParentID = null,
+            };
+            var createdId = Assert.IsType<CreatedODataResult<FinanceControlCenter>>(await control.Post(cc)).Entity.ID;
+            this.listCreatedID.Add(createdId);
+
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+            var attack = new FinanceControlCenter
+            {
+                ID = createdId,
+                HomeID = DataSetupUtility.Home1ID,
+                Name = "Stolen",
+                Comment = "Stolen",
+                Owner = DataSetupUtility.UserA,
+                ParentID = null,
+            };
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => control.Put(createdId, attack));
+
+            await context.DisposeAsync();
         }
 
         public void Dispose()
@@ -37,7 +117,7 @@ namespace hihapi.unittest.Finance
         public static TheoryData<ControlCenterTestData> TestData => new TheoryData<ControlCenterTestData>
         {
             new ControlCenterTestData()
-            {                
+            {
                 HomeID = DataSetupUtility.Home1ID,
                 Name = "Test 1",
                 Comment = "Test 1 Comment",

@@ -1,13 +1,13 @@
-﻿using System;
-using Xunit;
+using System;
 using System.Linq;
-using hihapi.Models;
-using hihapi.Controllers;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.OData.Results;
+using hihapi.Controllers;
+using hihapi.Models;
 using hihapi.test.common;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Results;
+using Xunit;
 
 namespace hihapi.unittest.Finance
 {
@@ -78,7 +78,7 @@ namespace hihapi.unittest.Finance
             // 2. Insert a new one.
             FinanceDocumentType ctgy = new FinanceDocumentType();
             ctgy.HomeID = hid;
-            ctgy.Name = name;            
+            ctgy.Name = name;
             ctgy.Comment = name;
             var postresult = await control.Post(ctgy);
             var createdResult = Assert.IsType<CreatedODataResult<FinanceDocumentType>>(postresult);
@@ -104,6 +104,97 @@ namespace hihapi.unittest.Finance
             // 5. Delete it
             var deleteresult = control.Delete(nctgyid);
             Assert.NotNull(deleteresult);
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task Put_RejectsHomeIDChange()
+        {
+            var context = fixture.GetCurrentDataContext();
+            var control = new FinanceDocumentTypesController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+
+            // Create a Home 1 doc type as UserA (a member of Home 1)
+            var ctgy = new FinanceDocumentType
+            {
+                HomeID = DataSetupUtility.Home1ID,
+                Name = "HomeIDChangeTest",
+                Comment = "HomeIDChangeTest",
+            };
+            var createdId = Assert.IsType<CreatedODataResult<FinanceDocumentType>>(await control.Post(ctgy)).Entity.ID;
+
+            try
+            {
+                // Attempt to move it to Home 2 via PUT (must be rejected)
+                var update = new FinanceDocumentType
+                {
+                    ID = createdId,
+                    HomeID = DataSetupUtility.Home2ID,
+                    Name = "HomeIDChangeTest",
+                    Comment = "Changed",
+                };
+                var rst = await control.Put(createdId, update);
+                Assert.IsType<BadRequestODataResult>(rst);
+            }
+            finally
+            {
+                control.ControllerContext = new ControllerContext()
+                {
+                    HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+                };
+                await control.Delete(createdId);
+            }
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task Put_RejectsCrossTenantWriteByNonMember()
+        {
+            var context = fixture.GetCurrentDataContext();
+
+            // UserB (sole member of Home 2) creates a doc type in Home 2
+            var control = new FinanceDocumentTypesController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+            };
+            var ctgy = new FinanceDocumentType
+            {
+                HomeID = DataSetupUtility.Home2ID,
+                Name = "CrossTenantTarget",
+                Comment = "CrossTenantTarget",
+            };
+            var createdId = Assert.IsType<CreatedODataResult<FinanceDocumentType>>(await control.Post(ctgy)).Entity.ID;
+
+            try
+            {
+                // UserA (NOT a member of Home 2) attempts to overwrite it, claiming Home 1 membership
+                control.ControllerContext = new ControllerContext()
+                {
+                    HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+                };
+                var attack = new FinanceDocumentType
+                {
+                    ID = createdId,
+                    HomeID = DataSetupUtility.Home1ID,
+                    Name = "Stolen",
+                    Comment = "Stolen",
+                };
+                await Assert.ThrowsAsync<UnauthorizedAccessException>(() => control.Put(createdId, attack));
+            }
+            finally
+            {
+                control.ControllerContext = new ControllerContext()
+                {
+                    HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+                };
+                await control.Delete(createdId);
+            }
 
             await context.DisposeAsync();
         }

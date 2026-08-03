@@ -1,16 +1,15 @@
-﻿using System;
-using Xunit;
-using System.Linq;
-using hihapi.Models;
-using hihapi.Controllers;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.OData.Results;
-using hihapi.test.common;
-using Microsoft.AspNetCore.OData.Deltas;
+using System.Linq;
+using System.Threading.Tasks;
+using hihapi.Controllers;
 using hihapi.Exceptions;
+using hihapi.Models;
+using hihapi.test.common;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Results;
+using Xunit;
 
 namespace hihapi.unittest.Finance
 {
@@ -23,6 +22,98 @@ namespace hihapi.unittest.Finance
         public FinancePlansControllerTest(SqliteDatabaseFixture fixture)
         {
             this.fixture = fixture;
+        }
+
+        [Fact]
+        public async Task Put_RejectsHomeIDChange()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home1ID, context);
+
+            var control = new FinancePlansController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+
+            var plan = new FinancePlan
+            {
+                HomeID = DataSetupUtility.Home1ID,
+                TranCurr = DataSetupUtility.Home1BaseCurrency,
+                Description = "HomeIDChangeTest",
+                StartDate = new DateTime(2021, 1, 1),
+                TargetDate = new DateTime(2022, 1, 1),
+                PlanType = FinancePlanTypeEnum.AccountCategory,
+                AccountCategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                TargetBalance = 10000,
+            };
+            var createdId = Assert.IsType<CreatedODataResult<FinancePlan>>(await control.Post(plan)).Entity.ID;
+            this.listCreatedID.Add(createdId);
+
+            // Attempt to move it to Home 2 via PUT (must be rejected)
+            var update = new FinancePlan
+            {
+                ID = createdId,
+                HomeID = DataSetupUtility.Home2ID,
+                TranCurr = DataSetupUtility.Home1BaseCurrency,
+                Description = "HomeIDChangeTest",
+                StartDate = new DateTime(2021, 1, 1),
+                TargetDate = new DateTime(2022, 1, 1),
+                PlanType = FinancePlanTypeEnum.AccountCategory,
+                AccountCategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                TargetBalance = 10000,
+            };
+
+            await Assert.ThrowsAsync<BadRequestException>(() => control.Put(createdId, update));
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task Put_RejectsCrossTenantWriteByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home2ID, context);
+
+            var control = new FinancePlansController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+            };
+            var plan = new FinancePlan
+            {
+                HomeID = DataSetupUtility.Home2ID,
+                TranCurr = DataSetupUtility.Home2BaseCurrency,
+                Description = "CrossTenantTarget",
+                StartDate = new DateTime(2021, 1, 1),
+                TargetDate = new DateTime(2022, 1, 1),
+                PlanType = FinancePlanTypeEnum.AccountCategory,
+                AccountCategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                TargetBalance = 10000,
+            };
+            var createdId = Assert.IsType<CreatedODataResult<FinancePlan>>(await control.Post(plan)).Entity.ID;
+            this.listCreatedID.Add(createdId);
+
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+            var attack = new FinancePlan
+            {
+                ID = createdId,
+                HomeID = DataSetupUtility.Home1ID,
+                TranCurr = DataSetupUtility.Home1BaseCurrency,
+                Description = "Stolen",
+                StartDate = new DateTime(2021, 1, 1),
+                TargetDate = new DateTime(2022, 1, 1),
+                PlanType = FinancePlanTypeEnum.AccountCategory,
+                AccountCategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                TargetBalance = 10000,
+            };
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => control.Put(createdId, attack));
+
+            await context.DisposeAsync();
         }
 
         public void Dispose()

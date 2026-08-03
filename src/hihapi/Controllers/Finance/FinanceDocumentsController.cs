@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,7 +22,7 @@ namespace hihapi.Controllers
         private readonly hihDataContext _context;
         private readonly ILogger<FinanceDocumentsController> _logger;
 
-        private Dictionary<String, Object> changableProperites = new Dictionary<string, object>();
+        private Dictionary<String, Object> changableProperites = new Dictionary<string, object>(StringComparer.Ordinal);
 
         public FinanceDocumentsController(hihDataContext context, ILogger<FinanceDocumentsController> logger)
         {
@@ -173,11 +173,25 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            // Check whether User assigned with specified Home ID
-            var hms = await _context.HomeMembers.Where(p => p.HomeID == update.HomeID && p.User == usrName).CountAsync();
+            // Find the existing record first - membership is checked against the EXISTING home,
+            // not the HomeID in the request body (prevents cross-tenant mass-assignment).
+            var existing = await _context.FinanceDocument.FindAsync(key);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            // Check whether User assigned with the existing Home ID
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == existing.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
+            }
+
+            // Reject HomeID changes via PUT
+            if (update.HomeID != existing.HomeID)
+            {
+                return BadRequest("HomeID cannot be changed via PUT.");
             }
 
             // Only allow change normal document: TranDate, Desp
@@ -187,9 +201,11 @@ namespace hihapi.Controllers
             if (!update.IsValid(this._context))
                 return BadRequest("Document verify failed");
 
+            update.CreatedAt = existing.CreatedAt;
+            update.Createdby = existing.Createdby;
             update.UpdatedAt = DateTime.Now;
             update.Updatedby = usrName;
-            _context.Entry(update).State = EntityState.Modified;
+            _context.Entry(existing).CurrentValues.SetValues(update);
 
             // Items
             var itemsInDB = _context.FinanceDocumentItem.Where(p => p.DocID == update.ID).AsNoTracking().ToList();
@@ -389,6 +405,13 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            // Check whether User assigned with the document's Home ID
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == entity.HomeID && p.User == usrName).CountAsync();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             // Do the validation.
             if (!(entity.DocType == FinanceDocumentType.DocType_Normal
                 || entity.DocType == FinanceDocumentType.DocType_Transfer))
@@ -434,7 +457,7 @@ namespace hihapi.Controllers
                 || createContext.DocumentInfo == null
                 || createContext.AccountInfo == null
                 || createContext.AccountInfo.HomeID <= 0
-                || createContext.AccountInfo.Status != (Byte)FinanceAccountStatus.Normal
+                || (FinanceAccountStatus)createContext.AccountInfo.Status != FinanceAccountStatus.Normal
                 || createContext.DocumentInfo.HomeID <= 0
                 || createContext.DocumentInfo.HomeID != createContext.AccountInfo.HomeID
                 || createContext.AccountInfo.ExtraDP == null
@@ -1027,7 +1050,7 @@ namespace hihapi.Controllers
                          select new { Status = account.Status, RefSellDoc = assetaccount.RefenceSoldDocumentID }).FirstOrDefault();
             if (query == null)
                 throw new NotFoundException("Asset account not found");
-            if (query.Status != (Byte)FinanceAccountStatus.Normal)
+            if ((FinanceAccountStatus)query.Status != FinanceAccountStatus.Normal)
             {
                 throw new BadRequestException("Account status is not normal");
             }
@@ -1176,7 +1199,7 @@ namespace hihapi.Controllers
                          select new { Status = account.Status, RefSellDoc = assetaccount.RefenceSoldDocumentID }).FirstOrDefault();
             if (query == null)
                 throw new NotFoundException("Asset account not found");
-            if (query.Status != (Byte)FinanceAccountStatus.Normal)
+            if ((FinanceAccountStatus)query.Status != FinanceAccountStatus.Normal)
             {
                 throw new BadRequestException("Account status is not normal");
             }
@@ -1518,17 +1541,39 @@ namespace hihapi.Controllers
         }
 
         [HttpGet]
-        public IActionResult IsChangable([FromODataUri] int key)
+        public async Task<IActionResult> IsChangable([FromODataUri] int key)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var doc = _context.FinanceDocument.Find(key);
+            var doc = await _context.FinanceDocument.FindAsync(key);
             if (doc == null)
             {
                 return NotFound();
+            }
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Check whether User assigned with the document's Home ID
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == doc.HomeID && p.User == usrName).CountAsync();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
             }
 
             return Ok(doc.IsChangeAllowed(_context));
