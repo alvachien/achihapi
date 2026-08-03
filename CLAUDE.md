@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 H.I.H. (Home Info. Hub) — an OData v4 Web API built on ASP.NET Core (`net10.0`) with EF Core + SQLite. The API serves as the backend for [achihui](https://github.com/alvachien/achihui), providing domains for Finance, Home management, Library, Blog, and Events.
 
+> **Temporarily disabled (2026-08-02):** The **Blog** and **Event** OData endpoints are shut down: their entity-set registrations are commented out in `Models/EdmModelBuilder.cs`, so they return **404**. The controllers, models, `hihDataContext` DbSets, and DB tables are preserved. UI entry points are also hidden (see `achihui`). Reversible.
+
 ## Build & Test Commands
 
 ```bash

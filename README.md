@@ -155,7 +155,9 @@ All controllers follow the OData convention: `GET /{Controller}`, `GET /{Control
 
 > **Authentication**: Endpoints marked with 🔒 require a valid JWT Bearer token in the `Authorization` header.
 
-### Blog
+### Blog _(temporarily disabled, 2026-08-02)_
+
+> **Disabled:** These OData endpoints return 404; the Blog entity-set registrations are commented out in `EdmModelBuilder.cs`. Controllers and DB tables are preserved. Reversible.
 
 | Controller | Methods | Auth | Home ID |
 |---|---|---|---|
@@ -174,7 +176,9 @@ All controllers follow the OData convention: `GET /{Controller}`, `GET /{Control
 | `DBVersions` | `GET`, `GET({key})`, `POST`, `GET GetRepeatedDates2(...)`, `POST GetRepeatedDates`, `POST GetRepeatedDatesWithAmount`, `POST GetRepeatedDatesWithAmountAndInterest` | 🔒 | — |
 | `Languages` | `GET`, `GET({key})` | — | — |
 
-### Event
+### Event _(temporarily disabled, 2026-08-02)_
+
+> **Disabled:** These OData endpoints return 404; the Event entity-set registrations are commented out in `EdmModelBuilder.cs`. Controllers and DB tables are preserved. Reversible.
 
 | Controller | Methods | Auth | Home ID |
 |---|---|---|---|
