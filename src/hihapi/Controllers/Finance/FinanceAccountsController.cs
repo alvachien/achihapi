@@ -491,10 +491,11 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
-            // 3. Check the account
+            // 3. Check the account - must belong to the verified home so a caller
+            // cannot close another home's account by supplying its AccountID.
             var acntDB = await _context.FinanceAccount.FindAsync(accountID);
             bool ret = false;
-            if (acntDB != null)
+            if (acntDB != null && acntDB.HomeID == hid)
             {
                 ret = acntDB.IsCloseAllowed(this._context);
 
@@ -552,10 +553,11 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
-            // 3. Check the account
+            // 3. Check the account - must belong to the verified home so a caller
+            // cannot settle against another home's account by supplying its AccountID.
             var acntDB = await _context.FinanceAccount.FindAsync(accountID);
             bool ret = true;
-            if (acntDB != null)
+            if (acntDB != null && acntDB.HomeID == hid)
             {
                 // 4. Check account status
                 if (acntDB.Status != FinanceAccountStatus.Normal)

@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Results;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
 
 namespace hihapi.unittest.Finance
@@ -20,6 +23,7 @@ namespace hihapi.unittest.Finance
     {
         private SqliteDatabaseFixture fixture = null;
         private List<int> listCreatedID = new List<int>();
+        private List<int> listCreatedDocs = new List<int>();
 
         public FinanceAccountsControllerTest(SqliteDatabaseFixture fixture)
         {
@@ -150,6 +154,130 @@ namespace hihapi.unittest.Finance
             await context.DisposeAsync();
         }
 
+        [Fact]
+        public async Task CloseAccount_RejectsCrossTenantByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home1ID, context);
+
+            // UserA (member of Home 1) buys an Asset account in Home 1. IsCloseAllowed
+            // only permits Asset accounts, so this is the case the IDOR would exploit -
+            // closing a non-Asset account is a no-op and would not distinguish the fix.
+            var docControl = new FinanceDocumentsController(context, new Mock<ILogger<FinanceDocumentsController>>().Object);
+            docControl.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+            var buyContext = new FinanceAssetBuyDocumentCreateContext
+            {
+                HID = DataSetupUtility.Home1ID,
+                AccountOwner = DataSetupUtility.UserA,
+                ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                Desp = "CloseAccountIDOR asset",
+                TranAmount = 100000,
+                TranDate = new DateTime(2022, 1, 30),
+                TranCurr = DataSetupUtility.Home1BaseCurrency,
+                ExtraAsset = new FinanceAccountExtraAS
+                {
+                    CategoryID = DataSetupUtility.Home1AssetCategory1ID,
+                    Name = "CloseAccountIDOR asset",
+                },
+                Items = new List<FinanceDocumentItem>
+                {
+                    new FinanceDocumentItem
+                    {
+                        ItemID = 1,
+                        AccountID = DataSetupUtility.Home1CashAccount1ID,
+                        TranType = DataSetupUtility.TranType_Expense3,
+                        TranAmount = 100000,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                        Desp = "CloseAccountIDOR asset",
+                    }
+                },
+            };
+            var buyRst = Assert.IsType<OkObjectResult>(await docControl.PostAssetBuyDocument(buyContext));
+            var buyDoc = Assert.IsType<FinanceDocument>(buyRst.Value);
+            this.listCreatedDocs.Add(buyDoc.ID);
+
+            int assetAccountId = -1;
+            foreach (var item in buyDoc.Items)
+            {
+                if (item.TranType == FinanceTransactionType.TranType_OpeningAsset)
+                    assetAccountId = item.AccountID;
+            }
+            Assert.True(assetAccountId != -1);
+            this.listCreatedID.Add(assetAccountId);
+
+            // Sanity: the victim account is closeable (Asset + Normal).
+            var victim = context.FinanceAccount.AsNoTracking().First(a => a.ID == assetAccountId);
+            Assert.Equal(FinanceAccountCategory.AccountCategory_Asset, victim.CategoryID);
+            Assert.Equal(FinanceAccountStatus.Normal, (FinanceAccountStatus)victim.Status);
+
+            // UserB (member of Home 2, NOT Home 1) attempts to close the Home 1 asset
+            // account by claiming Home 2 membership and supplying the victim's AccountID.
+            var control = new FinanceAccountsController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+            };
+            var parameters = new ODataActionParameters
+            {
+                { "HomeID", DataSetupUtility.Home2ID },
+                { "AccountID", assetAccountId },
+            };
+
+            var rst = await control.CloseAccount(parameters);
+            var okRst = Assert.IsType<OkObjectResult>(rst);
+            Assert.False((bool)okRst.Value);
+
+            // The Home 1 asset account must remain Normal (the close must NOT have applied).
+            var after = context.FinanceAccount.AsNoTracking().First(a => a.ID == assetAccountId);
+            Assert.Equal(FinanceAccountStatus.Normal, (FinanceAccountStatus)after.Status);
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task SettleAccount_RejectsCrossTenantByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home1ID, context);
+            this.fixture.InitHomeTestData(DataSetupUtility.Home2ID, context);
+
+            // UserA (member of Home 1, NOT Home 2) attempts to settle against Home 2's
+            // cash account by claiming Home 1 membership and supplying the victim AccountID.
+            var control = new FinanceAccountsController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+            var parameters = new ODataActionParameters
+            {
+                { "HomeID", DataSetupUtility.Home1ID },
+                { "AccountID", DataSetupUtility.Home2CashAccount1ID },
+                { "ControlCenterID", DataSetupUtility.Home1ControlCenter1ID },
+                { "SettledDate", "2022-01-01" },
+                { "InitialAmount", 100m },
+                { "Currency", DataSetupUtility.Home1BaseCurrency },
+            };
+
+            var rst = await control.SettleAccount(parameters);
+
+            // The account belongs to Home 2, not the verified Home 1 -> must be rejected.
+            // With the binding fix this returns NotFound; without it, a cross-home document
+            // would be created in Home 1 referencing the Home 2 account.
+            Assert.IsType<NotFoundResult>(rst);
+
+            // No document may have been created in Home 1 referencing the Home 2 account.
+            var strayDoc = (from doc in context.FinanceDocument
+                            join item in context.FinanceDocumentItem on doc.ID equals item.DocID
+                            where doc.HomeID == DataSetupUtility.Home1ID && item.AccountID == DataSetupUtility.Home2CashAccount1ID
+                            select doc.ID).Any();
+            Assert.False(strayDoc);
+
+            await context.DisposeAsync();
+        }
+
         public void Dispose()
         {
             if (this.listCreatedID.Count > 0)
@@ -157,8 +285,14 @@ namespace hihapi.unittest.Finance
                 this.listCreatedID.ForEach(x => this.fixture.DeleteFinanceAccount(this.fixture.GetCurrentDataContext(), x));
 
                 this.listCreatedID.Clear();
-                this.fixture.GetCurrentDataContext().SaveChanges();
             }
+            if (this.listCreatedDocs.Count > 0)
+            {
+                this.listCreatedDocs.ForEach(x => this.fixture.DeleteFinanceDocument(this.fixture.GetCurrentDataContext(), x));
+
+                this.listCreatedDocs.Clear();
+            }
+            this.fixture.GetCurrentDataContext().SaveChanges();
         }
 
         [Theory]
