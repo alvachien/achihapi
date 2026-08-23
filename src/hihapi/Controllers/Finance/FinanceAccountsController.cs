@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using hihapi.Exceptions;
@@ -151,16 +152,24 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            // Check whether User assigned with specified Home ID
-            var hms = await _context.HomeMembers.Where(p => p.HomeID == update.HomeID && p.User == usrName).CountAsync();
+            // Find the existing record first - membership is checked against the EXISTING home,
+            // not the HomeID in the request body (prevents cross-tenant mass-assignment).
+            var account = await _context.FinanceAccount.FindAsync(key);
+            if (account == null)
+                return NotFound();
+
+            // Check whether User assigned with the existing Home ID
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == account.HomeID && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
             }
 
-            var account = await _context.FinanceAccount.FindAsync(key);
-            if (account == null)
-                return NotFound();
+            // Reject HomeID changes via PUT
+            if (update.HomeID != account.HomeID)
+            {
+                return BadRequest("HomeID cannot be changed via PUT.");
+            }
 
 
             if (!update.IsValid(this._context))
@@ -169,9 +178,11 @@ namespace hihapi.Controllers
             // Checks.
             // 1. Not changes to account category            
 
+            update.CreatedAt = account.CreatedAt;
+            update.Createdby = account.Createdby;
             update.Updatedby = usrName;
             update.UpdatedAt = DateTime.Now;
-            _context.Entry(update).State = EntityState.Modified;
+            _context.Entry(account).CurrentValues.SetValues(update);
             try
             {
                 await _context.SaveChangesAsync();
@@ -214,7 +225,9 @@ namespace hihapi.Controllers
                 {
                     throw new UnauthorizedAccessException();
                 }
-                if (String.CompareOrdinal(entity.Owner, usrName) != 0)
+                // Any member of the account's home may patch it (consistent with Put/Post).
+                var hms = await _context.HomeMembers.Where(p => p.HomeID == entity.HomeID && p.User == usrName).CountAsync();
+                if (hms <= 0)
                 {
                     throw new UnauthorizedAccessException();
                 }
@@ -478,10 +491,11 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
-            // 3. Check the account
+            // 3. Check the account - must belong to the verified home so a caller
+            // cannot close another home's account by supplying its AccountID.
             var acntDB = await _context.FinanceAccount.FindAsync(accountID);
             bool ret = false;
-            if (acntDB != null)
+            if (acntDB != null && acntDB.HomeID == hid)
             {
                 ret = acntDB.IsCloseAllowed(this._context);
 
@@ -515,7 +529,7 @@ namespace hihapi.Controllers
             Int32 hid = (Int32)parameters["HomeID"];
             Int32 accountID = (Int32)parameters["AccountID"];
             Int32 ccID = (Int32)parameters["ControlCenterID"];
-            DateTime dateSettle = DateTime.Parse((String)parameters["SettledDate"]);
+            DateTime dateSettle = DateTime.Parse((String)parameters["SettledDate"], CultureInfo.InvariantCulture);
             Decimal amt = (Decimal)parameters["InitialAmount"];
             String curr = (String)parameters["Currency"];
 
@@ -539,10 +553,11 @@ namespace hihapi.Controllers
             {
                 throw new UnauthorizedAccessException();
             }
-            // 3. Check the account
+            // 3. Check the account - must belong to the verified home so a caller
+            // cannot settle against another home's account by supplying its AccountID.
             var acntDB = await _context.FinanceAccount.FindAsync(accountID);
             bool ret = true;
-            if (acntDB != null)
+            if (acntDB != null && acntDB.HomeID == hid)
             {
                 // 4. Check account status
                 if (acntDB.Status != FinanceAccountStatus.Normal)
@@ -617,9 +632,10 @@ namespace hihapi.Controllers
                             await _context.SaveChangesAsync();
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        return BadRequest(ex.Message);
+                        // Don't leak ex.Message (DB/schema details) to the client.
+                        return BadRequest("Failed to create the opening balance document.");
                     }
                 }
             }

@@ -128,13 +128,20 @@ namespace hihapi.Controllers
 
             homedef.Createdby = usrName;
             homedef.CreatedAt = DateTime.Now;
+
+            // Check for duplicate name — T_HOMEDEF.NAME has a UNIQUE constraint
+            var nameExists = await _context.HomeDefines.AnyAsync(h => h.Name == homedef.Name);
+            if (nameExists)
+            {
+                throw new BadRequestException($"A Home Define with name '{homedef.Name}' already exists");
+            }
+
             foreach (var hmem in homedef.Members)
             {
                 hmem.CreatedAt = homedef.CreatedAt;
                 hmem.Createdby = usrName;
             }
             _context.HomeDefines.Add(homedef);
-
             await _context.SaveChangesAsync();
 
             return Created(homedef);
@@ -187,6 +194,14 @@ namespace hihapi.Controllers
             }
             else
             {
+                // Check for duplicate name — T_HOMEDEF.NAME has a UNIQUE constraint.
+                // Exclude the current record (renaming to the same name is a no-op).
+                var nameConflict = await _context.HomeDefines.AnyAsync(h => h.Name == update.Name && h.ID != key);
+                if (nameConflict)
+                {
+                    throw new BadRequestException($"A Home Define with name '{update.Name}' already exists");
+                }
+
                 update.Updatedby = usrName;
                 update.UpdatedAt = DateTime.Now;
                 update.CreatedAt = existinghd.CreatedAt;
@@ -196,7 +211,7 @@ namespace hihapi.Controllers
                 var dbmems = _context.HomeMembers.Where(p => p.HomeID == key).ToList();
                 foreach (var mem in update.Members)
                 {
-                    var memindb = dbmems.Find(p => p.HomeID == key && p.User == mem.User);
+                    var memindb = dbmems.Find(p => p.HomeID == key && string.Equals(p.User, mem.User, StringComparison.Ordinal));
                     if (memindb == null)
                     {
                         mem.Createdby = usrName;
@@ -212,7 +227,7 @@ namespace hihapi.Controllers
                 }
                 foreach (var mem in dbmems)
                 {
-                    var nmem = update.Members.FirstOrDefault(p => p.User == mem.User);
+                    var nmem = update.Members.FirstOrDefault(p => string.Equals(p.User, mem.User, StringComparison.Ordinal));
                     if (nmem == null)
                     {
                         _context.HomeMembers.Remove(mem);

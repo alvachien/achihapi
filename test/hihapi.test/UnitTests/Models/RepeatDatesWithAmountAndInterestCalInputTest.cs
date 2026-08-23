@@ -1,9 +1,5 @@
-﻿using hihapi.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using hihapi.Models;
 using Xunit;
 
 namespace hihapi.unittest.UnitTests.Models
@@ -20,7 +16,7 @@ namespace hihapi.unittest.UnitTests.Models
             Action act = () => vm.doVerify();
             // assert
             ArgumentException exception = Assert.Throws<ArgumentException>(act);
-            Assert.Contains("Total amount", exception.Message);
+            Assert.Contains("Total amount", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -35,7 +31,7 @@ namespace hihapi.unittest.UnitTests.Models
             Action act = () => vm.doVerify();
             // assert
             ArgumentException exception = Assert.Throws<ArgumentException>(act);
-            Assert.Contains("Interest-Free", exception.Message);
+            Assert.Contains("Interest-Free", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -50,7 +46,7 @@ namespace hihapi.unittest.UnitTests.Models
             Action act = () => vm.doVerify();
             // assert
             ArgumentException exception = Assert.Throws<ArgumentException>(act);
-            Assert.Contains("Interest rate", exception.Message);
+            Assert.Contains("Interest rate", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -67,7 +63,7 @@ namespace hihapi.unittest.UnitTests.Models
             Action act = () => vm.doVerify();
             // assert
             ArgumentException exception = Assert.Throws<ArgumentException>(act);
-            Assert.Contains("Total months", exception.Message);
+            Assert.Contains("Total months", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -84,7 +80,7 @@ namespace hihapi.unittest.UnitTests.Models
             Action act = () => vm.doVerify();
             // assert
             ArgumentException exception = Assert.Throws<ArgumentException>(act);
-            Assert.Contains("Total months", exception.Message);
+            Assert.Contains("Total months", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -100,7 +96,7 @@ namespace hihapi.unittest.UnitTests.Models
             Action act = () => vm.doVerify();
             // assert
             ArgumentException exception = Assert.Throws<ArgumentException>(act);
-            Assert.Contains("Payment method need interest", exception.Message);
+            Assert.Contains("Payment method need interest", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -116,7 +112,7 @@ namespace hihapi.unittest.UnitTests.Models
             Action act = () => vm.doVerify();
             // assert
             ArgumentException exception = Assert.Throws<ArgumentException>(act);
-            Assert.Contains("End date is mandatory", exception.Message);
+            Assert.Contains("End date is mandatory", exception.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -133,7 +129,7 @@ namespace hihapi.unittest.UnitTests.Models
             Action act = () => vm.doVerify();
             // assert
             ArgumentException exception = Assert.Throws<ArgumentException>(act);
-            Assert.Contains("End date", exception.Message);
+            Assert.Contains("End date", exception.Message, StringComparison.Ordinal);
         }
     }
 }

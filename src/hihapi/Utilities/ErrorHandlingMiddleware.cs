@@ -46,7 +46,13 @@ public class ErrorHandlingMiddleware
             logger.LogWarning(ex, "Handled exception: {ExceptionType}", ex.GetType().Name);
         }
 
-        var result = System.Text.Json.JsonSerializer.Serialize(new { error = ex.Message });
+        // For 500s, return a generic message and rely on the server-side log above
+        // (line 42) for details; never leak ex.Message for unhandled exceptions.
+        // For explicitly-handled 4xx types, ex.Message is intentional (e.g. validation).
+        var message = code == StatusCodes.Status500InternalServerError
+            ? "An internal server error occurred."
+            : ex.Message;
+        var result = System.Text.Json.JsonSerializer.Serialize(new { error = message });
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)code;
         return context.Response.WriteAsync(result);

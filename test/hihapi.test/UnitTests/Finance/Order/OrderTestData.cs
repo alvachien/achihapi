@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using Xunit.Sdk;
 using System.Text.Json;
 using hihapi.Models;
+using Xunit.Sdk;
 
 namespace hihapi.unittest.Finance
 {
@@ -45,7 +45,7 @@ namespace hihapi.unittest.Finance
         }
     }
 
-    public class OrderControllerTestData: IXunitSerializable
+    public class OrderControllerTestData : IXunitSerializable
     {
         public Int32 ID { get; set; }
         public Int32 HomeID { get; set; }

@@ -1,18 +1,16 @@
-﻿using System;
-using Xunit;
-using System.Threading.Tasks;
+using System;
 using System.Collections.Generic;
-using hihapi.Controllers;
-using Microsoft.AspNetCore.OData.Formatter;
-using hihapi.test.common;
-using hihapi.Exceptions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using System.Security.Cryptography;
-using Microsoft.OData.ModelBuilder;
-using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
+using hihapi.Controllers;
 using hihapi.Models;
+using hihapi.test.common;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
 
 namespace hihapi.unittest.Finance
 {
@@ -22,7 +20,6 @@ namespace hihapi.unittest.Finance
         private SqliteDatabaseFixture fixture = null;
         private List<int> listCreatedAccount = new List<int>();
         private List<int> listCreatedDocs = new List<int>();
-        private Boolean isDataPrepared = false;
 
         public FinanceReportsControllerTest2(SqliteDatabaseFixture fixture)
         {
@@ -43,16 +40,6 @@ namespace hihapi.unittest.Finance
                 this.fixture.GetCurrentDataContext().SaveChanges();
 
                 this.listCreatedDocs.Clear();
-            }
-        }
-
-        private void prepareData()
-        {
-            if (!isDataPrepared)
-            {
-                // documents already there
-                
-                isDataPrepared = true;
             }
         }
 
@@ -81,7 +68,7 @@ namespace hihapi.unittest.Finance
             var trantype = context.FinTransactionType
                 .Where(p => p.HomeID == null || p.HomeID == hid);
             Double amt = 0;
-            foreach(var di in docitems)
+            foreach (var di in docitems)
             {
                 var isexp = trantype.First(p => di.TranType == p.ID).Expense;
 
@@ -91,11 +78,11 @@ namespace hihapi.unittest.Finance
                     amt += (double)di.TranAmount;
             }
 
-            var balance = control.GetAccountBalance(parameters); 
+            var balance = control.GetAccountBalance(parameters);
             Assert.NotNull(balance);
             var balval = (double)((balance as OkObjectResult).Value);
             Assert.Equal(0.00, Math.Abs(Math.Round(amt - balval, 2)));
-            
+
             await context.DisposeAsync();
         }
 
@@ -127,7 +114,7 @@ namespace hihapi.unittest.Finance
                 listDates.Add(new DateTime(curyear - 1, 12, 31));
                 listDates.Add(new DateTime(curyear, 1, 31));
                 listDates.Add(new DateTime(curyear, 3, 1).AddDays(-1));
-            } 
+            }
             else
             {
                 listDates.Add(new DateTime(curyear, curmonth - 1, 1).AddDays(-1));
@@ -135,9 +122,9 @@ namespace hihapi.unittest.Finance
                 listDates.Add(new DateTime(curyear, curmonth + 1, 1).AddDays(-1));
             }
             List<String> listDateStrs = new List<string>();
-            foreach(var date in listDates)
+            foreach (var date in listDates)
             {
-                listDateStrs.Add(date.ToString("yyyy-MM-dd"));
+                listDateStrs.Add(date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
             }
             parameters.Add("SelectedDates", listDateStrs);
 
@@ -160,7 +147,7 @@ namespace hihapi.unittest.Finance
             foreach (var curdate in listDates)
             {
                 amt = 0;
-                foreach(var di in docitems)
+                foreach (var di in docitems)
                 {
                     if (di.DocumentHeader.TranDate >= lstdate && di.DocumentHeader.TranDate <= curdate)
                     {
@@ -176,7 +163,7 @@ namespace hihapi.unittest.Finance
                 dbbals.Add(new FinanceAccountBalancePerDate
                 {
                     BalanceDate = curdate,
-                    Balance =(decimal)amt,
+                    Balance = (decimal)amt,
                 });
                 lstdate = curdate;
             }
@@ -186,7 +173,7 @@ namespace hihapi.unittest.Finance
             var apibalsval = (apibals as OkObjectResult).Value as List<FinanceAccountBalancePerDate>;
             Assert.NotNull(apibalsval);
             Assert.Equal(dbbals.Count, apibalsval.Count);
-            
+
             //Assert.Equal(0.00, Math.Abs(amt - balval));
 
             await context.DisposeAsync();

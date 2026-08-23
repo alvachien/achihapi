@@ -89,12 +89,12 @@ namespace hihapi.Models
                 return false;
             if (Members.Count <= 0)
                 return false;
-            var self = Members.First(p => p.Relation == HomeMemberRelationType.Self);
+            var self = Members.FirstOrDefault(p => p.Relation == HomeMemberRelationType.Self);
             if (self == null)
                 return false;
             else
             {
-                if (self.User != this.Host)
+                if (!string.Equals(self.User, this.Host, StringComparison.Ordinal))
                     return false;
             }
 

@@ -1,15 +1,20 @@
-﻿using System;
-using Xunit;
-using System.Linq;
-using hihapi.Models;
-using hihapi.Controllers;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.OData.Results;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
+using hihapi.Controllers;
+using hihapi.Models;
 using hihapi.test.common;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Results;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
 
 namespace hihapi.unittest.Finance
 {
@@ -18,21 +23,276 @@ namespace hihapi.unittest.Finance
     {
         private SqliteDatabaseFixture fixture = null;
         private List<int> listCreatedID = new List<int>();
+        private List<int> listCreatedDocs = new List<int>();
 
         public FinanceAccountsControllerTest(SqliteDatabaseFixture fixture)
         {
             this.fixture = fixture;
         }
 
+        [Fact]
+        public async Task Put_RejectsHomeIDChange()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home1ID, context);
+
+            var control = new FinanceAccountsController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+
+            // Create a Home 1 account as UserA (a member of Home 1)
+            var acnt = new FinanceAccount
+            {
+                CategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                Name = "HomeIDChangeTest",
+                Owner = DataSetupUtility.UserA,
+                HomeID = DataSetupUtility.Home1ID,
+                Status = (byte)FinanceAccountStatus.Normal,
+                Comment = "HomeIDChangeTest",
+            };
+            var createdId = Assert.IsType<CreatedODataResult<FinanceAccount>>(await control.Post(acnt)).Entity.ID;
+            this.listCreatedID.Add(createdId);
+
+            // Attempt to move it to Home 2 via PUT (must be rejected)
+            var update = new FinanceAccount
+            {
+                ID = createdId,
+                HomeID = DataSetupUtility.Home2ID,
+                CategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                Name = "HomeIDChangeTest",
+                Owner = DataSetupUtility.UserA,
+                Status = (byte)FinanceAccountStatus.Normal,
+                Comment = "Changed",
+            };
+            var rst = await control.Put(createdId, update);
+            Assert.IsType<BadRequestODataResult>(rst);
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task Put_RejectsCrossTenantWriteByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home2ID, context);
+
+            // UserB (sole member of Home 2) creates an account in Home 2
+            var control = new FinanceAccountsController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+            };
+            var acnt = new FinanceAccount
+            {
+                CategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                Name = "CrossTenantTarget",
+                Owner = DataSetupUtility.UserB,
+                HomeID = DataSetupUtility.Home2ID,
+                Status = (byte)FinanceAccountStatus.Normal,
+                Comment = "CrossTenantTarget",
+            };
+            var createdId = Assert.IsType<CreatedODataResult<FinanceAccount>>(await control.Post(acnt)).Entity.ID;
+            this.listCreatedID.Add(createdId);
+
+            // UserA (NOT a member of Home 2) attempts to overwrite it, claiming Home 1 membership
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+            var attack = new FinanceAccount
+            {
+                ID = createdId,
+                HomeID = DataSetupUtility.Home1ID,
+                CategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                Name = "Stolen",
+                Owner = DataSetupUtility.UserA,
+                Status = (byte)FinanceAccountStatus.Normal,
+                Comment = "Stolen",
+            };
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => control.Put(createdId, attack));
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task Patch_RejectsCrossTenantByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home2ID, context);
+
+            // UserB (sole member of Home 2) creates an account in Home 2
+            var control = new FinanceAccountsController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+            };
+            var acnt = new FinanceAccount
+            {
+                CategoryID = FinanceAccountCategory.AccountCategory_Cash,
+                Name = "PatchCrossTenantTarget",
+                Owner = DataSetupUtility.UserB,
+                HomeID = DataSetupUtility.Home2ID,
+                Status = (byte)FinanceAccountStatus.Normal,
+                Comment = "PatchCrossTenantTarget",
+            };
+            var createdId = Assert.IsType<CreatedODataResult<FinanceAccount>>(await control.Post(acnt)).Entity.ID;
+            this.listCreatedID.Add(createdId);
+
+            // UserA (NOT a member of Home 2) attempts to PATCH it
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+            Delta<FinanceAccount> delta = new Delta<FinanceAccount>();
+            delta.TrySetPropertyValue("Comment", "attacker");
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => control.Patch(createdId, delta));
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task CloseAccount_RejectsCrossTenantByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home1ID, context);
+
+            // UserA (member of Home 1) buys an Asset account in Home 1. IsCloseAllowed
+            // only permits Asset accounts, so this is the case the IDOR would exploit -
+            // closing a non-Asset account is a no-op and would not distinguish the fix.
+            var docControl = new FinanceDocumentsController(context, new Mock<ILogger<FinanceDocumentsController>>().Object);
+            docControl.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+            var buyContext = new FinanceAssetBuyDocumentCreateContext
+            {
+                HID = DataSetupUtility.Home1ID,
+                AccountOwner = DataSetupUtility.UserA,
+                ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                Desp = "CloseAccountIDOR asset",
+                TranAmount = 100000,
+                TranDate = new DateTime(2022, 1, 30),
+                TranCurr = DataSetupUtility.Home1BaseCurrency,
+                ExtraAsset = new FinanceAccountExtraAS
+                {
+                    CategoryID = DataSetupUtility.Home1AssetCategory1ID,
+                    Name = "CloseAccountIDOR asset",
+                },
+                Items = new List<FinanceDocumentItem>
+                {
+                    new FinanceDocumentItem
+                    {
+                        ItemID = 1,
+                        AccountID = DataSetupUtility.Home1CashAccount1ID,
+                        TranType = DataSetupUtility.TranType_Expense3,
+                        TranAmount = 100000,
+                        ControlCenterID = DataSetupUtility.Home1ControlCenter1ID,
+                        Desp = "CloseAccountIDOR asset",
+                    }
+                },
+            };
+            var buyRst = Assert.IsType<OkObjectResult>(await docControl.PostAssetBuyDocument(buyContext));
+            var buyDoc = Assert.IsType<FinanceDocument>(buyRst.Value);
+            this.listCreatedDocs.Add(buyDoc.ID);
+
+            int assetAccountId = -1;
+            foreach (var item in buyDoc.Items)
+            {
+                if (item.TranType == FinanceTransactionType.TranType_OpeningAsset)
+                    assetAccountId = item.AccountID;
+            }
+            Assert.True(assetAccountId != -1);
+            this.listCreatedID.Add(assetAccountId);
+
+            // Sanity: the victim account is closeable (Asset + Normal).
+            var victim = context.FinanceAccount.AsNoTracking().First(a => a.ID == assetAccountId);
+            Assert.Equal(FinanceAccountCategory.AccountCategory_Asset, victim.CategoryID);
+            Assert.Equal(FinanceAccountStatus.Normal, (FinanceAccountStatus)victim.Status);
+
+            // UserB (member of Home 2, NOT Home 1) attempts to close the Home 1 asset
+            // account by claiming Home 2 membership and supplying the victim's AccountID.
+            var control = new FinanceAccountsController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+            };
+            var parameters = new ODataActionParameters
+            {
+                { "HomeID", DataSetupUtility.Home2ID },
+                { "AccountID", assetAccountId },
+            };
+
+            var rst = await control.CloseAccount(parameters);
+            var okRst = Assert.IsType<OkObjectResult>(rst);
+            Assert.False((bool)okRst.Value);
+
+            // The Home 1 asset account must remain Normal (the close must NOT have applied).
+            var after = context.FinanceAccount.AsNoTracking().First(a => a.ID == assetAccountId);
+            Assert.Equal(FinanceAccountStatus.Normal, (FinanceAccountStatus)after.Status);
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task SettleAccount_RejectsCrossTenantByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home1ID, context);
+            this.fixture.InitHomeTestData(DataSetupUtility.Home2ID, context);
+
+            // UserA (member of Home 1, NOT Home 2) attempts to settle against Home 2's
+            // cash account by claiming Home 1 membership and supplying the victim AccountID.
+            var control = new FinanceAccountsController(context);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+            var parameters = new ODataActionParameters
+            {
+                { "HomeID", DataSetupUtility.Home1ID },
+                { "AccountID", DataSetupUtility.Home2CashAccount1ID },
+                { "ControlCenterID", DataSetupUtility.Home1ControlCenter1ID },
+                { "SettledDate", "2022-01-01" },
+                { "InitialAmount", 100m },
+                { "Currency", DataSetupUtility.Home1BaseCurrency },
+            };
+
+            var rst = await control.SettleAccount(parameters);
+
+            // The account belongs to Home 2, not the verified Home 1 -> must be rejected.
+            // With the binding fix this returns NotFound; without it, a cross-home document
+            // would be created in Home 1 referencing the Home 2 account.
+            Assert.IsType<NotFoundResult>(rst);
+
+            // No document may have been created in Home 1 referencing the Home 2 account.
+            var strayDoc = (from doc in context.FinanceDocument
+                            join item in context.FinanceDocumentItem on doc.ID equals item.DocID
+                            where doc.HomeID == DataSetupUtility.Home1ID && item.AccountID == DataSetupUtility.Home2CashAccount1ID
+                            select doc.ID).Any();
+            Assert.False(strayDoc);
+
+            await context.DisposeAsync();
+        }
+
         public void Dispose()
         {
             if (this.listCreatedID.Count > 0)
             {
-                this.listCreatedID.ForEach(x => this.fixture.DeleteFinanceAccount(this.fixture.GetCurrentDataContext(), x));                
+                this.listCreatedID.ForEach(x => this.fixture.DeleteFinanceAccount(this.fixture.GetCurrentDataContext(), x));
 
                 this.listCreatedID.Clear();
-                this.fixture.GetCurrentDataContext().SaveChanges();
             }
+            if (this.listCreatedDocs.Count > 0)
+            {
+                this.listCreatedDocs.ForEach(x => this.fixture.DeleteFinanceDocument(this.fixture.GetCurrentDataContext(), x));
+
+                this.listCreatedDocs.Clear();
+            }
+            this.fixture.GetCurrentDataContext().SaveChanges();
         }
 
         [Theory]
@@ -80,7 +340,7 @@ namespace hihapi.unittest.Finance
             // 3. Create account
             FinanceAccount acnt = new FinanceAccount();
             acnt.CategoryID = ctgyid;
-            acnt.Name = user + ctgyid.ToString();
+            acnt.Name = user + ctgyid.ToString(CultureInfo.InvariantCulture);
             acnt.Owner = user;
             acnt.HomeID = hid;
             acnt.Status = (byte)FinanceAccountStatus.Normal;
@@ -95,7 +355,8 @@ namespace hihapi.unittest.Finance
             this.listCreatedID.Add(nacntid);
             // Verify it in DB.
             var dbacnts = (from dbacnt in context.FinanceAccount
-                          where dbacnt.ID == nacntid && dbacnt.HomeID == hid select dbacnt).ToList();
+                           where dbacnt.ID == nacntid && dbacnt.HomeID == hid
+                           select dbacnt).ToList();
             Assert.Single(dbacnts);
             Assert.Equal(acnt.Name, dbacnts[0].Name);
             Assert.Equal(acnt.Owner, dbacnts[0].Owner);

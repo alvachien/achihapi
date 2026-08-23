@@ -55,6 +55,35 @@ dotnet_diagnostic.IDE0079.severity = warning
 # CA1050: Declare types in namespaces
 dotnet_diagnostic.CA1050.severity = none
 
+# Meziantou.Analyzer - rules suppressed for this project (with rationale):
+# MA0004: Use Task.ConfigureAwait(false) - N/A in ASP.NET Core; there is no SynchronizationContext,
+#         so ConfigureAwait(false) is a no-op. Suppressing project-wide is standard ASP.NET Core practice.
+dotnet_diagnostic.MA0004.severity = none
+# MA0047: Declare type in a namespace - duplicate of CA1050 (suppressed above); the flagged middleware
+#         types are referenced by their fully-qualified name and are global by design.
+dotnet_diagnostic.MA0047.severity = none
+# MA0048: File name must match type name - the project intentionally groups related types
+#         (entity + enum + helper records) per file; e.g. FinanceReport.cs holds ~12 related types.
+#         This is the established pattern across Models/, so the rule is noise here.
+dotnet_diagnostic.MA0048.severity = none
+# MA0016: Prefer collection abstraction over implementation - EF Core navigation properties and API
+#         models require concrete List<T>/HashSet<T> (EF needs a settable concrete collection).
+#         Abstracting them adds no value and can break EF materialization.
+dotnet_diagnostic.MA0016.severity = none
+# MA0051: Method is too long - the flagged methods are structural and large by nature:
+#         hihDataContext.OnModelCreating (535 lines of EF Core config), EdmModelBuilder (305),
+#         CommonUtility SQL builders (190-223). Refactoring is large and risky (could subtly change
+#         EF model mapping / break tests) and is tracked as deferred follow-up work.
+dotnet_diagnostic.MA0051.severity = none
+# MA0015: Use ArgumentException overload with the parameter name - the rule requires the paramName to
+#         be an actual method parameter, but the codebase validates object STATE (properties) with
+#         ArgumentException in many places (e.g. RepeatedDatesWithAmountAndInterestCalInput.doVerify
+#         validates TotalAmount/InterestRate/etc. - no matching method param exists; nameof(property)
+#         is itself rejected by the rule as "not a valid parameter name"). Satisfying the rule would
+#         mean changing exception types to InvalidOperationException across ~35 sites, risking callers
+#         and tests for a debuggability-only nicety. Suppressed; high-value rules below remain active.
+dotnet_diagnostic.MA0015.severity = none
+
 # CA1869: Avoid creating multiple JSON serializers for same type
 dotnet_diagnostic.CA1869.severity = suggestion
 

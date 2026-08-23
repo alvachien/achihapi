@@ -1,9 +1,9 @@
-﻿using Xunit;
 using System.Linq;
-using hihapi.Models;
-using hihapi.Controllers;
 using System.Threading.Tasks;
+using hihapi.Controllers;
+using hihapi.Models;
 using Microsoft.AspNetCore.Mvc;
+using Xunit;
 
 namespace hihapi.unittest.Common
 {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.Authorization;

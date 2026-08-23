@@ -1,4 +1,4 @@
-﻿namespace hihapi.Models
+namespace hihapi.Models
 {
     public class PhotoFileUploadResult
     {

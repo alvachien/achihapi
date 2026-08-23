@@ -85,7 +85,8 @@ if (builder.Environment.IsDevelopment())
 
             options.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateAudience = false
+                ValidateAudience = true,
+                ValidAudience = jwtAudience
             };
         });
 }
@@ -176,6 +177,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

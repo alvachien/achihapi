@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using hihapi.Exceptions;
@@ -35,6 +35,7 @@ namespace hihapi.Controllers
         [HttpGet]
         public BlogUserSetting Get([FromODataUri] string key)
         {
+            _ = key;
             var usrName = HIHAPIUtility.GetAuthenticatedUserName(this);
             return _context.BlogUserSettings.Where(p => p.Owner == usrName).SingleOrDefault();
         }
@@ -42,6 +43,7 @@ namespace hihapi.Controllers
         [HttpPost]
         public IActionResult Post([FromBody] BlogUserSetting newsetting)
         {
+            _ = newsetting;
             // Not Yet possible
             return Forbid();
         }
@@ -49,6 +51,7 @@ namespace hihapi.Controllers
         [HttpPut]
         public async Task<IActionResult> Put([FromODataUri] string key, [FromBody] BlogUserSetting update)
         {
+            _ = key;
             if (!ModelState.IsValid)
             {
                 HIHAPIUtility.HandleModelStateError(ModelState);

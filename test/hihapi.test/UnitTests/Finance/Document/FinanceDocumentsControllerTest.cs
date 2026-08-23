@@ -1,19 +1,19 @@
-﻿using System;
-using Xunit;
-using System.Linq;
-using hihapi.Models;
-using hihapi.Controllers;
-using hihapi.Utilities;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.OData.Results;
-using Microsoft.AspNetCore.OData.Deltas;
-using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Threading.Tasks;
+using hihapi.Controllers;
+using hihapi.Models;
 using hihapi.test.common;
-using Moq;
+using hihapi.Utilities;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Deltas;
+using Microsoft.AspNetCore.OData.Results;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
 
 namespace hihapi.unittest.Finance
 {
@@ -144,6 +144,180 @@ namespace hihapi.unittest.Finance
             this.fixture = fixture;
         }
 
+        [Fact]
+        public async Task Put_RejectsHomeIDChange()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home1ID, context);
+            var mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
+
+            var control = new FinanceDocumentsController(context, mockLogger.Object);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+
+            // Create a Home 1 normal document as UserA
+            var doc = new FinanceDocument();
+            doc.HomeID = DataSetupUtility.Home1ID;
+            doc.DocType = FinanceDocumentType.DocType_Normal;
+            doc.Desp = "HomeIDChangeTest";
+            doc.TranCurr = DataSetupUtility.Home1BaseCurrency;
+            var item = new FinanceDocumentItem();
+            item.ItemID = 1;
+            item.AccountID = DataSetupUtility.Home1CashAccount1ID;
+            item.TranAmount = 100m;
+            item.TranType = DataSetupUtility.TranType_Income1;
+            item.Desp = "item1";
+            item.ControlCenterID = DataSetupUtility.Home1ControlCenter3ID;
+            doc.Items.Add(item);
+            var createdId = Assert.IsType<CreatedODataResult<FinanceDocument>>(await control.Post(doc)).Entity.ID;
+            this.listCreatedDocs.Add(createdId);
+
+            // Attempt to move it to Home 2 via PUT (must be rejected)
+            var update = new FinanceDocument
+            {
+                ID = createdId,
+                HomeID = DataSetupUtility.Home2ID,
+                DocType = FinanceDocumentType.DocType_Normal,
+                Desp = "HomeIDChangeTest",
+                TranCurr = DataSetupUtility.Home1BaseCurrency,
+            };
+            var rst = await control.Put(createdId, update);
+            Assert.IsType<BadRequestODataResult>(rst);
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task Put_RejectsCrossTenantWriteByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home2ID, context);
+            var mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
+
+            // UserB (sole member of Home 2) creates a normal document in Home 2
+            var control = new FinanceDocumentsController(context, mockLogger.Object);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+            };
+            var doc = new FinanceDocument();
+            doc.HomeID = DataSetupUtility.Home2ID;
+            doc.DocType = FinanceDocumentType.DocType_Normal;
+            doc.Desp = "CrossTenantTarget";
+            doc.TranCurr = DataSetupUtility.Home2BaseCurrency;
+            var item = new FinanceDocumentItem();
+            item.ItemID = 1;
+            item.AccountID = DataSetupUtility.Home2CashAccount1ID;
+            item.TranAmount = 200m;
+            item.TranType = DataSetupUtility.TranType_Income1;
+            item.Desp = "item1";
+            item.ControlCenterID = DataSetupUtility.Home2ControlCenter1ID;
+            doc.Items.Add(item);
+            var createdId = Assert.IsType<CreatedODataResult<FinanceDocument>>(await control.Post(doc)).Entity.ID;
+            this.listCreatedDocs.Add(createdId);
+
+            // UserA (NOT a member of Home 2) attempts to overwrite it, claiming Home 1 membership
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+            var attack = new FinanceDocument
+            {
+                ID = createdId,
+                HomeID = DataSetupUtility.Home1ID,
+                DocType = FinanceDocumentType.DocType_Normal,
+                Desp = "Stolen",
+                TranCurr = DataSetupUtility.Home1BaseCurrency,
+            };
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => control.Put(createdId, attack));
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task Patch_RejectsCrossTenantByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home2ID, context);
+            var mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
+
+            var control = new FinanceDocumentsController(context, mockLogger.Object);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+            };
+            var doc = new FinanceDocument();
+            doc.HomeID = DataSetupUtility.Home2ID;
+            doc.DocType = FinanceDocumentType.DocType_Normal;
+            doc.Desp = "PatchCrossTenantTarget";
+            doc.TranCurr = DataSetupUtility.Home2BaseCurrency;
+            var item = new FinanceDocumentItem();
+            item.ItemID = 1;
+            item.AccountID = DataSetupUtility.Home2CashAccount1ID;
+            item.TranAmount = 200m;
+            item.TranType = DataSetupUtility.TranType_Income1;
+            item.Desp = "item1";
+            item.ControlCenterID = DataSetupUtility.Home2ControlCenter1ID;
+            doc.Items.Add(item);
+            var createdId = Assert.IsType<CreatedODataResult<FinanceDocument>>(await control.Post(doc)).Entity.ID;
+            this.listCreatedDocs.Add(createdId);
+
+            // UserA (NOT a member of Home 2) attempts to PATCH it
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+            Delta<FinanceDocument> delta = new Delta<FinanceDocument>();
+            delta.TrySetPropertyValue("Desp", "attacker");
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => control.Patch(createdId, delta));
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task IsChangable_RejectsCrossTenantByNonMember()
+        {
+            var context = this.fixture.GetCurrentDataContext();
+            this.fixture.InitHomeTestData(DataSetupUtility.Home2ID, context);
+            var mockLogger = new Mock<ILogger<FinanceDocumentsController>>();
+
+            // UserB (sole member of Home 2) creates a normal document in Home 2
+            var control = new FinanceDocumentsController(context, mockLogger.Object);
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserB) }
+            };
+            var doc = new FinanceDocument();
+            doc.HomeID = DataSetupUtility.Home2ID;
+            doc.DocType = FinanceDocumentType.DocType_Normal;
+            doc.Desp = "IsChangableCrossTenantTarget";
+            doc.TranCurr = DataSetupUtility.Home2BaseCurrency;
+            var item = new FinanceDocumentItem();
+            item.ItemID = 1;
+            item.AccountID = DataSetupUtility.Home2CashAccount1ID;
+            item.TranAmount = 200m;
+            item.TranType = DataSetupUtility.TranType_Income1;
+            item.Desp = "item1";
+            item.ControlCenterID = DataSetupUtility.Home2ControlCenter1ID;
+            doc.Items.Add(item);
+            var createdId = Assert.IsType<CreatedODataResult<FinanceDocument>>(await control.Post(doc)).Entity.ID;
+            this.listCreatedDocs.Add(createdId);
+
+            // UserA (NOT a member of Home 2) probes editability -> must be blocked (no cross-tenant oracle)
+            control.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = DataSetupUtility.GetClaimForUser(DataSetupUtility.UserA) }
+            };
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => control.IsChangable(createdId));
+
+            await context.DisposeAsync();
+        }
+
         public void Dispose()
         {
             if (this.listCreatedAccount.Count > 0)
@@ -268,7 +442,7 @@ namespace hihapi.unittest.Finance
             Assert.NotNull(docitemviewrst);
 
             // 4. Do the changes to normal docs.
-            var changableResult = control.IsChangable(ndocid);
+            var changableResult = await control.IsChangable(ndocid);
             Assert.NotNull(changableResult);
 
             // 4.1 Change the desp
@@ -1393,7 +1567,7 @@ namespace hihapi.unittest.Finance
             loanContext.IsLegacy = true;
             loanContext.LegacyAmount = testdata.Amount;
             loanContext.ControlCenterID = testdata.ControlCenterID;
-            loanContext.OrderID = testdata.OrderID;            
+            loanContext.OrderID = testdata.OrderID;
             var acntLoan = new FinanceAccountExtraLoan()
             {
                 StartDate = testdata.StartDate,

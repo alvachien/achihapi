@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
-using Xunit;
+using System.Security.Claims;
 using hihapi.Models;
-using Microsoft.OData.Edm;
 using hihapi.Utilities;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.OData.Edm;
+using Xunit;
 
 namespace hihapi.unittest.Utility
 {
@@ -16,7 +18,7 @@ namespace hihapi.unittest.Utility
         {
             var results = CommonUtility.WorkoutRepeatedDates(datInput);
 
-            switch(datInput.RepeatType)
+            switch (datInput.RepeatType)
             {
                 case RepeatFrequency.Month:
                     Assert.Equal(12, results.Count);
@@ -329,7 +331,7 @@ namespace hihapi.unittest.Utility
 
                 case RepeatFrequency.Week:
                     Assert.Equal(4, results.Count);
-                    for(int i = 0; i < 4; i++)
+                    for (int i = 0; i < 4; i++)
                     {
                         Assert.Equal(300, results[i].TranAmount);
                     }
@@ -1073,7 +1075,7 @@ namespace hihapi.unittest.Utility
 
             var idx = 0;
             Decimal amtTotal = 0;
-            foreach(var rst in results)
+            foreach (var rst in results)
             {
                 if (idx == 0)
                 {
@@ -1168,7 +1170,7 @@ namespace hihapi.unittest.Utility
 
             // Total amount shall be equal
             decimal amttotalpaid = 0;
-            foreach(var rst in results)
+            foreach (var rst in results)
             {
                 amttotalpaid += rst.TranAmount;
             }
@@ -1195,16 +1197,16 @@ namespace hihapi.unittest.Utility
 
         public static IEnumerable<object[]> RepeatedDateTestingData => new List<object[]>
         {
-            new object[] 
-            { 
-                new RepeatDatesCalculationInput() 
+            new object[]
+            {
+                new RepeatDatesCalculationInput()
                 {
                     StartDate = new Date(2020, 1, 1),
                     EndDate = new Date(2020, 12, 31),
                     RepeatType = RepeatFrequency.Month
                 }
             },
-            new object[] 
+            new object[]
             {
                 new RepeatDatesCalculationInput()
                 {
@@ -1240,5 +1242,119 @@ namespace hihapi.unittest.Utility
                 }
             }
         };
+
+        #region GetUserID tests
+
+        // Minimal concrete controller for testing GetUserID / GetAuthenticatedUserName
+        private sealed class TestStubController : ControllerBase { }
+
+        private static ControllerBase BuildController(ClaimsPrincipal principal)
+        {
+            var ctrl = new TestStubController();
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = principal }
+            };
+            return ctrl;
+        }
+
+        [Fact]
+        public void GetUserID_ReturnsSubClaim_FromOidcJwt()
+        {
+            // Simulates a real Duende IdentityServer access token (no claim mapping)
+            var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim("sub", "user-guid-123"),
+                new Claim("name", "alvachien"),
+            }, "mock"));
+
+            var result = HIHAPIUtility.GetUserID(BuildController(principal));
+
+            Assert.Equal("user-guid-123", result);
+        }
+
+        [Fact]
+        public void GetUserID_FallsBackToNameIdentifier_WhenNoSubClaim()
+        {
+            // Simulates test mocks that use ClaimTypes.NameIdentifier
+            var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.Name, "TestUser"),
+                new Claim(ClaimTypes.NameIdentifier, "test-user-id"),
+            }, "mock"));
+
+            var result = HIHAPIUtility.GetUserID(BuildController(principal));
+
+            Assert.Equal("test-user-id", result);
+        }
+
+        [Fact]
+        public void GetUserID_PrefersSub_OverNameClaim()
+        {
+            // When both "sub" and "name" are present, "sub" (immutable) must win
+            var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim("sub", "immutable-guid"),
+                new Claim("name", "mutable-username"),
+            }, "mock"));
+
+            var result = HIHAPIUtility.GetUserID(BuildController(principal));
+
+            Assert.Equal("immutable-guid", result);
+        }
+
+        [Fact]
+        public void GetUserID_ReturnsEmpty_WhenNoSubjectClaim()
+        {
+            // Only "name" claim present (no "sub", no NameIdentifier) → should NOT
+            // fall back to the mutable username
+            var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim("name", "mutable-username"),
+            }, "mock"));
+
+            var result = HIHAPIUtility.GetUserID(BuildController(principal));
+
+            Assert.Equal(string.Empty, result);
+        }
+
+        [Fact]
+        public void GetUserID_ReturnsEmpty_WhenUserIsNull()
+        {
+            var ctrl = new TestStubController();
+            // No ControllerContext set → ctrl.User is null
+
+            var result = HIHAPIUtility.GetUserID(ctrl);
+
+            Assert.Equal(string.Empty, result);
+        }
+
+        [Fact]
+        public void GetAuthenticatedUserName_Throws_WhenNoSubjectClaim()
+        {
+            var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim("name", "mutable-username"),
+            }, "mock"));
+
+            Assert.Throws<UnauthorizedAccessException>(() =>
+                HIHAPIUtility.GetAuthenticatedUserName(BuildController(principal)));
+        }
+
+        [Fact]
+        public void GetAuthenticatedUserName_ReturnsSub_WhenPresent()
+        {
+            var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim("sub", "user-guid-456"),
+                new Claim("name", "alvachien"),
+            }, "mock"));
+
+            var result = HIHAPIUtility.GetAuthenticatedUserName(BuildController(principal));
+
+            Assert.Equal("user-guid-456", result);
+        }
+
+        #endregion
     }
 }

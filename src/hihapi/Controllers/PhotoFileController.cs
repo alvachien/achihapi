@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -49,6 +49,24 @@ namespace hihapi.Controllers
             return fullPath.StartsWith(uploadDir, StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Reduces a user identity to a path-safe token used to tag uploaded
+        /// filenames so ownership can be verified on delete without a DB table.
+        /// </summary>
+        private static string SanitizeUserName(string usrName)
+        {
+            if (string.IsNullOrWhiteSpace(usrName))
+                return string.Empty;
+
+            var sb = new System.Text.StringBuilder();
+            foreach (var ch in usrName)
+            {
+                if (char.IsLetterOrDigit(ch))
+                    sb.Append(ch);
+            }
+            return sb.ToString();
+        }
+
         // GET: api/PhotoFile
         [HttpGet]
         public IActionResult Get()
@@ -57,6 +75,11 @@ namespace hihapi.Controllers
         }
 
         // GET: api/PhotoFile/filename
+        // NOTE: Left [AllowAnonymous] because rendered markdown embeds these URLs as
+        // <img src>, which cannot carry a Bearer token. Requiring auth here would break
+        // every embedded blog/library image. The proper fix (authenticated image fetch
+        // via the auth interceptor + blob URLs) is coupled to the UI auth-flow work
+        // (UI-01/UI-02). The unguessable GUID filename is the current access control.
         [HttpGet("{filename}")]
         [AllowAnonymous]
         [ResponseCache(Duration = 864000)]
@@ -120,7 +143,11 @@ namespace hihapi.Controllers
                 if (file.Length > MaxFileSizeBytes)
                     return BadRequest("File too large: " + filename1);
 
-                var newfilename = Guid.NewGuid().ToString("N") + fileext;
+                // Tag the stored filename with the uploader so DELETE can verify ownership.
+                var sanitizedUser = SanitizeUserName(usrName);
+                if (string.IsNullOrEmpty(sanitizedUser))
+                    throw new UnauthorizedAccessException();
+                var newfilename = sanitizedUser + "_" + Guid.NewGuid().ToString("N") + fileext;
 
                 using (var fileStream = new FileStream(Path.Combine(HIHAPIUtility.UploadFolder, newfilename), FileMode.Create))
                 {
@@ -154,16 +181,35 @@ namespace hihapi.Controllers
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody] string value)
         {
+            _ = id;
+            _ = value;
             return Forbid();
         }
 
-        // DELETE: api/ApiWithActions/5
+        // DELETE: api/PhotoFile/{filename}
         [HttpDelete("{strfile}")]
         [Authorize]
         public IActionResult DeleteUploadedFile(String strfile)
         {
             if (!IsPathSafe(strfile))
                 return BadRequest("Invalid filename");
+
+            // Ownership: only the original uploader may delete a file. The uploader is
+            // encoded into the stored filename at upload time (see UploadPhotos).
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                    throw new UnauthorizedAccessException();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var sanitizedUser = SanitizeUserName(usrName);
+            if (string.IsNullOrEmpty(sanitizedUser) || !strfile.StartsWith(sanitizedUser + "_", StringComparison.Ordinal))
+                return Forbid();
 
             var fileFullPath = Path.Combine(HIHAPIUtility.UploadFolder, strfile);
 
@@ -180,7 +226,7 @@ namespace hihapi.Controllers
                 System.Diagnostics.Debug.WriteLine(exp.Message);
 #endif
 
-                return BadRequest(exp.Message);
+                return Problem("Failed to delete file.");
             }
 
             return Ok();

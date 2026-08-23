@@ -1,0 +1,20 @@
+# Test-project analyzer overrides (applies to the test/ subtree only).
+# Production code under src/ keeps these rules active; they are noise for test code here.
+
+[*.cs]
+
+# MA0099: Use explicit enum value instead of 0 - test fixtures assign enum members to Byte model fields
+#         (e.g. Status = (Byte)FinanceAccountStatus.Normal). The (Byte) cast is unavoidable for a Byte
+#         field, so the rule cannot be satisfied without changing the model field type (which would
+#         change the OData API surface). Suppressed in test data setup only.
+dotnet_diagnostic.MA0099.severity = none
+
+# xUnit1051: Use TestContext.Current.CancellationToken - pedantic modernization; existing tests do not
+#            plumb cancellation tokens through every async call. Suppressed in test code.
+dotnet_diagnostic.xUnit1051.severity = none
+
+# IDE0005: Remove unused usings - lowered to suggestion in test projects. The main project enforces this
+#          at build via GenerateDocumentationFile=true; test projects don't set that flag, which would
+#          otherwise trigger the EnableGenerateDocumentationFile compiler hint. `dotnet format` still
+#          cleans unused usings solution-wide.
+dotnet_diagnostic.IDE0005.severity = suggestion

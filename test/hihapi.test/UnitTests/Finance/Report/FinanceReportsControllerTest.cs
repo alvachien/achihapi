@@ -1,13 +1,13 @@
-﻿using System;
-using Xunit;
-using System.Threading.Tasks;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using hihapi.Controllers;
-using Microsoft.AspNetCore.OData.Formatter;
-using hihapi.test.common;
 using hihapi.Exceptions;
-using Microsoft.AspNetCore.Mvc;
+using hihapi.test.common;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Formatter;
+using Xunit;
 
 namespace hihapi.unittest.Finance
 {
@@ -146,7 +146,7 @@ namespace hihapi.unittest.Finance
 
             await context.DisposeAsync();
         }
-    
+
         [Fact]
         public async Task TestCase_GetReportByTranTypeMOM_InvalidModel()
         {
@@ -170,7 +170,7 @@ namespace hihapi.unittest.Finance
         [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home1ID, DataSetupUtility.TranType_Expense1, "1", false)]
         [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home1ID, DataSetupUtility.TranType_Expense2, "2", false)]
         [InlineData(DataSetupUtility.UserB, DataSetupUtility.Home1ID, DataSetupUtility.TranType_Expense2, "3", false)]
-        public async Task TestCase_ReportByTranTypeMOM(string user, int hid, int ttid, 
+        public async Task TestCase_ReportByTranTypeMOM(string user, int hid, int ttid,
             string period, Boolean? child)
         {
             var context = this.fixture.GetCurrentDataContext();

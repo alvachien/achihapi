@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Security.Claims;
 using hihapi.Exceptions;
@@ -41,19 +42,61 @@ namespace hihapi.Utilities
             throw new BadRequestException("Model State Failed: " + string.Join("; ", errors));
         }
 
+        /// <summary>
+        /// Gets the immutable user identifier from the authenticated user's claims.
+        /// <para>
+        /// Resolution order:
+        ///   1. "sub" — OIDC standard subject claim (Duende IdentityServer access tokens)
+        ///   2. ClaimTypes.NameIdentifier — used in test mocks
+        /// </para>
+        /// <para>
+        /// Does NOT fall back to the "name" claim, because the username is mutable
+        /// and must not be used as a stable identity key / foreign key in the database.
+        /// </para>
+        /// <remarks>
+        /// Root cause of the change (2026-06-24):
+        /// Previously this method returned the "name" claim (e.g. "alvachien"), which is
+        /// the mutable ASP.NET Core Identity username. However, the UI sends the immutable
+        /// subject ID (the "sub" GUID from IdentityServer) as the <c>User</c> field when
+        /// creating HomeMember records. This caused a mismatch:
+        /// <list type="bullet">
+        ///   <item>POST /HomeDefines stored Createdby = "alvachien" (from "name" claim),
+        ///         but Members[].User = "20e31ea5-..." (GUID from the UI).</item>
+        ///   <item>GET  /HomeDefines queried <c>WHERE hmem.User == usrName</c>, where
+        ///         usrName was resolved from the "name" claim ("alvachien"). Since the
+        ///         stored User was the GUID, the query returned no results — the home
+        ///         appeared to be created successfully (data was in the DB) but the UI
+        ///         showed nothing, with no error reported.</item>
+        /// </list>
+        /// The fix: always resolve the subject ID ("sub" claim) as the user identity.
+        /// This makes POST and GET use the same immutable value, and also protects
+        /// against future username changes breaking existing data references.
+        /// </remarks>
+        /// <returns>
+        /// The immutable user identifier (subject ID GUID). Returns
+        /// <see cref="string.Empty"/> when no subject claim is found; callers should
+        /// throw <see cref="UnauthorizedAccessException"/> in that case.
+        /// </returns>
         internal static String GetUserID(Microsoft.AspNetCore.Mvc.ControllerBase ctrl)
         {
             if (ctrl.User != null)
-                return ctrl.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                return ctrl.User.FindFirst("sub")?.Value
+                    ?? ctrl.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? String.Empty;
             return String.Empty;
         }
 
+        /// <summary>
+        /// Gets the immutable user identifier, throwing <see cref="UnauthorizedAccessException"/>
+        /// if the user is not authenticated or no subject claim is present.
+        /// See <see cref="GetUserID"/> for claim resolution details.
+        /// </summary>
         internal static String GetAuthenticatedUserName(Microsoft.AspNetCore.Mvc.ControllerBase ctrl)
         {
-            var userName = GetUserID(ctrl);
-            if (String.IsNullOrEmpty(userName))
+            var userId = GetUserID(ctrl);
+            if (String.IsNullOrEmpty(userId))
                 throw new UnauthorizedAccessException();
-            return userName;
+            return userId;
         }
 
         internal static string EnsureFolderExistence(String rootPath, String subFolders)
@@ -333,7 +376,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddDays(i),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + tdays.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + tdays.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }
@@ -355,7 +398,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddDays(i * 14),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + tfortnights.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + tfortnights.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }
@@ -376,7 +419,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddMonths(i * 6),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nhalfyear.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + nhalfyear.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }
@@ -396,7 +439,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddMonths(i),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nmonths.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + nmonths.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }
@@ -416,7 +459,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddMonths(i * 3),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nquarters.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + nquarters.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }
@@ -438,7 +481,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddDays(i * 7),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + tweeks.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + tweeks.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }
@@ -458,7 +501,7 @@ namespace hihapi.Utilities
                         {
                             TranDate = datInput.StartDate.AddYears(i),
                             TranAmount = tamt,
-                            Desp = datInput.Desp + " | " + (i + 1).ToString() + " / " + nyears.ToString()
+                            Desp = datInput.Desp + " | " + (i + 1).ToString(CultureInfo.InvariantCulture) + " / " + nyears.ToString(CultureInfo.InvariantCulture)
                         });
                     }
                 }

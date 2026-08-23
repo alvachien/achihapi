@@ -1,5 +1,5 @@
-﻿using System;
-using hihapi.Models.Event;
+using System;
+//using hihapi.Models.Event; // Event APIs disabled (temporary shutdown, 2026-08-02); uncomment when re-enabling the Event EDM block below.
 using hihapi.Models.Library;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
@@ -270,21 +270,24 @@ namespace hihapi.Models
             actionFinanceOverviewKeyfigure.Parameter<bool>("ExcludeTransfer");
             actionFinanceOverviewKeyfigure.ReturnsFromEntitySet<FinanceOverviewKeyFigure>("FinanceOverviewKeyFigure");
 
-            modelBuilder.EntitySet<BlogFormat>("BlogFormats");
-            modelBuilder.EntitySet<BlogUserSetting>("BlogUserSettings");
-            modelBuilder.EntitySet<BlogCollection>("BlogCollections");
-            modelBuilder.EntitySet<BlogPost>("BlogPosts");
-            modelBuilder.EntitySet<BlogPostCollection>("BlogPostCollections");
-            modelBuilder.EntitySet<BlogPostTag>("BlogPostTags");
-            // Functions in Blog part
-            var postentity = modelBuilder.EntityType<BlogPost>();
-            postentity.Function("Deploy")
-                    .Returns<string>();
-            postentity.Function("ClearDeploy")
-                    .Returns<string>();
-            var blogsetting = modelBuilder.EntityType<BlogUserSetting>();
-            blogsetting.Function("Deploy")
-                    .Returns<string>();
+            // Blog APIs disabled (temporary shutdown, 2026-08-02) - DB content preserved.
+            // Uncomment the block below to re-enable Blog OData endpoints (BlogFormats/BlogUserSettings/
+            // BlogCollections/BlogPosts/BlogPostCollections/BlogPostTags + Deploy/ClearDeploy functions).
+            //modelBuilder.EntitySet<BlogFormat>("BlogFormats");
+            //modelBuilder.EntitySet<BlogUserSetting>("BlogUserSettings");
+            //modelBuilder.EntitySet<BlogCollection>("BlogCollections");
+            //modelBuilder.EntitySet<BlogPost>("BlogPosts");
+            //modelBuilder.EntitySet<BlogPostCollection>("BlogPostCollections");
+            //modelBuilder.EntitySet<BlogPostTag>("BlogPostTags");
+            //// Functions in Blog part
+            //var postentity = modelBuilder.EntityType<BlogPost>();
+            //postentity.Function("Deploy")
+            //        .Returns<string>();
+            //postentity.Function("ClearDeploy")
+            //        .Returns<string>();
+            //var blogsetting = modelBuilder.EntityType<BlogUserSetting>();
+            //blogsetting.Function("Deploy")
+            //        .Returns<string>();
 
             // Library
             modelBuilder.EntitySet<LibraryPersonRole>("LibraryPersonRoles");
@@ -296,17 +299,19 @@ namespace hihapi.Models
             modelBuilder.EntitySet<LibraryBook>("LibraryBooks");
             modelBuilder.EntitySet<LibraryBookBorrowRecord>("LibraryBookBorrowRecords");
 
-            // Event
-            modelBuilder.EntitySet<NormalEvent>("NormalEvents");
-            modelBuilder.EntitySet<RecurEvent>("RecurEvents");
-            var normalEventEntity = modelBuilder.EntityType<NormalEvent>();
-            normalEventEntity.Property(c => c.StartDate).AsDate();
-            normalEventEntity.Property(c => c.EndDate).AsDate();
-            // Action: Mark as completed
-            var actionMarkAsCompleted = normalEventEntity.Collection.Action("MarkAsCompleted");
-            actionMarkAsCompleted.Parameter<int>("HomeID");
-            actionMarkAsCompleted.Parameter<int>("EventID");
-            actionMarkAsCompleted.Returns<bool>();
+            // Event APIs disabled (temporary shutdown, 2026-08-02) - DB content preserved.
+            // Uncomment the block below (and `using hihapi.Models.Event;` at the top of this file)
+            // to re-enable Event OData endpoints (NormalEvents/RecurEvents + MarkAsCompleted action).
+            //modelBuilder.EntitySet<NormalEvent>("NormalEvents");
+            //modelBuilder.EntitySet<RecurEvent>("RecurEvents");
+            //var normalEventEntity = modelBuilder.EntityType<NormalEvent>();
+            //normalEventEntity.Property(c => c.StartDate).AsDate();
+            //normalEventEntity.Property(c => c.EndDate).AsDate();
+            //// Action: Mark as completed
+            //var actionMarkAsCompleted = normalEventEntity.Collection.Action("MarkAsCompleted");
+            //actionMarkAsCompleted.Parameter<int>("HomeID");
+            //actionMarkAsCompleted.Parameter<int>("EventID");
+            //actionMarkAsCompleted.Returns<bool>();
             //// Action: Generate normal events
             //var recurEventEntity = modelBuilder.EntityType<RecurEvent>();
             //var actionGenerateNormalEvents = recurEventEntity.Collection.Action("GenerateNormalEvents");

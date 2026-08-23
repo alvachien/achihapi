@@ -109,6 +109,7 @@ namespace hihapi.Models
         }
         public bool IsCloseAllowed(hihDataContext context)
         {
+            _ = context;
             // Check category
             switch (CategoryID)
             {
@@ -217,7 +218,7 @@ namespace hihapi.Models
         public ICollection<FinanceTmpDPDocument> DPTmpDocs { get; set; }
         public FinanceAccount AccountHeader { get; set; }
 
-        public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
+        internal static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>(StringComparer.Ordinal);
         public FinanceAccountExtraDP() : base()
         {
             this.DPTmpDocs = new List<FinanceTmpDPDocument>();
@@ -254,7 +255,7 @@ namespace hihapi.Models
         public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountExtraDP oldAcnt,
             FinanceAccountExtraDP newAcnt)
         {
-            Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
+            Dictionary<String, Object> dictDelta = new Dictionary<string, object>(StringComparer.Ordinal);
             if (oldAcnt == null || newAcnt == null || Object.ReferenceEquals(oldAcnt, newAcnt)
                 || oldAcnt.AccountID != newAcnt.AccountID)
             {
@@ -267,11 +268,11 @@ namespace hihapi.Models
 
             Type t = typeof(FinanceAccountExtraDP);
             PropertyInfo[] listProperties = t.GetProperties();
-            var listSortedProperties = listProperties.OrderBy(o => o.Name);
+            var listSortedProperties = listProperties.OrderBy(o => o.Name, StringComparer.Ordinal);
 
             foreach (PropertyInfo item in listSortedProperties)
             {
-                if (item.Name == "Direct" || item.Name == "DefrrDays" || item.Name == "DPTmpDocs")
+                if (string.Equals(item.Name, "Direct", StringComparison.Ordinal) || string.Equals(item.Name, "DefrrDays", StringComparison.Ordinal) || string.Equals(item.Name, "DPTmpDocs", StringComparison.Ordinal))
                 {
                     continue;
                 }
@@ -302,51 +303,6 @@ namespace hihapi.Models
             }
 
             return dictDelta;
-        }
-        public static string WorkoutDeltaStringForUpdate(FinanceAccountExtraDP oldAcnt,
-            FinanceAccountExtraDP newAcnt)
-        {
-            var diffs = WorkoutDeltaForUpdate(oldAcnt, newAcnt);
-
-            List<String> listHeaderSqls = new List<string>();
-            foreach (var diff in diffs)
-            {
-                var dbfield = newAcnt.GetDBFieldName(diff.Key);
-
-                if (diff.Value == null)
-                {
-                    listHeaderSqls.Add("[" + dbfield + "] = NULL");
-                }
-                else
-                {
-                    if (diff.Value is DateTime)
-                        listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
-                    else if (diff.Value is Boolean)
-                        listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
-                    else if (diff.Value is String)
-                    {
-                        if (String.IsNullOrEmpty((string)diff.Value))
-                            listHeaderSqls.Add("[" + dbfield + "] = NULL");
-                        else
-                            listHeaderSqls.Add("[" + dbfield + "] = N'" + ((string)diff.Value).Replace("'", "''") + "'");
-                    }
-                    else if (diff.Value is Decimal)
-                    {
-                        if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
-                        {
-                            listHeaderSqls.Add("[" + dbfield + "] = NULL");
-                        }
-                        else
-                            listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
-                    }
-                    else
-                        listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
-                }
-            }
-
-            return listHeaderSqls.Count == 0 ?
-                String.Empty :
-                (@"UPDATE [t_fin_account_ext_dp] SET " + string.Join(",", listHeaderSqls) + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
         }
     }
 
@@ -393,7 +349,7 @@ namespace hihapi.Models
         public FinanceAccountExtraAS() : base()
         {
         }
-        public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
+        internal static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>(StringComparer.Ordinal);
         static FinanceAccountExtraAS()
         {
             dictFieldNames.Add("AccountID", "ACCOUNTID");
@@ -428,7 +384,7 @@ namespace hihapi.Models
         public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountExtraAS oldAcnt,
             FinanceAccountExtraAS newAcnt)
         {
-            Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
+            Dictionary<String, Object> dictDelta = new Dictionary<string, object>(StringComparer.Ordinal);
             if (oldAcnt == null || newAcnt == null || Object.ReferenceEquals(oldAcnt, newAcnt)
                 || oldAcnt.AccountID != newAcnt.AccountID)
             {
@@ -441,11 +397,11 @@ namespace hihapi.Models
 
             Type t = typeof(FinanceAccountExtraAS);
             PropertyInfo[] listProperties = t.GetProperties();
-            var listSortedProperties = listProperties.OrderBy(o => o.Name);
+            var listSortedProperties = listProperties.OrderBy(o => o.Name, StringComparer.Ordinal);
 
             foreach (PropertyInfo item in listSortedProperties)
             {
-                if (item.Name == "RefDocForSold")
+                if (string.Equals(item.Name, "RefDocForSold", StringComparison.Ordinal))
                 {
                     if (oldAcnt.RefenceSoldDocumentID.HasValue)
                     {
@@ -494,51 +450,6 @@ namespace hihapi.Models
             }
 
             return dictDelta;
-        }
-        public static string WorkoutDeltaStringForUpdate(FinanceAccountExtraAS oldAcnt,
-            FinanceAccountExtraAS newAcnt)
-        {
-            var diffs = WorkoutDeltaForUpdate(oldAcnt, newAcnt);
-
-            List<String> listHeaderSqls = new List<string>();
-            foreach (var diff in diffs)
-            {
-                var dbfield = newAcnt.GetDBFieldName(diff.Key);
-
-                if (diff.Value == null)
-                {
-                    listHeaderSqls.Add("[" + dbfield + "] = NULL");
-                }
-                else
-                {
-                    if (diff.Value is DateTime)
-                        listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
-                    else if (diff.Value is Boolean)
-                        listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
-                    else if (diff.Value is String)
-                    {
-                        if (String.IsNullOrEmpty((string)diff.Value))
-                            listHeaderSqls.Add("[" + dbfield + "] = NULL");
-                        else
-                            listHeaderSqls.Add("[" + dbfield + "] = N'" + ((string)diff.Value).Replace("'", "''") + "'");
-                    }
-                    else if (diff.Value is Decimal)
-                    {
-                        if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
-                        {
-                            listHeaderSqls.Add("[" + dbfield + "] = NULL");
-                        }
-                        else
-                            listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
-                    }
-                    else
-                        listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
-                }
-            }
-
-            return listHeaderSqls.Count == 0 ?
-                String.Empty :
-                (@"UPDATE [t_fin_account_ext_as] SET " + string.Join(",", listHeaderSqls) + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
         }
     }
 
@@ -592,7 +503,7 @@ namespace hihapi.Models
             this.LoanTmpDocs = new List<FinanceTmpLoanDocument>();
         }
 
-        public static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>();
+        internal static Dictionary<String, String> dictFieldNames = new Dictionary<string, string>(StringComparer.Ordinal);
         static FinanceAccountExtraLoan()
         {
             dictFieldNames.Add("AccountID", "ACCOUNTID");
@@ -644,7 +555,7 @@ namespace hihapi.Models
         public static Dictionary<String, Object> WorkoutDeltaForUpdate(FinanceAccountExtraLoan oldAcnt,
             FinanceAccountExtraLoan newAcnt)
         {
-            Dictionary<String, Object> dictDelta = new Dictionary<string, object>();
+            Dictionary<String, Object> dictDelta = new Dictionary<string, object>(StringComparer.Ordinal);
             if (oldAcnt == null || newAcnt == null || Object.ReferenceEquals(oldAcnt, newAcnt)
                 || oldAcnt.AccountID != newAcnt.AccountID)
             {
@@ -657,11 +568,11 @@ namespace hihapi.Models
 
             Type t = typeof(FinanceAccountExtraLoan);
             PropertyInfo[] listProperties = t.GetProperties();
-            var listSortedProperties = listProperties.OrderBy(o => o.Name);
+            var listSortedProperties = listProperties.OrderBy(o => o.Name, StringComparer.Ordinal);
 
             foreach (PropertyInfo item in listSortedProperties)
             {
-                if (item.Name == "LoanTmpDocs")
+                if (string.Equals(item.Name, "LoanTmpDocs", StringComparison.Ordinal))
                 {
                     continue;
                 }
@@ -738,50 +649,6 @@ namespace hihapi.Models
             }
 
             return dictDelta;
-        }
-        public static string WorkoutDeltaStringForUpdate(FinanceAccountExtraLoan oldAcnt,
-            FinanceAccountExtraLoan newAcnt)
-        {
-            var diffs = WorkoutDeltaForUpdate(oldAcnt, newAcnt);
-
-            List<String> listHeaderSqls = new List<string>();
-            foreach (var diff in diffs)
-            {
-                var dbfield = newAcnt.GetDBFieldName(diff.Key);
-
-                if (diff.Value is DateTime)
-                    listHeaderSqls.Add("[" + dbfield + "] = '" + ((DateTime)diff.Value).ToString("yyyy-MM-dd") + "'");
-                else if (diff.Value is Boolean)
-                    listHeaderSqls.Add("[" + dbfield + "] = " + (((Boolean)diff.Value) ? "1" : "NULL"));
-                else if (diff.Value is String)
-                {
-                    if (String.IsNullOrEmpty((string)diff.Value))
-                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
-                    else
-                        listHeaderSqls.Add("[" + dbfield + "] = N'" + ((string)diff.Value).Replace("'", "''") + "'");
-                }
-                else if (diff.Value is Decimal)
-                {
-                    if (Decimal.Compare((Decimal)diff.Value, 0) == 0)
-                    {
-                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
-                    }
-                    else
-                        listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
-                }
-                else
-                {
-                    if (diff.Value == null)
-                        listHeaderSqls.Add("[" + dbfield + "] = NULL");
-                    else
-                        listHeaderSqls.Add("[" + dbfield + "] = " + diff.Value.ToString());
-                }
-            }
-
-            return listHeaderSqls.Count == 0 ?
-                String.Empty :
-                (@"UPDATE [t_fin_account_ext_loan] SET " + string.Join(",", listHeaderSqls)
-                    + " WHERE [ACCOUNTID] = " + oldAcnt.AccountID.ToString());
         }
     }
 

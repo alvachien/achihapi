@@ -1,8 +1,8 @@
-﻿using System;
-using Xunit;
-using hihapi.Models;
+using System;
 using System.Threading.Tasks;
+using hihapi.Models;
 using hihapi.test.common;
+using Xunit;
 
 namespace hihapi.unittest.Finance
 {

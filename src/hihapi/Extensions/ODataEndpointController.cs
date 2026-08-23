@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.OData.Routing;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Hosting;
 
 namespace hihapi.Extensions
 {
@@ -18,14 +19,17 @@ namespace hihapi.Extensions
     public class ODataEndpointController : ControllerBase
     {
         private EndpointDataSource _dataSource;
+        private readonly IHostEnvironment _env;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ODataEndpointController" /> class.
         /// </summary>
         /// <param name="dataSource">The data source.</param>
-        public ODataEndpointController(EndpointDataSource dataSource)
+        /// <param name="env">The hosting environment.</param>
+        public ODataEndpointController(EndpointDataSource dataSource, IHostEnvironment env)
         {
             _dataSource = dataSource;
+            _env = env;
         }
 
         /// <summary>
@@ -35,6 +39,12 @@ namespace hihapi.Extensions
         [HttpGet("$odata")]
         public ContentResult GetAllRoutes()
         {
+            // Debug endpoint: expose the full route map only in Development.
+            if (!_env.IsDevelopment())
+            {
+                return new ContentResult { StatusCode = StatusCodes.Status404NotFound };
+            }
+
             StringBuilder nonSb = new StringBuilder();
             StringBuilder sb = new StringBuilder();
             foreach (var endpoint in _dataSource.Endpoints)

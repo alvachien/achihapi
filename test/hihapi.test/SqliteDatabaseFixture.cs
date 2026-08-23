@@ -1,7 +1,7 @@
-﻿using System;
+using System;
+using hihapi.test.common;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using hihapi.test.common;
 
 namespace hihapi.unittest
 {

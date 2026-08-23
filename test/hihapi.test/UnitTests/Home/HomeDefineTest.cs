@@ -1,5 +1,5 @@
-﻿using Xunit;
 using hihapi.Models;
+using Xunit;
 
 namespace hihapi.unittest.Home
 {
