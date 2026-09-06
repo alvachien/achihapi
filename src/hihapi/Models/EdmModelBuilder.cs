@@ -298,6 +298,10 @@ namespace hihapi.Models
             modelBuilder.EntitySet<LibraryBookLocation>("LibraryBookLocations");
             modelBuilder.EntitySet<LibraryBook>("LibraryBooks");
             modelBuilder.EntitySet<LibraryBookBorrowRecord>("LibraryBookBorrowRecords");
+            modelBuilder.EntitySet<LibraryBookReadingRecord>("LibraryBookReadingRecords");
+            var readingRecordEntity = modelBuilder.EntityType<LibraryBookReadingRecord>();
+            readingRecordEntity.Property(c => c.FromDate).AsDate();
+            readingRecordEntity.Property(c => c.ToDate).AsDate();
 
             // Event APIs disabled (temporary shutdown, 2026-08-02) - DB content preserved.
             // Uncomment the block below (and `using hihapi.Models.Event;` at the top of this file)

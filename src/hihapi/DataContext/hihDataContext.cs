@@ -62,6 +62,7 @@ namespace hihapi
         public DbSet<LibraryBookLocation> BookLocations { get; set; }
         public DbSet<LibraryBook> Books { get; set; }
         public DbSet<LibraryBookBorrowRecord> BookBorrowRecords { get; set; }
+        public DbSet<LibraryBookReadingRecord> BookReadingRecords { get; set; }
         public DbSet<NormalEvent> NormalEvents { get; set; }
         public DbSet<RecurEvent> RecurEvents { get; set; }
 

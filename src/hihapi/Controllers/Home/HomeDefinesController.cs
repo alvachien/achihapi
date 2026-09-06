@@ -307,6 +307,7 @@ namespace hihapi.Controllers
                 await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_EVENT WHERE HID=@hid", hidParam);
                 await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_EVENT_RECUR WHERE HID=@hid", hidParam);
                 await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_BOOK_BORROW_RECORD WHERE HID=@hid", hidParam);
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_BOOK_READING_RECORD WHERE HID=@hid", hidParam);
                 await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_BOOK_DEF WHERE HID=@hid", hidParam);
                 await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_BOOKCTGY_DEF WHERE HID=@hid", hidParam);
                 await _context.Database.ExecuteSqlRawAsync("DELETE FROM T_LIB_BOOKLOC_DEF WHERE HID=@hid", hidParam);

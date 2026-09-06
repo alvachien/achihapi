@@ -743,6 +743,21 @@ namespace hihapi.test.common
                 UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
 	            CONSTRAINT FK_t_lib_book_brwrd_HID FOREIGN KEY (HID) REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
             )");
+            // Reading record
+            database.ExecuteSqlRaw(@"CREATE TABLE t_lib_book_reading_record(
+	            ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+	            HID int NOT NULL,
+	            BOOK_ID int NOT NULL,
+	            USER nvarchar(40) NOT NULL,
+	            FROMDATE date NULL,
+	            TODATE date NULL,
+	            COMMENT nvarchar(50) NULL,
+                CREATEDBY   NVARCHAR (40) NULL,
+                CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY   NVARCHAR (40) NULL,
+                UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+	            CONSTRAINT FK_t_lib_book_rdrec_HID FOREIGN KEY (HID) REFERENCES t_homedef (ID) ON DELETE CASCADE ON UPDATE CASCADE
+            )");
             #endregion
 
             #region Event

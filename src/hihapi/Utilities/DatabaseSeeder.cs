@@ -12,6 +12,7 @@ namespace hihapi.Utilities
         {
             await context.Database.EnsureCreatedAsync();
 
+            EnsureRuntimeTables(context);
             SeedViews(context);
             SeedCurrencies(context);
             SeedLanguages(context);
@@ -24,6 +25,28 @@ namespace hihapi.Utilities
             SeedLibraryBookCategories(context);
 
             await context.SaveChangesAsync();
+        }
+
+        private static void EnsureRuntimeTables(hihDataContext context)
+        {
+            // Tables added after the first deployment: EnsureCreatedAsync() is a no-op
+            // on an existing hih.db, so new entities need an idempotent DDL pass here.
+            // On a fresh database EnsureCreatedAsync() has already created this table
+            // from the [Table]/[Column] annotations and IF NOT EXISTS makes this a
+            // no-op (SQLite matches object names case-insensitively).
+            context.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS T_LIB_BOOK_READING_RECORD (
+                ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+                HID         INTEGER       NOT NULL,
+                BOOK_ID     INTEGER       NOT NULL,
+                USER        NVARCHAR(40)  NOT NULL,
+                FROMDATE    DATE          NULL,
+                TODATE      DATE          NULL,
+                COMMENT     NVARCHAR(50)  NULL,
+                CREATEDBY   NVARCHAR(40)  NULL,
+                CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
+                UPDATEDBY   NVARCHAR(40)  NULL,
+                UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE
+            )");
         }
 
         private static void SeedViews(hihDataContext context)
@@ -348,14 +371,39 @@ namespace hihapi.Utilities
         private static void SeedLibraryBookCategories(hihDataContext context)
         {
             if (context.BookCategories.Any()) return;
+
+            // System-level book categories (HomeID = null). `Name` is the i18n key the UI
+            // resolves via transloco (Sys.BkCtgy.* in assets/i18n/{en,zh}.json), so every
+            // row here is already bilingual. `ParentID` forms the hierarchy (null = root).
+            // IDs are stable and referenced by t_lib_book_ctgy, so do not renumber existing
+            // ones (1-9, 21, 41, 51, 61); new rows use free slots in the same ranges.
             context.BookCategories.AddRange(
-                new LibraryBookCategory { Id = 1, Name = "Sys.BkCtgy.Novel", Comment = "Novel" },
-                new LibraryBookCategory { Id = 2, Name = "Sys.BkCtgy.SciFiction", Comment = "Sci Fiction", ParentID = 1 },
-                new LibraryBookCategory { Id = 3, Name = "Sys.BkCtgy.Romance", Comment = "Romance", ParentID = 1 },
-                new LibraryBookCategory { Id = 4, Name = "Sys.BkCtgy.Thriller", Comment = "悬疑类", ParentID = 1 },
-                new LibraryBookCategory { Id = 5, Name = "Sys.BkCtgy.DetectiveStory", Comment = "侦探、推理类", ParentID = 1 },
-                new LibraryBookCategory { Id = 6, Name = "Sys.BkCtgy.KungfuNovels", Comment = "武侠小说类", ParentID = 1 },
-                new LibraryBookCategory { Id = 7, Name = "Sys.BkCtgy.FantasyNovel", Comment = "玄幻小说类", ParentID = 1 }
+                // --- Roots (ParentID = null) ---
+                new LibraryBookCategory { Id = 1, Name = "Sys.BkCtgy.Novel", ParentID = null, Comment = null },
+                new LibraryBookCategory { Id = 21, Name = "Sys.BkCtgy.Computer", ParentID = null, Comment = null },
+                new LibraryBookCategory { Id = 41, Name = "Sys.BkCtgy.Education", ParentID = null, Comment = null },
+                new LibraryBookCategory { Id = 51, Name = "Sys.BkCtgy.ChildBk", ParentID = null, Comment = null },
+                new LibraryBookCategory { Id = 61, Name = "Sys.BkCtgy.Finance", ParentID = null, Comment = null },
+                new LibraryBookCategory { Id = 71, Name = "Sys.BkCtgy.History", ParentID = null, Comment = null },
+                new LibraryBookCategory { Id = 81, Name = "Sys.BkCtgy.ArtPt", ParentID = null, Comment = null },
+                new LibraryBookCategory { Id = 91, Name = "Sys.BkCtgy.Health", ParentID = null, Comment = null },
+                new LibraryBookCategory { Id = 101, Name = "Sys.BkCtgy.Cookbook", ParentID = null, Comment = null },
+                new LibraryBookCategory { Id = 111, Name = "Sys.BkCtgy.Reference", ParentID = null, Comment = null },
+                new LibraryBookCategory { Id = 121, Name = "Sys.BkCtgy.Comics", ParentID = null, Comment = null },
+                new LibraryBookCategory { Id = 131, Name = "Sys.BkCtgy.Travel", ParentID = null, Comment = null },
+                // --- Children of Novel (1) ---
+                new LibraryBookCategory { Id = 2, Name = "Sys.BkCtgy.SciFiction", ParentID = 1, Comment = null },
+                new LibraryBookCategory { Id = 3, Name = "Sys.BkCtgy.Romance", ParentID = 1, Comment = null },
+                new LibraryBookCategory { Id = 4, Name = "Sys.BkCtgy.Thriller", ParentID = 1, Comment = null },
+                new LibraryBookCategory { Id = 5, Name = "Sys.BkCtgy.DetectiveStory", ParentID = 1, Comment = null },
+                new LibraryBookCategory { Id = 6, Name = "Sys.BkCtgy.KungfuNovels", ParentID = 1, Comment = null },
+                new LibraryBookCategory { Id = 7, Name = "Sys.BkCtgy.FantasyNovel", ParentID = 1, Comment = null },
+                new LibraryBookCategory { Id = 8, Name = "Sys.BkCtgy.ChineseClassical", ParentID = 1, Comment = null },
+                new LibraryBookCategory { Id = 9, Name = "Sys.BkCtgy.WorldFamousBook", ParentID = 1, Comment = null },
+                // --- Other children ---
+                new LibraryBookCategory { Id = 62, Name = "Sys.BkCtgy.Accounting", ParentID = 61, Comment = null },
+                new LibraryBookCategory { Id = 72, Name = "Sys.BkCtgy.Bio", ParentID = 71, Comment = null },
+                new LibraryBookCategory { Id = 82, Name = "Sys.BkCtgy.CraftAndHobby", ParentID = 81, Comment = null }
             );
         }
     }

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using hihapi.Exceptions;
 using hihapi.Models.Library;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.Authorization;
@@ -73,6 +74,68 @@ namespace hihapi.Controllers.Library
                            select ord;
 
             return rstquery.SingleOrDefault();
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] LibraryBookLocation update)
+        {
+            if (!ModelState.IsValid)
+            {
+                HIHAPIUtility.HandleModelStateError(ModelState);
+            }
+
+            if (key != update.Id)
+            {
+                throw new BadRequestException("Inputted ID mismatched");
+            }
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Find the existing record first - membership is checked against the EXISTING home,
+            // not the HomeID in the request body (prevents cross-tenant mass-assignment).
+            var existing = await _context.BookLocations.FindAsync(key);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            // Check whether User assigned with the existing Home ID
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == existing.HomeID.Value && p.User == usrName).CountAsync();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Reject HomeID changes via PUT
+            if (update.HomeID != existing.HomeID)
+            {
+                return BadRequest("HomeID cannot be changed via PUT.");
+            }
+
+            update.CreatedAt = existing.CreatedAt;
+            update.Createdby = existing.Createdby;
+            update.UpdatedAt = DateTime.Now;
+            update.Updatedby = usrName;
+            _context.Entry(existing).CurrentValues.SetValues(update);
+
+            // A book location is a flat single-table entity (no many-to-many linkages),
+            // so no transaction or raw-SQL linkage sync is required.
+            await _context.SaveChangesAsync();
+
+            return Updated(update);
         }
 
         [HttpPost]

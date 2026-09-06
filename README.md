@@ -220,6 +220,7 @@ All controllers follow the OData convention: `GET /{Controller}`, `GET /{Control
 | `LibraryBookBorrowRecords` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
 | `LibraryBookCategories` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
 | `LibraryBookLocations` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
+| `LibraryBookReadingRecords` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
 | `LibraryOrganizations` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
 | `LibraryOrganizationTypes` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |
 | `LibraryPersons` | `GET`, `GET({key})`, `POST`, `DELETE({key})` | 🔒 | Query / Body |

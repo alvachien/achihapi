@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using hihapi.Exceptions;
 using hihapi.Models.Library;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.Authorization;
@@ -75,6 +77,113 @@ namespace hihapi.Controllers.Library
                            select ord;
 
             return rstquery.SingleOrDefault();
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> Put([FromODataUri] int key, [FromBody] LibraryBook update)
+        {
+            if (!ModelState.IsValid)
+            {
+                HIHAPIUtility.HandleModelStateError(ModelState);
+            }
+
+            if (key != update.Id)
+            {
+                throw new BadRequestException("Inputted ID mismatched");
+            }
+
+            // User
+            String usrName = String.Empty;
+            try
+            {
+                usrName = HIHAPIUtility.GetUserID(this);
+                if (String.IsNullOrEmpty(usrName))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Find the existing record first - membership is checked against the EXISTING home,
+            // not the HomeID in the request body (prevents cross-tenant mass-assignment).
+            var existing = await _context.Books.FindAsync(key);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            // Check whether User assigned with the existing Home ID
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == existing.HomeID && p.User == usrName).CountAsync();
+            if (hms <= 0)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            // Reject HomeID changes via PUT
+            if (update.HomeID != existing.HomeID)
+            {
+                return BadRequest("HomeID cannot be changed via PUT.");
+            }
+
+            update.CreatedAt = existing.CreatedAt;
+            update.Createdby = existing.Createdby;
+            update.UpdatedAt = DateTime.Now;
+            update.Updatedby = usrName;
+            _context.Entry(existing).CurrentValues.SetValues(update);
+
+            // The book <-> author/translator/press/category/location linkage tables have no
+            // DbSet (see Delete below), so they are reconciled via raw SQL within the same
+            // transaction: existing rows are cleared and the incoming set is re-inserted.
+            // The linkages carry no mutable scalar fields, so this is equivalent to a diff.
+            var param = new SqliteParameter("@id", key);
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_author WHERE BOOK_ID = @id", param);
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_ctgy WHERE BOOK_ID = @id", param);
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_location WHERE BOOK_ID = @id", param);
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_press WHERE BOOK_ID = @id", param);
+                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_book_translator WHERE BOOK_ID = @id", param);
+
+                InsertLinkages(update.BookAuthors?.Select(a => a.AuthorId) ?? Enumerable.Empty<int>(), key,
+                    "INSERT INTO t_lib_book_author (BOOK_ID, AUTHOR_ID) VALUES (@bookId, @foreignId)");
+                InsertLinkages(update.BookTranslators?.Select(t => t.TranslatorId) ?? Enumerable.Empty<int>(), key,
+                    "INSERT INTO t_lib_book_translator (BOOK_ID, TRANSLATOR_ID) VALUES (@bookId, @foreignId)");
+                InsertLinkages(update.BookPresses?.Select(p => p.PressId) ?? Enumerable.Empty<int>(), key,
+                    "INSERT INTO t_lib_book_press (BOOK_ID, PRESS_ID) VALUES (@bookId, @foreignId)");
+                InsertLinkages(update.BookCategories?.Select(c => c.CategoryId) ?? Enumerable.Empty<int>(), key,
+                    "INSERT INTO t_lib_book_ctgy (BOOK_ID, CTGY_ID) VALUES (@bookId, @foreignId)");
+                InsertLinkages(update.BookLocations?.Select(l => l.LocationId) ?? Enumerable.Empty<int>(), key,
+                    "INSERT INTO t_lib_book_location (BOOK_ID, LOCATION_ID) VALUES (@bookId, @foreignId)");
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+            return Updated(update);
+        }
+
+        // Inserts one row per foreign ID into a book linkage table. The SQL statement passed
+        // in is a constant string (no interpolation), so it is not subject to injection; the
+        // only variable values are the parameterized @bookId and @foreignId.
+        private void InsertLinkages(IEnumerable<int> foreignIds, int bookId, string insertSql)
+        {
+            foreach (var foreignId in foreignIds)
+            {
+                var bookParam = new SqliteParameter("@bookId", bookId);
+                var foreignParam = new SqliteParameter("@foreignId", foreignId);
+                _context.Database.ExecuteSqlRaw(insertSql, bookParam, foreignParam);
+            }
         }
 
         [HttpPost]
