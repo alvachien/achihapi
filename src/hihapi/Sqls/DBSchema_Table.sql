@@ -650,6 +650,29 @@ CREATE TABLE [t_lib_book_location](
 	CONSTRAINT [FK_lib_book_location_location] FOREIGN KEY([LOCATION_ID]) REFERENCES [t_lib_bookloc_def] ([ID])
 );
 
+/* Book reading records (added 2026-09-02; STATUS: 0=Reading, 1=Completed, 2=Aborted.
+ * FROMDATE/TODATE nullable for legacy rows; new records require FROMDATE server-side.
+ * The live SQLite schema in DatabaseSeeder declares no FKs - cascades are done in
+ * code (HomeDefines delete); the relations below document intent for this
+ * reference script only. */
+CREATE TABLE [t_lib_book_reading_record](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[HID] [int] NOT NULL,
+	[BOOK_ID] [int] NOT NULL,
+	[USER] [nvarchar](40) NOT NULL,
+	[FROMDATE] [date] NULL,
+	[TODATE] [date] NULL,
+	[COMMENT] [nvarchar](50) NULL,
+	[STATUS] [int] NOT NULL CONSTRAINT [DEF_t_lib_book_reading_STATUS] DEFAULT 0,
+    [CREATEDBY]       NVARCHAR (40)  NULL,
+    [CREATEDAT]       DATE           CONSTRAINT [DF_t_lib_book_reading_CREATEDAT] DEFAULT (getdate()) NULL,
+    [UPDATEDBY]       NVARCHAR (40)  NULL,
+    [UPDATEDAT]       DATE           CONSTRAINT [DF_t_lib_book_reading_UPDATEDAT] DEFAULT (getdate()) NULL,
+	CONSTRAINT [PK_t_lib_book_reading_record] PRIMARY KEY CLUSTERED  ( [ID] ASC ),
+	CONSTRAINT [FK_t_lib_book_reading_HID] FOREIGN KEY ([HID]) REFERENCES [t_homedef] ([ID]) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT [FK_lib_book_reading_book] FOREIGN KEY([BOOK_ID]) REFERENCES [t_lib_book_def] ([ID])
+);
+
 
 /*
  * Event

@@ -752,6 +752,7 @@ namespace hihapi.test.common
 	            FROMDATE date NULL,
 	            TODATE date NULL,
 	            COMMENT nvarchar(50) NULL,
+	            STATUS      int           NOT NULL DEFAULT 0,
                 CREATEDBY   NVARCHAR (40) NULL,
                 CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
                 UPDATEDBY   NVARCHAR (40) NULL,

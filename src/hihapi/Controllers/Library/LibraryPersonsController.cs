@@ -139,6 +139,9 @@ namespace hihapi.Controllers.Library
             // The person <-> role linkage table (t_lib_person_role) has no DbSet, so it is
             // reconciled via raw SQL within the same transaction: existing rows are cleared and
             // the incoming set is re-inserted. The linkage carries no mutable scalar fields.
+            var roleIds = await ResolveRoleIdsAsync(
+                update.PersonRoles?.Select(r => r.RoleId) ?? Enumerable.Empty<int>(), usrName);
+
             var param = new SqliteParameter("@id", key);
 
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -147,7 +150,7 @@ namespace hihapi.Controllers.Library
                 await _context.SaveChangesAsync();
 
                 _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_person_role WHERE PERSON_ID = @id", param);
-                InsertLinkages(update.PersonRoles?.Select(r => r.RoleId) ?? Enumerable.Empty<int>(), key,
+                InsertLinkages(roleIds, key,
                     "INSERT INTO t_lib_person_role (PERSON_ID, ROLE_ID) VALUES (@bookId, @foreignId)");
 
                 await transaction.CommitAsync();
@@ -172,6 +175,32 @@ namespace hihapi.Controllers.Library
                 var foreignParam = new SqliteParameter("@foreignId", foreignId);
                 _context.Database.ExecuteSqlRaw(insertSql, bookParam, foreignParam);
             }
+        }
+
+        // Keeps only role IDs that exist and are visible to the requesting user, mirroring
+        // LibraryPersonRolesController.Get (shared rows with HomeID == null, plus rows of any
+        // home the user is a member of). Blank linkage rows the UI used to submit arrive as
+        // RoleId 0; feeding them to EF (graph insert) or to the FK-constrained linkage table
+        // must not be possible.
+        private async Task<List<int>> ResolveRoleIdsAsync(IEnumerable<int> roleIds, string usrName)
+        {
+            var ids = (from rid in roleIds
+                       where rid > 0
+                       select rid).Distinct().ToList();
+            if (ids.Count == 0)
+            {
+                return ids;
+            }
+
+            var memberHomeIds = from hmem in _context.HomeMembers
+                                where hmem.User == usrName
+                                select hmem.HomeID;
+
+            return await _context.PersonRoles
+                .Where(r => ids.Contains(r.Id) &&
+                            (r.HomeID == null || memberHomeIds.Contains(r.HomeID.Value)))
+                .Select(r => r.Id)
+                .ToListAsync();
         }
 
         [HttpPost]
@@ -204,10 +233,40 @@ namespace hihapi.Controllers.Library
                 throw new UnauthorizedAccessException();
             }
 
+            // The linkage/join collections on an inbound entity must not enter the EF graph:
+            // rows with an unresolved RoleId (e.g. the blank assignment rows the UI sends as
+            // RoleId 0) crash SaveChanges with "The value of 'LibraryPersonRoleLinkage.RoleId'
+            // is unknown". Mirror Put: insert only the person row, then reconcile the validated
+            // linkage rows via raw SQL within the same transaction.
+            var roleIds = await ResolveRoleIdsAsync(
+                tbc.PersonRoles?.Select(r => r.RoleId) ?? Enumerable.Empty<int>(), usrName);
+            tbc.PersonRoles = null;
+            tbc.Roles = null;
+            tbc.CurrentHome = null;
+            tbc.WritenBooks = null;
+            tbc.WrittenBooksByAuthor = null;
+            tbc.TranslatedBooks = null;
+            tbc.TranslatedBooksByTranslator = null;
+
             tbc.CreatedAt = DateTime.Now;
             tbc.Createdby = usrName;
-            _context.Persons.Add(tbc);
-            await _context.SaveChangesAsync();
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _context.Persons.Add(tbc);
+                await _context.SaveChangesAsync();
+
+                InsertLinkages(roleIds, tbc.Id,
+                    "INSERT INTO t_lib_person_role (PERSON_ID, ROLE_ID) VALUES (@bookId, @foreignId)");
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
 
             return Created(tbc);
         }

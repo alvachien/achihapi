@@ -1,3 +1,5 @@
+using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using hihapi.Models;
@@ -42,11 +44,54 @@ namespace hihapi.Utilities
                 FROMDATE    DATE          NULL,
                 TODATE      DATE          NULL,
                 COMMENT     NVARCHAR(50)  NULL,
+                STATUS      INTEGER       NOT NULL DEFAULT 0,
                 CREATEDBY   NVARCHAR(40)  NULL,
                 CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
                 UPDATEDBY   NVARCHAR(40)  NULL,
                 UPDATEDAT   DATE          NULL DEFAULT CURRENT_DATE
             )");
+
+            // STATUS added after the reading-lifecycle feature: EnsureCreatedAsync never
+            // alters an existing table, so upgrade old hih.db files idempotently.
+            // DEFAULT 0 is the enum's Reading value - the least-damaging state for any
+            // row that forgets STATUS (an open record can still be finalized or aborted).
+            if (!ColumnExists(context, "T_LIB_BOOK_READING_RECORD", "STATUS"))
+            {
+                context.Database.ExecuteSqlRaw(
+                    @"ALTER TABLE T_LIB_BOOK_READING_RECORD ADD COLUMN STATUS INTEGER NOT NULL DEFAULT 0");
+
+                // Backfill the lifecycle state of legacy rows: the former IsValid
+                // required both dates, so TODATE IS NOT NULL -> Completed. The few
+                // NULL-ToDate rows from the era before dates became required stay
+                // open (Reading); they carry a NULL FromDate and are inert.
+                context.Database.ExecuteSqlRaw(
+                    @"UPDATE T_LIB_BOOK_READING_RECORD SET STATUS = 1 WHERE TODATE IS NOT NULL");
+            }
+        }
+
+        // pragma_table_info() is SQLite's table-valued form of PRAGMA table_info and
+        // accepts the table name as a bound parameter; column names compare
+        // case-insensitively via UPPER() on both sides.
+        private static bool ColumnExists(hihDataContext context, String table, String column)
+        {
+            var conn = context.Database.GetDbConnection();
+            if (conn.State != System.Data.ConnectionState.Open)
+            {
+                conn.Open();
+            }
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"SELECT COUNT(1) FROM pragma_table_info($t) WHERE UPPER(name) = UPPER($c)";
+            var pt = cmd.CreateParameter();
+            pt.ParameterName = "$t";
+            pt.Value = table;
+            cmd.Parameters.Add(pt);
+            var pc = cmd.CreateParameter();
+            pc.ParameterName = "$c";
+            pc.Value = column;
+            cmd.Parameters.Add(pc);
+
+            return Convert.ToInt64(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) > 0;
         }
 
         private static void SeedViews(hihDataContext context)
