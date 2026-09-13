@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using hihapi.Models;
@@ -102,6 +103,109 @@ namespace hihapi.integrationtest
             finally
             {
                 context.BookReadingRecords.RemoveRange(record, otherRecord);
+                context.HomeMembers.Remove(member);
+                await context.SaveChangesAsync();
+                await context.DisposeAsync();
+            }
+        }
+
+        // The unit tests invoke the controller methods directly, so the OData
+        // routing of the two lifecycle actions (registered as bound collection
+        // actions on the entity set) is only proven here over real HTTP.
+        [Fact]
+        public async Task ReadingLifecycle_Actions_RouteAndTransition()
+        {
+            var context = _factory.GetCurrentDataContext();
+
+            var member = new HomeMember
+            {
+                HomeID = DataSetupUtility.Home1ID,
+                User = TestAuthUserId,
+                Relation = HomeMemberRelationType.Self,
+                Createdby = TestAuthUserId,
+                CreatedAt = DateTime.Now,
+            };
+            var toComplete = new LibraryBookReadingRecord
+            {
+                HomeID = DataSetupUtility.Home1ID,
+                BookId = 11,
+                User = TestAuthUserId,
+                FromDate = new DateTime(2026, 8, 1),
+                Status = LibraryBookReadingStatus.Reading,
+                Comment = "IntegComplete",
+            };
+            var toAbort = new LibraryBookReadingRecord
+            {
+                HomeID = DataSetupUtility.Home1ID,
+                BookId = 12,
+                User = TestAuthUserId,
+                FromDate = new DateTime(2026, 8, 1),
+                Status = LibraryBookReadingStatus.Reading,
+                Comment = "IntegAbort",
+            };
+            context.HomeMembers.Add(member);
+            context.BookReadingRecords.AddRange(toComplete, toAbort);
+            await context.SaveChangesAsync();
+
+            try
+            {
+                // 1. CompleteReading with an end date -> 200, entity finalized.
+                var completeResp = await _client.PostAsync(
+                    "LibraryBookReadingRecords/CompleteReading",
+                    new StringContent(
+                        $"{{\"HomeID\":{DataSetupUtility.Home1ID},\"RecordID\":{toComplete.Id},\"ToDate\":\"2026-08-20\"}}",
+                        Encoding.UTF8, "application/json"));
+                Assert.Equal(HttpStatusCode.OK, completeResp.StatusCode);
+
+                using (var doc = JsonDocument.Parse(await completeResp.Content.ReadAsStringAsync()))
+                {
+                    var ent = doc.RootElement;
+                    // .AsDate() serialization: bare yyyy-MM-dd, as elsewhere.
+                    Assert.Equal("2026-08-20", ent.GetProperty("ToDate").GetString());
+                }
+
+                var stored = await context.BookReadingRecords.AsNoTracking()
+                    .FirstAsync(p => p.Id == toComplete.Id);
+                Assert.Equal(LibraryBookReadingStatus.Completed, stored.Status);
+
+                // 2. AbortReading without a ToDate (the key is omitted) -> 200.
+                var abortResp = await _client.PostAsync(
+                    "LibraryBookReadingRecords/AbortReading",
+                    new StringContent(
+                        $"{{\"HomeID\":{DataSetupUtility.Home1ID},\"RecordID\":{toAbort.Id}}}",
+                        Encoding.UTF8, "application/json"));
+                Assert.Equal(HttpStatusCode.OK, abortResp.StatusCode);
+
+                var aborted = await context.BookReadingRecords.AsNoTracking()
+                    .FirstAsync(p => p.Id == toAbort.Id);
+                Assert.Equal(LibraryBookReadingStatus.Aborted, aborted.Status);
+                Assert.Null(aborted.ToDate);
+
+                // 3. Completed is terminal: a second completion is refused.
+                var againResp = await _client.PostAsync(
+                    "LibraryBookReadingRecords/CompleteReading",
+                    new StringContent(
+                        $"{{\"HomeID\":{DataSetupUtility.Home1ID},\"RecordID\":{toComplete.Id},\"ToDate\":\"2026-08-25\"}}",
+                        Encoding.UTF8, "application/json"));
+                Assert.Equal(HttpStatusCode.BadRequest, againResp.StatusCode);
+
+                // 4. Status is readable through the normal OData query pipeline.
+                var getResp = await _client.GetAsync(
+                    $"LibraryBookReadingRecords({toComplete.Id})?$select=Id,Status");
+                Assert.Equal(HttpStatusCode.OK, getResp.StatusCode);
+                using (var doc = JsonDocument.Parse(await getResp.Content.ReadAsStringAsync()))
+                {
+                    var statusEl = doc.RootElement.GetProperty("Status");
+                    // Pinned wire format: the enum MEMBER NAME as a JSON string
+                    // (OData default, identical to FinanceAccountStatus today).
+                    // The UI's follow-up work must parse this shape.
+                    Assert.Equal(JsonValueKind.String, statusEl.ValueKind);
+                    Assert.Equal(nameof(LibraryBookReadingStatus.Completed), statusEl.GetString());
+                }
+            }
+            finally
+            {
+                context.BookReadingRecords.RemoveRange(toComplete, toAbort);
                 context.HomeMembers.Remove(member);
                 await context.SaveChangesAsync();
                 await context.DisposeAsync();

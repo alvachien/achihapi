@@ -298,10 +298,26 @@ namespace hihapi.Models
             modelBuilder.EntitySet<LibraryBookLocation>("LibraryBookLocations");
             modelBuilder.EntitySet<LibraryBook>("LibraryBooks");
             modelBuilder.EntitySet<LibraryBookBorrowRecord>("LibraryBookBorrowRecords");
+            modelBuilder.EnumType<LibraryBookReadingStatus>();
             modelBuilder.EntitySet<LibraryBookReadingRecord>("LibraryBookReadingRecords");
             var readingRecordEntity = modelBuilder.EntityType<LibraryBookReadingRecord>();
             readingRecordEntity.Property(c => c.FromDate).AsDate();
             readingRecordEntity.Property(c => c.ToDate).AsDate();
+            // Actions: finalize the reading lifecycle (Reading -> Completed / Aborted).
+            // Status is not client-settable: the server derives it on POST or flips it
+            // here. Dates travel as strings - precedent: SettleAccount's SettledDate.
+            var completeReadingAction = readingRecordEntity.Collection.Action("CompleteReading");
+            completeReadingAction.Parameter<int>("HomeID");
+            completeReadingAction.Parameter<int>("RecordID");
+            completeReadingAction.Parameter<string>("ToDate");
+            completeReadingAction.ReturnsFromEntitySet<LibraryBookReadingRecord>("LibraryBookReadingRecords");
+            var abortReadingAction = readingRecordEntity.Collection.Action("AbortReading");
+            abortReadingAction.Parameter<int>("HomeID");
+            abortReadingAction.Parameter<int>("RecordID");
+            // Optional for abort (an abandoned reading may have no end date):
+            // Nullable makes $metadata honest for external clients.
+            abortReadingAction.Parameter<string>("ToDate").Nullable = true;
+            abortReadingAction.ReturnsFromEntitySet<LibraryBookReadingRecord>("LibraryBookReadingRecords");
 
             // Event APIs disabled (temporary shutdown, 2026-08-02) - DB content preserved.
             // Uncomment the block below (and `using hihapi.Models.Event;` at the top of this file)
