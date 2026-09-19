@@ -318,6 +318,19 @@ namespace hihapi.Models
             // Nullable makes $metadata honest for external clients.
             abortReadingAction.Parameter<string>("ToDate").Nullable = true;
             abortReadingAction.ReturnsFromEntitySet<LibraryBookReadingRecord>("LibraryBookReadingRecords");
+            // Action: Library overview key figures (server-side aggregate for the
+            // overview landing page). Rankings travel as a collection complex
+            // property; the return entity set is materialized by the convention
+            // builder from the return type (precedent: GetFinanceOverviewKeyFigure).
+            var overviewKeyfigure = modelBuilder.EntityType<LibraryOverviewKeyFigure>();
+            overviewKeyfigure.HasKey(p => new
+            {
+                p.HomeID,
+            });
+            var bookEntity = modelBuilder.EntityType<LibraryBook>();
+            var actionLibraryOverviewKeyfigure = bookEntity.Collection.Action("GetLibraryOverviewKeyFigure");
+            actionLibraryOverviewKeyfigure.Parameter<int>("HomeID");
+            actionLibraryOverviewKeyfigure.ReturnsFromEntitySet<LibraryOverviewKeyFigure>("LibraryOverviewKeyFigure");
 
             // Event APIs disabled (temporary shutdown, 2026-08-02) - DB content preserved.
             // Uncomment the block below (and `using hihapi.Models.Event;` at the top of this file)

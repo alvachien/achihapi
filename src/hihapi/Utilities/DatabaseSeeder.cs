@@ -10,11 +10,35 @@ namespace hihapi.Utilities
 {
     public static class DatabaseSeeder
     {
+        // ── Version-based schema upgrade ──
+        // Versions 1-21 belong to the old SQL Server delta era (Sqls/Delta/v1.sql
+        // ... v21.sql, frozen 2022-09-30; never executed against SQLite). They are
+        // frozen history: a database whose T_DBVERSION table is still empty is
+        // baselined at LegacyBaselineVersion, after which every registered step
+        // above the stored maximum runs exactly once and stamps its version row.
+        // A schema change therefore means: add an idempotent step below and bump
+        // CurrentVersion - no delta script, anywhere.
+        // A throwing step fails startup before the API begins listening (fail
+        // fast); steps must be idempotent because a crash between a step and its
+        // version row makes the next start re-run it.
+        internal const Int32 LegacyBaselineVersion = 21;
+        public const Int32 CurrentVersion = 22;
+
+        private static readonly DateTime LegacyBaselineReleasedDate = new(2022, 9, 30);
+
+        internal readonly record struct SchemaUpgrade(Int32 Version, DateTime ReleasedDate, String Description, Action<hihDataContext> Apply);
+
+        internal static readonly SchemaUpgrade[] SchemaUpgrades =
+        {
+            new(22, new DateTime(2026, 9, 2), "Book reading records: table + STATUS lifecycle column",
+                EnsureReadingRecordSchema),
+        };
+
         public static async Task SeedAsync(hihDataContext context)
         {
-            await context.Database.EnsureCreatedAsync();
+            var freshDatabase = await context.Database.EnsureCreatedAsync();
 
-            EnsureRuntimeTables(context);
+            ApplySchemaVersions(context, freshDatabase);
             SeedViews(context);
             SeedCurrencies(context);
             SeedLanguages(context);
@@ -27,15 +51,60 @@ namespace hihapi.Utilities
             SeedLibraryBookCategories(context);
 
             await context.SaveChangesAsync();
+
+            // Must run after SaveChanges: the seed inserts above are what bring
+            // sqlite_sequence (and its per-table rows) into existence.
+            ReserveCustomerIdRanges(context);
         }
 
-        private static void EnsureRuntimeTables(hihDataContext context)
+        // Compare the stored version against the code's CurrentVersion and run every
+        // missing upgrade step in order, one T_DBVERSION row stamped per version.
+        private static void ApplySchemaVersions(hihDataContext context, Boolean freshDatabase)
         {
-            // Tables added after the first deployment: EnsureCreatedAsync() is a no-op
-            // on an existing hih.db, so new entities need an idempotent DDL pass here.
-            // On a fresh database EnsureCreatedAsync() has already created this table
-            // from the [Table]/[Column] annotations and IF NOT EXISTS makes this a
-            // no-op (SQLite matches object names case-insensitively).
+            var applied = context.DBVersions.Select(v => v.VersionID).ToList();
+            if (applied.Count == 0)
+            {
+                // Fresh: EnsureCreatedAsync just built the CURRENT schema from the
+                // model, so stamp it straight away - no historical step needs to run.
+                // Existing but unversioned: a pre-upgrade install. Baseline it at the
+                // last delta-era version and let the registered steps catch it up.
+                var baseline = freshDatabase ? CurrentVersion : LegacyBaselineVersion;
+                var baselineReleased = !freshDatabase ? LegacyBaselineReleasedDate
+                    : SchemaUpgrades.Length > 0 ? SchemaUpgrades[^1].ReleasedDate
+                    : DateTime.Today;
+                context.DBVersions.Add(new DBVersion
+                {
+                    VersionID = baseline,
+                    ReleasedDate = baselineReleased,
+                    AppliedDate = DateTime.Today,
+                });
+                applied.Add(baseline);
+                context.SaveChanges();
+            }
+
+            var maxApplied = applied.Max();
+            foreach (var upgrade in SchemaUpgrades.Where(u => u.Version > maxApplied).OrderBy(u => u.Version))
+            {
+                upgrade.Apply(context);
+
+                // Stamp right behind the step; a crash in between re-runs the
+                // (idempotent) step on the next start instead of skipping it.
+                context.DBVersions.Add(new DBVersion
+                {
+                    VersionID = upgrade.Version,
+                    ReleasedDate = upgrade.ReleasedDate,
+                    AppliedDate = DateTime.Today,
+                });
+                context.SaveChanges();
+            }
+        }
+
+        // v22 - tables added after the first deployment. On a fresh database
+        // EnsureCreatedAsync() has already created this table from the
+        // [Table]/[Column] annotations and IF NOT EXISTS makes this a no-op
+        // (SQLite matches object names case-insensitively).
+        private static void EnsureReadingRecordSchema(hihDataContext context)
+        {
             context.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS T_LIB_BOOK_READING_RECORD (
                 ID          INTEGER PRIMARY KEY AUTOINCREMENT,
                 HID         INTEGER       NOT NULL,
@@ -90,6 +159,96 @@ namespace hihapi.Utilities
             pc.ParameterName = "$c";
             pc.Value = column;
             cmd.Parameters.Add(pc);
+
+            return Convert.ToInt64(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) > 0;
+        }
+
+        // ── ID-range separation (system-delivered vs. customer-created) ──
+        // System configuration rows carry explicit IDs below this boundary;
+        // customer-created rows take IDs from the table's SQLite AUTOINCREMENT
+        // sequence. Raising every configuration table's sequence to
+        // CustomerIdRangeStart - 1 makes the next GENERATED row land AT the
+        // boundary, so from this bump onward the two populations no longer share
+        // the generated ID space (the race the historical v7/v10 account-category
+        // deltas had to walk). Monotone (only ever raises) and idempotent, so
+        // running it on every startup lets existing databases adopt the
+        // separation without a delta script.
+        //
+        // CAUTION — the bump protects only ids generated AFTER the first run;
+        // home rows created on an existing database before it keep their low
+        // ids. So a NEW system row is never safe to append at a "free" low id
+        // directly: it can collide with a pre-bump home row that already owns
+        // that id. Delivering a new system row therefore requires a
+        // SchemaUpgrade step that inserts per-row only where the id is still
+        // unclaimed (check-then-insert against the live table) - the Any()-
+        // guarded Seed* methods skip existing databases entirely and are not a
+        // delivery path. The HID column (null = system) remains the
+        // authoritative system/home marker everywhere.
+        internal const int CustomerIdRangeStart = 1000;
+
+        // [Table] names of the seeded configuration tables whose rows homes may
+        // create (the Any()-guarded Seed* methods above — currencies and
+        // languages are system-only and need no separation). Comparisons run
+        // COLLATE NOCASE because the hand-written schemas created some tables
+        // with different casing than the entity attributes.
+        internal static readonly string[] CustomerBoundedConfigTables =
+        {
+            "T_FIN_ACCOUNT_CTGY",
+            "T_FIN_ASSET_CTGY",
+            "T_FIN_DOC_TYPE",
+            "T_FIN_TRAN_TYPE",
+            "t_lib_personrole_def",
+            "T_LIB_ORGTYPE_DEF",
+            "T_LIB_BOOKCTGY_DEF",
+        };
+
+        private static void ReserveCustomerIdRanges(hihDataContext context)
+        {
+            if (!TableExists(context, "sqlite_sequence"))
+            {
+                // sqlite_sequence is created lazily by SQLite on the first insert
+                // into an AUTOINCREMENT table; with no sequence table there is
+                // nothing to raise. Unreachable today (the seed inserts above always
+                // run first) — purely defensive against future ordering changes.
+                return;
+            }
+
+            var boundary = CustomerIdRangeStart - 1;
+            foreach (var table in CustomerBoundedConfigTables)
+            {
+                // {0}/{1}/{2} tokens are turned into DbParameters by ExecuteSqlRaw —
+                // no value is ever concatenated into the SQL text.
+                var raised = context.Database.ExecuteSqlRaw(
+                    @"UPDATE sqlite_sequence SET seq = CASE WHEN seq < {0} THEN {1} ELSE seq END
+                      WHERE name = {2} COLLATE NOCASE",
+                    boundary, boundary, table);
+                if (raised == 0)
+                {
+                    // The sequence row can only be missing if this table was never
+                    // inserted into; create it at the boundary so the first
+                    // generated ID lands exactly on CustomerIdRangeStart.
+                    context.Database.ExecuteSqlRaw(
+                        "INSERT INTO sqlite_sequence (name, seq) VALUES ({0}, {1})",
+                        table, boundary);
+                }
+            }
+        }
+
+        // sqlite_master lookup (same raw-ADO shape as ColumnExists above).
+        private static bool TableExists(hihDataContext context, String name)
+        {
+            var conn = context.Database.GetDbConnection();
+            if (conn.State != System.Data.ConnectionState.Open)
+            {
+                conn.Open();
+            }
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"SELECT COUNT(1) FROM sqlite_master WHERE type = 'table' AND name = $n";
+            var p = cmd.CreateParameter();
+            p.ParameterName = "$n";
+            p.Value = name;
+            cmd.Parameters.Add(p);
 
             return Convert.ToInt64(cmd.ExecuteScalar(), CultureInfo.InvariantCulture) > 0;
         }

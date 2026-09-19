@@ -130,35 +130,62 @@ namespace hihapi.Controllers.Library
                 return BadRequest("HomeID cannot be changed via PUT.");
             }
 
-            update.CreatedAt = existing.CreatedAt;
-            update.Createdby = existing.Createdby;
-            update.UpdatedAt = DateTime.Now;
-            update.Updatedby = usrName;
-            _context.Entry(existing).CurrentValues.SetValues(update);
-
-            // The person <-> role linkage table (t_lib_person_role) has no DbSet, so it is
-            // reconciled via raw SQL within the same transaction: existing rows are cleared and
-            // the incoming set is re-inserted. The linkage carries no mutable scalar fields.
-            var roleIds = await ResolveRoleIdsAsync(
-                update.PersonRoles?.Select(r => r.RoleId) ?? Enumerable.Empty<int>(), usrName);
-
-            var param = new SqliteParameter("@id", key);
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            // Serialize check→act→save against concurrent writes on the same
+            // (table, home) — the duplicate guard has no DB-level backstop; see
+            // NameGuardLock for why that is a deliberate trade-off.
+            var gate = NameGuardLock.For<LibraryPerson>(existing.HomeID);
+            await gate.WaitAsync();
             try
             {
-                await _context.SaveChangesAsync();
+                // Duplicate guard (same home): only the name fields this request actually
+                // CHANGES are checked, so a row that ALREADY collides with another row
+                // (data predating the guard) stays savable when a non-name field is
+                // edited. A changed NativeName or non-empty ChineseName must not equal
+                // ANY OTHER row's NativeName or non-empty ChineseName ("Cross" ==
+                // " cross "), folded with C# Trim + ToLowerInvariant over the per-home
+                // name pairs - Unicode-complete, unlike SQLite lower()/trim() (see
+                // LibraryNameGuard). The message names the field that actually collided.
+                await LibraryNameGuard.EnsureNoDuplicateNameAsync(
+                    _context.Persons.Where(p => p.HomeID == existing.HomeID && p.Id != key)
+                                    .Select(p => new LibraryNameGuard.NamePair(p.NativeName, p.ChineseName)),
+                    update.NativeName, update.ChineseName,
+                    existing.NativeName, existing.ChineseName, "A person");
 
-                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_person_role WHERE PERSON_ID = @id", param);
-                InsertLinkages(roleIds, key,
-                    "INSERT INTO t_lib_person_role (PERSON_ID, ROLE_ID) VALUES (@bookId, @foreignId)");
+                update.CreatedAt = existing.CreatedAt;
+                update.Createdby = existing.Createdby;
+                update.UpdatedAt = DateTime.Now;
+                update.Updatedby = usrName;
+                _context.Entry(existing).CurrentValues.SetValues(update);
 
-                await transaction.CommitAsync();
+                // The person <-> role linkage table (t_lib_person_role) has no DbSet, so it
+                // is reconciled via raw SQL within the same transaction: existing rows are
+                // cleared and the incoming set is re-inserted. The linkage carries no
+                // mutable scalar fields.
+                var roleIds = await ResolveRoleIdsAsync(
+                    update.PersonRoles?.Select(r => r.RoleId) ?? Enumerable.Empty<int>(), usrName);
+
+                var param = new SqliteParameter("@id", key);
+
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+
+                    _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_person_role WHERE PERSON_ID = @id", param);
+                    InsertLinkages(roleIds, key,
+                        "INSERT INTO t_lib_person_role (PERSON_ID, ROLE_ID) VALUES (@bookId, @foreignId)");
+
+                    await transaction.CommitAsync();
+                }
+                catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
             }
-            catch (Exception)
+            finally
             {
-                await transaction.RollbackAsync();
-                throw;
+                gate.Release();
             }
 
             return Updated(update);
@@ -233,39 +260,62 @@ namespace hihapi.Controllers.Library
                 throw new UnauthorizedAccessException();
             }
 
-            // The linkage/join collections on an inbound entity must not enter the EF graph:
-            // rows with an unresolved RoleId (e.g. the blank assignment rows the UI sends as
-            // RoleId 0) crash SaveChanges with "The value of 'LibraryPersonRoleLinkage.RoleId'
-            // is unknown". Mirror Put: insert only the person row, then reconcile the validated
-            // linkage rows via raw SQL within the same transaction.
-            var roleIds = await ResolveRoleIdsAsync(
-                tbc.PersonRoles?.Select(r => r.RoleId) ?? Enumerable.Empty<int>(), usrName);
-            tbc.PersonRoles = null;
-            tbc.Roles = null;
-            tbc.CurrentHome = null;
-            tbc.WritenBooks = null;
-            tbc.WrittenBooksByAuthor = null;
-            tbc.TranslatedBooks = null;
-            tbc.TranslatedBooksByTranslator = null;
-
-            tbc.CreatedAt = DateTime.Now;
-            tbc.Createdby = usrName;
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            // Serialize check→insert against concurrent writes on the same
+            // (table, home) — the guard has no DB-level backstop (NameGuardLock).
+            var gate = NameGuardLock.For<LibraryPerson>(tbc.HomeID);
+            await gate.WaitAsync();
             try
             {
-                _context.Persons.Add(tbc);
-                await _context.SaveChangesAsync();
+                // Duplicate guard (same home): on a create every non-blank name field is
+                // checked - it must not equal ANY existing row's NativeName or non-empty
+                // ChineseName ("Cross" == " cross "), folded with C# Trim +
+                // ToLowerInvariant over the per-home name pairs (see LibraryNameGuard).
+                // Whitespace-only inputs match nothing; the message names the field that
+                // actually collided.
+                await LibraryNameGuard.EnsureNoDuplicateNameAsync(
+                    _context.Persons.Where(p => p.HomeID == tbc.HomeID)
+                                    .Select(p => new LibraryNameGuard.NamePair(p.NativeName, p.ChineseName)),
+                    tbc.NativeName, tbc.ChineseName, null, null, "A person");
 
-                InsertLinkages(roleIds, tbc.Id,
-                    "INSERT INTO t_lib_person_role (PERSON_ID, ROLE_ID) VALUES (@bookId, @foreignId)");
+                // The linkage/join collections on an inbound entity must not enter the EF
+                // graph: rows with an unresolved RoleId (e.g. the blank assignment rows the
+                // UI sends as RoleId 0) crash SaveChanges with
+                // "The value of 'LibraryPersonRoleLinkage.RoleId' is unknown". Mirror Put:
+                // insert only the person row, then reconcile the validated linkage rows via
+                // raw SQL within the same transaction.
+                var roleIds = await ResolveRoleIdsAsync(
+                    tbc.PersonRoles?.Select(r => r.RoleId) ?? Enumerable.Empty<int>(), usrName);
+                tbc.PersonRoles = null;
+                tbc.Roles = null;
+                tbc.CurrentHome = null;
+                tbc.WritenBooks = null;
+                tbc.WrittenBooksByAuthor = null;
+                tbc.TranslatedBooks = null;
+                tbc.TranslatedBooksByTranslator = null;
 
-                await transaction.CommitAsync();
+                tbc.CreatedAt = DateTime.Now;
+                tbc.Createdby = usrName;
+
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    _context.Persons.Add(tbc);
+                    await _context.SaveChangesAsync();
+
+                    InsertLinkages(roleIds, tbc.Id,
+                        "INSERT INTO t_lib_person_role (PERSON_ID, ROLE_ID) VALUES (@bookId, @foreignId)");
+
+                    await transaction.CommitAsync();
+                }
+                catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
             }
-            catch (Exception)
+            finally
             {
-                await transaction.RollbackAsync();
-                throw;
+                gate.Release();
             }
 
             return Created(tbc);

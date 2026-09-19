@@ -79,11 +79,13 @@ achihapi.sln
 
 - **OData-centric**: All controllers expose OData endpoints. The EDM model is built in `EdmModelBuilder`. Two route prefixes exist: default and `/v1`.
 - **Home ID convention**: Most domain entities have a `HomeID` property for multi-tenant isolation. `HomeDefines` uses `{key}` as the Home ID. `HomeMembers` is scoped to the authenticated user's home memberships. Reference controllers (Currencies, Languages, DBVersions) and some category controllers allow `HomeID = null` for shared reference data. `FinanceReports` requires HomeID in the request body.
+- **Config ID ranges**: System-delivered configuration rows use explicit IDs below 1000; home-created rows get IDs ≥ 1000. `DatabaseSeeder` raises the SQLite AUTOINCREMENT sequence of the seven home-bounded config tables to the boundary at every startup (monotone + idempotent — no delta script needed), so ids **generated from the bump onward** never collide. Pre-bump home rows on existing databases keep their low IDs, so a NEW system row must be delivered via a `SchemaUpgrade` step that per-row checks the id is unclaimed — never appended at a "free" low id directly, and never via the `Any()`-guarded seed passes (they skip existing databases). `HomeID IS NULL` stays the authoritative system/home marker.
 - **Single DbContext**: `hihDataContext` is the sole EF Core context, using SQLite (`Data Source=hih.db`).
 - **Authentication**: JWT Bearer tokens. Authority is `https://localhost:44353` in development, `https://www.alvachien.com/idserver` in production.
 - **CORS**: Different allowed origins per environment (dev: localhost ports 29521/29528/29525; prod: alvachien.com paths).
 - **Middleware pipeline** (order matters): Serilog request logging → ErrorHandlingMiddleware → OData batching → Response caching → Authentication → Routing → HTTPS redirect → Authorization → CORS → Endpoints.
-- **Startup seeding**: `DatabaseSeeder.Seed(db)` runs on app startup to populate reference data.
+- **Startup seeding**: `DatabaseSeeder.SeedAsync(db)` runs on app startup to populate reference data and to raise the config-table ID sequences to the customer range boundary.
+- **Version-based auto-upgrade**: `DatabaseSeeder.CurrentVersion` + the `SchemaUpgrades` step registry replace the old delta scripts. At startup the stored max `T_DBVERSION.VersionID` is compared to the code; every missing step runs (idempotently) in order and stamps its version row. Fresh DBs are stamped at `CurrentVersion`; unversioned pre-existing DBs are baselined at v21 first. A new schema change = one registered step + one `CurrentVersion` bump (a unit test guards that every version above the baseline has a step). `Sqls/Delta/*.sql` are never executed.
 - **InternalsVisibleTo**: The main project exposes internals to both test projects.
 - **Release build**: Defines `USE_ALIYUN` constant (conditional compilation for Aliyun deployment).
 

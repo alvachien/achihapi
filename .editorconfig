@@ -124,3 +124,12 @@ dotnet_diagnostic.IDE0031.severity = suggestion
 # Organize usings
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_sections = false
+
+# MA0011: Use a ToLower/ToUpper overload with a CultureInfo - inside LINQ-to-SQL query
+# expressions EF Core's SQLite provider translates ONLY the parameterless ToLower()/ToUpper()
+# to SQL lower()/upper(); passing a CultureInfo makes the predicate untranslatable (verified:
+# ToLowerInvariant() throws "could not be translated"). The case folding runs in SQLite
+# (ASCII), so the culture caveat does not apply. Scoped to the Library controllers'
+# duplicate-name guards; ordinary C# code should still prefer ToLowerInvariant().
+[**/Controllers/Library/*.cs]
+dotnet_diagnostic.MA0011.severity = none
