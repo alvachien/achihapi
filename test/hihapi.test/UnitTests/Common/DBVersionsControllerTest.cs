@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using hihapi.Controllers;
@@ -31,30 +32,27 @@ namespace hihapi.unittest.Common
             var context = this.fixture.GetCurrentDataContext();
             DBVersionsController control = new DBVersionsController(context);
 
-            // 1. Get all version
+            // 1. Get all version - the fixture carries the frozen v1-v21 history.
             var getresult = control.Get();
             Assert.NotNull(getresult);
             var okobjresult = Assert.IsType<OkObjectResult>(getresult);
             var objvalues = Assert.IsAssignableFrom<IQueryable<DBVersion>>(okobjresult.Value);
-            // DBVersionsController.CurrentVersion
-            var verexist = false;
-            foreach (var version in objvalues)
-            {
-                if (version.VersionID == DBVersionsController.CurrentVersion)
-                    verexist = true;
-            }
-            Assert.True(verexist);
+            var versions = objvalues.ToList();
+            Assert.NotEmpty(versions);
+            var storedMax = versions.Max(v => v.VersionID);
 
             // 2. Get a single version
-            var getsingleresult = control.Get(DBVersionsController.CurrentVersion);
+            var getsingleresult = control.Get(storedMax);
             Assert.NotNull(getsingleresult);
 
-            // 3. Check current version
+            // 3. Check reports the version actually stored, not the code constant
+            // (the seeder would only have stamped CurrentVersion after running the
+            // upgrade steps, which the fixture database does not go through).
             var postresult = control.Post();
             Assert.NotNull(postresult);
             var createdrst = Assert.IsType<CreatedODataResult<CheckVersionResult>>(postresult);
             Assert.NotNull(createdrst);
-            Assert.Equal(DBVersionsController.CurrentVersion.ToString(), createdrst.Entity.StorageVersion);
+            Assert.Equal(storedMax.ToString(CultureInfo.InvariantCulture), createdrst.Entity.StorageVersion);
 
             await context.DisposeAsync();
         }

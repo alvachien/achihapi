@@ -128,32 +128,59 @@ namespace hihapi.Controllers.Library
                 return BadRequest("HomeID cannot be changed via PUT.");
             }
 
-            update.CreatedAt = existing.CreatedAt;
-            update.Createdby = existing.Createdby;
-            update.UpdatedAt = DateTime.Now;
-            update.Updatedby = usrName;
-            _context.Entry(existing).CurrentValues.SetValues(update);
-
-            // The organization <-> type linkage table (t_lib_org_type) has no DbSet, so it is
-            // reconciled via raw SQL within the same transaction: existing rows are cleared and
-            // the incoming set is re-inserted. The linkage carries no mutable scalar fields.
-            var param = new SqliteParameter("@id", key);
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            // Serialize check→act→save against concurrent writes on the same
+            // (table, home) — the duplicate guard has no DB-level backstop; see
+            // NameGuardLock for why that is a deliberate trade-off.
+            var gate = NameGuardLock.For<LibraryOrganization>(existing.HomeID);
+            await gate.WaitAsync();
             try
             {
-                await _context.SaveChangesAsync();
+                // Duplicate guard (same home): only the name fields this request actually
+                // CHANGES are checked, so a row that ALREADY collides with another row
+                // (data predating the guard) stays savable when a non-name field is
+                // edited. A changed NativeName or non-empty ChineseName must not equal
+                // ANY OTHER row's NativeName or non-empty ChineseName ("Cross" ==
+                // " cross "), folded with C# Trim + ToLowerInvariant over the per-home
+                // name pairs - Unicode-complete, unlike SQLite lower()/trim() (see
+                // LibraryNameGuard). The message names the field that actually collided.
+                await LibraryNameGuard.EnsureNoDuplicateNameAsync(
+                    _context.Organizations.Where(p => p.HomeID == existing.HomeID && p.Id != key)
+                                          .Select(p => new LibraryNameGuard.NamePair(p.NativeName, p.ChineseName)),
+                    update.NativeName, update.ChineseName,
+                    existing.NativeName, existing.ChineseName, "An organization");
 
-                _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_org_type WHERE ORG_ID = @id", param);
-                InsertLinkages(update.OrganizationTypes?.Select(t => t.TypeId) ?? Enumerable.Empty<int>(), key,
-                    "INSERT INTO t_lib_org_type (ORG_ID, TYPE_ID) VALUES (@bookId, @foreignId)");
+                update.CreatedAt = existing.CreatedAt;
+                update.Createdby = existing.Createdby;
+                update.UpdatedAt = DateTime.Now;
+                update.Updatedby = usrName;
+                _context.Entry(existing).CurrentValues.SetValues(update);
 
-                await transaction.CommitAsync();
+                // The organization <-> type linkage table (t_lib_org_type) has no DbSet, so
+                // it is reconciled via raw SQL within the same transaction: existing rows
+                // are cleared and the incoming set is re-inserted. The linkage carries no
+                // mutable scalar fields.
+                var param = new SqliteParameter("@id", key);
+
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+
+                    _context.Database.ExecuteSqlRaw("DELETE FROM t_lib_org_type WHERE ORG_ID = @id", param);
+                    InsertLinkages(update.OrganizationTypes?.Select(t => t.TypeId) ?? Enumerable.Empty<int>(), key,
+                        "INSERT INTO t_lib_org_type (ORG_ID, TYPE_ID) VALUES (@bookId, @foreignId)");
+
+                    await transaction.CommitAsync();
+                }
+                catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
             }
-            catch (Exception)
+            finally
             {
-                await transaction.RollbackAsync();
-                throw;
+                gate.Release();
             }
 
             return Updated(update);
@@ -202,10 +229,32 @@ namespace hihapi.Controllers.Library
                 throw new UnauthorizedAccessException();
             }
 
-            tbc.CreatedAt = DateTime.Now;
-            tbc.Createdby = usrName;
-            _context.Organizations.Add(tbc);
-            await _context.SaveChangesAsync();
+            // Serialize check→insert against concurrent writes on the same
+            // (table, home) — the guard has no DB-level backstop (NameGuardLock).
+            var gate = NameGuardLock.For<LibraryOrganization>(tbc.HomeID);
+            await gate.WaitAsync();
+            try
+            {
+                // Duplicate guard (same home): on a create every non-blank name field is
+                // checked - it must not equal ANY existing row's NativeName or non-empty
+                // ChineseName ("Cross" == " cross "), folded with C# Trim +
+                // ToLowerInvariant over the per-home name pairs (see LibraryNameGuard).
+                // Whitespace-only inputs match nothing; the message names the field that
+                // actually collided.
+                await LibraryNameGuard.EnsureNoDuplicateNameAsync(
+                    _context.Organizations.Where(p => p.HomeID == tbc.HomeID)
+                                          .Select(p => new LibraryNameGuard.NamePair(p.NativeName, p.ChineseName)),
+                    tbc.NativeName, tbc.ChineseName, null, null, "An organization");
+
+                tbc.CreatedAt = DateTime.Now;
+                tbc.Createdby = usrName;
+                _context.Organizations.Add(tbc);
+                await _context.SaveChangesAsync();
+            }
+            finally
+            {
+                gate.Release();
+            }
 
             return Created(tbc);
         }

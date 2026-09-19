@@ -16,25 +16,10 @@ namespace hihapi.Controllers
     [Authorize]
     public class DBVersionsController : ODataController
     {
-        // Version 4 - 2018.07
-        // Version 5 - 2018.08.02
-        // Version 6 - 2018.08.05
-        // Version 7 - 2018.09.11
-        // Version 8 - 2018.09.15
-        // Version 9 - 2018.09.16
-        // Version 10 - 2018.10.13
-        // Version 11 - 2018.12.18
-        // Version 12 - 2019.4.20
-        // Version 13 - 2020.02.28
-        // Version 14 - 2020.03.12 
-        // Version 15 - 2020.04.01
-        // Version 16 - 2020.04.15
-        // Version 17 - 2020.09.12
-        // Version 18 - 2022.5.1
-        // Version 19 - 2022.10.31
-        // Version 20 - 2022.8.31
-        // Version 21 - 2022.9.30
-        public const Int32 CurrentVersion = 21;
+        // The schema version is owned by DatabaseSeeder: it registers the upgrade
+        // steps, runs the missing ones at startup and stamps T_DBVERSION. The
+        // historical v1-v21 changelog lives with the delta scripts in Sqls/Delta/.
+        public const Int32 CurrentVersion = DatabaseSeeder.CurrentVersion;
 
         private readonly hihDataContext _context;
 
@@ -69,12 +54,16 @@ namespace hihapi.Controllers
         [AllowAnonymous]
         public IActionResult Post()
         {
-            // SQLite migration is handled by DatabaseSeeder.SeedAsync() on startup.
-            // The delta SQL files (v1.sql–v21.sql) are legacy SQL Server scripts
-            // and should not be executed against SQLite.
+            // DatabaseSeeder.SeedAsync() applies missing upgrade steps and stamps
+            // T_DBVERSION before the app starts listening, so the stored maximum is
+            // the schema this database actually carries. The delta SQL files under
+            // Sqls/Delta/ are legacy SQL Server scripts and are never executed.
+            var storedVersion = _context.DBVersions.Any()
+                ? _context.DBVersions.Max(v => v.VersionID)
+                : 0;
             var dbv = new CheckVersionResult
             {
-                StorageVersion = CurrentVersion.ToString(),
+                StorageVersion = storedVersion.ToString(CultureInfo.InvariantCulture),
                 APIVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString()
             };
 

@@ -291,8 +291,9 @@ namespace hihapi.Models
         public Decimal IncomeYTD { get; set; }
         public Decimal OutgoYTD { get; set; }
 
-        public Decimal CurrentMonthIncomePercentage { get; set; }
-        public Decimal CurrentMonthOutgoPercentage { get; set; }
+        // Null when last month was zero: a rise from nothing has no finite ratio.
+        public Decimal? CurrentMonthIncomePercentage { get; set; }
+        public Decimal? CurrentMonthOutgoPercentage { get; set; }
     }
     #endregion
 }

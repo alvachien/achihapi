@@ -1031,11 +1031,13 @@ namespace hihapi.Controllers
                                   where hd.ID == hid
                                   select hd.BaseCurrency).SingleOrDefault();
 
-            // 7. Calculate the precentage
+            // 7. Calculate the percentage, month on month.
+            // A zero last month leaves the ratio null (the change itself is still readable from the two amounts).
+            // The absolute base keeps the sign aligned with the raw delta when last month went negative (reversal docs).
             if (keyfigure.LastMonthIncome != 0)
-                keyfigure.CurrentMonthIncomePercentage = 100 * (keyfigure.CurrentMonthIncome - keyfigure.LastMonthIncome) / keyfigure.LastMonthIncome;
+                keyfigure.CurrentMonthIncomePercentage = 100 * (keyfigure.CurrentMonthIncome - keyfigure.LastMonthIncome) / Math.Abs(keyfigure.LastMonthIncome);
             if (keyfigure.LastMonthOutgo != 0)
-                keyfigure.CurrentMonthOutgoPercentage = 100 * (keyfigure.CurrentMonthOutgo - keyfigure.LastMonthOutgo) / keyfigure.LastMonthOutgo;
+                keyfigure.CurrentMonthOutgoPercentage = 100 * (keyfigure.CurrentMonthOutgo - keyfigure.LastMonthOutgo) / Math.Abs(keyfigure.LastMonthOutgo);
 
             List<FinanceOverviewKeyFigure> listResult = new List<FinanceOverviewKeyFigure>();
             listResult.Add(keyfigure);
