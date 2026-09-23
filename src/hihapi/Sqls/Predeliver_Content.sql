@@ -511,7 +511,16 @@ INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (41, 'Sy
 
 INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (51, 'Sys.BkCtgy.ChildBk', 'Children books', NULL);
 
-INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (61, 'Sys.BkCtgy.Finance', 'Finance books', NULL);
+-- v23: Finance moved under Education (41)
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (61, 'Sys.BkCtgy.Finance', 'Finance books', 41);
+-- v23: education subjects (children of 41)
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (42, 'Sys.BkCtgy.EnglishLearning', 'English learning', 41);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (43, 'Sys.BkCtgy.JapaneseLearning', 'Japanese learning', 41);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (44, 'Sys.BkCtgy.GermanLearning', 'German learning', 41);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (45, 'Sys.BkCtgy.Mathematics', 'Mathematics', 41);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (46, 'Sys.BkCtgy.Physics', 'Physics', 41);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (47, 'Sys.BkCtgy.Chemistry', 'Chemistry', 41);
+INSERT INTO [t_lib_bookctgy_def] ([ID],[NAME],[COMMENT],[PARID]) VALUES (48, 'Sys.BkCtgy.Chinese', 'Chinese', 41);
 SET IDENTITY_INSERT [t_lib_bookctgy_def] OFF;
 
 -- Set the version

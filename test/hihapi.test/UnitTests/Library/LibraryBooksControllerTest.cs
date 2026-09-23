@@ -273,6 +273,187 @@ namespace hihapi.unittest.UnitTests.Library
             }
         }
 
+        // CopyCount 0 is the retire state (the book is gone, the record stays for its
+        // reading history). PUT applies every scalar through SetValues, so the 0 must
+        // land in the column - the failure this guards against is a client (or a
+        // projection) treating 0 as "nothing to write" and leaving the old count, which
+        // would silently keep a discarded book looking owned.
+        [Fact]
+        public async Task TestCase_Put_PersistsZeroCopyCount()
+        {
+            var context = fixture.GetCurrentDataContext();
+            var control = CreateController(context, DataSetupUtility.UserA);
+
+            var guid = Guid.NewGuid().ToString("N");
+            var created = Assert.IsType<CreatedODataResult<LibraryBook>>(await control.Post(
+                new LibraryBook()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    NativeName = "unittest-book-" + guid,
+                    CopyCount = 2,
+                }));
+            try
+            {
+                // POST carried the count through untouched.
+                Assert.Equal(2, (await context.Books.AsNoTracking()
+                    .SingleAsync(b => b.Id == created.Entity.Id)).CopyCount);
+
+                var retired = new LibraryBook()
+                {
+                    Id = created.Entity.Id,
+                    HomeID = DataSetupUtility.Home1ID,
+                    NativeName = created.Entity.NativeName,
+                    CopyCount = 0,
+                };
+                Assert.IsType<UpdatedODataResult<LibraryBook>>(await control.Put(created.Entity.Id, retired));
+
+                Assert.Equal(0, (await context.Books.AsNoTracking()
+                    .SingleAsync(b => b.Id == created.Entity.Id)).CopyCount);
+            }
+            finally
+            {
+                await control.Delete(created.Entity.Id);
+                await context.DisposeAsync();
+            }
+        }
+
+        // CopyCount's three states do not include a negative one: it would drive the
+        // overview's TotalCopies (documented as the books on the shelf) below TotalBooks
+        // or below zero, and leave the retired-row query with nothing to match. The
+        // invariant is business rule, not a DataAnnotation, so it is enforced through
+        // IsValid - on both write paths.
+        [Fact]
+        public async Task TestCase_Post_RejectsNegativeCopyCount()
+        {
+            var context = fixture.GetCurrentDataContext();
+            var control = CreateController(context, DataSetupUtility.UserA);
+
+            await Assert.ThrowsAsync<BadRequestException>(() => control.Post(
+                new LibraryBook()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    NativeName = "unittest-book-" + Guid.NewGuid().ToString("N"),
+                    CopyCount = -3,
+                }));
+
+            await context.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task TestCase_Put_RejectsNegativeCopyCount()
+        {
+            var context = fixture.GetCurrentDataContext();
+            var control = CreateController(context, DataSetupUtility.UserA);
+
+            var guid = Guid.NewGuid().ToString("N");
+            var created = Assert.IsType<CreatedODataResult<LibraryBook>>(await control.Post(
+                new LibraryBook()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    NativeName = "unittest-book-" + guid,
+                    CopyCount = 2,
+                }));
+            try
+            {
+                var negative = new LibraryBook()
+                {
+                    Id = created.Entity.Id,
+                    HomeID = DataSetupUtility.Home1ID,
+                    NativeName = created.Entity.NativeName,
+                    CopyCount = -1,
+                };
+                await Assert.ThrowsAsync<BadRequestException>(() => control.Put(created.Entity.Id, negative));
+
+                // The rejected write left the stored count alone.
+                Assert.Equal(2, (await context.Books.AsNoTracking()
+                    .SingleAsync(b => b.Id == created.Entity.Id)).CopyCount);
+            }
+            finally
+            {
+                await control.Delete(created.Entity.Id);
+                await context.DisposeAsync();
+            }
+        }
+
+        // The retired marker must survive a PUT that says nothing about it. A payload
+        // without the field deserializes to the same null as one that carries it
+        // explicitly, so SetValues cannot tell them apart and would write NULL over the
+        // recorded 0 - turning a discarded book back into an owned one, unrecoverably.
+        [Fact]
+        public async Task TestCase_Put_WithoutCopyCountKeepsARecordedZero()
+        {
+            var context = fixture.GetCurrentDataContext();
+            var control = CreateController(context, DataSetupUtility.UserA);
+
+            var guid = Guid.NewGuid().ToString("N");
+            var created = Assert.IsType<CreatedODataResult<LibraryBook>>(await control.Post(
+                new LibraryBook()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    NativeName = "unittest-book-" + guid,
+                    CopyCount = 0,
+                }));
+            try
+            {
+                var rename = new LibraryBook()
+                {
+                    Id = created.Entity.Id,
+                    HomeID = DataSetupUtility.Home1ID,
+                    NativeName = created.Entity.NativeName + "-renamed",
+                };
+                Assert.IsType<UpdatedODataResult<LibraryBook>>(await control.Put(created.Entity.Id, rename));
+
+                Assert.Equal(0, (await context.Books.AsNoTracking()
+                    .SingleAsync(b => b.Id == created.Entity.Id)).CopyCount);
+
+                // The flip side: a count the payload DOES carry still writes through, so
+                // the rule above has not made the column read-only.
+                var recounted = new LibraryBook()
+                {
+                    Id = created.Entity.Id,
+                    HomeID = DataSetupUtility.Home1ID,
+                    NativeName = created.Entity.NativeName + "-renamed",
+                    CopyCount = 5,
+                };
+                Assert.IsType<UpdatedODataResult<LibraryBook>>(await control.Put(created.Entity.Id, recounted));
+
+                Assert.Equal(5, (await context.Books.AsNoTracking()
+                    .SingleAsync(b => b.Id == created.Entity.Id)).CopyCount);
+            }
+            finally
+            {
+                await control.Delete(created.Entity.Id);
+                await context.DisposeAsync();
+            }
+        }
+
+        // A book with no count recorded is not a retired book: the column is nullable
+        // exactly so "unrecorded" cannot be confused with "gone".
+        [Fact]
+        public async Task TestCase_Put_LeavesAnUnrecordedCopyCountNull()
+        {
+            var context = fixture.GetCurrentDataContext();
+            var control = CreateController(context, DataSetupUtility.UserA);
+
+            var guid = Guid.NewGuid().ToString("N");
+            var created = Assert.IsType<CreatedODataResult<LibraryBook>>(await control.Post(
+                new LibraryBook()
+                {
+                    HomeID = DataSetupUtility.Home1ID,
+                    NativeName = "unittest-book-" + guid,
+                }));
+            try
+            {
+                Assert.Null((await context.Books.AsNoTracking()
+                    .SingleAsync(b => b.Id == created.Entity.Id)).CopyCount);
+            }
+            finally
+            {
+                await control.Delete(created.Entity.Id);
+                await context.DisposeAsync();
+            }
+        }
+
         // The guard must name the field that actually collided: setting B's ChineseName to a
         // value colliding with A's NativeName reports the ChineseName, not B's unchanged
         // NativeName.
@@ -434,6 +615,18 @@ namespace hihapi.unittest.UnitTests.Library
                 });
             }
 
+            // The copy counts are set BEFORE the linkage PUTs on purpose: those payloads
+            // carry no CopyCount (the client that never learned about the column looks
+            // exactly like this), and a recorded count must survive them. Writing it
+            // through SetValues as a NULL would turn the retired b2 back into an owned
+            // book - the one bit of state this column exists to keep. b1 holds three
+            // copies, b2 is retired (a 0 that must add NOTHING), and b3-b5 keep the
+            // unrecorded NULL that must add exactly ONE each - the three cases the sum
+            // has to tell apart.
+            books[0].CopyCount = 3;
+            books[1].CopyCount = 0;
+            await context.SaveChangesAsync();
+
             await LinkAsync(books[0], new[] { cat1.Id, cat2.Id }, new[] { authorA.Id }, new[] { pressX.Id });
             await LinkAsync(books[1], new[] { cat1.Id }, new[] { authorA.Id }, Array.Empty<int>());
             await LinkAsync(books[2], new[] { cat1.Id }, new[] { authorB.Id }, Array.Empty<int>());
@@ -462,6 +655,8 @@ namespace hihapi.unittest.UnitTests.Library
 
                 Assert.Equal(DataSetupUtility.Home1ID, figure.HomeID);
                 Assert.Equal(5, figure.TotalBooks);
+                // 3 (b1) + 0 (b2, retired) + 1 + 1 + 1 (unrecorded NULLs).
+                Assert.Equal(6, figure.TotalCopies);
                 Assert.Equal(4, figure.AddedThisMonth);
                 Assert.Equal(1, figure.AddedLastMonth);
                 Assert.Equal(2, figure.CompletedThisMonth);

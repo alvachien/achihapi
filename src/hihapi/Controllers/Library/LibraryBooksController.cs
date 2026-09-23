@@ -128,6 +128,13 @@ namespace hihapi.Controllers.Library
                 return BadRequest("HomeID cannot be changed via PUT.");
             }
 
+            // CopyCount's invariant lives on the model (a negative count is not one of
+            // its three states); ModelState above only covers the DataAnnotations.
+            if (!update.IsValid(_context))
+            {
+                throw new BadRequestException("Not a valid object");
+            }
+
             // Serialize check→act→save against concurrent writes on the same
             // (table, home) — the duplicate guard has no DB-level backstop; see
             // NameGuardLock for why that is a deliberate trade-off.
@@ -154,6 +161,22 @@ namespace hihapi.Controllers.Library
                 update.Createdby = existing.Createdby;
                 update.UpdatedAt = DateTime.Now;
                 update.Updatedby = usrName;
+
+                // CopyCount is tri-state (0 = gone, NULL = not recorded, >0 = owned), but
+                // a PUT payload cannot tell "omitted" from "explicitly null" - both
+                // deserialize to null - so SetValues below would write NULL over a
+                // recorded 0 for any client that does not know the column (an older
+                // bundle, a script, a body built from a $select that left it out). That
+                // turns a retired book back into an owned one, drops it out of the
+                // retired query and adds a phantom copy to TotalCopies, unrecoverably.
+                // An omitted count therefore means "leave the recorded one alone"; any
+                // value sent, 0 included, is written through. There is no PATCH endpoint
+                // to carry the distinction explicitly.
+                if (update.CopyCount == null)
+                {
+                    update.CopyCount = existing.CopyCount;
+                }
+
                 _context.Entry(existing).CurrentValues.SetValues(update);
 
                 // The book <-> author/translator/press/category/location linkage tables have
@@ -242,6 +265,13 @@ namespace hihapi.Controllers.Library
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
+            }
+
+            // CopyCount's invariant lives on the model (a negative count is not one of
+            // its three states); ModelState above only covers the DataAnnotations.
+            if (!tbc.IsValid(_context))
+            {
+                throw new BadRequestException("Not a valid object");
             }
 
             // Serialize check→insert against concurrent writes on the same
@@ -349,7 +379,6 @@ namespace hihapi.Controllers.Library
             var lastBegin = thisBegin.AddMonths(-1);
 
             var figure = new LibraryOverviewKeyFigure { HomeID = hid };
-            figure.TotalBooks = await _context.Books.CountAsync(p => p.HomeID == hid);
             figure.AddedThisMonth = await _context.Books.CountAsync(
                 p => p.HomeID == hid && p.CreatedAt >= thisBegin && p.CreatedAt < thisEnd);
             figure.AddedLastMonth = await _context.Books.CountAsync(
@@ -380,6 +409,16 @@ namespace hihapi.Controllers.Library
                 .Include(b => b.Presses)
                 .AsNoTracking()
                 .ToListAsync();
+            // Both book figures come out of the materialized graph rather than a COUNT
+            // and a SUM round trip of their own: these are the same rows, with CopyCount
+            // read straight from the database (AsNoTracking, so no stale tracked value),
+            // and on a large home those were two extra full scans per overview request
+            // for numbers already in hand. NULL counts as 1 (unrecorded means still
+            // held), 0 as nothing - so TotalCopies and TotalBooks disagree by exactly
+            // the retired books plus the extra copies.
+            figure.TotalBooks = linkedBooks.Count;
+            figure.TotalCopies = linkedBooks.Sum(b => b.CopyCount ?? 1);
+
             figure.TopCategories = TopThree(linkedBooks.SelectMany(b => b.Categories
                 .Select(c => new RankingRow(b.Id, c.Id, c.Name))));
             figure.TopAuthors = TopThree(linkedBooks.SelectMany(b => b.Authors

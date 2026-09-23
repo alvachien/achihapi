@@ -131,6 +131,18 @@ namespace hihapi.Models.Library
         [Column("PAGE_COUNT", TypeName = "INTEGER")]
         public Int32? PageCount { get; set; }
 
+        // Physical copies the home currently holds. 0 means the book is gone
+        // (lost, discarded, given away) but deliberately KEPT: reading and borrow
+        // records reference it, so the title must survive. NULL is "not recorded"
+        // (rows written before this column existed, or a create that omitted it)
+        // and is read as still-owned - a missing value must never mean "gone", so
+        // every consumer tests == 0 rather than falsy. On an update an omitted
+        // value keeps whatever is recorded instead of resetting the column to
+        // NULL, because a payload cannot say whether it meant to omit it
+        // (see LibraryBooksController.Put).
+        [Column("COPY_COUNT", TypeName = "INTEGER")]
+        public Int32? CopyCount { get; set; }
+
         [ForeignKey("HomeID")]
         public HomeDefine CurrentHome { get; set; }
         public IList<LibraryBookCategory> Categories { get; set; }
@@ -143,5 +155,26 @@ namespace hihapi.Models.Library
         public IList<LibraryBookTranslatorLinkage> BookTranslators { get; set; }
         public IList<LibraryOrganization> Presses { get; set; }
         public IList<LibraryBookPressLinkage> BookPresses { get; set; }
+
+        // Business-rule validation, called explicitly by the controller: the OData
+        // binding path only enforces the DataAnnotations, and CopyCount's constraint
+        // is not one of them (no [Range] on a value whose meaning lives in three
+        // states rather than in an interval).
+        public override bool IsValid(hihDataContext context)
+        {
+            bool isvalid = base.IsValid(context);
+
+            // CopyCount has exactly three states - 0 (gone), NULL (not recorded) and
+            // >0 (owned) - so a negative count is outside all of them. Left through,
+            // it would drag LibraryOverviewKeyFigure.TotalCopies, documented as the
+            // physical books on the shelf, below TotalBooks or below zero, and the
+            // retired-row query (CopyCount eq 0) would never list the book.
+            if (isvalid && CopyCount < 0)
+            {
+                isvalid = false;
+            }
+
+            return isvalid;
+        }
     }
 }

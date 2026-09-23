@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using hihapi;
 using hihapi.Models;
+using hihapi.Models.Library;
 using hihapi.Utilities;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,30 @@ namespace hihapi.unittest.Utility
             var value = cmd.ExecuteScalar();
             Assert.NotNull(value); // the sequence row must exist after seeding
             return Convert.ToInt64(value, CultureInfo.InvariantCulture);
+        }
+
+        // Replaces every stamp above `version` with one AT `version`, so the next start
+        // must run each registered step above it. VersionID is the key, so a stamp is
+        // replaced rather than edited - in two saves, since one SaveChanges could insert
+        // the new key before the delete of its predecessor frees the way.
+        private static async Task RollSchemaBackToAsync(hihDataContext context, Int32 version)
+        {
+            var newer = await context.DBVersions.Where(v => v.VersionID > version).ToListAsync();
+            if (newer.Count == 0) return;
+
+            foreach (var stamp in newer)
+            {
+                context.DBVersions.Remove(stamp);
+            }
+            await context.SaveChangesAsync();
+
+            context.DBVersions.Add(new DBVersion
+            {
+                VersionID = version,
+                ReleasedDate = newer[0].ReleasedDate,
+                AppliedDate = newer[0].AppliedDate,
+            });
+            await context.SaveChangesAsync();
         }
 
         [Fact]
@@ -158,6 +183,125 @@ namespace hihapi.unittest.Utility
             // DDL no-ops because the model-built schema already carries it.
             Assert.Contains(rows, r => r.VersionID == DatabaseSeeder.LegacyBaselineVersion);
             Assert.Equal(DatabaseSeeder.CurrentVersion, rows.Max(r => r.VersionID));
+        }
+
+        // The v23 step inserts its own subject rows into T_LIB_BOOKCTGY_DEF - the same table
+        // SeedLibraryBookCategories populates. A table-wide Any() guard in that pass read
+        // those rows as "already seeded" and skipped, so a database whose category table was
+        // empty at startup (a first start that aborted before the seed pass was saved) came
+        // out with the 7 subjects only, every one of them parented to an Education row (41)
+        // that was never delivered - a dangling tree with no base categories, and the run
+        // stamped CurrentVersion, so no later start repaired it.
+        [Fact]
+        public async Task TestCase_EducationStepDoesNotStrandTheBaseCategorySeed()
+        {
+            var (connection, context) = await CreateSeededDatabaseAsync();
+            await using var _ = connection;
+            await using var __ = context;
+
+            // The state that used to break: no categories at all, and a stored version
+            // below v23, so the next start runs the step against an empty table.
+            context.BookCategories.RemoveRange(await context.BookCategories.ToListAsync());
+            await context.SaveChangesAsync();
+            await RollSchemaBackToAsync(context, 22);
+
+            await DatabaseSeeder.SeedAsync(context);
+
+            var categories = await context.BookCategories.AsNoTracking().ToListAsync();
+
+            // The base set survives the step: roots and the Education parent are there...
+            Assert.Contains(categories, c => c.Id == 1);
+            Assert.Contains(categories, c => c.Id == 41);
+            Assert.Contains(categories, c => c.Id == 61);
+            // ...the subjects the step delivers are present exactly once...
+            Assert.Equal(7, categories.Count(c => c.Id >= 42 && c.Id <= 48));
+            Assert.Single(categories, c => c.Id == 42);
+            // ...and nothing points at a parent that does not exist.
+            Assert.All(categories.Where(c => c.ParentID != null),
+                c => Assert.Contains(categories, p => p.Id == c.ParentID));
+        }
+
+        // The v23 step's real job: a deployed database already carries the older system
+        // set, with Finance (61) as a ROOT and Accounting (62) hanging under 61. The step
+        // must add the seven subjects and move both finance rows under Education (41).
+        // Neither half had ever been executed by a test - the subjects were inserted by
+        // hand-built SQL and the re-parents only ever ran on a real pre-v23 database.
+        [Fact]
+        public async Task TestCase_EducationStepDeliversSubjectsAndReparentsOnAPopulatedDatabase()
+        {
+            var (connection, context) = await CreateSeededDatabaseAsync();
+            await using var _ = connection;
+            await using var __ = context;
+
+            // Reach the pre-v23 shape: the subjects not delivered yet, and the two
+            // finance rows still where they used to sit.
+            var subjects = await context.BookCategories.Where(c => c.Id >= 42 && c.Id <= 48).ToListAsync();
+            context.BookCategories.RemoveRange(subjects);
+            var finance = await context.BookCategories.SingleAsync(c => c.Id == 61);
+            var accounting = await context.BookCategories.SingleAsync(c => c.Id == 62);
+            finance.ParentID = null;   // 61 used to be a root
+            accounting.ParentID = 61;  // 62 used to hang under Finance
+            await context.SaveChangesAsync();
+            await RollSchemaBackToAsync(context, 22);
+
+            await DatabaseSeeder.SeedAsync(context);
+
+            var categories = await context.BookCategories.AsNoTracking().ToListAsync();
+
+            // The step delivered exactly the seven subjects...
+            Assert.Equal(7, categories.Count(c => c.Id >= 42 && c.Id <= 48));
+            // ...and re-parented the two finance rows under Education (41), keeping their
+            // historic ids and their linked books untouched.
+            Assert.Equal(41, categories.Single(c => c.Id == 61).ParentID);
+            Assert.Equal(41, categories.Single(c => c.Id == 62).ParentID);
+        }
+
+        // The v24 step is the one carrying a data hazard: adding COPY_COUNT with the
+        // wrong default would mark every catalogued book as "gone" (0 copies) at once.
+        // This drives a pre-v24 database through the real startup path and asserts the
+        // row that predates the column comes out as ONE copy.
+        [Fact]
+        public async Task TestCase_CopyCountStepAddsColumnAndBackfillsLegacyBooksToOwned()
+        {
+            var (connection, context) = await CreateSeededDatabaseAsync();
+            await using var _ = connection;
+            await using var __ = context;
+
+            var home = new HomeDefine()
+            {
+                Name = "unittest-copycount-" + Guid.NewGuid().ToString("N"),
+                Host = "unittest",
+                BaseCurrency = "CNY",
+            };
+            context.HomeDefines.Add(home);
+            await context.SaveChangesAsync();
+
+            context.Books.Add(new LibraryBook() { HomeID = home.ID, NativeName = "legacy book" });
+            await context.SaveChangesAsync();
+
+            // Reach the pre-v24 state: the column gone (EnsureCreatedAsync built the
+            // CURRENT schema from the model, so it has to be dropped) and the version
+            // table rolled back below the step so the next start must run it.
+            await context.Database.ExecuteSqlRawAsync("ALTER TABLE T_LIB_BOOK_DEF DROP COLUMN COPY_COUNT");
+            // VersionID is the key, so the stamp is replaced rather than edited -
+            // in two saves, since one SaveChanges could insert the new key before
+            // the delete of its predecessor frees the way.
+            var stamp = await context.DBVersions.SingleAsync(v => v.VersionID == DatabaseSeeder.CurrentVersion);
+            context.DBVersions.Remove(stamp);
+            await context.SaveChangesAsync();
+            context.DBVersions.Add(new DBVersion
+            {
+                VersionID = DatabaseSeeder.CurrentVersion - 1,
+                ReleasedDate = stamp.ReleasedDate,
+                AppliedDate = stamp.AppliedDate,
+            });
+            await context.SaveChangesAsync();
+
+            await DatabaseSeeder.SeedAsync(context);
+
+            // AsNoTracking: the tracked instance still holds the pre-drop NULL.
+            var legacy = await context.Books.AsNoTracking().SingleAsync(b => b.NativeName == "legacy book");
+            Assert.Equal(1, legacy.CopyCount);
         }
 
         [Fact]

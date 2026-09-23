@@ -680,6 +680,7 @@ namespace hihapi.test.common
 	            ORIGIN_LANG INT NULL,
 	            BOOK_LANG INT NULL,
 	            PAGE_COUNT INT NULL,
+	            COPY_COUNT INT NULL,
                 CREATEDBY   NVARCHAR (40) NULL,
                 CREATEDAT   DATE          NULL DEFAULT CURRENT_DATE,
                 UPDATEDBY   NVARCHAR (40) NULL,
