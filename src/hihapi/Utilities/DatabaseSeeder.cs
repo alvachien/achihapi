@@ -22,7 +22,7 @@ namespace hihapi.Utilities
         // fast); steps must be idempotent because a crash between a step and its
         // version row makes the next start re-run it.
         internal const Int32 LegacyBaselineVersion = 21;
-        public const Int32 CurrentVersion = 22;
+        public const Int32 CurrentVersion = 24;
 
         private static readonly DateTime LegacyBaselineReleasedDate = new(2022, 9, 30);
 
@@ -32,6 +32,10 @@ namespace hihapi.Utilities
         {
             new(22, new DateTime(2026, 9, 2), "Book reading records: table + STATUS lifecycle column",
                 EnsureReadingRecordSchema),
+            new(23, new DateTime(2026, 9, 19), "Education book categories: 7 new subjects + Finance/Accounting re-parented under Education",
+                EnsureEducationBookCategories),
+            new(24, new DateTime(2026, 9, 20), "Book copy count: COPY_COUNT on the book definition, legacy rows backfilled to one copy",
+                EnsureBookCopyCountSchema),
         };
 
         public static async Task SeedAsync(hihDataContext context)
@@ -61,6 +65,19 @@ namespace hihapi.Utilities
         // missing upgrade step in order, one T_DBVERSION row stamped per version.
         private static void ApplySchemaVersions(hihDataContext context, Boolean freshDatabase)
         {
+            // Runtime counterpart of the CI drift guard (DatabaseSeederTest): a
+            // CurrentVersion without a matching registered step would silently
+            // "catch up" to an older maximum and then serve a database missing the
+            // schema this code assumes - abort startup (fail fast) instead.
+            var maxStep = SchemaUpgrades.Length > 0 ? SchemaUpgrades.Max(u => u.Version) : 0;
+            if (maxStep != CurrentVersion)
+            {
+                throw new InvalidOperationException(
+                    string.Format(CultureInfo.InvariantCulture,
+                        "DatabaseSeeder.CurrentVersion is {0} but the highest registered SchemaUpgrade step is {1}; "
+                        + "every version needs a registered step - startup aborted.", CurrentVersion, maxStep));
+            }
+
             var applied = context.DBVersions.Select(v => v.VersionID).ToList();
             if (applied.Count == 0)
             {
@@ -96,6 +113,19 @@ namespace hihapi.Utilities
                     AppliedDate = DateTime.Today,
                 });
                 context.SaveChanges();
+            }
+
+            // Registry matched CurrentVersion (checked above) and every missing step
+            // ran, so the stored maximum must now equal it. Anything else means the
+            // stored rows disagree with this registry (e.g. a future-version or
+            // hand-edited T_DBVERSION) - the API refuses to serve such a database.
+            var finalMax = context.DBVersions.Any() ? context.DBVersions.Max(v => v.VersionID) : 0;
+            if (finalMax != CurrentVersion)
+            {
+                throw new InvalidOperationException(
+                    string.Format(CultureInfo.InvariantCulture,
+                        "Database schema ended at version {0} but the code expects {1}; startup aborted.",
+                        finalMax, CurrentVersion));
             }
         }
 
@@ -135,6 +165,75 @@ namespace hihapi.Utilities
                 // open (Reading); they carry a NULL FromDate and are inert.
                 context.Database.ExecuteSqlRaw(
                     @"UPDATE T_LIB_BOOK_READING_RECORD SET STATUS = 1 WHERE TODATE IS NOT NULL");
+            }
+        }
+
+        // v23 - system-level education subjects (HomeID NULL; NAME is the UI i18n key,
+        // Sys.BkCtgy.* in achihui's en/zh.json). Fresh databases receive these rows via
+        // SeedLibraryBookCategories; this step is the delivery path for pre-existing
+        // databases (the seed pass per-row checks ids and leaves claimed ones alone).
+        // Each row is checked by ID - a low id can be occupied by a home row created
+        // before the sequence reservation (see CLAUDE.md ID-range convention), and the
+        // claimed id is then left to its owner rather than force-inserted. The
+        // re-parent UPDATEs are idempotent through their WHERE conditions.
+        private static void EnsureEducationBookCategories(hihDataContext context)
+        {
+            (Int32 Id, String Name)[] subjects =
+            {
+                (42, "Sys.BkCtgy.EnglishLearning"),
+                (43, "Sys.BkCtgy.JapaneseLearning"),
+                (44, "Sys.BkCtgy.GermanLearning"),
+                (45, "Sys.BkCtgy.Mathematics"),
+                (46, "Sys.BkCtgy.Physics"),
+                (47, "Sys.BkCtgy.Chemistry"),
+                (48, "Sys.BkCtgy.Chinese"),
+            };
+
+            foreach (var subject in subjects)
+            {
+                if (context.BookCategories.Any(c => c.Id == subject.Id)) continue;
+
+                // EF add path, like every other seed: the column set then follows the
+                // model, so a mapping change (a renamed column, an added NOT NULL
+                // column) fails on the fresh-database path in CI instead of only on the
+                // one deployment that needs this step. CreatedAt/UpdatedAt pick up
+                // their CURRENT_DATE default.
+                context.BookCategories.Add(new LibraryBookCategory
+                {
+                    Id = subject.Id,
+                    Name = subject.Name,
+                    ParentID = 41,
+                    Comment = null,
+                });
+            }
+
+            // Finance (61, formerly a root) and Accounting (62, formerly under Finance)
+            // move under Education (41) - historic ids and their linked books untouched.
+            // These two stay raw SQL: they are UPDATEs over rows that already exist, and
+            // their WHERE conditions are what make them idempotent.
+            context.Database.ExecuteSqlRaw(
+                @"UPDATE T_LIB_BOOKCTGY_DEF SET PARID = 41 WHERE ID = 61 AND HID IS NULL AND PARID IS NULL");
+            context.Database.ExecuteSqlRaw(
+                @"UPDATE T_LIB_BOOKCTGY_DEF SET PARID = 41 WHERE ID = 62 AND HID IS NULL AND PARID = 61");
+        }
+
+        // v24 - physical copies per book. 0 means the book is gone (lost, discarded,
+        // given away) while its catalogue record and its reading/borrow history stay;
+        // NULL means "not recorded" and reads as still-owned. The existing rows are
+        // backfilled to 1 rather than left NULL or defaulted to 0: each of them was
+        // catalogued as a book the home owned, and a 0 default would silently mark the
+        // entire library as gone. The backfill is guarded by the same "column was just
+        // added" branch as the ALTER, so a database that already carries the column is
+        // never re-touched (its NULLs are its own, and they are harmless by design).
+        private static void EnsureBookCopyCountSchema(hihDataContext context)
+        {
+            if (!ColumnExists(context, "T_LIB_BOOK_DEF", "COPY_COUNT"))
+            {
+                context.Database.ExecuteSqlRaw(
+                    @"ALTER TABLE T_LIB_BOOK_DEF ADD COLUMN COPY_COUNT INTEGER NULL");
+
+                context.Database.ExecuteSqlRaw(
+                    @"UPDATE T_LIB_BOOK_DEF SET COPY_COUNT = 1 WHERE COPY_COUNT IS NULL");
             }
         }
 
@@ -574,20 +673,30 @@ namespace hihapi.Utilities
 
         private static void SeedLibraryBookCategories(hihDataContext context)
         {
-            if (context.BookCategories.Any()) return;
+            // Per-row id check instead of a table-wide Any() guard. The v23 upgrade step
+            // inserts system rows (42-48) into this table on databases that predate them,
+            // so on a database whose category table was empty - one whose first start
+            // aborted before this pass was saved - Any() reported "already populated" and
+            // this pass skipped entirely, leaving the base categories (1-9, 21, 41, 61...)
+            // out permanently while the step's 7 rows kept dangling under a missing
+            // PARID 41. Checking each id keeps the set complete wherever this pass runs,
+            // in either order relative to the steps, and follows their delivery
+            // convention: an id already claimed stays with its owner (a home row created
+            // before the sequence reservation, or a row the v23 step delivered).
+            var delivered = context.BookCategories.Select(c => c.Id).ToHashSet();
 
             // System-level book categories (HomeID = null). `Name` is the i18n key the UI
             // resolves via transloco (Sys.BkCtgy.* in assets/i18n/{en,zh}.json), so every
             // row here is already bilingual. `ParentID` forms the hierarchy (null = root).
             // IDs are stable and referenced by t_lib_book_ctgy, so do not renumber existing
             // ones (1-9, 21, 41, 51, 61); new rows use free slots in the same ranges.
-            context.BookCategories.AddRange(
+            LibraryBookCategory[] systemCategories =
+            {
                 // --- Roots (ParentID = null) ---
                 new LibraryBookCategory { Id = 1, Name = "Sys.BkCtgy.Novel", ParentID = null, Comment = null },
                 new LibraryBookCategory { Id = 21, Name = "Sys.BkCtgy.Computer", ParentID = null, Comment = null },
                 new LibraryBookCategory { Id = 41, Name = "Sys.BkCtgy.Education", ParentID = null, Comment = null },
                 new LibraryBookCategory { Id = 51, Name = "Sys.BkCtgy.ChildBk", ParentID = null, Comment = null },
-                new LibraryBookCategory { Id = 61, Name = "Sys.BkCtgy.Finance", ParentID = null, Comment = null },
                 new LibraryBookCategory { Id = 71, Name = "Sys.BkCtgy.History", ParentID = null, Comment = null },
                 new LibraryBookCategory { Id = 81, Name = "Sys.BkCtgy.ArtPt", ParentID = null, Comment = null },
                 new LibraryBookCategory { Id = 91, Name = "Sys.BkCtgy.Health", ParentID = null, Comment = null },
@@ -604,11 +713,24 @@ namespace hihapi.Utilities
                 new LibraryBookCategory { Id = 7, Name = "Sys.BkCtgy.FantasyNovel", ParentID = 1, Comment = null },
                 new LibraryBookCategory { Id = 8, Name = "Sys.BkCtgy.ChineseClassical", ParentID = 1, Comment = null },
                 new LibraryBookCategory { Id = 9, Name = "Sys.BkCtgy.WorldFamousBook", ParentID = 1, Comment = null },
+                // --- Children of Education (41) ---
+                new LibraryBookCategory { Id = 42, Name = "Sys.BkCtgy.EnglishLearning", ParentID = 41, Comment = null },
+                new LibraryBookCategory { Id = 43, Name = "Sys.BkCtgy.JapaneseLearning", ParentID = 41, Comment = null },
+                new LibraryBookCategory { Id = 44, Name = "Sys.BkCtgy.GermanLearning", ParentID = 41, Comment = null },
+                new LibraryBookCategory { Id = 45, Name = "Sys.BkCtgy.Mathematics", ParentID = 41, Comment = null },
+                new LibraryBookCategory { Id = 46, Name = "Sys.BkCtgy.Physics", ParentID = 41, Comment = null },
+                new LibraryBookCategory { Id = 47, Name = "Sys.BkCtgy.Chemistry", ParentID = 41, Comment = null },
+                new LibraryBookCategory { Id = 48, Name = "Sys.BkCtgy.Chinese", ParentID = 41, Comment = null },
+                // Finance/Accounting joined Education in v23 (kept their historic ids;
+                // the v23 SchemaUpgrade step moves them on pre-existing databases).
+                new LibraryBookCategory { Id = 61, Name = "Sys.BkCtgy.Finance", ParentID = 41, Comment = null },
+                new LibraryBookCategory { Id = 62, Name = "Sys.BkCtgy.Accounting", ParentID = 41, Comment = null },
                 // --- Other children ---
-                new LibraryBookCategory { Id = 62, Name = "Sys.BkCtgy.Accounting", ParentID = 61, Comment = null },
                 new LibraryBookCategory { Id = 72, Name = "Sys.BkCtgy.Bio", ParentID = 71, Comment = null },
                 new LibraryBookCategory { Id = 82, Name = "Sys.BkCtgy.CraftAndHobby", ParentID = 81, Comment = null }
-            );
+            };
+
+            context.BookCategories.AddRange(systemCategories.Where(c => !delivered.Contains(c.Id)));
         }
     }
 }

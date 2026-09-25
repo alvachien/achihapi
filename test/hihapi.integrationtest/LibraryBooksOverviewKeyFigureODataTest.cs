@@ -59,6 +59,9 @@ namespace hihapi.integrationtest
             {
                 HomeID = DataSetupUtility.Home1ID,
                 NativeName = "unittest-integ-book-" + guid,
+                // Three copies: with the shelf figure summing rather than counting
+                // rows, this book alone makes TotalCopies outgrow TotalBooks.
+                CopyCount = 3,
                 CreatedAt = DateTime.Now,
                 Createdby = TestAuthUserId,
             };
@@ -107,6 +110,19 @@ namespace hihapi.integrationtest
                 Assert.Equal(DataSetupUtility.Home1ID, row.GetProperty("HomeID").GetInt32());
                 Assert.True(row.GetProperty("TotalBooks").GetInt32() >= 1);
                 Assert.True(row.GetProperty("AddedThisMonth").GetInt32() >= 1);
+
+                // The shelf figure is its own property (a missing one would throw
+                // here) and it SUMS copies rather than counting rows. Recomputed
+                // against the live context rather than hard-coded, so it stays true
+                // whatever else the shared fixture holds: null counts as one copy,
+                // and only the 3-copy book above lifts the sum above TotalBooks.
+                var expectedCopies = (await context.Books
+                    .Where(b => b.HomeID == DataSetupUtility.Home1ID)
+                    .SumAsync(b => (int?)(b.CopyCount ?? 1))) ?? 0;
+                Assert.Equal(expectedCopies, row.GetProperty("TotalCopies").GetInt32());
+                Assert.True(
+                    expectedCopies > row.GetProperty("TotalBooks").GetInt32(),
+                    "a 3-copy book must make the copy sum exceed the row count");
 
                 // The collection-of-complex ranking property serializes as an
                 // array of {Key,Name,Count} objects.

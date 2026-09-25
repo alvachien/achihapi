@@ -32,7 +32,15 @@ namespace hihapi.Models.Library
         [Required]
         public Int32 HomeID { get; set; }
 
+        // Catalogue entries of the home: every row, retired ones included. The
+        // number the book list shows, since that list is rows.
         public Int32 TotalBooks { get; set; }
+
+        // Physical books on the shelf: SUM of CopyCount, each NULL count read as 1
+        // (an unrecorded count means still held - see LibraryBook.CopyCount). A
+        // retired book (0) adds nothing here while still counting in TotalBooks, so
+        // the two figures answer different questions and are shown side by side.
+        public Int32 TotalCopies { get; set; }
 
         // Books whose CreatedAt falls in the half-open month window
         // [startOfMonth, start + 1 month) of the server's current / previous month.
