@@ -33,8 +33,10 @@ namespace hihapi.Models
         [Column("RELT", TypeName = "INTEGER")]
         public HomeMemberRelationType Relation { get; set; }
 
+        // Wire/EDM name is IsLite (renamed 2026-10-05 from IsChild); the SQLite
+        // column deliberately keeps its historical name ISCHILD — no schema change.
         [Column("ISCHILD", TypeName = "INTEGER")]
-        public bool? IsChild { get; set; }
+        public bool? IsLite { get; set; }
 
         public HomeDefine HomeDefinition { get; set; }
     }

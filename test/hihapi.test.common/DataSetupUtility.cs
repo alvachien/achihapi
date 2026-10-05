@@ -849,9 +849,9 @@ namespace hihapi.test.common
                     TRANAMOUNT_ORG,
                     TRANAMOUNT,
                     CASE WHEN ( USECURR2 IS NULL OR USECURR2 = '' ) AND EXGRATE IS NOT NULL AND EXGRATE != 0 
-                            THEN TRANAMOUNT * EXGRATE / 100                         
+                            THEN ROUND(TRANAMOUNT * EXGRATE / 100, 2)                         
                          WHEN USECURR2 IS NOT NULL AND USECURR2 != '' AND EXGRATE2 IS NOT NULL AND EXGRATE2 != 0
-                            THEN TRANAMOUNT * EXGRATE2 / 100
+                            THEN ROUND(TRANAMOUNT * EXGRATE2 / 100, 2)
                          ELSE TRANAMOUNT
                     END AS TRANAMOUNT_LC,
                     CONTROLCENTERID,
@@ -1162,7 +1162,7 @@ namespace hihapi.test.common
                 Relation = HomeMemberRelationType.Child,
                 User = UserC,
                 Createdby = UserA,
-                IsChild = true
+                IsLite = true
             });
             HomeMembers.Add(new HomeMember()
             {
@@ -1171,7 +1171,7 @@ namespace hihapi.test.common
                 Relation = HomeMemberRelationType.Child,
                 User = UserD,
                 Createdby = UserA,
-                IsChild = true
+                IsLite = true
             });
 
             // Home 2

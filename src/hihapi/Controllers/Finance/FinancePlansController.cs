@@ -41,11 +41,25 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            // Restricted ("lite") members only see plans whose target is one of their
+            // own accounts / control centers; home-level plans (account category,
+            // transaction type) stay invisible to them.
+            var ownAcntIDs = _context.FinanceAccount
+                .Where(acnt => acnt.Owner == usrName)
+                .Select(acnt => acnt.ID);
+            var ownCcIDs = _context.FinanceControlCenter
+                .Where(cc => cc.Owner == usrName)
+                .Select(cc => cc.ID);
+
             // Check whether User assigned with specified Home ID
             return Ok(from hmem in _context.HomeMembers
                       where hmem.User == usrName
-                      select new { HomeID = hmem.HomeID } into hids
+                      select new { HomeID = hmem.HomeID, IsLite = hmem.IsLite } into hids
                       join ords in _context.FinancePlan on hids.HomeID equals ords.HomeID
+                      where !hids.IsLite.HasValue
+                          || hids.IsLite == false
+                          || (ords.PlanType == FinancePlanTypeEnum.Account && ords.AccountID != null && ownAcntIDs.Contains(ords.AccountID.Value))
+                          || (ords.PlanType == FinancePlanTypeEnum.ControlCenter && ords.ControlCenterID != null && ownCcIDs.Contains(ords.ControlCenterID.Value))
                       select ords);
 
             //return Ok(option.ApplyTo(query));
@@ -67,12 +81,25 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            // Same lite-scope as the collection query above: a restricted member must
+            // not reach another member's plan by guessing its key.
+            var ownAcntIDs = _context.FinanceAccount
+                .Where(acnt => acnt.Owner == usrName)
+                .Select(acnt => acnt.ID);
+            var ownCcIDs = _context.FinanceControlCenter
+                .Where(cc => cc.Owner == usrName)
+                .Select(cc => cc.ID);
+
             // Check whether User assigned with specified Home ID
             return SingleResult.Create(from hmem in _context.HomeMembers
                                        where hmem.User == usrName
-                                       select new { HomeID = hmem.HomeID } into hids
+                                       select new { HomeID = hmem.HomeID, IsLite = hmem.IsLite } into hids
                                        join ords in _context.FinancePlan on hids.HomeID equals ords.HomeID
                                        where ords.ID == key
+                                          && (!hids.IsLite.HasValue
+                                              || hids.IsLite == false
+                                              || (ords.PlanType == FinancePlanTypeEnum.Account && ords.AccountID != null && ownAcntIDs.Contains(ords.AccountID.Value))
+                                              || (ords.PlanType == FinancePlanTypeEnum.ControlCenter && ords.ControlCenterID != null && ownCcIDs.Contains(ords.ControlCenterID.Value)))
                                        select ords);
         }
 
@@ -101,9 +128,12 @@ namespace hihapi.Controllers
             if (!plan.IsValid(this._context))
                 throw new BadRequestException("Check IsValid failed");
 
-            // Check whether User assigned with specified Home ID
-            var hms = await _context.HomeMembers.Where(p => p.HomeID == plan.HomeID && p.User == usrName).CountAsync();
-            if (hms <= 0)
+            // Check whether User assigned with specified Home ID; restricted ("lite")
+            // members may not create plans - a grown-up sets the goal for them.
+            var mem = await (from hmem in _context.HomeMembers
+                             where hmem.HomeID == plan.HomeID && hmem.User == usrName
+                             select new { hmem.IsLite }).FirstOrDefaultAsync();
+            if (mem == null || mem.IsLite == true)
                 throw new UnauthorizedAccessException();
 
             plan.Createdby = usrName;
@@ -144,9 +174,12 @@ namespace hihapi.Controllers
                 throw new NotFoundException("Inputted ID not found");
             }
 
-            // Check whether User assigned with the existing Home ID
-            var hms = await _context.HomeMembers.Where(p => p.HomeID == existing.HomeID && p.User == usrName).CountAsync();
-            if (hms <= 0)
+            // Check whether User assigned with the existing Home ID; restricted ("lite")
+            // members may not change plans.
+            var mem = await (from hmem in _context.HomeMembers
+                             where hmem.HomeID == existing.HomeID && hmem.User == usrName
+                             select new { hmem.IsLite }).FirstOrDefaultAsync();
+            if (mem == null || mem.IsLite == true)
             {
                 throw new UnauthorizedAccessException();
             }
@@ -206,9 +239,12 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            // Check whether User assigned with specified Home ID
-            var hms = await _context.HomeMembers.Where(p => p.HomeID == cc.HomeID && p.User == usrName).CountAsync();
-            if (hms <= 0)
+            // Check whether User assigned with specified Home ID; restricted ("lite")
+            // members may not delete plans.
+            var mem = await (from hmem in _context.HomeMembers
+                             where hmem.HomeID == cc.HomeID && hmem.User == usrName
+                             select new { hmem.IsLite }).FirstOrDefaultAsync();
+            if (mem == null || mem.IsLite == true)
             {
                 throw new UnauthorizedAccessException();
             }

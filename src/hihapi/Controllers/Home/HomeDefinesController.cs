@@ -208,7 +208,7 @@ namespace hihapi.Controllers
                 update.Createdby = existinghd.Createdby;
                 _context.Entry(existinghd).CurrentValues.SetValues(update);
 
-                var dbmems = _context.HomeMembers.Where(p => p.HomeID == key).ToList();
+                var dbmems = await _context.HomeMembers.Where(p => p.HomeID == key).ToListAsync();
                 foreach (var mem in update.Members)
                 {
                     var memindb = dbmems.Find(p => p.HomeID == key && string.Equals(p.User, mem.User, StringComparison.Ordinal));

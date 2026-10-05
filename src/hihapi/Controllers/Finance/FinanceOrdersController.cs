@@ -46,7 +46,7 @@ namespace hihapi.Controllers
             // Check whether User assigned with specified Home ID
             return Ok(from hmem in _context.HomeMembers
                       where hmem.User == usrName
-                      select new { hmem.HomeID, hmem.IsChild } into hids
+                      select new { hmem.HomeID, hmem.IsLite } into hids
                       join ords in _context.FinanceOrder on hids.HomeID equals ords.HomeID
                       select ords);
         }
@@ -184,7 +184,7 @@ namespace hihapi.Controllers
             _context.Entry(existing).CurrentValues.SetValues(update);
 
             // SRules.
-            var rulesInDB = _context.FinanceOrderSRule.Where(p => p.OrderID == update.ID).ToList();
+            var rulesInDB = await _context.FinanceOrderSRule.Where(p => p.OrderID == update.ID).ToListAsync();
             foreach (var rule in update.SRule)
             {
                 var itemindb = rulesInDB.Find(p => p.OrderID == update.ID && p.RuleID == rule.RuleID);

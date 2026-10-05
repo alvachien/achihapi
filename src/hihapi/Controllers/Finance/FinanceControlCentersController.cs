@@ -51,12 +51,12 @@ namespace hihapi.Controllers
             // Check whether User assigned with specified Home ID
             return Ok(from hmem in _context.HomeMembers
                       where hmem.User == usrName
-                      select new { hmem.HomeID, hmem.User, hmem.IsChild } into hmems
+                      select new { hmem.HomeID, hmem.User, hmem.IsLite } into hmems
                       join ccs in _context.FinanceControlCenter
                         on hmems.HomeID equals ccs.HomeID
-                      where (hmems.IsChild == true && hmems.User == ccs.Owner)
-                          || !hmems.IsChild.HasValue
-                          || hmems.IsChild == false
+                      where (hmems.IsLite == true && hmems.User == ccs.Owner)
+                          || !hmems.IsLite.HasValue
+                          || hmems.IsLite == false
                       select ccs);
             //return Ok(option.ApplyTo(query));
         }

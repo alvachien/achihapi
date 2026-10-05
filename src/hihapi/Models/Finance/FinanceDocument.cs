@@ -87,9 +87,13 @@ namespace hihapi.Models
             if (Items.Count == 0)
                 return false;
 
+            // API-18: batch-validate the items - two key-set queries for the
+            // whole document instead of two round-trips per item.
+            var validAccountIDs = context.FinanceAccount.Select(p => p.ID).ToHashSet();
+            var validTranTypes = context.FinTransactionType.Select(p => p.ID).ToHashSet();
             foreach (var item in Items)
             {
-                if (!item.IsValid(context))
+                if (!item.IsValid(validAccountIDs, validTranTypes))
                     return false;
             }
 
@@ -345,15 +349,24 @@ namespace hihapi.Models
 
         public bool IsValid(hihDataContext context)
         {
+            // Single-item convenience path (API-18): the two key lookups are
+            // batched into one query each, same cost shape as the set overload.
+            var validAccountIDs = context.FinanceAccount.Select(p => p.ID).ToHashSet();
+            var validTranTypes = context.FinTransactionType.Select(p => p.ID).ToHashSet();
+            return IsValid(validAccountIDs, validTranTypes);
+        }
+
+        public bool IsValid(ISet<Int32> validAccountIDs, ISet<Int32> validTranTypes)
+        {
             if (ItemID <= 0)
                 return false;
             if (AccountID <= 0)
                 return false;
-            else if (context.FinanceAccount.Where(p => p.ID == AccountID).Count() != 1)
+            else if (!validAccountIDs.Contains(AccountID))
                 return false;
             if (TranType <= 0)
                 return false;
-            else if (context.FinTransactionType.Where(p => p.ID == TranType).Count() != 1)
+            else if (!validTranTypes.Contains(TranType))
                 return false;
             if (TranAmount == 0)
                 return false;

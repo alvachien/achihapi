@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using hihapi.Models;
+using Microsoft.EntityFrameworkCore;
 using hihapi.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,9 +26,30 @@ namespace hihapi.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Check the home membership of the caller and resolve its data scope:
+        /// returns true when the caller is a restricted ("lite") member whose
+        /// figures must be limited to the accounts they own. Throws when the
+        /// caller is not a member of the home.
+        /// </summary>
+        /// <param name="hid">Home ID</param>
+        /// <param name="usrName">User ID of the caller</param>
+        /// <returns>True when the caller is a restricted (lite) member.</returns>
+        /// <exception cref="UnauthorizedAccessException"></exception>
+        private async Task<bool> CheckHomeMembershipLiteScopeAsync(Int32 hid, String usrName)
+        {
+            var member = await (from hmem in _context.HomeMembers
+                                where hmem.HomeID == hid && hmem.User == usrName
+                                select new { hmem.IsLite }).FirstOrDefaultAsync();
+            if (member == null)
+                throw new UnauthorizedAccessException();
+
+            return member.IsLite == true;
+        }
+
         // Actions
         [HttpPost]
-        public IActionResult GetReportByTranType([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetReportByTranType([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -62,14 +85,14 @@ namespace hihapi.Controllers
             }
 
             // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
             // 3. Calculate the amount            
             DateTime dtlow = new DateTime(year, month == null ? 1 : month.Value, 1);
             DateTime dthigh = month == null ? dtlow.AddYears(1) : dtlow.AddMonths(1);
-            var results = (from item in _context.FinanceDocumentItemView
+            var results = await (from item in _context.FinanceDocumentItemView
                            where item.HomeID == hid
                              && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                            //&& item.TransactionType != FinanceTransactionType.TranType_TransferIn
@@ -83,8 +106,8 @@ namespace hihapi.Controllers
                                TransactionType = newresult.Key.TransactionType,
                                TransactionTypeName = newresult.Key.TransactionTypeName,
                                IsExpense = newresult.Key.IsExpense,
-                               Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency)
-                           }).ToList();
+                               Amount = newresult.Sum(c => c.AmountInLocalCurrency)
+                           }).ToListAsync();
 
             List<FinanceReportByTransactionType> listResult = new List<FinanceReportByTransactionType>();
             foreach (var result in results)
@@ -113,7 +136,7 @@ namespace hihapi.Controllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetAccountBalance([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetAccountBalance([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -145,13 +168,19 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
-            if (hms <= 0)
+            // 2. Check the Home ID (and resolve the member's data scope)
+            var isLiteMember = await CheckHomeMembershipLiteScopeAsync(hid, usrName);
+
+            // The account must belong to this home; a restricted member may read
+            // only the balances of the accounts they own.
+            var acntCnt = await _context.FinanceAccount
+                .Where(p => p.ID == accountid && p.HomeID == hid && (!isLiteMember || p.Owner == usrName))
+                .CountAsync();
+            if (acntCnt <= 0)
                 throw new UnauthorizedAccessException();
 
             // 3. Calculate the amount
-            var results = (
+            var results = await (
                 from docitem in _context.FinanceDocumentItem
                 join docheader in _context.FinanceDocument
                     on docitem.DocID equals docheader.ID
@@ -178,10 +207,10 @@ namespace hihapi.Controllers
                     UseCurr2 = docitem3.Key.UseCurr2,
                     ExgRate = docitem3.Key.ExgRate,
                     ExgRate2 = docitem3.Key.ExgRate2,
-                    TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
-                }).ToList();
+                    TranAmount = docitem3.Sum(p => p.TranAmount)
+                }).ToListAsync();
 
-            Double doubleAmount = 0;
+            Decimal decimalAmount = 0;
 
             foreach (var rst in results)
             {
@@ -193,21 +222,21 @@ namespace hihapi.Controllers
                 {
                     if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
                     {
-                        amountLC *= (Double)rst.ExgRate2.GetValueOrDefault();
+                        amountLC *= rst.ExgRate2.GetValueOrDefault();
                     }
                 }
                 else
                 {
                     if (rst.ExgRate != null && rst.ExgRate.GetValueOrDefault() > 0)
                     {
-                        amountLC *= (Double)rst.ExgRate.GetValueOrDefault();
+                        amountLC *= rst.ExgRate.GetValueOrDefault();
                     }
                 }
 
-                doubleAmount += amountLC;
+                decimalAmount += amountLC;
             }
 
-            return Ok(doubleAmount);
+            return Ok(decimalAmount);
         }
 
         /// <summary>
@@ -221,7 +250,7 @@ namespace hihapi.Controllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetAccountBalanceEx([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetAccountBalanceEx([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -254,9 +283,15 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
-            if (hms <= 0)
+            // 2. Check the Home ID (and resolve the member's data scope)
+            var isLiteMember = await CheckHomeMembershipLiteScopeAsync(hid, usrName);
+
+            // The account must belong to this home; a restricted member may read
+            // only the balances of the accounts they own.
+            var acntCnt = await _context.FinanceAccount
+                .Where(p => p.ID == accountid && p.HomeID == hid && (!isLiteMember || p.Owner == usrName))
+                .CountAsync();
+            if (acntCnt <= 0)
                 throw new UnauthorizedAccessException();
 
             List<DateTime> listDates = new List<DateTime>();
@@ -264,12 +299,12 @@ namespace hihapi.Controllers
                 listDates.Add(DateTime.Parse(dstr, CultureInfo.InvariantCulture));
             listDates.Sort();
             var lastDate = DateTime.MinValue;
-            Double doubleAmount = 0;
+            Decimal decimalAmount = 0;
             List<FinanceAccountBalancePerDate> listResults = new List<FinanceAccountBalancePerDate>();
 
             foreach (var curdate in listDates)
             {
-                var results = (
+                var results = await (
                     from docitem in _context.FinanceDocumentItem
                     join docheader in _context.FinanceDocument
                         on docitem.DocID equals docheader.ID
@@ -298,11 +333,11 @@ namespace hihapi.Controllers
                         UseCurr2 = docitem3.Key.UseCurr2,
                         ExgRate = docitem3.Key.ExgRate,
                         ExgRate2 = docitem3.Key.ExgRate2,
-                        TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
-                    }).ToList();
+                        TranAmount = docitem3.Sum(p => p.TranAmount)
+                    }).ToListAsync();
                 lastDate = curdate;
 
-                doubleAmount = 0;
+                decimalAmount = 0;
                 foreach (var rst in results)
                 {
                     var amountLC = rst.TranAmount;
@@ -313,25 +348,25 @@ namespace hihapi.Controllers
                     {
                         if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
                         {
-                            amountLC *= (Double)rst.ExgRate2.GetValueOrDefault();
+                            amountLC *= rst.ExgRate2.GetValueOrDefault();
                         }
                     }
                     else
                     {
                         if (rst.ExgRate != null && rst.ExgRate.GetValueOrDefault() > 0)
                         {
-                            amountLC *= (Double)rst.ExgRate.GetValueOrDefault();
+                            amountLC *= rst.ExgRate.GetValueOrDefault();
                         }
                     }
 
-                    doubleAmount += amountLC;
+                    decimalAmount += amountLC;
                 }
                 listResults.Add(new FinanceAccountBalancePerDate
                 {
                     HomeID = hid,
                     AccountID = accountid,
                     BalanceDate = curdate,
-                    Balance = (decimal)doubleAmount,
+                    Balance = decimalAmount,
                 });
             }
 
@@ -347,7 +382,7 @@ namespace hihapi.Controllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetReportByAccount([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetReportByAccount([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -379,12 +414,12 @@ namespace hihapi.Controllers
             }
 
             // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
             // 3. Calculate the amount
-            var results = (
+            var results = await (
                 from docitem in _context.FinanceDocumentItem
                 join docheader in _context.FinanceDocument
                     on docitem.DocID equals docheader.ID
@@ -415,8 +450,8 @@ namespace hihapi.Controllers
                     UseCurr2 = docitem3.Key.UseCurr2,
                     ExgRate = docitem3.Key.ExgRate,
                     ExgRate2 = docitem3.Key.ExgRate2,
-                    TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
-                }).ToList();
+                    TranAmount = docitem3.Sum(p => p.TranAmount)
+                }).ToListAsync();
 
             List<FinanceReportByAccount> listResults = new List<FinanceReportByAccount>();
             foreach (var rst in results)
@@ -429,14 +464,14 @@ namespace hihapi.Controllers
                 {
                     if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
                     {
-                        amountLC *= (Double)rst.ExgRate2.GetValueOrDefault();
+                        amountLC *= rst.ExgRate2.GetValueOrDefault();
                     }
                 }
                 else
                 {
                     if (rst.ExgRate != null && rst.ExgRate.GetValueOrDefault() > 0)
                     {
-                        amountLC *= (Double)rst.ExgRate.GetValueOrDefault();
+                        amountLC *= rst.ExgRate.GetValueOrDefault();
                     }
                 }
 
@@ -476,7 +511,7 @@ namespace hihapi.Controllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetReportByControlCenter([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetReportByControlCenter([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -508,12 +543,12 @@ namespace hihapi.Controllers
             }
 
             // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
             // 3. Calculate the amount
-            var results = (
+            var results = await (
                 from docitem in _context.FinanceDocumentItem
                 join docheader in _context.FinanceDocument
                     on docitem.DocID equals docheader.ID
@@ -542,8 +577,8 @@ namespace hihapi.Controllers
                     UseCurr2 = docitem3.Key.UseCurr2,
                     ExgRate = docitem3.Key.ExgRate,
                     ExgRate2 = docitem3.Key.ExgRate2,
-                    TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
-                }).ToList();
+                    TranAmount = docitem3.Sum(p => p.TranAmount)
+                }).ToListAsync();
 
             List<FinanceReportByControlCenter> listResults = new List<FinanceReportByControlCenter>();
             foreach (var rst in results)
@@ -556,14 +591,14 @@ namespace hihapi.Controllers
                 {
                     if (rst.ExgRate2 != null && rst.ExgRate2.GetValueOrDefault() > 0)
                     {
-                        amountLC *= (Double)rst.ExgRate2.GetValueOrDefault();
+                        amountLC *= rst.ExgRate2.GetValueOrDefault();
                     }
                 }
                 else
                 {
                     if (rst.ExgRate != null && rst.ExgRate.GetValueOrDefault() > 0)
                     {
-                        amountLC *= (Double)rst.ExgRate.GetValueOrDefault();
+                        amountLC *= rst.ExgRate.GetValueOrDefault();
                     }
                 }
 
@@ -603,7 +638,7 @@ namespace hihapi.Controllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetReportByOrder([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetReportByOrder([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -638,7 +673,7 @@ namespace hihapi.Controllers
             }
 
             // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
@@ -647,7 +682,7 @@ namespace hihapi.Controllers
 
             if (orderid != null)
             {
-                var results = (
+                var results = await (
                     from docitem in _context.FinanceDocumentItem
                     join docheader in _context.FinanceDocument
                         on docitem.DocID equals docheader.ID
@@ -675,7 +710,7 @@ namespace hihapi.Controllers
                         ExgRate = docitem3.Key.ExgRate,
                         ExgRate2 = docitem3.Key.ExgRate2,
                         TranAmount = docitem3.Sum(p => p.TranAmount)
-                    }).ToList();
+                    }).ToListAsync();
 
                 foreach (var rst in results)
                 {
@@ -723,7 +758,7 @@ namespace hihapi.Controllers
             }
             else
             {
-                var results = (
+                var results = await (
                     from docitem in _context.FinanceDocumentItem
                     join docheader in _context.FinanceDocument
                         on docitem.DocID equals docheader.ID
@@ -753,7 +788,7 @@ namespace hihapi.Controllers
                         ExgRate = docitem3.Key.ExgRate,
                         ExgRate2 = docitem3.Key.ExgRate2,
                         TranAmount = docitem3.Sum(p => p.TranAmount)
-                    }).ToList();
+                    }).ToListAsync();
 
                 foreach (var rst in results)
                 {
@@ -822,7 +857,7 @@ namespace hihapi.Controllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetFinanceOverviewKeyFigure([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetFinanceOverviewKeyFigure([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -862,22 +897,32 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
-            if (hms <= 0)
-                throw new UnauthorizedAccessException();
+            // 2. Check the Home ID (and resolve the member's data scope)
+            var isLiteMember = await CheckHomeMembershipLiteScopeAsync(hid, usrName);
 
             // 3. Calculate the key figure of current month.
             FinanceOverviewKeyFigure keyfigure = new FinanceOverviewKeyFigure();
             keyfigure.HomeID = hid;
 
+            // Aggregation source: a restricted (lite) member's figures cover only the
+            // accounts they own. The scope follows the caller's membership - never a
+            // request parameter - so it cannot be widened from the client.
+            IQueryable<FinanceDocumentItemView> scopedItems = _context.FinanceDocumentItemView
+                .Where(item => item.HomeID == hid);
+            if (isLiteMember)
+            {
+                var ownAccountIDs = _context.FinanceAccount
+                    .Where(acnt => acnt.HomeID == hid && acnt.Owner == usrName)
+                    .Select(acnt => acnt.ID);
+                scopedItems = scopedItems.Where(item => ownAccountIDs.Contains(item.AccountID));
+            }
+
             DateTime dtlow = new DateTime(year, month, 1);
             DateTime dthigh = dtlow.AddMonths(1);
             if (excludeTransfer)
             {
-                var results = (from item in _context.FinanceDocumentItemView
-                               where item.HomeID == hid
-                                 && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                var results = await (from item in scopedItems
+                               where item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                                  && item.TransactionType != FinanceTransactionType.TranType_TransferIn
                                  && item.TransactionType != FinanceTransactionType.TranType_TransferOut
                                  && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
@@ -892,31 +937,36 @@ namespace hihapi.Controllers
                                    HomeID = hid,
                                    IsExpense = newresult.Key.IsExpense,
                                    Amount = newresult.Sum(c => c.AmountInLocalCurrency)
-                               }).ToList();
+                               }).ToListAsync();
                 results.ForEach(rst =>
                 {
+                    // The view signs expense items negative (debit convention); the
+                    // overview figures are reported as magnitudes - income and outgo
+                    // both positive, month-on-month and net read naturally.
                     if (rst.IsExpense)
-                        keyfigure.CurrentMonthOutgo = rst.Amount;
+                        keyfigure.CurrentMonthOutgo = -rst.Amount;
                     else
                         keyfigure.CurrentMonthIncome = rst.Amount;
                 });
             }
             else
             {
-                var results = (from item in _context.FinanceDocumentItemView
-                               where item.HomeID == hid
-                                 && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                var results = await (from item in scopedItems
+                               where item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                                group item by new { item.IsExpense } into newresult
                                select new
                                {
                                    HomeID = hid,
                                    IsExpense = newresult.Key.IsExpense,
                                    Amount = newresult.Sum(c => c.AmountInLocalCurrency)
-                               }).ToList();
+                               }).ToListAsync();
                 results.ForEach(rst =>
                 {
+                    // The view signs expense items negative (debit convention); the
+                    // overview figures are reported as magnitudes - income and outgo
+                    // both positive, month-on-month and net read naturally.
                     if (rst.IsExpense)
-                        keyfigure.CurrentMonthOutgo = rst.Amount;
+                        keyfigure.CurrentMonthOutgo = -rst.Amount;
                     else
                         keyfigure.CurrentMonthIncome = rst.Amount;
                 });
@@ -927,9 +977,8 @@ namespace hihapi.Controllers
             dthigh = dtlow.AddYears(1);
             if (excludeTransfer)
             {
-                var results = (from item in _context.FinanceDocumentItemView
-                               where item.HomeID == hid
-                                 && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                var results = await (from item in scopedItems
+                               where item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                                  && item.TransactionType != FinanceTransactionType.TranType_TransferIn
                                  && item.TransactionType != FinanceTransactionType.TranType_TransferOut
                                  && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
@@ -944,31 +993,32 @@ namespace hihapi.Controllers
                                    HomeID = hid,
                                    IsExpense = newresult.Key.IsExpense,
                                    Amount = newresult.Sum(c => c.AmountInLocalCurrency)
-                               }).ToList();
+                               }).ToListAsync();
                 results.ForEach(rst =>
                 {
+                    // Expense amounts come back negative from the view - see above.
                     if (rst.IsExpense)
-                        keyfigure.OutgoYTD = rst.Amount;
+                        keyfigure.OutgoYTD = -rst.Amount;
                     else
                         keyfigure.IncomeYTD = rst.Amount;
                 });
             }
             else
             {
-                var results = (from item in _context.FinanceDocumentItemView
-                               where item.HomeID == hid
-                                 && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                var results = await (from item in scopedItems
+                               where item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                                group item by new { item.IsExpense } into newresult
                                select new
                                {
                                    HomeID = hid,
                                    IsExpense = newresult.Key.IsExpense,
                                    Amount = newresult.Sum(c => c.AmountInLocalCurrency)
-                               }).ToList();
+                               }).ToListAsync();
                 results.ForEach(rst =>
                 {
+                    // Expense amounts come back negative from the view - see above.
                     if (rst.IsExpense)
-                        keyfigure.OutgoYTD = rst.Amount;
+                        keyfigure.OutgoYTD = -rst.Amount;
                     else
                         keyfigure.IncomeYTD = rst.Amount;
                 });
@@ -979,9 +1029,8 @@ namespace hihapi.Controllers
             dthigh = new DateTime(year, month, 1);
             if (excludeTransfer)
             {
-                var results = (from item in _context.FinanceDocumentItemView
-                               where item.HomeID == hid
-                                 && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                var results = await (from item in scopedItems
+                               where item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                                  && item.TransactionType != FinanceTransactionType.TranType_TransferIn
                                  && item.TransactionType != FinanceTransactionType.TranType_TransferOut
                                  && item.TransactionType != FinanceTransactionType.TranType_OpeningAsset
@@ -996,31 +1045,32 @@ namespace hihapi.Controllers
                                    HomeID = hid,
                                    IsExpense = newresult.Key.IsExpense,
                                    Amount = newresult.Sum(c => c.AmountInLocalCurrency)
-                               }).ToList();
+                               }).ToListAsync();
                 results.ForEach(rst =>
                 {
+                    // Expense amounts come back negative from the view - see above.
                     if (rst.IsExpense)
-                        keyfigure.LastMonthOutgo = rst.Amount;
+                        keyfigure.LastMonthOutgo = -rst.Amount;
                     else
                         keyfigure.LastMonthIncome = rst.Amount;
                 });
             }
             else
             {
-                var results = (from item in _context.FinanceDocumentItemView
-                               where item.HomeID == hid
-                                 && item.TransactionDate >= dtlow && item.TransactionDate < dthigh
+                var results = await (from item in scopedItems
+                               where item.TransactionDate >= dtlow && item.TransactionDate < dthigh
                                group item by new { item.IsExpense } into newresult
                                select new
                                {
                                    HomeID = hid,
                                    IsExpense = newresult.Key.IsExpense,
                                    Amount = newresult.Sum(c => c.AmountInLocalCurrency)
-                               }).ToList();
+                               }).ToListAsync();
                 results.ForEach(rst =>
                 {
+                    // Expense amounts come back negative from the view - see above.
                     if (rst.IsExpense)
-                        keyfigure.LastMonthOutgo = rst.Amount;
+                        keyfigure.LastMonthOutgo = -rst.Amount;
                     else
                         keyfigure.LastMonthIncome = rst.Amount;
                 });
@@ -1057,7 +1107,7 @@ namespace hihapi.Controllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetReportByTranTypeMOM([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetReportByTranTypeMOM([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -1094,7 +1144,7 @@ namespace hihapi.Controllers
             }
 
             // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
@@ -1108,10 +1158,10 @@ namespace hihapi.Controllers
             ttids.Add(ttid);
             if (includeChildren)
             {
-                var lvl = (from fintt in _context.FinTransactionType
+                var lvl = await (from fintt in _context.FinTransactionType
                            where fintt.ParID != null
                            && ttids.Contains(fintt.ParID.GetValueOrDefault())
-                           select fintt.ID).ToList();
+                           select fintt.ID).ToListAsync();
                 ttids.AddRange(lvl);
             }
 
@@ -1130,7 +1180,7 @@ namespace hihapi.Controllers
             else
                 return BadRequest("Invalid Period");
 
-            var results = (from item in _context.FinanceDocumentItemView
+            var results = await (from item in _context.FinanceDocumentItemView
                            where item.HomeID == hid
                              && item.TransactionDate >= dtbgn && item.TransactionDate <= dtend
                              && ttids.Contains(item.TransactionType)
@@ -1146,8 +1196,8 @@ namespace hihapi.Controllers
                                TransactionTypeName = newresult.Key.TransactionTypeName,
                                IsExpense = newresult.Key.IsExpense,
                                Month = newresult.Key.Month,
-                               Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency)
-                           }).ToList();
+                               Amount = newresult.Sum(c => c.AmountInLocalCurrency)
+                           }).ToListAsync();
 
             List<FinanceReportByTransactionTypeMOM> listResult = new List<FinanceReportByTransactionTypeMOM>();
             foreach (var result in results)
@@ -1178,7 +1228,7 @@ namespace hihapi.Controllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetReportByAccountMOM([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetReportByAccountMOM([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -1212,7 +1262,7 @@ namespace hihapi.Controllers
             }
 
             // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
@@ -1238,7 +1288,7 @@ namespace hihapi.Controllers
             else
                 return BadRequest("Invalid Period");
 
-            var results = (from item in _context.FinanceDocumentItemView
+            var results = await (from item in _context.FinanceDocumentItemView
                            where item.HomeID == hid
                              && item.TransactionDate >= dtbgn && item.TransactionDate <= dtend
                              && item.AccountID == accountid
@@ -1253,8 +1303,8 @@ namespace hihapi.Controllers
                                AccountID = newresult.Key.AccountID,
                                IsExpense = newresult.Key.IsExpense,
                                Month = newresult.Key.Month,
-                               Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency)
-                           }).ToList();
+                               Amount = newresult.Sum(c => c.AmountInLocalCurrency)
+                           }).ToListAsync();
 
             var result = new List<FinanceReportByAccountMOM>();
             foreach (var dbresult in results)
@@ -1298,7 +1348,7 @@ namespace hihapi.Controllers
         /// <returns></returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetReportByControlCenterMOM([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetReportByControlCenterMOM([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -1335,7 +1385,7 @@ namespace hihapi.Controllers
             }
 
             // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
@@ -1349,10 +1399,10 @@ namespace hihapi.Controllers
             ccids.Add(ccid);
             if (includeChildren)
             {
-                var lvl = (from fincc in _context.FinanceControlCenter
+                var lvl = await (from fincc in _context.FinanceControlCenter
                            where fincc.ParentID != null
                             && ccids.Contains(fincc.ParentID.GetValueOrDefault())
-                           select fincc.ID).ToList();
+                           select fincc.ID).ToListAsync();
                 ccids.AddRange(lvl);
             }
 
@@ -1371,7 +1421,7 @@ namespace hihapi.Controllers
             else
                 return BadRequest("Invalid Period");
 
-            var results = (from item in _context.FinanceDocumentItemView
+            var results = await (from item in _context.FinanceDocumentItemView
                            where item.HomeID == hid
                              && item.TransactionDate >= dtbgn && item.TransactionDate <= dtend
                              && item.ControlCenterID != null
@@ -1383,8 +1433,8 @@ namespace hihapi.Controllers
                                ControlCenterID = newresult.Key.ControlCenterID.GetValueOrDefault(),
                                IsExpense = newresult.Key.IsExpense,
                                Month = newresult.Key.Month,
-                               Amount = newresult.Sum(c => (double)c.Amount)
-                           }).ToList();
+                               Amount = newresult.Sum(c => c.Amount)
+                           }).ToListAsync();
 
             List<FinanceReportByControlCenterMOM> listResult = new List<FinanceReportByControlCenterMOM>();
             foreach (var dbresult in results)
@@ -1428,7 +1478,7 @@ namespace hihapi.Controllers
         /// </returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetCashReport([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetCashReport([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -1461,7 +1511,7 @@ namespace hihapi.Controllers
             }
 
             // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
@@ -1488,12 +1538,12 @@ namespace hihapi.Controllers
                 return BadRequest("Invalid Period");
 
             // Account
-            List<int> acntids = (from finacc in _context.FinanceAccount
+            List<int> acntids = await (from finacc in _context.FinanceAccount
                                  where finacc.CategoryID == FinanceAccountCategory.AccountCategory_AccountReceivable
                                       || finacc.CategoryID == FinanceAccountCategory.AccountCategory_AdvancePayment
-                                 select finacc.ID).ToList();
+                                 select finacc.ID).ToListAsync();
 
-            var results = (from item in _context.FinanceDocumentItemView
+            var results = await (from item in _context.FinanceDocumentItemView
                            where item.HomeID == hid
                              && item.TransactionDate >= dtbgn && item.TransactionDate <= dtend
                              && item.ControlCenterID != null
@@ -1502,8 +1552,8 @@ namespace hihapi.Controllers
                            select new
                            {
                                IsExpense = newresult.Key.IsExpense,
-                               Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency)
-                           }).ToList();
+                               Amount = newresult.Sum(c => c.AmountInLocalCurrency)
+                           }).ToListAsync();
 
             List<FinanceReport> listResult = new List<FinanceReport>();
             foreach (var dbresult in results)
@@ -1533,7 +1583,7 @@ namespace hihapi.Controllers
         /// </returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetCashReportMOM([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetCashReportMOM([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -1566,7 +1616,7 @@ namespace hihapi.Controllers
             }
 
             // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
@@ -1593,12 +1643,12 @@ namespace hihapi.Controllers
                 return BadRequest("Invalid Period");
 
             // Account
-            List<int> acntids = (from finacc in _context.FinanceAccount
+            List<int> acntids = await (from finacc in _context.FinanceAccount
                                  where finacc.CategoryID == FinanceAccountCategory.AccountCategory_AccountReceivable
                                       || finacc.CategoryID == FinanceAccountCategory.AccountCategory_AdvancePayment
-                                 select finacc.ID).ToList();
+                                 select finacc.ID).ToListAsync();
 
-            var results = (from item in _context.FinanceDocumentItemView
+            var results = await (from item in _context.FinanceDocumentItemView
                            where item.HomeID == hid
                              && item.TransactionDate >= dtbgn && item.TransactionDate <= dtend
                              && item.ControlCenterID != null
@@ -1608,8 +1658,8 @@ namespace hihapi.Controllers
                            {
                                IsExpense = newresult.Key.IsExpense,
                                Month = newresult.Key.Month,
-                               Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency)
-                           }).ToList();
+                               Amount = newresult.Sum(c => c.AmountInLocalCurrency)
+                           }).ToListAsync();
 
             List<FinanceReportMOM> listResult = new List<FinanceReportMOM>();
             foreach (var dbresult in results)
@@ -1653,7 +1703,7 @@ namespace hihapi.Controllers
         /// </returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetDailyCashReport([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetDailyCashReport([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -1687,7 +1737,7 @@ namespace hihapi.Controllers
             }
 
             // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
@@ -1696,12 +1746,12 @@ namespace hihapi.Controllers
             DateTime dtend = new DateTime(year, month, 1).AddMonths(1).AddDays(-1);
 
             // Account
-            List<int> acntids = (from finacc in _context.FinanceAccount
+            List<int> acntids = await (from finacc in _context.FinanceAccount
                                  where finacc.CategoryID == FinanceAccountCategory.AccountCategory_AccountReceivable
                                       || finacc.CategoryID == FinanceAccountCategory.AccountCategory_AdvancePayment
-                                 select finacc.ID).ToList();
+                                 select finacc.ID).ToListAsync();
 
-            var results = (from item in _context.FinanceDocumentItemView
+            var results = await (from item in _context.FinanceDocumentItemView
                            where item.HomeID == hid
                              && item.TransactionDate >= dtbgn && item.TransactionDate <= dtend
                              && item.ControlCenterID != null
@@ -1711,8 +1761,8 @@ namespace hihapi.Controllers
                            {
                                IsExpense = newresult.Key.IsExpense,
                                TransactionDate = newresult.Key.TransactionDate,
-                               Amount = newresult.Sum(c => (double)c.AmountInLocalCurrency)
-                           }).ToList();
+                               Amount = newresult.Sum(c => c.AmountInLocalCurrency)
+                           }).ToListAsync();
 
             List<FinanceReportPerDate> listResult = new List<FinanceReportPerDate>();
             foreach (var dbresult in results)
@@ -1756,7 +1806,7 @@ namespace hihapi.Controllers
         /// </returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetStatementOfIncomeAndExpenseMOM([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetStatementOfIncomeAndExpenseMOM([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -1790,7 +1840,7 @@ namespace hihapi.Controllers
             }
 
             // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
@@ -1817,7 +1867,7 @@ namespace hihapi.Controllers
                 return BadRequest("Invalid Period");
 
             List<FinanceReportMOM> listResult = new List<FinanceReportMOM>();
-            var results = (from item in _context.FinanceDocumentItemView
+            var results = await (from item in _context.FinanceDocumentItemView
                            where item.HomeID == hid
                              && item.TransactionDate >= dtbgn && item.TransactionDate < dtend
                              && (!excludeTransfer
@@ -1834,7 +1884,7 @@ namespace hihapi.Controllers
                                Month = newresult.Key.Month,
                                IsExpense = newresult.Key.IsExpense,
                                Amount = newresult.Sum(c => c.AmountInLocalCurrency)
-                           }).ToList();
+                           }).ToListAsync();
             results.ForEach(dbresult =>
             {
                 var idx = listResult.FindIndex(p => p.HomeID == hid && p.Month == dbresult.Month);
@@ -1877,7 +1927,7 @@ namespace hihapi.Controllers
         /// </returns>
         /// <exception cref="UnauthorizedAccessException"></exception>
         [HttpPost]
-        public IActionResult GetDailyStatementOfIncomeAndExpense([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetDailyStatementOfIncomeAndExpense([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -1912,7 +1962,7 @@ namespace hihapi.Controllers
             }
 
             // 2. Check the Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
                 throw new UnauthorizedAccessException();
 
@@ -1921,7 +1971,7 @@ namespace hihapi.Controllers
             DateTime dtend = new DateTime(year, month, 1).AddMonths(1).AddDays(-1);
 
             List<FinanceReportPerDate> listResult = new List<FinanceReportPerDate>();
-            var results = (from item in _context.FinanceDocumentItemView
+            var results = await (from item in _context.FinanceDocumentItemView
                            where item.HomeID == hid
                              && item.TransactionDate >= dtbgn && item.TransactionDate < dtend
                              && (!excludeTransfer
@@ -1938,7 +1988,7 @@ namespace hihapi.Controllers
                                TransactionDate = newresult.Key.TransactionDate,
                                IsExpense = newresult.Key.IsExpense,
                                Amount = newresult.Sum(c => c.AmountInLocalCurrency)
-                           }).ToList();
+                           }).ToListAsync();
             results.ForEach(dbresult =>
             {
                 var idx = listResult.FindIndex(p => p.HomeID == hid && p.TransactionDate == dbresult.TransactionDate);

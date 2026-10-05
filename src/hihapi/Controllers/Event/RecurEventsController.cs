@@ -41,7 +41,7 @@ namespace hihapi.Controllers.Event
 
             return Ok(from hmem in _context.HomeMembers
                       where hmem.User == usrName
-                      select new { hmem.HomeID, hmem.User, hmem.IsChild } into hmems
+                      select new { hmem.HomeID, hmem.User, hmem.IsLite } into hmems
                       join nrevt in this._context.RecurEvents
                         on hmems.HomeID equals nrevt.HomeID
                       select nrevt);

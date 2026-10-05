@@ -43,7 +43,7 @@ namespace hihapi.Controllers.Library
 
             return Ok(from hmem in _context.HomeMembers
                       where hmem.User == usrName
-                      select new { hmem.HomeID, hmem.User, hmem.IsChild } into hmems
+                      select new { hmem.HomeID, hmem.User, hmem.IsLite } into hmems
                       join org in _context.Organizations
                         on hmems.HomeID equals org.HomeID
                       select org);

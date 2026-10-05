@@ -184,7 +184,7 @@ namespace hihapi.Controllers
             var origdocid = 0;
             FinanceDocument findoc = null;
 
-            using (var transaction = _context.Database.BeginTransaction())
+            await using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
@@ -358,7 +358,7 @@ namespace hihapi.Controllers
             var origdocid = 0;
             FinanceDocument findoc = null;
 
-            using (var transaction = _context.Database.BeginTransaction())
+            await using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
