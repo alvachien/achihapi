@@ -35,10 +35,16 @@ namespace hihapi.Controllers
                 throw new UnauthorizedAccessException();
             }
 
+            // Restricted ("lite") members see only the items on the accounts they own.
             return Ok(from hmem in _context.HomeMembers
                       where hmem.User == usrName
-                      select new { hmem.HomeID } into hids
-                      join items in _context.FinanceDocumentItemView on hids.HomeID equals items.HomeID
+                      select new { hmem.HomeID, hmem.User, hmem.IsLite } into hmems
+                      join items in _context.FinanceDocumentItemView on hmems.HomeID equals items.HomeID
+                      where !hmems.IsLite.HasValue
+                          || hmems.IsLite == false
+                          || (from acnt in _context.FinanceAccount
+                              where acnt.ID == items.AccountID && acnt.Owner == hmems.User
+                              select acnt.ID).Any()
                       select items);
 
             //return Ok(option.ApplyTo(rst));

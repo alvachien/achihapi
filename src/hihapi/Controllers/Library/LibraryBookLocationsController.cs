@@ -41,7 +41,7 @@ namespace hihapi.Controllers.Library
 
             return Ok(from hmem in _context.HomeMembers
                       where hmem.User == usrName
-                      select new { hmem.HomeID, hmem.IsChild } into hids
+                      select new { hmem.HomeID, hmem.IsLite } into hids
                       join ords in _context.BookLocations on hids.HomeID equals ords.HomeID
                       select ords);
         }

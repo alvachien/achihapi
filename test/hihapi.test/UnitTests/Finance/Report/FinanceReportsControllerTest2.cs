@@ -78,9 +78,9 @@ namespace hihapi.unittest.Finance
                     amt += (double)di.TranAmount;
             }
 
-            var balance = control.GetAccountBalance(parameters);
+            var balance = await control.GetAccountBalance(parameters);
             Assert.NotNull(balance);
-            var balval = (double)((balance as OkObjectResult).Value);
+            var balval = Convert.ToDouble((balance as OkObjectResult).Value);
             Assert.Equal(0.00, Math.Abs(Math.Round(amt - balval, 2)));
 
             await context.DisposeAsync();
@@ -168,7 +168,7 @@ namespace hihapi.unittest.Finance
                 lstdate = curdate;
             }
 
-            var apibals = control.GetAccountBalanceEx(parameters);
+            var apibals = await control.GetAccountBalanceEx(parameters);
             Assert.NotNull(apibals);
             var apibalsval = (apibals as OkObjectResult).Value as List<FinanceAccountBalancePerDate>;
             Assert.NotNull(apibalsval);

@@ -6,6 +6,6 @@ namespace hihapi.Models
     {
         public string UserID { get; set; }
         public string DisplayAs { get; set; }
-        public Boolean IsChild { get; set; }
+        public Boolean IsLite { get; set; }
     }
 }

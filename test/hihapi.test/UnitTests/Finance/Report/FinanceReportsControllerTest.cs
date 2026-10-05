@@ -58,7 +58,7 @@ namespace hihapi.unittest.Finance
             // 1. No authorization
             try
             {
-                control.GetReportByTranType(parameters);
+                await control.GetReportByTranType(parameters);
             }
             catch (Exception exp)
             {
@@ -69,7 +69,7 @@ namespace hihapi.unittest.Finance
             {
                 HttpContext = new DefaultHttpContext() { User = userclaim }
             };
-            var rst = control.GetReportByTranType(parameters);
+            var rst = await control.GetReportByTranType(parameters);
             Assert.NotNull(rst);
 
             await context.DisposeAsync();
@@ -83,7 +83,7 @@ namespace hihapi.unittest.Finance
             control.ModelState.AddModelError("Name", "The Name field is required.");
             try
             {
-                control.GetReportByTranType(new ODataActionParameters());
+                await control.GetReportByTranType(new ODataActionParameters());
             }
             catch (Exception exp)
             {
@@ -101,7 +101,7 @@ namespace hihapi.unittest.Finance
             control.ModelState.AddModelError("Name", "The Name field is required.");
             try
             {
-                control.GetReportByAccount(new ODataActionParameters());
+                await control.GetReportByAccount(new ODataActionParameters());
             }
             catch (Exception exp)
             {
@@ -119,7 +119,7 @@ namespace hihapi.unittest.Finance
             control.ModelState.AddModelError("Name", "The Name field is required.");
             try
             {
-                control.GetReportByControlCenter(new ODataActionParameters());
+                await control.GetReportByControlCenter(new ODataActionParameters());
             }
             catch (Exception exp)
             {
@@ -137,7 +137,7 @@ namespace hihapi.unittest.Finance
             control.ModelState.AddModelError("Name", "The Name field is required.");
             try
             {
-                control.GetReportByOrder(new ODataActionParameters());
+                await control.GetReportByOrder(new ODataActionParameters());
             }
             catch (Exception exp)
             {
@@ -155,7 +155,7 @@ namespace hihapi.unittest.Finance
             control.ModelState.AddModelError("HomeID", "The HomeIDfield is required.");
             try
             {
-                control.GetReportByTranTypeMOM(new ODataActionParameters());
+                await control.GetReportByTranTypeMOM(new ODataActionParameters());
             }
             catch (Exception exp)
             {
@@ -188,7 +188,7 @@ namespace hihapi.unittest.Finance
             // 1. No authorization
             try
             {
-                control.GetReportByTranTypeMOM(parameters);
+                await control.GetReportByTranTypeMOM(parameters);
             }
             catch (Exception exp)
             {
@@ -199,7 +199,7 @@ namespace hihapi.unittest.Finance
             {
                 HttpContext = new DefaultHttpContext() { User = userclaim }
             };
-            var rst = control.GetReportByTranTypeMOM(parameters);
+            var rst = await control.GetReportByTranTypeMOM(parameters);
             Assert.NotNull(rst);
 
             await context.DisposeAsync();
@@ -213,7 +213,7 @@ namespace hihapi.unittest.Finance
             control.ModelState.AddModelError("HomeID", "The HomeIDfield is required.");
             try
             {
-                control.GetReportByAccount(new ODataActionParameters());
+                await control.GetReportByAccount(new ODataActionParameters());
             }
             catch (Exception exp)
             {
@@ -239,7 +239,7 @@ namespace hihapi.unittest.Finance
             // 1. No authorization
             try
             {
-                control.GetReportByAccount(parameters);
+                await control.GetReportByAccount(parameters);
             }
             catch (Exception exp)
             {
@@ -250,7 +250,7 @@ namespace hihapi.unittest.Finance
             {
                 HttpContext = new DefaultHttpContext() { User = userclaim }
             };
-            var rst = control.GetReportByAccount(parameters);
+            var rst = await control.GetReportByAccount(parameters);
             Assert.NotNull(rst);
 
             await context.DisposeAsync();
@@ -264,7 +264,7 @@ namespace hihapi.unittest.Finance
             control.ModelState.AddModelError("HomeID", "The HomeIDfield is required.");
             try
             {
-                control.GetReportByAccountMOM(new ODataActionParameters());
+                await control.GetReportByAccountMOM(new ODataActionParameters());
             }
             catch (Exception exp)
             {
@@ -290,7 +290,7 @@ namespace hihapi.unittest.Finance
             // 1. No authorization
             try
             {
-                control.GetReportByControlCenter(parameters);
+                await control.GetReportByControlCenter(parameters);
             }
             catch (Exception exp)
             {
@@ -301,7 +301,7 @@ namespace hihapi.unittest.Finance
             {
                 HttpContext = new DefaultHttpContext() { User = userclaim }
             };
-            var rst = control.GetReportByControlCenter(parameters);
+            var rst = await control.GetReportByControlCenter(parameters);
             Assert.NotNull(rst);
 
             await context.DisposeAsync();
@@ -326,7 +326,7 @@ namespace hihapi.unittest.Finance
             // 1. No authorization
             try
             {
-                control.GetReportByAccountMOM(parameters);
+                await control.GetReportByAccountMOM(parameters);
             }
             catch (Exception exp)
             {
@@ -337,7 +337,7 @@ namespace hihapi.unittest.Finance
             {
                 HttpContext = new DefaultHttpContext() { User = userclaim }
             };
-            var rst = control.GetReportByAccountMOM(parameters);
+            var rst = await control.GetReportByAccountMOM(parameters);
             Assert.NotNull(rst);
 
             await context.DisposeAsync();
@@ -351,7 +351,7 @@ namespace hihapi.unittest.Finance
             control.ModelState.AddModelError("HomeID", "The HomeIDfield is required.");
             try
             {
-                control.GetReportByControlCenter(new ODataActionParameters());
+                await control.GetReportByControlCenter(new ODataActionParameters());
             }
             catch (Exception exp)
             {
@@ -369,7 +369,7 @@ namespace hihapi.unittest.Finance
             control.ModelState.AddModelError("HomeID", "The HomeIDfield is required.");
             try
             {
-                control.GetReportByControlCenterMOM(new ODataActionParameters());
+                await control.GetReportByControlCenterMOM(new ODataActionParameters());
             }
             catch (Exception exp)
             {
@@ -401,7 +401,7 @@ namespace hihapi.unittest.Finance
             // 1. No authorization
             try
             {
-                control.GetReportByControlCenterMOM(parameters);
+                await control.GetReportByControlCenterMOM(parameters);
             }
             catch (Exception exp)
             {
@@ -412,7 +412,7 @@ namespace hihapi.unittest.Finance
             {
                 HttpContext = new DefaultHttpContext() { User = userclaim }
             };
-            var rst = control.GetReportByControlCenterMOM(parameters);
+            var rst = await control.GetReportByControlCenterMOM(parameters);
             Assert.NotNull(rst);
 
             await context.DisposeAsync();

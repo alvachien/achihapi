@@ -46,12 +46,12 @@ namespace hihapi.Controllers
             // Check whether User assigned with specified Home ID
             return Ok(from hmem in _context.HomeMembers
                       where hmem.User == usrName
-                      select new { hmem.HomeID, hmem.User, hmem.IsChild } into hmems
+                      select new { hmem.HomeID, hmem.User, hmem.IsLite } into hmems
                       join acnts in _context.FinanceAccount
                         on hmems.HomeID equals acnts.HomeID
-                      where (hmems.IsChild == true && hmems.User == acnts.Owner)
-                          || !hmems.IsChild.HasValue
-                          || hmems.IsChild == false
+                      where (hmems.IsLite == true && hmems.User == acnts.Owner)
+                          || !hmems.IsLite.HasValue
+                          || hmems.IsLite == false
                       select acnts);
         }
 
@@ -373,7 +373,7 @@ namespace hihapi.Controllers
             var origdocid = 0;
             var loanAccountID = 0;
 
-            using (var transaction = _context.Database.BeginTransaction())
+            await using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
@@ -419,7 +419,7 @@ namespace hihapi.Controllers
                     origdocid = docEntity.Entity.ID;
 
                     // Update the account
-                    var extraEntry = _context.FinanceAccountExtraLoan.Find(loanAccountID);
+                    var extraEntry = await _context.FinanceAccountExtraLoan.FindAsync(loanAccountID);
                     if (extraEntry != null)
                     {
                         extraEntry.RefDocID = origdocid;

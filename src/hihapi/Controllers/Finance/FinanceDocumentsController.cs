@@ -55,12 +55,12 @@ namespace hihapi.Controllers
             // Check whether User assigned with specified Home ID
             return Ok(from hmem in _context.HomeMembers
                       where hmem.User == usrName
-                      select new { HomeID = hmem.HomeID, User = hmem.User, IsChild = hmem.IsChild } into hmems
+                      select new { HomeID = hmem.HomeID, User = hmem.User, IsLite = hmem.IsLite } into hmems
                       join docs in _context.FinanceDocument
                         on hmems.HomeID equals docs.HomeID
-                      where (hmems.IsChild == true && hmems.User == docs.Createdby)
-                          || hmems.IsChild == null
-                          || hmems.IsChild == false
+                      where (hmems.IsLite == true && hmems.User == docs.Createdby)
+                          || hmems.IsLite == null
+                          || hmems.IsLite == false
                       select docs);
         }
 
@@ -208,7 +208,7 @@ namespace hihapi.Controllers
             _context.Entry(existing).CurrentValues.SetValues(update);
 
             // Items
-            var itemsInDB = _context.FinanceDocumentItem.Where(p => p.DocID == update.ID).AsNoTracking().ToList();
+            var itemsInDB = await _context.FinanceDocumentItem.Where(p => p.DocID == update.ID).AsNoTracking().ToListAsync();
             foreach (var ditem in update.Items)
             {
                 var itemindb = itemsInDB.Find(p => p.DocID == update.ID && p.ItemID == ditem.ItemID);
@@ -1394,7 +1394,7 @@ namespace hihapi.Controllers
         }
 
         [HttpPost]
-        public IActionResult GetAssetDepreciationResult([FromBody] ODataActionParameters parameters)
+        public async Task<IActionResult> GetAssetDepreciationResult([FromBody] ODataActionParameters parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -1421,7 +1421,7 @@ namespace hihapi.Controllers
             Int32 month = (Int32)parameters["Month"];
 
             // Check whether User assigned with specified Home ID
-            var hms = _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).Count();
+            var hms = await _context.HomeMembers.Where(p => p.HomeID == hid && p.User == usrName).CountAsync();
             if (hms <= 0)
             {
                 throw new UnauthorizedAccessException();
@@ -1446,13 +1446,13 @@ namespace hihapi.Controllers
                             accountext.BoughtDate,
                             accountext.ResidualValue
                         };
-            var homeDefine = _context.HomeDefines.FirstOrDefault(prop => prop.ID == hid);
+            var homeDefine = await _context.HomeDefines.FirstOrDefaultAsync(prop => prop.ID == hid);
             if (homeDefine == null)
                 throw new NotFoundException("Home not found");
             var lc = homeDefine.BaseCurrency;
 
             // Get the balance
-            var dbresults = (
+            var dbresults = await (
                 from docitem in _context.FinanceDocumentItem
                 join docheader in _context.FinanceDocument
                     on docitem.DocID equals docheader.ID
@@ -1472,7 +1472,7 @@ namespace hihapi.Controllers
                     TranAmount = docitem.TranAmount,
                     docheader.ExgRate,
                     docheader.ExgRate2,
-                }).ToList();
+                }).ToListAsync();
             //into docitem2
             //group docitem2 by new { docitem2.AccountID, docitem2.IsExpense, docitem2.TranCurr, docitem2.TranCurr2, docitem2.UseCurr2, docitem2.ExgRate, docitem2.ExgRate2 } into docitem3
             //select new
@@ -1487,7 +1487,8 @@ namespace hihapi.Controllers
             //    TranAmount = docitem3.Sum(p => (Double)p.TranAmount)
             //}).ToList();
 
-            foreach (var acnt in acnts)
+            // Materialize once instead of re-running the query synchronously.
+            foreach (var acnt in await acnts.ToListAsync())
             {
                 Double doubleAmount = 0;
                 if (dbresults.FindIndex(p => p.TranDate >= dtMonthFirstday && p.TranDate <= dtMonthLastday && p.DocType == FinanceDocumentType.DocType_AssetDepreciation) != -1)

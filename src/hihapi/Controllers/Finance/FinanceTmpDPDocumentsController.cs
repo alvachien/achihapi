@@ -139,7 +139,7 @@ namespace hihapi.Controllers
             var errorOccur = false;
             var origdocid = 0;
 
-            using (var transaction = _context.Database.BeginTransaction())
+            await using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
